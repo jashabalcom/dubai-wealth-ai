@@ -103,18 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
-          
-          // Check subscription only on sign in (not token refresh to reduce calls)
-          if (event === 'SIGNED_IN') {
-            // Clear any pending timeout
-            if (subscriptionCheckTimeout.current) {
-              clearTimeout(subscriptionCheckTimeout.current);
-            }
-            // Delay the check to avoid race conditions
-            subscriptionCheckTimeout.current = setTimeout(() => {
-              checkSubscription();
-            }, 2000);
-          }
         } else {
           setProfile(null);
         }
@@ -127,10 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
-        // Initial subscription check with delay
-        subscriptionCheckTimeout.current = setTimeout(() => {
-          checkSubscription();
-        }, 3000);
       }
       setLoading(false);
     });
@@ -141,18 +125,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearTimeout(subscriptionCheckTimeout.current);
       }
     };
-  }, [fetchProfile, checkSubscription]);
+  }, [fetchProfile]);
 
-  // Periodic subscription check every 10 minutes (reduced from 5)
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      checkSubscription();
-    }, 10 * 60 * 1000); // 10 minutes
-
-    return () => clearInterval(interval);
-  }, [user, checkSubscription]);
+  // No automatic periodic checks - rely on profile data from database
+  // Manual refresh available via refreshSubscription()
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
