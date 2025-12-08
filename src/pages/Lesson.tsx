@@ -5,21 +5,27 @@ import {
   ArrowLeft, 
   ArrowRight, 
   CheckCircle2, 
-  Play, 
   List,
   X,
   Clock,
-  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { VideoPlayer } from '@/components/lessons/VideoPlayer';
+import { ResourceList } from '@/components/lessons/ResourceList';
 
 interface Course {
   id: string;
   title: string;
   slug: string;
+}
+
+interface Resource {
+  name: string;
+  url: string;
+  type: string;
 }
 
 interface Lesson {
@@ -33,6 +39,7 @@ interface Lesson {
   order_index: number;
   duration_minutes: number;
   is_free_preview: boolean;
+  resources: unknown;
 }
 
 export default function Lesson() {
@@ -289,15 +296,8 @@ export default function Lesson() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Video Player Placeholder */}
-            <div className="aspect-video bg-primary-dark relative">
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                <div className="w-20 h-20 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center">
-                  <Play className="w-10 h-10 text-gold fill-gold ml-1" />
-                </div>
-                <p className="text-muted-foreground">Video lesson coming soon</p>
-              </div>
-            </div>
+            {/* Video Player */}
+            <VideoPlayer url={lesson.video_url} title={lesson.title} />
 
             {/* Lesson Content */}
             <div className="max-w-4xl mx-auto px-4 py-8">
@@ -335,6 +335,13 @@ export default function Lesson() {
                         .replace(/\n\n/g, '</p><p class="text-muted-foreground">')
                     }}
                   />
+                </div>
+              )}
+
+              {/* Downloadable Resources */}
+              {Array.isArray(lesson.resources) && lesson.resources.length > 0 && (
+                <div className="mb-8">
+                  <ResourceList resources={lesson.resources as Resource[]} />
                 </div>
               )}
 

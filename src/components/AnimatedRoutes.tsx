@@ -28,6 +28,7 @@ import EliteFunnel from "@/pages/EliteFunnel";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminCourses from "@/pages/admin/AdminCourses";
+import AdminLessons from "@/pages/admin/AdminLessons";
 import AdminProperties from "@/pages/admin/AdminProperties";
 import AdminEvents from "@/pages/admin/AdminEvents";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
@@ -97,6 +98,7 @@ export function AnimatedRoutes() {
         <Route path="/admin" element={<AnimatedPage><AdminDashboard /></AnimatedPage>} />
         <Route path="/admin/users" element={<AnimatedPage><AdminUsers /></AnimatedPage>} />
         <Route path="/admin/courses" element={<AnimatedPage><AdminCourses /></AnimatedPage>} />
+        <Route path="/admin/courses/:courseId/lessons" element={<AnimatedPage><AdminLessons /></AnimatedPage>} />
         <Route path="/admin/properties" element={<AnimatedPage><AdminProperties /></AnimatedPage>} />
         <Route path="/admin/events" element={<AnimatedPage><AdminEvents /></AnimatedPage>} />
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
