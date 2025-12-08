@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { label: "Why Dubai", href: "#why-dubai" },
@@ -13,6 +15,7 @@ const navLinks = [
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,14 +40,14 @@ export function Navbar() {
         <div className="container-luxury">
           <nav className="flex items-center justify-between h-20 md:h-24">
             {/* Logo */}
-            <a href="#" className="flex flex-col items-start">
+            <Link to="/" className="flex flex-col items-start">
               <span className="font-serif text-xl md:text-2xl font-semibold text-secondary-foreground tracking-wide">
                 Dubai Wealth Hub
               </span>
               <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-sans">
                 by Balcom Privé
               </span>
-            </a>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-10">
@@ -61,12 +64,26 @@ export function Navbar() {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
-              <Button variant="ghost" size="sm" className="text-secondary-foreground hover:text-primary">
-                Sign In
-              </Button>
-              <Button variant="hero" size="sm">
-                Get Started
-              </Button>
+              {user ? (
+                <Link to="/dashboard">
+                  <Button variant="hero" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link to="/auth">
+                    <Button variant="ghost" size="sm" className="text-secondary-foreground hover:text-primary">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/auth">
+                    <Button variant="hero" size="sm">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -105,12 +122,26 @@ export function Navbar() {
                 </motion.a>
               ))}
               <div className="flex flex-col gap-4 pt-8 border-t border-primary/20">
-                <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start">
-                  Sign In
-                </Button>
-                <Button variant="hero" size="lg">
-                  Get Started
-                </Button>
+                {user ? (
+                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button variant="hero" size="lg" className="w-full">
+                      Dashboard
+                    </Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="hero" size="lg" className="w-full">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
