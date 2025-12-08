@@ -8,6 +8,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Academy from "./pages/Academy";
+import Course from "./pages/Course";
+import Lesson from "./pages/Lesson";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,9 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/academy" element={<Academy />} />
+            <Route path="/academy/:slug" element={<Course />} />
+            <Route path="/academy/:courseSlug/:lessonSlug" element={<Lesson />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

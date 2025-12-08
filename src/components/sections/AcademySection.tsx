@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Play, Clock, BarChart, Star } from "lucide-react";
 
@@ -139,13 +140,13 @@ export function AcademySection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className="text-center mt-12"
         >
-          <a
-            href="#membership"
+          <Link
+            to="/academy"
             className="inline-flex items-center gap-2 text-primary hover:text-primary/80 transition-colors font-sans text-sm uppercase tracking-[0.1em]"
           >
-            View All 50+ Courses
+            View All Courses
             <span className="text-lg">→</span>
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>
