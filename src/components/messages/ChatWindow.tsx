@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { OnlineIndicator } from '@/components/ui/online-indicator';
 import { useOnlineStatus } from '@/contexts/OnlinePresenceContext';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
+import { useMessageReactions } from '@/hooks/useMessageReactions';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TypingIndicator } from './TypingIndicator';
@@ -55,6 +56,14 @@ export function ChatWindow({
     partner?.id ?? null,
     currentUserId
   );
+
+  // Get all message IDs for reactions
+  const messageIds = useMemo(() => messages.map(m => m.id), [messages]);
+  const { getReactionsForMessage, toggleReaction } = useMessageReactions(messageIds);
+
+  const handleReact = (messageId: string, emoji: string) => {
+    toggleReaction.mutate({ messageId, emoji });
+  };
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -136,10 +145,13 @@ export function ChatWindow({
           messages.map((message) => (
             <MessageBubble
               key={message.id}
+              id={message.id}
               content={message.content}
               timestamp={message.created_at}
               isSender={message.sender_id === currentUserId}
               isRead={message.is_read}
+              reactions={getReactionsForMessage(message.id)}
+              onReact={handleReact}
             />
           ))
         )}
