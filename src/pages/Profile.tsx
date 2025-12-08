@@ -16,12 +16,19 @@ import {
   Edit3,
   Check,
   X,
+  Linkedin,
+  Briefcase,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -47,6 +54,9 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editCountry, setEditCountry] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editLookingFor, setEditLookingFor] = useState('');
+  const [editLinkedin, setEditLinkedin] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (authLoading || profileLoading) {
@@ -79,6 +89,9 @@ export default function Profile() {
   const handleStartEdit = () => {
     setEditName(profile.full_name || '');
     setEditCountry(profile.country || '');
+    setEditBio((profile as any).bio || '');
+    setEditLookingFor((profile as any).looking_for || '');
+    setEditLinkedin((profile as any).linkedin_url || '');
     setIsEditing(true);
   };
 
@@ -86,8 +99,18 @@ export default function Profile() {
     updateProfile.mutate({
       full_name: editName,
       country: editCountry,
-    });
+      bio: editBio,
+      looking_for: editLookingFor,
+      linkedin_url: editLinkedin,
+    } as any);
     setIsEditing(false);
+  };
+
+  const handleToggleDirectoryVisibility = () => {
+    const currentValue = (profile as any).is_visible_in_directory ?? true;
+    updateProfile.mutate({
+      is_visible_in_directory: !currentValue,
+    } as any);
   };
 
   const handleCancelEdit = () => {
@@ -195,6 +218,24 @@ export default function Profile() {
                           placeholder="Country"
                           className="h-auto py-1 px-2 bg-muted/30"
                         />
+                        <Input
+                          value={editLinkedin}
+                          onChange={(e) => setEditLinkedin(e.target.value)}
+                          placeholder="LinkedIn URL (optional)"
+                          className="h-auto py-1 px-2 bg-muted/30"
+                        />
+                        <Input
+                          value={editLookingFor}
+                          onChange={(e) => setEditLookingFor(e.target.value)}
+                          placeholder="Looking for (e.g., Joint ventures, Networking)"
+                          className="h-auto py-1 px-2 bg-muted/30"
+                        />
+                        <Textarea
+                          value={editBio}
+                          onChange={(e) => setEditBio(e.target.value)}
+                          placeholder="Short bio about yourself..."
+                          className="bg-muted/30 min-h-[80px]"
+                        />
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -217,6 +258,14 @@ export default function Profile() {
                           {profile.full_name || 'Anonymous User'}
                         </h1>
                         <p className="text-muted-foreground mb-3">{profile.email}</p>
+                        
+                        {/* Bio */}
+                        {(profile as any).bio && (
+                          <p className="text-sm text-muted-foreground mb-3 max-w-lg">
+                            {(profile as any).bio}
+                          </p>
+                        )}
+                        
                         <div className="flex flex-wrap gap-2">
                           <Badge
                             variant="outline"
@@ -230,6 +279,25 @@ export default function Profile() {
                               <MapPin className="h-3 w-3 mr-1" />
                               {profile.country}
                             </Badge>
+                          )}
+                          {(profile as any).looking_for && (
+                            <Badge variant="outline" className="bg-gold/10 text-gold border-gold/30">
+                              <Briefcase className="h-3 w-3 mr-1" />
+                              {(profile as any).looking_for}
+                            </Badge>
+                          )}
+                          {(profile as any).linkedin_url && (
+                            <a
+                              href={(profile as any).linkedin_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex"
+                            >
+                              <Badge variant="outline" className="hover:bg-muted/50 cursor-pointer">
+                                <Linkedin className="h-3 w-3 mr-1" />
+                                LinkedIn
+                              </Badge>
+                            </a>
                           )}
                         </div>
                       </>
@@ -289,6 +357,33 @@ export default function Profile() {
                     </div>
                   )}
                 </div>
+                
+                {/* Directory Visibility Toggle */}
+                {isOwnProfile && (
+                  <div className="mt-4 pt-4 border-t border-border/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {(profile as any).is_visible_in_directory !== false ? (
+                          <Eye className="h-4 w-4 text-gold" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <Label htmlFor="directory-visibility" className="text-sm cursor-pointer">
+                          Show in Directory
+                        </Label>
+                      </div>
+                      <Switch
+                        id="directory-visibility"
+                        checked={(profile as any).is_visible_in_directory !== false}
+                        onCheckedChange={handleToggleDirectoryVisibility}
+                        disabled={updateProfile.isPending}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Let other members find and connect with you
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

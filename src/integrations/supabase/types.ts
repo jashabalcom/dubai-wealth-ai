@@ -553,6 +553,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           budget_range: string | null
           country: string | null
           created_at: string
@@ -560,6 +561,9 @@ export type Database = {
           full_name: string | null
           id: string
           investment_goal: string | null
+          is_visible_in_directory: boolean | null
+          linkedin_url: string | null
+          looking_for: string | null
           membership_renews_at: string | null
           membership_status: Database["public"]["Enums"]["membership_status"]
           membership_tier: Database["public"]["Enums"]["membership_tier"]
@@ -569,6 +573,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           budget_range?: string | null
           country?: string | null
           created_at?: string
@@ -576,6 +581,9 @@ export type Database = {
           full_name?: string | null
           id: string
           investment_goal?: string | null
+          is_visible_in_directory?: boolean | null
+          linkedin_url?: string | null
+          looking_for?: string | null
           membership_renews_at?: string | null
           membership_status?: Database["public"]["Enums"]["membership_status"]
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
@@ -585,6 +593,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           budget_range?: string | null
           country?: string | null
           created_at?: string
@@ -592,6 +601,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           investment_goal?: string | null
+          is_visible_in_directory?: boolean | null
+          linkedin_url?: string | null
+          looking_for?: string | null
           membership_renews_at?: string | null
           membership_status?: Database["public"]["Enums"]["membership_status"]
           membership_tier?: Database["public"]["Enums"]["membership_tier"]

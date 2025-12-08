@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Users, Hash, MessageSquarePlus, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Users, Hash, MessageSquarePlus, Calendar, UserSearch } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -112,9 +113,15 @@ export default function Community() {
                   <MessageSquarePlus className="h-4 w-4" />
                   Discussions
                 </TabsTrigger>
-                <TabsTrigger value="events" className="gap-2 data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+              <TabsTrigger value="events" className="gap-2 data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
                   <Calendar className="h-4 w-4" />
                   Events
+                </TabsTrigger>
+                <TabsTrigger value="members" className="gap-2 data-[state=active]:bg-gold/20 data-[state=active]:text-gold" asChild>
+                  <Link to="/members">
+                    <UserSearch className="h-4 w-4" />
+                    Members
+                  </Link>
                 </TabsTrigger>
               </TabsList>
             </motion.div>
