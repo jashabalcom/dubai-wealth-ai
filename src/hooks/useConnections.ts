@@ -47,6 +47,44 @@ export function useConnections() {
     enabled: !!user?.id,
   });
 
+  // Fetch accepted connections with the other user's profile
+  const { data: acceptedConnections = [], isLoading: acceptedLoading } = useQuery({
+    queryKey: ['accepted-connections', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
+        .from('connections')
+        .select('*')
+        .or(`requester_id.eq.${user.id},recipient_id.eq.${user.id}`)
+        .eq('status', 'accepted')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      if (data.length === 0) return [];
+
+      // Get the OTHER user's ID for each connection
+      const otherUserIds = data.map(c => 
+        c.requester_id === user.id ? c.recipient_id : c.requester_id
+      );
+
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, membership_tier, country, bio')
+        .in('id', otherUserIds);
+
+      if (profileError) throw profileError;
+
+      return data.map(connection => ({
+        ...connection,
+        profile: profiles?.find(p => 
+          p.id === (connection.requester_id === user.id ? connection.recipient_id : connection.requester_id)
+        ),
+      }));
+    },
+    enabled: !!user?.id,
+  });
+
   // Fetch pending requests received by the current user
   const { data: pendingRequests = [], isLoading: pendingLoading } = useQuery({
     queryKey: ['pending-connections', user?.id],
@@ -68,7 +106,7 @@ export function useConnections() {
 
       const { data: profiles, error: profileError } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, membership_tier')
+        .select('id, full_name, avatar_url, membership_tier, country, bio')
         .in('id', requesterIds);
 
       if (profileError) throw profileError;
@@ -76,6 +114,40 @@ export function useConnections() {
       return data.map(connection => ({
         ...connection,
         requester: profiles?.find(p => p.id === connection.requester_id),
+      })) as Connection[];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch pending requests sent by the current user
+  const { data: sentRequests = [], isLoading: sentLoading } = useQuery({
+    queryKey: ['sent-connections', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+
+      const { data, error } = await supabase
+        .from('connections')
+        .select('*')
+        .eq('requester_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch recipient profiles
+      const recipientIds = data.map(c => c.recipient_id);
+      if (recipientIds.length === 0) return [];
+
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, membership_tier, country, bio')
+        .in('id', recipientIds);
+
+      if (profileError) throw profileError;
+
+      return data.map(connection => ({
+        ...connection,
+        recipient: profiles?.find(p => p.id === connection.recipient_id),
       })) as Connection[];
     },
     enabled: !!user?.id,
@@ -209,8 +281,12 @@ export function useConnections() {
   return {
     connections,
     connectionsLoading,
+    acceptedConnections,
+    acceptedLoading,
     pendingRequests,
     pendingLoading,
+    sentRequests,
+    sentLoading,
     pendingCount: pendingRequests.length,
     getConnectionStatus,
     sendRequest,
