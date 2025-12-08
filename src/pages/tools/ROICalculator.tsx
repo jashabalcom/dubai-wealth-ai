@@ -1,31 +1,43 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, TrendingUp, DollarSign, Percent, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencySelector } from '@/components/tools/CurrencySelector';
+import { SliderInput } from '@/components/tools/SliderInput';
+import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
+import { ROICharts } from '@/components/tools/ROICharts';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 
 export default function ROICalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
     purchasePrice: 2000000,
     downPayment: 25,
-    closingCosts: 8, // DLD 4% + agent 2% + other 2%
+    closingCosts: 8,
     annualRent: 120000,
     annualAppreciation: 5,
     holdingPeriod: 5,
-    annualExpenses: 15000, // service charges, maintenance
+    annualExpenses: 15000,
     vacancyRate: 5,
   });
 
   const handleChange = (field: string, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
+    setActivePreset(undefined);
+  };
+
+  const handlePresetSelect = (preset: AreaPreset) => {
+    setInputs(prev => ({
+      ...prev,
+      purchasePrice: preset.propertyPrice,
+      annualRent: preset.annualRent || prev.annualRent,
+    }));
+    setActivePreset(preset.name);
   };
 
   // Calculations
@@ -38,17 +50,13 @@ export default function ROICalculator() {
   const grossYield = (inputs.annualRent / inputs.purchasePrice) * 100;
   const netYield = (netRentalIncome / inputs.purchasePrice) * 100;
 
-  // Future value with appreciation
   const futureValue = inputs.purchasePrice * Math.pow(1 + inputs.annualAppreciation / 100, inputs.holdingPeriod);
   const capitalGain = futureValue - inputs.purchasePrice;
   
-  // Total returns over holding period
   const totalRentalIncome = netRentalIncome * inputs.holdingPeriod;
   const totalReturn = capitalGain + totalRentalIncome;
   const totalROI = (totalReturn / totalInitialInvestment) * 100;
   const annualizedROI = (Math.pow(1 + totalReturn / totalInitialInvestment, 1 / inputs.holdingPeriod) - 1) * 100;
-
-  // Cash on Cash return (first year)
   const cashOnCash = (netRentalIncome / totalInitialInvestment) * 100;
 
   return (
@@ -103,40 +111,43 @@ export default function ROICalculator() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="space-y-6"
             >
+              {/* Dubai Presets */}
+              <div className="p-6 rounded-2xl bg-card border border-border">
+                <DubaiPresets onSelectPreset={handlePresetSelect} activePreset={activePreset} />
+              </div>
+
               <div className="p-6 rounded-2xl bg-card border border-border">
                 <h2 className="font-heading text-xl text-foreground mb-6">Property Details</h2>
                 
-                <div className="space-y-4">
-                  <div>
-                    <Label>Purchase Price (AED)</Label>
-                    <Input
-                      type="number"
-                      value={inputs.purchasePrice}
-                      onChange={(e) => handleChange('purchasePrice', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">{formatCurrency(inputs.purchasePrice)}</p>
-                  </div>
+                <div className="space-y-6">
+                  <SliderInput
+                    label="Purchase Price (AED)"
+                    value={inputs.purchasePrice}
+                    onChange={(v) => handleChange('purchasePrice', v)}
+                    min={500000}
+                    max={20000000}
+                    step={100000}
+                    formatValue={(v) => formatAED(v)}
+                  />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Down Payment (%)</Label>
-                      <Input
-                        type="number"
-                        value={inputs.downPayment}
-                        onChange={(e) => handleChange('downPayment', Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Closing Costs (%)</Label>
-                      <Input
-                        type="number"
-                        value={inputs.closingCosts}
-                        onChange={(e) => handleChange('closingCosts', Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <SliderInput
+                      label="Down Payment"
+                      value={inputs.downPayment}
+                      onChange={(v) => handleChange('downPayment', v)}
+                      min={10}
+                      max={100}
+                      suffix="%"
+                    />
+                    <SliderInput
+                      label="Closing Costs"
+                      value={inputs.closingCosts}
+                      onChange={(v) => handleChange('closingCosts', v)}
+                      min={0}
+                      max={15}
+                      step={0.5}
+                      suffix="%"
+                    />
                   </div>
                 </div>
               </div>
@@ -144,37 +155,35 @@ export default function ROICalculator() {
               <div className="p-6 rounded-2xl bg-card border border-border">
                 <h2 className="font-heading text-xl text-foreground mb-6">Income & Expenses</h2>
                 
-                <div className="space-y-4">
-                  <div>
-                    <Label>Annual Rent (AED)</Label>
-                    <Input
-                      type="number"
-                      value={inputs.annualRent}
-                      onChange={(e) => handleChange('annualRent', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">{formatCurrency(inputs.annualRent)}</p>
-                  </div>
+                <div className="space-y-6">
+                  <SliderInput
+                    label="Annual Rent (AED)"
+                    value={inputs.annualRent}
+                    onChange={(v) => handleChange('annualRent', v)}
+                    min={20000}
+                    max={500000}
+                    step={5000}
+                    formatValue={(v) => formatAED(v)}
+                  />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Annual Expenses (AED)</Label>
-                      <Input
-                        type="number"
-                        value={inputs.annualExpenses}
-                        onChange={(e) => handleChange('annualExpenses', Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Vacancy Rate (%)</Label>
-                      <Input
-                        type="number"
-                        value={inputs.vacancyRate}
-                        onChange={(e) => handleChange('vacancyRate', Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <SliderInput
+                      label="Annual Expenses"
+                      value={inputs.annualExpenses}
+                      onChange={(v) => handleChange('annualExpenses', v)}
+                      min={0}
+                      max={100000}
+                      step={1000}
+                      formatValue={(v) => formatAED(v)}
+                    />
+                    <SliderInput
+                      label="Vacancy Rate"
+                      value={inputs.vacancyRate}
+                      onChange={(v) => handleChange('vacancyRate', v)}
+                      min={0}
+                      max={30}
+                      suffix="%"
+                    />
                   </div>
                 </div>
               </div>
@@ -182,27 +191,37 @@ export default function ROICalculator() {
               <div className="p-6 rounded-2xl bg-card border border-border">
                 <h2 className="font-heading text-xl text-foreground mb-6">Investment Timeline</h2>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Holding Period (Years)</Label>
-                    <Input
-                      type="number"
-                      value={inputs.holdingPeriod}
-                      onChange={(e) => handleChange('holdingPeriod', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <Label>Annual Appreciation (%)</Label>
-                    <Input
-                      type="number"
-                      value={inputs.annualAppreciation}
-                      onChange={(e) => handleChange('annualAppreciation', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-6">
+                  <SliderInput
+                    label="Holding Period"
+                    value={inputs.holdingPeriod}
+                    onChange={(v) => handleChange('holdingPeriod', v)}
+                    min={1}
+                    max={30}
+                    suffix=" yrs"
+                  />
+                  <SliderInput
+                    label="Annual Appreciation"
+                    value={inputs.annualAppreciation}
+                    onChange={(v) => handleChange('annualAppreciation', v)}
+                    min={0}
+                    max={15}
+                    step={0.5}
+                    suffix="%"
+                  />
                 </div>
               </div>
+
+              {/* Charts */}
+              <ROICharts
+                purchasePrice={inputs.purchasePrice}
+                downPaymentAmount={downPaymentAmount}
+                closingCostsAmount={closingCostsAmount}
+                annualAppreciation={inputs.annualAppreciation}
+                holdingPeriod={inputs.holdingPeriod}
+                netRentalIncome={netRentalIncome}
+                formatAED={formatAED}
+              />
             </motion.div>
 
             {/* Results */}

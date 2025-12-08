@@ -1,27 +1,38 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Home, DollarSign, Calendar, Percent } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { ArrowLeft, Home } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencySelector } from '@/components/tools/CurrencySelector';
+import { SliderInput } from '@/components/tools/SliderInput';
+import { DubaiPresets, AreaPreset } from '@/components/tools/DubaiPresets';
+import { MortgageCharts } from '@/components/tools/MortgageCharts';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 
 export default function MortgageCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
     propertyPrice: 2000000,
     downPayment: 25,
     interestRate: 4.5,
     loanTerm: 25,
-    processingFee: 1, // % of loan
+    processingFee: 1,
   });
 
   const handleChange = (field: string, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
+    setActivePreset(undefined);
+  };
+
+  const handlePresetSelect = (preset: AreaPreset) => {
+    setInputs(prev => ({
+      ...prev,
+      propertyPrice: preset.propertyPrice,
+    }));
+    setActivePreset(preset.name);
   };
 
   // Calculations
@@ -32,14 +43,12 @@ export default function MortgageCalculator() {
   const monthlyRate = inputs.interestRate / 100 / 12;
   const numPayments = inputs.loanTerm * 12;
   
-  // Monthly payment formula
   const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
   
   const totalPayment = monthlyPayment * numPayments;
   const totalInterest = totalPayment - loanAmount;
   const totalCost = totalPayment + downPaymentAmount + processingFeeAmount;
 
-  // Generate amortization schedule (first 12 months)
   const generateSchedule = () => {
     const schedule = [];
     let balance = loanAmount;
@@ -115,102 +124,74 @@ export default function MortgageCalculator() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="space-y-6"
             >
+              {/* Dubai Presets */}
+              <div className="p-6 rounded-2xl bg-card border border-border">
+                <DubaiPresets onSelectPreset={handlePresetSelect} activePreset={activePreset} />
+              </div>
+
               <div className="p-6 rounded-2xl bg-card border border-border">
                 <h2 className="font-heading text-xl text-foreground mb-6">Loan Details</h2>
                 
-                <div className="space-y-4">
-                  <div>
-                    <Label>Property Price (AED)</Label>
-                    <Input
-                      type="number"
-                      value={inputs.propertyPrice}
-                      onChange={(e) => handleChange('propertyPrice', Number(e.target.value))}
-                      className="mt-1"
+                <div className="space-y-6">
+                  <SliderInput
+                    label="Property Price (AED)"
+                    value={inputs.propertyPrice}
+                    onChange={(v) => handleChange('propertyPrice', v)}
+                    min={500000}
+                    max={20000000}
+                    step={100000}
+                    formatValue={(v) => formatAED(v)}
+                  />
+
+                  <SliderInput
+                    label="Down Payment"
+                    value={inputs.downPayment}
+                    onChange={(v) => handleChange('downPayment', v)}
+                    min={10}
+                    max={80}
+                    suffix="%"
+                  />
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <SliderInput
+                      label="Interest Rate"
+                      value={inputs.interestRate}
+                      onChange={(v) => handleChange('interestRate', v)}
+                      min={2}
+                      max={10}
+                      step={0.1}
+                      suffix="%"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">{formatCurrency(inputs.propertyPrice)}</p>
-                  </div>
-
-                  <div>
-                    <Label>Down Payment (%)</Label>
-                    <Input
-                      type="number"
-                      value={inputs.downPayment}
-                      onChange={(e) => handleChange('downPayment', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatAED(downPaymentAmount)} ({formatCurrency(downPaymentAmount)})
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Interest Rate (%)</Label>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        value={inputs.interestRate}
-                        onChange={(e) => handleChange('interestRate', Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label>Loan Term (Years)</Label>
-                      <Input
-                        type="number"
-                        value={inputs.loanTerm}
-                        onChange={(e) => handleChange('loanTerm', Number(e.target.value))}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Processing Fee (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={inputs.processingFee}
-                      onChange={(e) => handleChange('processingFee', Number(e.target.value))}
-                      className="mt-1"
+                    <SliderInput
+                      label="Loan Term"
+                      value={inputs.loanTerm}
+                      onChange={(v) => handleChange('loanTerm', v)}
+                      min={5}
+                      max={30}
+                      suffix=" yrs"
                     />
                   </div>
+
+                  <SliderInput
+                    label="Processing Fee"
+                    value={inputs.processingFee}
+                    onChange={(v) => handleChange('processingFee', v)}
+                    min={0}
+                    max={3}
+                    step={0.1}
+                    suffix="%"
+                  />
                 </div>
               </div>
 
-              {/* First Year Schedule */}
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">First Year Schedule</h2>
-                
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-2 text-muted-foreground font-normal">Month</th>
-                        <th className="text-right py-2 text-muted-foreground font-normal">Principal</th>
-                        <th className="text-right py-2 text-muted-foreground font-normal">Interest</th>
-                        <th className="text-right py-2 text-muted-foreground font-normal">Balance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {schedule.map((row) => (
-                        <tr key={row.month} className="border-b border-border/50">
-                          <td className="py-2">{row.month}</td>
-                          <td className="text-right py-2 text-emerald-400">
-                            {formatAED(row.principal)}
-                          </td>
-                          <td className="text-right py-2 text-orange-400">
-                            {formatAED(row.interest)}
-                          </td>
-                          <td className="text-right py-2">
-                            {formatAED(row.balance)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              {/* Charts */}
+              <MortgageCharts
+                loanAmount={loanAmount}
+                totalInterest={totalInterest}
+                downPaymentAmount={downPaymentAmount}
+                schedule={schedule}
+                formatAED={formatAED}
+              />
             </motion.div>
 
             {/* Results */}
@@ -272,6 +253,40 @@ export default function MortgageCalculator() {
                       <p className="text-sm text-gold/80">{formatCurrency(totalCost)}</p>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* First Year Schedule */}
+              <div className="p-6 rounded-2xl bg-card border border-border">
+                <h2 className="font-heading text-xl text-foreground mb-6">First Year Schedule</h2>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 text-muted-foreground font-normal">Month</th>
+                        <th className="text-right py-2 text-muted-foreground font-normal">Principal</th>
+                        <th className="text-right py-2 text-muted-foreground font-normal">Interest</th>
+                        <th className="text-right py-2 text-muted-foreground font-normal">Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {schedule.map((row) => (
+                        <tr key={row.month} className="border-b border-border/50">
+                          <td className="py-2">{row.month}</td>
+                          <td className="text-right py-2 text-emerald-400">
+                            {formatAED(row.principal)}
+                          </td>
+                          <td className="text-right py-2 text-orange-400">
+                            {formatAED(row.interest)}
+                          </td>
+                          <td className="text-right py-2">
+                            {formatAED(row.balance)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
