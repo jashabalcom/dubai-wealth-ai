@@ -22,6 +22,11 @@ import AIAssistant from "./pages/AIAssistant";
 import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
 import GoldenVisaWizard from "./pages/GoldenVisaWizard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminProperties from "./pages/admin/AdminProperties";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +63,11 @@ const App = () => (
             <Route path="/community" element={<Community />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/courses" element={<AdminCourses />} />
+            <Route path="/admin/properties" element={<AdminProperties />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
