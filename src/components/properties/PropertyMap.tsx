@@ -134,15 +134,23 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
     }
   }, [getPropertyCoordinates, onPropertySelect]);
 
+  // Detect current theme
+  const isDarkMode = document.documentElement.classList.contains('dark');
+
   // Initialize map with neighborhood layers
   useEffect(() => {
     if (!mapContainer.current || !token || map.current) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const mapStyle = isDark 
+      ? 'mapbox://styles/mapbox/dark-v11' 
+      : 'mapbox://styles/mapbox/light-v11';
 
     mapboxgl.accessToken = token;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: mapStyle,
       center: [55.2708, 25.2048], // Dubai center
       zoom: 10.5,
       pitch: 30,
@@ -163,6 +171,15 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
         data: createNeighborhoodGeoJSON(),
       });
 
+      // Theme-aware colors for neighborhood overlays
+      const isDark = document.documentElement.classList.contains('dark');
+      const fillColorHover = isDark ? 'hsla(40, 40%, 55%, 0.25)' : 'hsla(40, 50%, 45%, 0.20)';
+      const fillColorDefault = isDark ? 'hsla(40, 40%, 55%, 0.05)' : 'hsla(40, 50%, 45%, 0.08)';
+      const lineColorHover = isDark ? 'hsl(40, 40%, 65%)' : 'hsl(40, 50%, 40%)';
+      const lineColorDefault = isDark ? 'hsla(40, 40%, 55%, 0.3)' : 'hsla(40, 50%, 35%, 0.4)';
+      const textColor = isDark ? 'hsl(40, 40%, 75%)' : 'hsl(40, 50%, 25%)';
+      const textHaloColor = isDark ? 'hsl(220, 30%, 10%)' : 'hsl(0, 0%, 100%)';
+
       // Add fill layer (invisible by default, visible on hover)
       map.current.addLayer({
         id: 'neighborhood-fill',
@@ -172,8 +189,8 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
           'fill-color': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            'hsla(40, 40%, 55%, 0.25)',
-            'hsla(40, 40%, 55%, 0.05)'
+            fillColorHover,
+            fillColorDefault
           ],
           'fill-opacity': 1,
         },
@@ -188,8 +205,8 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
           'line-color': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            'hsl(40, 40%, 65%)',
-            'hsla(40, 40%, 55%, 0.3)'
+            lineColorHover,
+            lineColorDefault
           ],
           'line-width': [
             'case',
@@ -212,8 +229,8 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
           'text-allow-overlap': false,
         },
         paint: {
-          'text-color': 'hsl(40, 40%, 75%)',
-          'text-halo-color': 'hsl(220, 30%, 10%)',
+          'text-color': textColor,
+          'text-halo-color': textHaloColor,
           'text-halo-width': 1.5,
           'text-opacity': [
             'case',
