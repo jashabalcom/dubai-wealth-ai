@@ -201,6 +201,57 @@ export type Database = {
         }
         Relationships: []
       }
+      golden_visa_submissions: {
+        Row: {
+          additional_notes: string | null
+          ai_recommendations: Json | null
+          ai_summary: string | null
+          created_at: string
+          current_residence: string
+          email: string
+          family_size: number
+          full_name: string
+          id: string
+          investment_budget: string
+          investment_type: string
+          nationality: string
+          timeline: string
+          user_id: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          created_at?: string
+          current_residence: string
+          email: string
+          family_size?: number
+          full_name: string
+          id?: string
+          investment_budget: string
+          investment_type: string
+          nationality: string
+          timeline: string
+          user_id?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          ai_recommendations?: Json | null
+          ai_summary?: string | null
+          created_at?: string
+          current_residence?: string
+          email?: string
+          family_size?: number
+          full_name?: string
+          id?: string
+          investment_budget?: string
+          investment_type?: string
+          nationality?: string
+          timeline?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed_at: string | null
