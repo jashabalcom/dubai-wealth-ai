@@ -25,6 +25,8 @@ import Pricing from "@/pages/Pricing";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import MembershipFunnel from "@/pages/MembershipFunnel";
 import EliteFunnel from "@/pages/EliteFunnel";
+import ResetPassword from "@/pages/ResetPassword";
+import Settings from "@/pages/Settings";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminCourses from "@/pages/admin/AdminCourses";
@@ -55,6 +57,8 @@ export function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<AnimatedPage><Index /></AnimatedPage>} />
         <Route path="/auth" element={<AnimatedPage><Auth /></AnimatedPage>} />
+        <Route path="/reset-password" element={<AnimatedPage><ResetPassword /></AnimatedPage>} />
+        <Route path="/settings" element={<ProtectedRoute><AnimatedPage><Settings /></AnimatedPage></ProtectedRoute>} />
         <Route
           path="/dashboard"
           element={
