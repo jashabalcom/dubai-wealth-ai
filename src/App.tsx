@@ -23,6 +23,8 @@ import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
 import Profile from "./pages/Profile";
 import GoldenVisaWizard from "./pages/GoldenVisaWizard";
+import Pricing from "./pages/Pricing";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -67,6 +69,8 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/courses" element={<AdminCourses />} />
