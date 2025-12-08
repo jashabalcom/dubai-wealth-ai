@@ -1,4 +1,4 @@
-import { Search, Filter, X, ChevronDown, Calendar, ArrowUpDown } from 'lucide-react';
+import { Search, Filter, X, ChevronDown, Calendar, ArrowUpDown, Grid3X3, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -84,6 +84,8 @@ interface PropertyFiltersProps {
   onSortChange: (value: string) => void;
   onClearFilters: () => void;
   resultCount: number;
+  viewMode?: 'grid' | 'map';
+  onViewModeChange?: (mode: 'grid' | 'map') => void;
 }
 
 export function PropertyFilters({
@@ -103,6 +105,8 @@ export function PropertyFilters({
   onSortChange,
   onClearFilters,
   resultCount,
+  viewMode = 'grid',
+  onViewModeChange,
 }: PropertyFiltersProps) {
   const hasActiveFilters = 
     searchQuery || 
@@ -192,6 +196,28 @@ export function PropertyFilters({
               ))}
             </SelectContent>
           </Select>
+
+          {/* View Toggle */}
+          {onViewModeChange && (
+            <div className="flex items-center border border-border rounded-md overflow-hidden">
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="rounded-none border-0"
+                onClick={() => onViewModeChange('grid')}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'map' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="rounded-none border-0"
+                onClick={() => onViewModeChange('map')}
+              >
+                <Map className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
