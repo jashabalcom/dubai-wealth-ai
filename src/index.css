@@ -109,6 +109,11 @@
     scroll-behavior: smooth;
   }
 
+  /* Scroll offset for fixed header on anchor targets */
+  [id] {
+    scroll-margin-top: 100px;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;

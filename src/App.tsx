@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
 import { AnimatedRoutes } from "@/components/AnimatedRoutes";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { SmoothScrollHandler } from "@/components/SmoothScrollHandler";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Sonner />
   <BrowserRouter>
     <ScrollToTop />
+    <SmoothScrollHandler />
     <AnimatedRoutes />
   </BrowserRouter>
         </TooltipProvider>
