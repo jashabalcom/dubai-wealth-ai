@@ -1,9 +1,8 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
-// Type extension for jsPDF with autoTable
+// Type for accessing lastAutoTable
 interface jsPDFWithAutoTable extends jsPDF {
-  autoTable: (options: any) => jsPDF;
   lastAutoTable: { finalY: number };
 }
 
@@ -168,7 +167,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     .map(item => [item.label, data.formatValue(item.value)]);
   acquisitionTableData.push(['Total Acquisition Costs', data.formatValue(data.costs.acquisitionTotal)]);
 
-  (doc as jsPDFWithAutoTable).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Fee', 'Amount']],
     body: acquisitionTableData,
@@ -193,7 +192,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
   ongoingTableData.push(['Total Annual Costs', data.formatValue(data.costs.ongoingTotal)]);
   ongoingTableData.push([`Total Over ${data.timeline.holdingPeriod} Years`, data.formatValue(data.costs.ongoingTotal * data.timeline.holdingPeriod)]);
 
-  (doc as jsPDFWithAutoTable).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Cost Item', 'Annual Amount']],
     body: ongoingTableData,
@@ -213,7 +212,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     .map(item => [item.label, data.formatValue(item.value)]);
   exitTableData.push(['Total Exit Costs', data.formatValue(data.costs.exitTotal)]);
 
-  (doc as jsPDFWithAutoTable).autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Fee', 'Amount']],
     body: exitTableData,
