@@ -12,11 +12,13 @@ import {
   DollarSign,
   PiggyBank,
   BarChart3,
-  Info
+  Info,
+  Download
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +30,8 @@ import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { TotalCostCharts } from '@/components/tools/TotalCostCharts';
+import { generateTotalCostPDF } from '@/lib/pdfExport';
+import { useToast } from '@/hooks/use-toast';
 import { 
   calculateAcquisitionCosts, 
   calculateAnnualOngoingCosts,
@@ -54,6 +58,7 @@ const currencySymbols: Record<string, string> = {
 
 export default function TotalCostCalculator() {
   const { convert, formatCurrency, selectedCurrency, setSelectedCurrency, supportedCurrencies } = useCurrencyConverter();
+  const { toast } = useToast();
   const [activePreset, setActivePreset] = useState<string>('');
 
   // Property Details
@@ -265,6 +270,69 @@ export default function TotalCostCalculator() {
 
   const formatValue = (value: number) => formatCurrency(value);
 
+  const handleExportPDF = () => {
+    try {
+      generateTotalCostPDF({
+        propertyDetails: {
+          purchasePrice,
+          propertySize,
+          area: selectedArea,
+          isOffPlan,
+        },
+        financing: {
+          useMortgage,
+          downPayment,
+          interestRate,
+          loanTerm,
+          loanAmount: calculations.loanAmount,
+          monthlyPayment: calculations.monthlyPayment,
+        },
+        strategy: {
+          usageType,
+          annualRent,
+          dailyRate,
+          occupancyRate,
+        },
+        timeline: {
+          holdingPeriod,
+          appreciationRate,
+        },
+        costs: {
+          acquisition: acquisitionFeeItems,
+          acquisitionTotal: calculations.acquisition.grandTotal,
+          ongoing: ongoingFeeItems,
+          ongoingTotal: calculations.annualOngoing.total,
+          exit: exitFeeItems,
+          exitTotal: calculations.exit.total,
+        },
+        results: {
+          totalCostOfOwnership: calculations.totalCostOfOwnership,
+          netProfit: calculations.netProfit,
+          roi: calculations.roi,
+          annualizedRoi: calculations.annualizedRoi,
+          initialInvestment: calculations.initialInvestment,
+          exitPropertyValue: calculations.exitPropertyValue,
+          capitalAppreciation: calculations.capitalAppreciation,
+          totalRentalIncome: calculations.totalRentalIncome,
+          totalInterest: calculations.totalInterest,
+          breakEvenYear: calculations.breakEvenYear,
+        },
+        formatValue,
+      });
+      
+      toast({
+        title: "PDF Downloaded",
+        description: "Your Total Cost of Ownership report has been saved.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -284,19 +352,28 @@ export default function TotalCostCalculator() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center gap-4"
+            className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
           >
-            <div className="w-14 h-14 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
-              <Wallet className="w-7 h-7 text-teal-500" />
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+                <Wallet className="w-7 h-7 text-teal-500" />
+              </div>
+              <div>
+                <h1 className="font-heading text-3xl md:text-4xl text-foreground">
+                  Total Cost of <span className="text-gradient-gold">Ownership</span>
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Complete financial picture over your investment timeline
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-heading text-3xl md:text-4xl text-foreground">
-                Total Cost of <span className="text-gradient-gold">Ownership</span>
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Complete financial picture over your investment timeline
-              </p>
-            </div>
+            <Button 
+              onClick={handleExportPDF}
+              className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export PDF Report
+            </Button>
           </motion.div>
         </div>
       </section>
