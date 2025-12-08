@@ -30,6 +30,7 @@ import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { TotalCostCharts } from '@/components/tools/TotalCostCharts';
+import { SensitivityAnalysisCharts } from '@/components/tools/SensitivityAnalysisCharts';
 import { generateTotalCostPDF } from '@/lib/pdfExport';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -654,10 +655,11 @@ export default function TotalCostCalculator() {
 
               {/* Fee Breakdown Tabs */}
               <Tabs defaultValue="acquisition" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="acquisition">Acquisition</TabsTrigger>
                   <TabsTrigger value="ongoing">Annual Ongoing</TabsTrigger>
                   <TabsTrigger value="exit">Exit Costs</TabsTrigger>
+                  <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
                 </TabsList>
                 <TabsContent value="acquisition" className="mt-4">
                   <FeeBreakdownCard
@@ -689,6 +691,26 @@ export default function TotalCostCalculator() {
                     total={calculations.exit.total}
                     formatValue={formatValue}
                     defaultExpanded={true}
+                  />
+                </TabsContent>
+                <TabsContent value="sensitivity" className="mt-4">
+                  <SensitivityAnalysisCharts
+                    baseAppreciationRate={appreciationRate}
+                    baseAnnualRent={annualRent}
+                    purchasePrice={purchasePrice}
+                    holdingPeriod={holdingPeriod}
+                    initialInvestment={calculations.initialInvestment}
+                    useMortgage={useMortgage}
+                    downPayment={downPayment}
+                    interestRate={interestRate}
+                    loanTerm={loanTerm}
+                    propertySize={propertySize}
+                    selectedArea={selectedArea}
+                    usageType={usageType}
+                    dailyRate={dailyRate}
+                    occupancyRate={occupancyRate}
+                    formatValue={formatValue}
+                    currencySymbol={currencySymbol}
                   />
                 </TabsContent>
               </Tabs>
