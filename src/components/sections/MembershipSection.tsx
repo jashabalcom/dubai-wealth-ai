@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Star, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const tiers = [
   {
@@ -61,6 +62,8 @@ const tiers = [
 ];
 
 export function MembershipSection() {
+  const navigate = useNavigate();
+  
   return (
     <section id="membership" className="section-padding bg-background relative overflow-hidden">
       {/* Background Decoration */}
@@ -140,6 +143,7 @@ export function MembershipSection() {
                   variant={tier.variant}
                   size="lg"
                   className="w-full"
+                  onClick={() => navigate('/pricing')}
                 >
                   {tier.cta}
                 </Button>
