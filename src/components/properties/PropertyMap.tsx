@@ -143,8 +143,8 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
 
     const isDark = document.documentElement.classList.contains('dark');
     const mapStyle = isDark 
-      ? 'mapbox://styles/mapbox/dark-v11' 
-      : 'mapbox://styles/mapbox/light-v11';
+      ? 'mapbox://styles/mapbox/navigation-night-v1' 
+      : 'mapbox://styles/mapbox/navigation-day-v1';
 
     mapboxgl.accessToken = token;
 
@@ -171,14 +171,14 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
         data: createNeighborhoodGeoJSON(),
       });
 
-      // Theme-aware colors for neighborhood overlays
+      // Bold luxury gold colors for neighborhood overlays
       const isDark = document.documentElement.classList.contains('dark');
-      const fillColorHover = isDark ? 'hsla(40, 40%, 55%, 0.25)' : 'hsla(40, 50%, 45%, 0.20)';
-      const fillColorDefault = isDark ? 'hsla(40, 40%, 55%, 0.05)' : 'hsla(40, 50%, 45%, 0.08)';
-      const lineColorHover = isDark ? 'hsl(40, 40%, 65%)' : 'hsl(40, 50%, 40%)';
-      const lineColorDefault = isDark ? 'hsla(40, 40%, 55%, 0.3)' : 'hsla(40, 50%, 35%, 0.4)';
-      const textColor = isDark ? 'hsl(40, 40%, 75%)' : 'hsl(40, 50%, 25%)';
-      const textHaloColor = isDark ? 'hsl(220, 30%, 10%)' : 'hsl(0, 0%, 100%)';
+      const fillColorHover = isDark ? 'hsla(40, 60%, 50%, 0.35)' : 'hsla(40, 70%, 45%, 0.30)';
+      const fillColorDefault = isDark ? 'hsla(40, 50%, 45%, 0.15)' : 'hsla(40, 60%, 50%, 0.12)';
+      const lineColorHover = isDark ? 'hsl(40, 70%, 60%)' : 'hsl(40, 60%, 45%)';
+      const lineColorDefault = isDark ? 'hsla(40, 60%, 55%, 0.6)' : 'hsla(40, 60%, 40%, 0.5)';
+      const textColor = isDark ? 'hsl(40, 50%, 85%)' : 'hsl(40, 60%, 20%)';
+      const textHaloColor = isDark ? 'hsl(220, 40%, 8%)' : 'hsl(0, 0%, 100%)';
 
       // Add fill layer (invisible by default, visible on hover)
       map.current.addLayer({
@@ -211,8 +211,8 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
           'line-width': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            3,
-            1
+            4,
+            2
           ],
         },
       });
@@ -224,7 +224,8 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
         source: 'neighborhoods',
         layout: {
           'text-field': ['get', 'name'],
-          'text-size': 12,
+          'text-size': 14,
+          'text-font': ['DIN Pro Bold', 'Arial Unicode MS Bold'],
           'text-anchor': 'center',
           'text-allow-overlap': false,
         },
@@ -487,60 +488,81 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
         <span className="text-sm font-medium">{properties.length} properties</span>
       </div>
 
-      {/* Custom marker styles */}
+      {/* Custom marker styles - Luxury navigation look */}
       <style>{`
         .property-marker {
           cursor: pointer;
           transform: translate(-50%, -100%);
+          z-index: 1;
         }
         .marker-content {
-          background: hsl(var(--primary));
-          color: hsl(var(--primary-foreground));
-          padding: 4px 8px;
-          border-radius: 6px;
-          font-size: 11px;
-          font-weight: 600;
+          background: linear-gradient(135deg, hsl(40, 50%, 45%) 0%, hsl(40, 40%, 35%) 100%);
+          color: hsl(0, 0%, 100%);
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
           white-space: nowrap;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 1px hsla(40, 50%, 50%, 0.3);
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
         .marker-content::after {
           content: '';
           position: absolute;
-          bottom: -6px;
+          bottom: -8px;
           left: 50%;
           transform: translateX(-50%);
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 6px solid hsl(var(--primary));
+          border-left: 8px solid transparent;
+          border-right: 8px solid transparent;
+          border-top: 8px solid hsl(40, 40%, 35%);
+          filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
         }
         .marker-content.off-plan {
-          background: hsl(var(--accent));
-          color: hsl(var(--accent-foreground));
+          background: linear-gradient(135deg, hsl(220, 50%, 45%) 0%, hsl(220, 45%, 35%) 100%);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 1px hsla(220, 50%, 50%, 0.3);
         }
         .marker-content.off-plan::after {
-          border-top-color: hsl(var(--accent));
+          border-top-color: hsl(220, 45%, 35%);
         }
         .marker-content.featured {
-          box-shadow: 0 0 0 2px hsl(var(--accent)), 0 2px 8px rgba(0,0,0,0.3);
+          background: linear-gradient(135deg, hsl(40, 60%, 50%) 0%, hsl(40, 50%, 40%) 100%);
+          box-shadow: 0 0 0 3px hsla(40, 70%, 60%, 0.5), 0 4px 16px rgba(0,0,0,0.5);
+          animation: pulse-gold 2s infinite;
+        }
+        .marker-content.featured::after {
+          border-top-color: hsl(40, 50%, 40%);
+        }
+        @keyframes pulse-gold {
+          0%, 100% { box-shadow: 0 0 0 3px hsla(40, 70%, 60%, 0.5), 0 4px 16px rgba(0,0,0,0.5); }
+          50% { box-shadow: 0 0 0 6px hsla(40, 70%, 60%, 0.3), 0 4px 20px rgba(0,0,0,0.6); }
         }
         .property-marker:hover .marker-content {
-          transform: scale(1.1);
-          z-index: 10;
+          transform: scale(1.15) translateY(-2px);
+          z-index: 100;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 0 2px hsla(40, 50%, 50%, 0.4);
         }
         .mapboxgl-ctrl-group {
           background: hsl(var(--card)) !important;
           border: 1px solid hsl(var(--border)) !important;
+          border-radius: 8px !important;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
         }
         .mapboxgl-ctrl-group button {
           background-color: transparent !important;
+          width: 36px !important;
+          height: 36px !important;
         }
         .mapboxgl-ctrl-group button + button {
           border-top: 1px solid hsl(var(--border)) !important;
         }
         .mapboxgl-ctrl-icon {
-          filter: invert(1);
+          filter: invert(0.4) sepia(1) saturate(2) hue-rotate(5deg);
+        }
+        .dark .mapboxgl-ctrl-icon {
+          filter: invert(0.85) sepia(0.3) saturate(2) hue-rotate(5deg);
         }
       `}</style>
     </div>
