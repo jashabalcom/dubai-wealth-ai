@@ -1,11 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { OnlineIndicator } from '@/components/ui/online-indicator';
 import { useOnlineStatus } from '@/contexts/OnlinePresenceContext';
+import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
+import { TypingIndicator } from './TypingIndicator';
 import { ArrowLeft, Crown, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -50,6 +51,10 @@ export function ChatWindow({
   const containerRef = useRef<HTMLDivElement>(null);
   const { isUserOnline } = useOnlineStatus();
   const isOnline = partner ? isUserOnline(partner.id) : false;
+  const { isPartnerTyping, setTyping } = useTypingIndicator(
+    partner?.id ?? null,
+    currentUserId
+  );
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -141,8 +146,14 @@ export function ChatWindow({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Typing Indicator */}
+      <TypingIndicator 
+        isTyping={isPartnerTyping} 
+        userName={partner?.full_name?.split(' ')[0]} 
+      />
+
       {/* Input */}
-      <MessageInput onSend={onSendMessage} isLoading={isSending} />
+      <MessageInput onSend={onSendMessage} onTyping={setTyping} isLoading={isSending} />
     </div>
   );
 }
