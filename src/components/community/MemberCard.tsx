@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConnectButton } from '@/components/community/ConnectButton';
+import { OnlineIndicator } from '@/components/ui/online-indicator';
+import { useOnlineStatus } from '@/contexts/OnlinePresenceContext';
 import { cn } from '@/lib/utils';
 import type { DirectoryMember } from '@/hooks/useMemberDirectory';
 
@@ -13,6 +15,9 @@ interface MemberCardProps {
 }
 
 export function MemberCard({ member }: MemberCardProps) {
+  const { isUserOnline } = useOnlineStatus();
+  const isOnline = isUserOnline(member.id);
+
   const getMembershipBadgeStyle = (tier: string) => {
     switch (tier) {
       case 'elite':
@@ -46,6 +51,11 @@ export function MemberCard({ member }: MemberCardProps) {
               <Crown className="h-3 w-3 text-gold" />
             </div>
           )}
+          <OnlineIndicator 
+            isOnline={isOnline} 
+            size="md" 
+            className="absolute bottom-0 right-0"
+          />
         </div>
 
         {/* Info */}
