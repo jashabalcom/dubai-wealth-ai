@@ -8,7 +8,8 @@ import {
   ArrowRight,
   Percent,
   DollarSign,
-  Calendar
+  Calendar,
+  Award
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -45,6 +46,14 @@ const tools = [
     icon: Calendar,
     color: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
     href: '/tools/airbnb',
+  },
+  {
+    id: 'golden-visa',
+    title: 'Golden Visa Wizard',
+    description: 'Get AI-powered personalized guidance for your UAE Golden Visa eligibility and investment recommendations.',
+    icon: Award,
+    color: 'bg-gold/10 text-gold border-gold/20',
+    href: '/golden-visa',
   },
 ];
 

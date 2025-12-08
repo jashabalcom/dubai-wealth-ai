@@ -21,6 +21,7 @@ import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
 import AIAssistant from "./pages/AIAssistant";
 import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
+import GoldenVisaWizard from "./pages/GoldenVisaWizard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/ai-assistant" element={<AIAssistant />} />
             <Route path="/community" element={<Community />} />
             <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/golden-visa" element={<GoldenVisaWizard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
