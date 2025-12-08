@@ -32,6 +32,7 @@ interface PostCardProps {
     user_id?: string;
     author?: Author;
     has_liked?: boolean;
+    images?: string[];
   };
   onLike: (postId: string, hasLiked: boolean) => void;
   onComment: (postId: string, content: string) => void;
@@ -130,9 +131,41 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
       </div>
 
       {/* Post Content */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h3 className="text-xl font-serif font-semibold leading-tight">{post.title}</h3>
         <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{post.content}</p>
+        
+        {/* Post Images */}
+        {post.images && post.images.length > 0 && (
+          <div className={cn(
+            "grid gap-2 pt-2",
+            post.images.length === 1 && "grid-cols-1",
+            post.images.length === 2 && "grid-cols-2",
+            post.images.length >= 3 && "grid-cols-2"
+          )}>
+            {post.images.map((imageUrl, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className={cn(
+                  "relative overflow-hidden rounded-xl bg-muted",
+                  post.images!.length === 1 && "aspect-video",
+                  post.images!.length === 2 && "aspect-square",
+                  post.images!.length >= 3 && index === 0 && "row-span-2 aspect-[3/4]",
+                  post.images!.length >= 3 && index > 0 && "aspect-square"
+                )}
+              >
+                <img
+                  src={imageUrl}
+                  alt={`Post image ${index + 1}`}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Decorative Divider */}

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Sparkles } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Plus, Sparkles, ImagePlus, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
 interface CreatePostDialogProps {
-  onSubmit: (title: string, content: string) => void;
+  onSubmit: (title: string, content: string, images: File[]) => void;
   isSubmitting: boolean;
 }
 
@@ -22,14 +22,40 @@ export function CreatePostDialog({ onSubmit, isSubmitting }: CreatePostDialogPro
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [images, setImages] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => file.type.startsWith('image/')).slice(0, 4 - images.length);
+    
+    if (validFiles.length > 0) {
+      setImages(prev => [...prev, ...validFiles]);
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setPreviews(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim()) return;
     
-    onSubmit(title, content);
+    onSubmit(title, content, images);
     setTitle('');
     setContent('');
+    setImages([]);
+    setPreviews([]);
     setOpen(false);
   };
 
@@ -83,9 +109,70 @@ export function CreatePostDialog({ onSubmit, isSubmitting }: CreatePostDialogPro
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Share your thoughts, questions, or insights..."
-                className="min-h-[160px] resize-none bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 rounded-xl"
+                className="min-h-[120px] resize-none bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 rounded-xl"
               />
             </div>
+
+            {/* Image Upload */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Images (up to 4)</Label>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              
+              <AnimatePresence mode="popLayout">
+                {previews.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="grid grid-cols-2 gap-2"
+                  >
+                    {previews.map((preview, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="relative aspect-video rounded-xl overflow-hidden bg-muted"
+                      >
+                        <img
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {images.length < 4 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full rounded-xl border-dashed border-2 border-border/50 hover:border-gold/50 hover:bg-gold/5 h-12"
+                >
+                  <ImagePlus className="h-4 w-4 mr-2" />
+                  Add Images
+                </Button>
+              )}
+            </div>
+
             <div className="flex justify-end gap-3 pt-2">
               <Button
                 type="button"
