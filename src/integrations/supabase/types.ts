@@ -207,6 +207,81 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          amenities: Json | null
+          bathrooms: number
+          bedrooms: number
+          completion_date: string | null
+          created_at: string
+          description: string | null
+          developer_name: string | null
+          highlights: Json | null
+          id: string
+          images: Json | null
+          is_featured: boolean
+          is_off_plan: boolean
+          location_area: string
+          payment_plan_json: Json | null
+          price_aed: number
+          property_type: string
+          rental_yield_estimate: number | null
+          size_sqft: number
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: Json | null
+          bathrooms?: number
+          bedrooms?: number
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          developer_name?: string | null
+          highlights?: Json | null
+          id?: string
+          images?: Json | null
+          is_featured?: boolean
+          is_off_plan?: boolean
+          location_area: string
+          payment_plan_json?: Json | null
+          price_aed: number
+          property_type?: string
+          rental_yield_estimate?: number | null
+          size_sqft: number
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: Json | null
+          bathrooms?: number
+          bedrooms?: number
+          completion_date?: string | null
+          created_at?: string
+          description?: string | null
+          developer_name?: string | null
+          highlights?: Json | null
+          id?: string
+          images?: Json | null
+          is_featured?: boolean
+          is_off_plan?: boolean
+          location_area?: string
+          payment_plan_json?: Json | null
+          price_aed?: number
+          property_type?: string
+          rental_yield_estimate?: number | null
+          size_sqft?: number
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
