@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { OnlineIndicator } from '@/components/ui/online-indicator';
+import { useOnlineStatus } from '@/contexts/OnlinePresenceContext';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { ArrowLeft, Crown, User } from 'lucide-react';
@@ -46,6 +48,8 @@ export function ChatWindow({
 }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { isUserOnline } = useOnlineStatus();
+  const isOnline = partner ? isUserOnline(partner.id) : false;
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -84,12 +88,19 @@ export function ChatWindow({
           </Button>
         )}
         <Link to={`/profile/${partner.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={partner.avatar_url || undefined} />
-            <AvatarFallback>
-              {partner.full_name?.charAt(0) || 'U'}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={partner.avatar_url || undefined} />
+              <AvatarFallback>
+                {partner.full_name?.charAt(0) || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <OnlineIndicator 
+              isOnline={isOnline} 
+              size="md" 
+              className="absolute bottom-0 right-0"
+            />
+          </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold">{partner.full_name || 'Unknown User'}</span>
@@ -97,9 +108,9 @@ export function ChatWindow({
                 <Crown className="h-4 w-4 text-primary" />
               )}
             </div>
-            <Badge variant="secondary" className="text-xs capitalize">
-              {partner.membership_tier}
-            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {isOnline ? 'Online' : 'Offline'}
+            </span>
           </div>
         </Link>
       </div>

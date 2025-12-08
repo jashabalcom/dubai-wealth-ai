@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { OnlineIndicator } from '@/components/ui/online-indicator';
+import { useOnlineStatus } from '@/contexts/OnlinePresenceContext';
 import { Crown, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -35,6 +37,8 @@ export function ConversationList({
   currentUserId,
   isLoading,
 }: ConversationListProps) {
+  const { isUserOnline } = useOnlineStatus();
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -64,6 +68,7 @@ export function ConversationList({
           const messagePreview = isSender 
             ? `You: ${conv.last_message.content}` 
             : conv.last_message.content;
+          const isOnline = isUserOnline(conv.user_id);
 
           return (
             <button
@@ -81,6 +86,11 @@ export function ConversationList({
                       {conv.profile.full_name?.charAt(0) || 'U'}
                     </AvatarFallback>
                   </Avatar>
+                  <OnlineIndicator 
+                    isOnline={isOnline} 
+                    size="md" 
+                    className="absolute bottom-0 right-0"
+                  />
                   {conv.unread_count > 0 && (
                     <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                       {conv.unread_count > 9 ? '9+' : conv.unread_count}
