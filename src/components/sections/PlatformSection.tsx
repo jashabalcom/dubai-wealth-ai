@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { GraduationCap, Bot, BarChart3, Building, Users, FileText } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -8,6 +9,7 @@ const features = [
     description:
       "Master Dubai investing with expert-led courses covering fundamentals, off-plan strategies, short-term rentals, and Golden Visa pathways.",
     highlight: "50+ Premium Lessons",
+    link: "/academy",
   },
   {
     icon: Bot,
@@ -15,6 +17,7 @@ const features = [
     description:
       "Get personalized investment strategies, property analysis, and market insights powered by advanced AI trained on Dubai real estate data.",
     highlight: "24/7 Smart Guidance",
+    link: "/ai",
   },
   {
     icon: BarChart3,
@@ -22,6 +25,7 @@ const features = [
     description:
       "ROI calculators, mortgage planners, rental yield analyzers, and off-plan cash flow projections to make data-driven decisions.",
     highlight: "5 Powerful Tools",
+    link: "/tools",
   },
   {
     icon: Building,
@@ -29,6 +33,7 @@ const features = [
     description:
       "Browse curated listings, compare off-plan projects, and get early access to exclusive launches from top Dubai developers.",
     highlight: "Priority Access",
+    link: "/properties",
   },
   {
     icon: Users,
@@ -36,6 +41,7 @@ const features = [
     description:
       "Connect with global investors, share insights, discuss deals, and access elite networking opportunities with like-minded wealth builders.",
     highlight: "12,000+ Members",
+    link: "/community",
   },
   {
     icon: FileText,
@@ -43,6 +49,7 @@ const features = [
     description:
       "Weekly market reports, developer updates, regulatory changes, and exclusive insights from our Dubai-based research team.",
     highlight: "Weekly Reports",
+    link: "/community",
   },
 ];
 
@@ -87,23 +94,25 @@ export function PlatformSection() {
               transition={{ duration: 0.6, delay: index * 0.1 }}
               className="group"
             >
-              <div className="h-full p-8 rounded-2xl bg-secondary-foreground/5 border border-secondary-foreground/10 hover:border-primary/30 hover:bg-secondary-foreground/10 transition-all duration-300">
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-                  <feature.icon className="w-6 h-6 text-primary" />
+              <Link to={feature.link} className="group block h-full">
+                <div className="h-full p-8 rounded-2xl bg-secondary-foreground/5 border border-secondary-foreground/10 hover:border-primary/30 hover:bg-secondary-foreground/10 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                    <feature.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  
+                  <h3 className="text-xl font-serif text-secondary-foreground mb-3">
+                    {feature.title}
+                  </h3>
+                  
+                  <p className="text-secondary-foreground/60 text-sm leading-relaxed mb-4">
+                    {feature.description}
+                  </p>
+                  
+                  <div className="inline-flex items-center text-xs uppercase tracking-[0.1em] text-primary font-sans">
+                    {feature.highlight}
+                  </div>
                 </div>
-                
-                <h3 className="text-xl font-serif text-secondary-foreground mb-3">
-                  {feature.title}
-                </h3>
-                
-                <p className="text-secondary-foreground/60 text-sm leading-relaxed mb-4">
-                  {feature.description}
-                </p>
-                
-                <div className="inline-flex items-center text-xs uppercase tracking-[0.1em] text-primary font-sans">
-                  {feature.highlight}
-                </div>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>
