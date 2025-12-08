@@ -295,6 +295,89 @@ export type Database = {
           },
         ]
       }
+      portfolio_properties: {
+        Row: {
+          created_at: string
+          current_value: number
+          id: string
+          location_area: string
+          monthly_expenses: number | null
+          monthly_rental_income: number | null
+          mortgage_balance: number | null
+          notes: string | null
+          portfolio_id: string
+          property_name: string
+          property_type: string
+          purchase_date: string
+          purchase_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_value: number
+          id?: string
+          location_area: string
+          monthly_expenses?: number | null
+          monthly_rental_income?: number | null
+          mortgage_balance?: number | null
+          notes?: string | null
+          portfolio_id: string
+          property_name: string
+          property_type?: string
+          purchase_date: string
+          purchase_price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          id?: string
+          location_area?: string
+          monthly_expenses?: number | null
+          monthly_rental_income?: number | null
+          mortgage_balance?: number | null
+          notes?: string | null
+          portfolio_id?: string
+          property_name?: string
+          property_type?: string
+          purchase_date?: string
+          purchase_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_properties_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolios: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_likes: {
         Row: {
           created_at: string
