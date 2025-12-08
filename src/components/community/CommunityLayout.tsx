@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
@@ -71,7 +72,9 @@ export function CommunityLayout() {
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <Outlet />
+              <AnimatePresence mode="wait">
+                <Outlet key={location.pathname} />
+              </AnimatePresence>
             </div>
           </div>
         </div>

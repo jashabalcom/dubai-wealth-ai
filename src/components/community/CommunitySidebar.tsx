@@ -102,40 +102,46 @@ export function CommunitySidebar({ collapsed, onToggleCollapse }: CommunitySideb
               const badgeCount = getBadgeCount(item.badgeKey);
 
               return (
-                <Link
+                <motion.div
                   key={item.path}
-                  to={item.path}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
-                    active
-                      ? "bg-gold/20 text-gold"
-                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                  )}
+                  whileHover={{ x: 2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.15 }}
                 >
-                  <item.icon className={cn(
-                    "h-5 w-5 shrink-0 transition-colors",
-                    active ? "text-gold" : "group-hover:text-foreground"
-                  )} />
-                  
-                  {!collapsed && (
-                    <span className="text-sm font-medium truncate">{item.label}</span>
-                  )}
+                  <Link
+                    to={item.path}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+                      active
+                        ? "bg-gold/20 text-gold"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-5 w-5 shrink-0 transition-colors",
+                      active ? "text-gold" : "group-hover:text-foreground"
+                    )} />
+                    
+                    {!collapsed && (
+                      <span className="text-sm font-medium truncate">{item.label}</span>
+                    )}
 
-                  {badgeCount > 0 && (
-                    <Badge 
-                      variant="secondary" 
-                      className={cn(
-                        "h-5 min-w-[20px] px-1.5 text-xs",
-                        item.badgeKey === 'pending' 
-                          ? "bg-destructive/20 text-destructive" 
-                          : "bg-gold/20 text-gold",
-                        collapsed && "absolute -top-1 -right-1"
-                      )}
-                    >
-                      {badgeCount > 9 ? '9+' : badgeCount}
-                    </Badge>
-                  )}
-                </Link>
+                    {badgeCount > 0 && (
+                      <Badge 
+                        variant="secondary" 
+                        className={cn(
+                          "h-5 min-w-[20px] px-1.5 text-xs",
+                          item.badgeKey === 'pending' 
+                            ? "bg-destructive/20 text-destructive" 
+                            : "bg-gold/20 text-gold",
+                          collapsed && "absolute -top-1 -right-1"
+                        )}
+                      >
+                        {badgeCount > 9 ? '9+' : badgeCount}
+                      </Badge>
+                    )}
+                  </Link>
+                </motion.div>
               );
             })}
           </nav>

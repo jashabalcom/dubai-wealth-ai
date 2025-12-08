@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Users, Grid3X3, List, SortAsc } from 'lucide-react';
 import { MemberCard } from '@/components/community/MemberCard';
 import { DirectoryFilters } from '@/components/community/DirectoryFilters';
+import { PageTransition } from '@/components/community/PageTransition';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -43,8 +44,9 @@ export default function MembersPage() {
   } = useMemberDirectory();
 
   return (
-    <div className="space-y-5">
-      {/* Header with controls */}
+    <PageTransition>
+      <div className="space-y-5">
+        {/* Header with controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-serif font-semibold">Member Directory</h2>
@@ -182,5 +184,6 @@ export default function MembersPage() {
         </div>
       </div>
     </div>
+  </PageTransition>
   );
 }
