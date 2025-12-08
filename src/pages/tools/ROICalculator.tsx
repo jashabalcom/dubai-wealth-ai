@@ -9,7 +9,9 @@ import { CurrencySelector } from '@/components/tools/CurrencySelector';
 import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
 import { ROICharts } from '@/components/tools/ROICharts';
+import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 
 export default function ROICalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -18,17 +20,26 @@ export default function ROICalculator() {
   const [inputs, setInputs] = useState({
     purchasePrice: 2000000,
     downPayment: 25,
-    closingCosts: 8,
+    propertySizeSqft: 1200,
+    selectedArea: 'Dubai Marina',
     annualRent: 120000,
     annualAppreciation: 5,
     holdingPeriod: 5,
-    annualExpenses: 15000,
     vacancyRate: 5,
+    // Detailed fees (can be customized)
+    dldFeePercent: 4,
+    agentCommission: 2,
+    trusteeFee: 4410,
+    nocFee: 1500,
+    // Ongoing costs
+    maintenancePercent: 1.5,
+    insuranceAnnual: 2000,
+    dewaMonthly: 800,
   });
 
-  const handleChange = (field: string, value: number) => {
+  const handleChange = (field: string, value: number | string) => {
     setInputs(prev => ({ ...prev, [field]: value }));
-    setActivePreset(undefined);
+    if (field !== 'selectedArea') setActivePreset(undefined);
   };
 
   const handlePresetSelect = (preset: AreaPreset) => {
@@ -36,17 +47,36 @@ export default function ROICalculator() {
       ...prev,
       purchasePrice: preset.propertyPrice,
       annualRent: preset.annualRent || prev.annualRent,
+      propertySizeSqft: preset.sizeSqft || prev.propertySizeSqft,
+      selectedArea: preset.name,
     }));
     setActivePreset(preset.name);
   };
 
-  // Calculations
+  // Get area-specific service charges
+  const serviceChargePerSqft = AREA_SERVICE_CHARGES[inputs.selectedArea] || 15;
+  const annualServiceCharges = inputs.propertySizeSqft * serviceChargePerSqft;
+
+  // Calculate detailed acquisition costs
+  const acquisitionCosts = calculateAcquisitionCosts(inputs.purchasePrice, {
+    ...DEFAULT_ACQUISITION_FEES,
+    dldRegistration: inputs.dldFeePercent,
+    agentCommission: inputs.agentCommission,
+    trusteeFee: inputs.trusteeFee,
+    nocFee: inputs.nocFee,
+  }, false);
+
+  // Calculate total annual expenses
+  const annualMaintenance = inputs.purchasePrice * (inputs.maintenancePercent / 100);
+  const annualDewa = inputs.dewaMonthly * 12;
+  const totalAnnualExpenses = annualServiceCharges + annualMaintenance + inputs.insuranceAnnual + annualDewa;
+
+  // ROI Calculations
   const downPaymentAmount = inputs.purchasePrice * (inputs.downPayment / 100);
-  const closingCostsAmount = inputs.purchasePrice * (inputs.closingCosts / 100);
-  const totalInitialInvestment = downPaymentAmount + closingCostsAmount;
+  const totalInitialInvestment = downPaymentAmount + acquisitionCosts.grandTotal;
   
   const effectiveRent = inputs.annualRent * (1 - inputs.vacancyRate / 100);
-  const netRentalIncome = effectiveRent - inputs.annualExpenses;
+  const netRentalIncome = effectiveRent - totalAnnualExpenses;
   const grossYield = (inputs.annualRent / inputs.purchasePrice) * 100;
   const netYield = (netRentalIncome / inputs.purchasePrice) * 100;
 
@@ -58,6 +88,24 @@ export default function ROICalculator() {
   const totalROI = (totalReturn / totalInitialInvestment) * 100;
   const annualizedROI = (Math.pow(1 + totalReturn / totalInitialInvestment, 1 / inputs.holdingPeriod) - 1) * 100;
   const cashOnCash = (netRentalIncome / totalInitialInvestment) * 100;
+
+  // Fee items for breakdown card
+  const acquisitionFeeItems = [
+    { label: 'DLD Registration (4%)', value: acquisitionCosts.dldFee, key: 'dldRegistration', category: 'acquisition' as const },
+    { label: 'DLD Admin Fee', value: acquisitionCosts.dldAdminFee, key: 'dldAdminFee', category: 'acquisition' as const },
+    { label: 'Agent Commission (2%)', value: acquisitionCosts.agentFee, key: 'agentCommission', category: 'acquisition' as const },
+    { label: 'Trustee Fee', value: acquisitionCosts.trusteeFee, key: 'trusteeFee', category: 'acquisition' as const },
+    { label: 'Title Deed Fee', value: acquisitionCosts.titleDeedFee, key: 'titleDeedFee', category: 'acquisition' as const },
+    { label: 'Developer NOC', value: acquisitionCosts.nocFee, key: 'nocFee', category: 'acquisition' as const },
+    { label: 'Valuation Fee', value: acquisitionCosts.valuationFee, key: 'valuationFee', category: 'acquisition' as const },
+  ];
+
+  const annualExpenseItems = [
+    { label: `Service Charges (${serviceChargePerSqft} AED/sqft)`, value: annualServiceCharges, key: 'serviceCharges', category: 'ongoing' as const },
+    { label: 'Maintenance Reserve', value: annualMaintenance, key: 'maintenance', category: 'ongoing' as const },
+    { label: 'Home Insurance', value: inputs.insuranceAnnual, key: 'insurance', category: 'ongoing' as const },
+    { label: 'DEWA (Est.)', value: annualDewa, key: 'dewa', category: 'ongoing' as const },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,7 +136,7 @@ export default function ROICalculator() {
                 </h1>
               </div>
               <p className="text-muted-foreground">
-                Calculate your total return on investment including rental yield and capital appreciation.
+                Calculate your total return with all Dubai real estate fees included.
               </p>
             </motion.div>
 
@@ -113,7 +161,11 @@ export default function ROICalculator() {
             >
               {/* Dubai Presets */}
               <div className="p-6 rounded-2xl bg-card border border-border">
-                <DubaiPresets onSelectPreset={handlePresetSelect} activePreset={activePreset} />
+                <DubaiPresets 
+                  onSelectPreset={handlePresetSelect} 
+                  activePreset={activePreset} 
+                  showDetails={true}
+                />
               </div>
 
               <div className="p-6 rounded-2xl bg-card border border-border">
@@ -132,6 +184,15 @@ export default function ROICalculator() {
 
                   <div className="grid grid-cols-2 gap-6">
                     <SliderInput
+                      label="Property Size"
+                      value={inputs.propertySizeSqft}
+                      onChange={(v) => handleChange('propertySizeSqft', v)}
+                      min={400}
+                      max={5000}
+                      step={50}
+                      suffix=" sqft"
+                    />
+                    <SliderInput
                       label="Down Payment"
                       value={inputs.downPayment}
                       onChange={(v) => handleChange('downPayment', v)}
@@ -139,21 +200,30 @@ export default function ROICalculator() {
                       max={100}
                       suffix="%"
                     />
-                    <SliderInput
-                      label="Closing Costs"
-                      value={inputs.closingCosts}
-                      onChange={(v) => handleChange('closingCosts', v)}
-                      min={0}
-                      max={15}
-                      step={0.5}
-                      suffix="%"
-                    />
                   </div>
                 </div>
               </div>
 
+              {/* Fee Breakdown */}
+              <div className="space-y-3">
+                <FeeBreakdownCard
+                  title="Acquisition Costs"
+                  fees={acquisitionFeeItems}
+                  total={acquisitionCosts.grandTotal}
+                  formatValue={formatAED}
+                  accentColor="blue-400"
+                />
+                <FeeBreakdownCard
+                  title="Annual Expenses"
+                  fees={annualExpenseItems}
+                  total={totalAnnualExpenses}
+                  formatValue={formatAED}
+                  accentColor="amber-400"
+                />
+              </div>
+
               <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Income & Expenses</h2>
+                <h2 className="font-heading text-xl text-foreground mb-6">Income & Timeline</h2>
                 
                 <div className="space-y-6">
                   <SliderInput
@@ -168,15 +238,6 @@ export default function ROICalculator() {
 
                   <div className="grid grid-cols-2 gap-6">
                     <SliderInput
-                      label="Annual Expenses"
-                      value={inputs.annualExpenses}
-                      onChange={(v) => handleChange('annualExpenses', v)}
-                      min={0}
-                      max={100000}
-                      step={1000}
-                      formatValue={(v) => formatAED(v)}
-                    />
-                    <SliderInput
                       label="Vacancy Rate"
                       value={inputs.vacancyRate}
                       onChange={(v) => handleChange('vacancyRate', v)}
@@ -184,22 +245,16 @@ export default function ROICalculator() {
                       max={30}
                       suffix="%"
                     />
+                    <SliderInput
+                      label="Holding Period"
+                      value={inputs.holdingPeriod}
+                      onChange={(v) => handleChange('holdingPeriod', v)}
+                      min={1}
+                      max={30}
+                      suffix=" yrs"
+                    />
                   </div>
-                </div>
-              </div>
 
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Investment Timeline</h2>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <SliderInput
-                    label="Holding Period"
-                    value={inputs.holdingPeriod}
-                    onChange={(v) => handleChange('holdingPeriod', v)}
-                    min={1}
-                    max={30}
-                    suffix=" yrs"
-                  />
                   <SliderInput
                     label="Annual Appreciation"
                     value={inputs.annualAppreciation}
@@ -216,7 +271,7 @@ export default function ROICalculator() {
               <ROICharts
                 purchasePrice={inputs.purchasePrice}
                 downPaymentAmount={downPaymentAmount}
-                closingCostsAmount={closingCostsAmount}
+                closingCostsAmount={acquisitionCosts.grandTotal}
                 annualAppreciation={inputs.annualAppreciation}
                 holdingPeriod={inputs.holdingPeriod}
                 netRentalIncome={netRentalIncome}
@@ -278,44 +333,67 @@ export default function ROICalculator() {
                 </div>
               </div>
 
-              {/* Financial Summary */}
+              {/* Total Investment Breakdown */}
               <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Financial Summary</h2>
+                <h2 className="font-heading text-xl text-foreground mb-6">Total Initial Investment</h2>
                 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="text-muted-foreground">Initial Investment</span>
+                    <span className="text-muted-foreground">Down Payment ({inputs.downPayment}%)</span>
                     <div className="text-right">
-                      <p className="font-medium text-foreground">{formatAED(totalInitialInvestment)}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(totalInitialInvestment)}</p>
+                      <p className="font-medium text-foreground">{formatAED(downPaymentAmount)}</p>
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-border">
-                    <span className="text-muted-foreground">Total Rental Income ({inputs.holdingPeriod}yr)</span>
+                    <span className="text-muted-foreground">Acquisition Costs ({acquisitionCosts.percentageOfProperty.toFixed(1)}%)</span>
+                    <div className="text-right">
+                      <p className="font-medium text-foreground">{formatAED(acquisitionCosts.grandTotal)}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center py-3 bg-gold/10 rounded-lg px-3 -mx-3">
+                    <span className="font-medium text-foreground">Total Cash Required</span>
+                    <div className="text-right">
+                      <p className="font-heading text-xl text-gold">{formatAED(totalInitialInvestment)}</p>
+                      <p className="text-sm text-gold/80">{formatCurrency(totalInitialInvestment)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="p-6 rounded-2xl bg-card border border-border">
+                <h2 className="font-heading text-xl text-foreground mb-6">Financial Projection</h2>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-border">
+                    <span className="text-muted-foreground">Net Annual Rental Income</span>
+                    <div className="text-right">
+                      <p className="font-medium text-emerald-400">{formatAED(netRentalIncome)}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-border">
+                    <span className="text-muted-foreground">Total Rental ({inputs.holdingPeriod}yr)</span>
                     <div className="text-right">
                       <p className="font-medium text-foreground">{formatAED(totalRentalIncome)}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(totalRentalIncome)}</p>
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-border">
                     <span className="text-muted-foreground">Capital Appreciation</span>
                     <div className="text-right">
                       <p className="font-medium text-foreground">{formatAED(capitalGain)}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(capitalGain)}</p>
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-border">
                     <span className="text-muted-foreground">Future Property Value</span>
                     <div className="text-right">
                       <p className="font-medium text-foreground">{formatAED(futureValue)}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(futureValue)}</p>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center py-3 bg-gold/10 rounded-lg px-3 -mx-3">
+                  <div className="flex justify-between items-center py-3 bg-emerald-500/10 rounded-lg px-3 -mx-3">
                     <span className="font-medium text-foreground">Total Return</span>
                     <div className="text-right">
-                      <p className="font-heading text-xl text-gold">{formatAED(totalReturn)}</p>
-                      <p className="text-sm text-gold/80">{formatCurrency(totalReturn)}</p>
+                      <p className="font-heading text-xl text-emerald-400">{formatAED(totalReturn)}</p>
+                      <p className="text-sm text-emerald-400/80">{formatCurrency(totalReturn)}</p>
                     </div>
                   </div>
                 </div>
