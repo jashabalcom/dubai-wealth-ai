@@ -8,6 +8,7 @@ import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
 import { AnimatedRoutes } from "@/components/AnimatedRoutes";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { SmoothScrollHandler } from "@/components/SmoothScrollHandler";
+import { NavigationProgress } from "@/components/NavigationProgress";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Toaster />
           <Sonner />
   <BrowserRouter>
+    <NavigationProgress />
     <ScrollToTop />
     <SmoothScrollHandler />
     <AnimatedRoutes />
