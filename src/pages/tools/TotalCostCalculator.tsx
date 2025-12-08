@@ -325,9 +325,10 @@ export default function TotalCostCalculator() {
         description: "Your Total Cost of Ownership report has been saved.",
       });
     } catch (error) {
+      console.error('PDF Export Error:', error);
       toast({
         title: "Export Failed",
-        description: "There was an error generating the PDF. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error generating the PDF. Please try again.",
         variant: "destructive",
       });
     }
