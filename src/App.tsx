@@ -18,6 +18,7 @@ import ROICalculator from "./pages/tools/ROICalculator";
 import MortgageCalculator from "./pages/tools/MortgageCalculator";
 import RentVsBuyCalculator from "./pages/tools/RentVsBuyCalculator";
 import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
+import TotalCostCalculator from "./pages/tools/TotalCostCalculator";
 import AIAssistant from "./pages/AIAssistant";
 import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/tools/mortgage" element={<MortgageCalculator />} />
             <Route path="/tools/rent-vs-buy" element={<RentVsBuyCalculator />} />
             <Route path="/tools/airbnb" element={<AirbnbCalculator />} />
+            <Route path="/tools/total-cost" element={<TotalCostCalculator />} />
             <Route path="/ai-assistant" element={<AIAssistant />} />
             <Route path="/community" element={<Community />} />
             <Route path="/portfolio" element={<Portfolio />} />
