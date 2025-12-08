@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useConnections } from "@/hooks/useConnections";
@@ -171,6 +171,12 @@ export function Navbar() {
                         Dashboard
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                        <Settings className="h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
                       <LogOut className="h-4 w-4" />
@@ -263,6 +269,12 @@ export function Navbar() {
                       <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
                         <User className="h-5 w-5 mr-2" />
                         My Profile
+                      </Button>
+                    </Link>
+                    <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
+                        <Settings className="h-5 w-5 mr-2" />
+                        Settings
                       </Button>
                     </Link>
                     <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
