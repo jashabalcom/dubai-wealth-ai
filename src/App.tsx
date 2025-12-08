@@ -19,6 +19,7 @@ import MortgageCalculator from "./pages/tools/MortgageCalculator";
 import RentVsBuyCalculator from "./pages/tools/RentVsBuyCalculator";
 import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
 import AIAssistant from "./pages/AIAssistant";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/tools/rent-vs-buy" element={<RentVsBuyCalculator />} />
             <Route path="/tools/airbnb" element={<AirbnbCalculator />} />
             <Route path="/ai-assistant" element={<AIAssistant />} />
+            <Route path="/community" element={<Community />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
