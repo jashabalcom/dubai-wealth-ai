@@ -6,10 +6,10 @@ import { Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
-  { label: "Why Dubai", href: "#why-dubai" },
-  { label: "Platform", href: "#platform" },
-  { label: "Academy", href: "#academy" },
-  { label: "Membership", href: "#membership" },
+  { label: "Academy", href: "/academy", isRoute: true },
+  { label: "Properties", href: "/properties", isRoute: true },
+  { label: "Why Dubai", href: "#why-dubai", isRoute: false },
+  { label: "Membership", href: "#membership", isRoute: false },
 ];
 
 export function Navbar() {
@@ -52,13 +52,23 @@ export function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-10">
               {navLinks.map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans"
-                >
-                  {link.label}
-                </a>
+                link.isRoute ? (
+                  <Link
+                    key={link.label}
+                    to={link.href}
+                    className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans"
+                  >
+                    {link.label}
+                  </a>
+                )
               ))}
             </div>
 
@@ -109,17 +119,34 @@ export function Navbar() {
           >
             <div className="container-luxury flex flex-col gap-8 py-8">
               {navLinks.map((link, index) => (
-                <motion.a
-                  key={link.label}
-                  href={link.href}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-2xl font-serif text-secondary-foreground hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </motion.a>
+                link.isRoute ? (
+                  <motion.div
+                    key={link.label}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link
+                      to={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-2xl font-serif text-secondary-foreground hover:text-primary transition-colors block"
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                ) : (
+                  <motion.a
+                    key={link.label}
+                    href={link.href}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-2xl font-serif text-secondary-foreground hover:text-primary transition-colors"
+                  >
+                    {link.label}
+                  </motion.a>
+                )
               ))}
               <div className="flex flex-col gap-4 pt-8 border-t border-primary/20">
                 {user ? (
