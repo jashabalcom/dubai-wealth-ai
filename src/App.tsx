@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCourses from "./pages/admin/AdminCourses";
 import AdminProperties from "./pages/admin/AdminProperties";
+import AdminEvents from "./pages/admin/AdminEvents";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import NotFound from "./pages/NotFound";
 
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/courses" element={<AdminCourses />} />
             <Route path="/admin/properties" element={<AdminProperties />} />
+            <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

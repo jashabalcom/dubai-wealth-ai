@@ -8,7 +8,8 @@ import {
   BarChart3,
   Settings,
   ChevronLeft,
-  Shield
+  Shield,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -24,6 +25,7 @@ const navItems = [
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Courses', href: '/admin/courses', icon: GraduationCap },
   { label: 'Properties', href: '/admin/properties', icon: Building2 },
+  { label: 'Events', href: '/admin/events', icon: Calendar },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
 ];
 
