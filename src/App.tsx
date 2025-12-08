@@ -13,6 +13,11 @@ import Course from "./pages/Course";
 import Lesson from "./pages/Lesson";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
+import Tools from "./pages/Tools";
+import ROICalculator from "./pages/tools/ROICalculator";
+import MortgageCalculator from "./pages/tools/MortgageCalculator";
+import RentVsBuyCalculator from "./pages/tools/RentVsBuyCalculator";
+import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,7 +45,11 @@ const App = () => (
             <Route path="/academy/:courseSlug/:lessonSlug" element={<Lesson />} />
             <Route path="/properties" element={<Properties />} />
             <Route path="/properties/:slug" element={<PropertyDetail />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/tools/roi" element={<ROICalculator />} />
+            <Route path="/tools/mortgage" element={<MortgageCalculator />} />
+            <Route path="/tools/rent-vs-buy" element={<RentVsBuyCalculator />} />
+            <Route path="/tools/airbnb" element={<AirbnbCalculator />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
