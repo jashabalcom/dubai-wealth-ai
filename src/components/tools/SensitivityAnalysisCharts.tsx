@@ -12,9 +12,13 @@ import {
   Legend,
   BarChart,
   Bar,
-  Cell
+  Cell,
+  PieChart,
+  Pie,
+  ComposedChart,
+  Area
 } from 'recharts';
-import { TrendingUp, TrendingDown, Target, AlertTriangle, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, AlertTriangle, Clock, CheckCircle2, XCircle, Wallet, Coins, PiggyBank, DollarSign } from 'lucide-react';
 
 interface SensitivityAnalysisChartsProps {
   baseAppreciationRate: number;
@@ -214,6 +218,87 @@ function calculateBreakEvenYear(params: {
     breakEvenYear: breakEvenYear === -1 ? maxYears + 1 : breakEvenYear,
     isProfitable: breakEvenYear !== -1,
     cumulativeProfitByYear,
+  };
+}
+
+// Cash-on-Cash calculation helper
+function calculateCashOnCashReturn(params: {
+  purchasePrice: number;
+  annualRent: number;
+  useMortgage: boolean;
+  downPayment: number;
+  interestRate: number;
+  loanTerm: number;
+  propertySize: number;
+  usageType: 'personal' | 'long-term' | 'short-term';
+  dailyRate: number;
+  occupancyRate: number;
+}): {
+  annualCashFlow: number;
+  cashOnCashReturn: number;
+  totalCashInvested: number;
+  grossRentalYield: number;
+  netRentalYield: number;
+  annualMortgagePayment: number;
+  annualExpenses: number;
+} {
+  const {
+    purchasePrice,
+    annualRent,
+    useMortgage,
+    downPayment,
+    interestRate,
+    loanTerm,
+    usageType,
+    dailyRate,
+    occupancyRate,
+  } = params;
+
+  const loanAmount = useMortgage ? purchasePrice * (1 - downPayment / 100) : 0;
+  const acquisitionCosts = purchasePrice * 0.07;
+  const annualExpenses = purchasePrice * 0.02; // Ongoing costs ~2%
+  
+  const monthlyRate = interestRate / 100 / 12;
+  const numPayments = loanTerm * 12;
+  const monthlyPayment = useMortgage && loanAmount > 0
+    ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
+      (Math.pow(1 + monthlyRate, numPayments) - 1)
+    : 0;
+  const annualMortgagePayment = monthlyPayment * 12;
+
+  // Calculate rental income
+  let annualRentalIncome = 0;
+  if (usageType === 'long-term') {
+    annualRentalIncome = annualRent;
+  } else if (usageType === 'short-term') {
+    annualRentalIncome = dailyRate * 365 * (occupancyRate / 100) * 0.85;
+  }
+
+  // Total cash invested (down payment + closing costs)
+  const totalCashInvested = useMortgage 
+    ? (purchasePrice * downPayment / 100) + acquisitionCosts 
+    : purchasePrice + acquisitionCosts;
+
+  // Annual cash flow = Rental Income - Expenses - Mortgage Payment
+  const annualCashFlow = annualRentalIncome - annualExpenses - annualMortgagePayment;
+
+  // Cash-on-Cash Return = Annual Cash Flow / Total Cash Invested
+  const cashOnCashReturn = (annualCashFlow / totalCashInvested) * 100;
+
+  // Gross Rental Yield = Annual Rent / Purchase Price
+  const grossRentalYield = (annualRentalIncome / purchasePrice) * 100;
+
+  // Net Rental Yield = (Annual Rent - Expenses) / Purchase Price
+  const netRentalYield = ((annualRentalIncome - annualExpenses) / purchasePrice) * 100;
+
+  return {
+    annualCashFlow,
+    cashOnCashReturn,
+    totalCashInvested,
+    grossRentalYield,
+    netRentalYield,
+    annualMortgagePayment,
+    annualExpenses,
   };
 }
 
@@ -537,6 +622,209 @@ export function SensitivityAnalysisCharts({
       return row;
     });
   }, [purchasePrice, useMortgage, downPayment, interestRate, loanTerm, propertySize, usageType, dailyRate, occupancyRate]);
+
+  // Cash-on-Cash return data
+  const cashOnCashData = useMemo(() => {
+    if (usageType === 'personal') return null;
+
+    const baseCoC = calculateCashOnCashReturn({
+      purchasePrice,
+      annualRent: baseAnnualRent,
+      useMortgage,
+      downPayment,
+      interestRate,
+      loanTerm,
+      propertySize,
+      usageType,
+      dailyRate,
+      occupancyRate,
+    });
+
+    return baseCoC;
+  }, [purchasePrice, baseAnnualRent, useMortgage, downPayment, interestRate, loanTerm, propertySize, usageType, dailyRate, occupancyRate]);
+
+  // Cash flow vs appreciation over time
+  const cashFlowVsAppreciationData = useMemo(() => {
+    if (usageType === 'personal') return [];
+
+    const data = [];
+    for (let year = 1; year <= holdingPeriod; year++) {
+      const propertyValue = purchasePrice * Math.pow(1 + baseAppreciationRate / 100, year);
+      const appreciation = propertyValue - purchasePrice;
+      
+      const cocData = calculateCashOnCashReturn({
+        purchasePrice,
+        annualRent: baseAnnualRent,
+        useMortgage,
+        downPayment,
+        interestRate,
+        loanTerm,
+        propertySize,
+        usageType,
+        dailyRate,
+        occupancyRate,
+      });
+      
+      const cumulativeCashFlow = cocData.annualCashFlow * year;
+      
+      data.push({
+        year,
+        cashFlow: cumulativeCashFlow,
+        appreciation: appreciation,
+        total: cumulativeCashFlow + appreciation,
+      });
+    }
+    return data;
+  }, [purchasePrice, baseAnnualRent, baseAppreciationRate, holdingPeriod, useMortgage, downPayment, interestRate, loanTerm, propertySize, usageType, dailyRate, occupancyRate]);
+
+  // Cash-on-Cash by down payment percentage
+  const cocByDownPayment = useMemo(() => {
+    if (usageType === 'personal' || !useMortgage) return [];
+
+    const downPayments = [20, 25, 30, 40, 50, 75, 100];
+    return downPayments.map(dp => {
+      const result = calculateCashOnCashReturn({
+        purchasePrice,
+        annualRent: baseAnnualRent,
+        useMortgage: dp < 100,
+        downPayment: dp,
+        interestRate,
+        loanTerm,
+        propertySize,
+        usageType,
+        dailyRate,
+        occupancyRate,
+      });
+      return {
+        downPayment: `${dp}%`,
+        coc: parseFloat(result.cashOnCashReturn.toFixed(2)),
+        cashFlow: result.annualCashFlow,
+        isCurrentDP: Math.abs(dp - downPayment) < 1,
+      };
+    });
+  }, [purchasePrice, baseAnnualRent, useMortgage, downPayment, interestRate, loanTerm, propertySize, usageType, dailyRate, occupancyRate]);
+
+  // Cash-on-Cash over time (as mortgage is paid down)
+  const cocOverTime = useMemo(() => {
+    if (usageType === 'personal') return [];
+
+    const data = [];
+    const loanAmount = useMortgage ? purchasePrice * (1 - downPayment / 100) : 0;
+    const monthlyRate = interestRate / 100 / 12;
+    const totalPayments = loanTerm * 12;
+    const monthlyPayment = useMortgage && loanAmount > 0
+      ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / 
+        (Math.pow(1 + monthlyRate, totalPayments) - 1)
+      : 0;
+
+    const acquisitionCosts = purchasePrice * 0.07;
+    const initialCashInvested = useMortgage 
+      ? (purchasePrice * downPayment / 100) + acquisitionCosts 
+      : purchasePrice + acquisitionCosts;
+
+    let annualRentalIncome = 0;
+    if (usageType === 'long-term') {
+      annualRentalIncome = baseAnnualRent;
+    } else if (usageType === 'short-term') {
+      annualRentalIncome = dailyRate * 365 * (occupancyRate / 100) * 0.85;
+    }
+
+    const annualExpenses = purchasePrice * 0.02;
+
+    for (let year = 1; year <= Math.min(holdingPeriod + 5, loanTerm); year++) {
+      // Calculate principal paid by this year
+      const paymentsMade = year * 12;
+      const remainingPayments = totalPayments - paymentsMade;
+      const remainingBalance = remainingPayments > 0 && useMortgage
+        ? monthlyPayment * (1 - Math.pow(1 + monthlyRate, -remainingPayments)) / monthlyRate
+        : 0;
+      const principalPaid = loanAmount - remainingBalance;
+      
+      // Equity = Down payment + Principal paid
+      const equity = (useMortgage ? purchasePrice * downPayment / 100 : purchasePrice) + principalPaid;
+      
+      // Cash flow remains similar but we're measuring return on initial cash
+      const annualCashFlow = annualRentalIncome - annualExpenses - (monthlyPayment * 12);
+      const coc = (annualCashFlow / initialCashInvested) * 100;
+      
+      // Return on Equity = Cash Flow / Current Equity
+      const roe = (annualCashFlow / equity) * 100;
+
+      data.push({
+        year,
+        coc: parseFloat(coc.toFixed(2)),
+        roe: parseFloat(roe.toFixed(2)),
+        equity: Math.round(equity),
+      });
+    }
+    return data;
+  }, [purchasePrice, baseAnnualRent, useMortgage, downPayment, interestRate, loanTerm, holdingPeriod, usageType, dailyRate, occupancyRate]);
+
+  // Income attribution (pie chart data)
+  const incomeAttribution = useMemo(() => {
+    if (usageType === 'personal') return [];
+
+    const totalAppreciation = purchasePrice * Math.pow(1 + baseAppreciationRate / 100, holdingPeriod) - purchasePrice;
+    const cocData = calculateCashOnCashReturn({
+      purchasePrice,
+      annualRent: baseAnnualRent,
+      useMortgage,
+      downPayment,
+      interestRate,
+      loanTerm,
+      propertySize,
+      usageType,
+      dailyRate,
+      occupancyRate,
+    });
+    const totalCashFlow = cocData.annualCashFlow * holdingPeriod;
+
+    const total = Math.abs(totalAppreciation) + Math.abs(totalCashFlow);
+    if (total === 0) return [];
+
+    return [
+      { name: 'Cash Flow', value: Math.max(0, totalCashFlow), fill: 'hsl(217, 91%, 60%)' },
+      { name: 'Appreciation', value: Math.max(0, totalAppreciation), fill: 'hsl(142, 76%, 36%)' },
+    ].filter(item => item.value > 0);
+  }, [purchasePrice, baseAnnualRent, baseAppreciationRate, holdingPeriod, useMortgage, downPayment, interestRate, loanTerm, propertySize, usageType, dailyRate, occupancyRate]);
+
+  // Cash-on-Cash Matrix by Down Payment and Rental Yield
+  const cocMatrix = useMemo(() => {
+    if (usageType === 'personal') return [];
+
+    const downPayments = [20, 30, 40, 50];
+    const yields = [4, 5, 6, 7, 8];
+
+    return downPayments.map(dp => {
+      const row: Record<string, any> = { downPayment: `${dp}%` };
+      yields.forEach(yieldRate => {
+        const simulatedRent = purchasePrice * (yieldRate / 100);
+        const result = calculateCashOnCashReturn({
+          purchasePrice,
+          annualRent: simulatedRent,
+          useMortgage: dp < 100,
+          downPayment: dp,
+          interestRate,
+          loanTerm,
+          propertySize,
+          usageType,
+          dailyRate,
+          occupancyRate,
+        });
+        row[`yield${yieldRate}`] = parseFloat(result.cashOnCashReturn.toFixed(1));
+      });
+      return row;
+    });
+  }, [purchasePrice, useMortgage, interestRate, loanTerm, propertySize, usageType, dailyRate, occupancyRate]);
+
+  const getCoCColor = (coc: number) => {
+    if (coc >= 10) return 'bg-emerald-500 text-white';
+    if (coc >= 6) return 'bg-emerald-400 text-white';
+    if (coc >= 3) return 'bg-green-400 text-white';
+    if (coc >= 0) return 'bg-yellow-400 text-gray-900';
+    if (coc >= -5) return 'bg-orange-400 text-white';
+    return 'bg-red-500 text-white';
+  };
 
   const getBreakEvenColor = (years: number | string) => {
     if (years === 'Never' || (typeof years === 'number' && years > 30)) return 'bg-red-500 text-white';
@@ -1112,6 +1400,408 @@ export function SensitivityAnalysisCharts({
           </Card>
         )}
       </div>
+
+      {/* Cash-on-Cash Analysis Section */}
+      {usageType !== 'personal' && cashOnCashData && (
+        <>
+          {/* Cash-on-Cash Summary Cards */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-heading flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-primary" />
+                Cash-on-Cash Return Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Annual cash flow returns separate from appreciation gains
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg border bg-blue-500/10 border-blue-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <DollarSign className="w-4 h-4 text-blue-500" />
+                    <h4 className="text-sm font-medium">Annual Cash Flow</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-500">
+                    {formatValue(cashOnCashData.annualCashFlow)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    After expenses & mortgage
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg border bg-emerald-500/10 border-emerald-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Coins className="w-4 h-4 text-emerald-500" />
+                    <h4 className="text-sm font-medium">Cash-on-Cash Return</h4>
+                  </div>
+                  <p className={`text-2xl font-bold ${cashOnCashData.cashOnCashReturn >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {cashOnCashData.cashOnCashReturn.toFixed(2)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Return on cash invested
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg border bg-amber-500/10 border-amber-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <PiggyBank className="w-4 h-4 text-amber-500" />
+                    <h4 className="text-sm font-medium">Gross Rental Yield</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-amber-500">
+                    {cashOnCashData.grossRentalYield.toFixed(2)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Annual rent / price
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg border bg-purple-500/10 border-purple-500/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="w-4 h-4 text-purple-500" />
+                    <h4 className="text-sm font-medium">Net Rental Yield</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-500">
+                    {cashOnCashData.netRentalYield.toFixed(2)}%
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    After operating costs
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cash Flow vs Appreciation Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-heading flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-emerald-500" />
+                Cash Flow vs. Appreciation Over Time
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Cumulative returns breakdown: income-based vs capital gains
+              </p>
+              <div className="h-[320px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={cashFlowVsAppreciationData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="year" 
+                      className="text-xs fill-muted-foreground"
+                      tick={{ fontSize: 11 }}
+                      label={{ value: 'Years', position: 'insideBottom', offset: -5, fontSize: 11 }}
+                    />
+                    <YAxis 
+                      className="text-xs fill-muted-foreground"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`}
+                    />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [
+                        formatValue(value), 
+                        name === 'cashFlow' ? 'Cash Flow' : name === 'appreciation' ? 'Appreciation' : 'Total'
+                      ]}
+                      labelFormatter={(label) => `Year ${label}`}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--background))', 
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend 
+                      formatter={(value) => value === 'cashFlow' ? 'Cash Flow' : value === 'appreciation' ? 'Appreciation' : 'Total'}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="cashFlow" 
+                      fill="hsl(217, 91%, 60%)" 
+                      fillOpacity={0.3}
+                      stroke="hsl(217, 91%, 60%)"
+                      strokeWidth={2}
+                      stackId="1"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="appreciation" 
+                      fill="hsl(142, 76%, 36%)" 
+                      fillOpacity={0.3}
+                      stroke="hsl(142, 76%, 36%)"
+                      strokeWidth={2}
+                      stackId="1"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="total" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3}
+                      strokeDasharray="5 5"
+                      dot={false}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cash-on-Cash by Down Payment & Income Attribution */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* CoC by Down Payment */}
+            {useMortgage && cocByDownPayment.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-heading flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-blue-500" />
+                    Cash-on-Cash by Down Payment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    How leverage affects your cash returns
+                  </p>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={cocByDownPayment}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis 
+                          dataKey="downPayment" 
+                          className="text-xs fill-muted-foreground"
+                          tick={{ fontSize: 11 }}
+                        />
+                        <YAxis 
+                          className="text-xs fill-muted-foreground"
+                          tick={{ fontSize: 11 }}
+                          tickFormatter={(v) => `${v}%`}
+                        />
+                        <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" />
+                        <Tooltip 
+                          formatter={(value: number) => [`${value.toFixed(2)}%`, 'CoC Return']}
+                          labelFormatter={(label) => `Down Payment: ${label}`}
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Bar dataKey="coc" radius={[4, 4, 0, 0]}>
+                          {cocByDownPayment.map((entry, index) => (
+                            <Cell 
+                              key={index} 
+                              fill={entry.isCurrentDP ? 'hsl(var(--primary))' : entry.coc >= 0 ? 'hsl(217, 91%, 60%)' : 'hsl(0, 84%, 60%)'}
+                              opacity={entry.isCurrentDP ? 1 : 0.7}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Current: {downPayment}% down payment (highlighted)
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Income Attribution Pie Chart */}
+            {incomeAttribution.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base font-heading flex items-center gap-2">
+                    <PiggyBank className="w-5 h-5 text-emerald-500" />
+                    Return Attribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Breakdown of total returns over {holdingPeriod} years
+                  </p>
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={incomeAttribution}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={5}
+                          dataKey="value"
+                          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                          labelLine={true}
+                        >
+                          {incomeAttribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number, name: string) => [formatValue(value), name]}
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex items-center justify-center gap-6 mt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(217, 91%, 60%)' }} />
+                      <span className="text-sm text-muted-foreground">Cash Flow</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142, 76%, 36%)' }} />
+                      <span className="text-sm text-muted-foreground">Appreciation</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Cash-on-Cash Over Time */}
+          {cocOverTime.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-heading flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-500" />
+                  Cash-on-Cash & Return on Equity Over Time
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  How your cash returns evolve as mortgage is paid down
+                </p>
+                <div className="h-[320px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={cocOverTime}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis 
+                        dataKey="year" 
+                        className="text-xs fill-muted-foreground"
+                        tick={{ fontSize: 11 }}
+                        label={{ value: 'Years', position: 'insideBottom', offset: -5, fontSize: 11 }}
+                      />
+                      <YAxis 
+                        className="text-xs fill-muted-foreground"
+                        tick={{ fontSize: 11 }}
+                        tickFormatter={(v) => `${v}%`}
+                      />
+                      <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          `${value.toFixed(2)}%`, 
+                          name === 'coc' ? 'Cash-on-Cash' : 'Return on Equity'
+                        ]}
+                        labelFormatter={(label) => `Year ${label}`}
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--background))', 
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend 
+                        formatter={(value) => value === 'coc' ? 'Cash-on-Cash' : 'Return on Equity'}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="coc" 
+                        stroke="hsl(217, 91%, 60%)" 
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="roe" 
+                        stroke="hsl(142, 76%, 36%)" 
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  CoC stays constant (based on initial cash), while ROE changes with equity buildup
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Cash-on-Cash Matrix */}
+          {cocMatrix.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-heading flex items-center gap-2">
+                  <Wallet className="w-5 h-5 text-amber-500" />
+                  Cash-on-Cash Matrix
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Cash-on-Cash Return (%) based on down payment and rental yield
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr>
+                        <th className="p-2 text-left font-medium text-muted-foreground">
+                          Down Payment ↓ / Yield →
+                        </th>
+                        {[4, 5, 6, 7, 8].map(y => (
+                          <th key={y} className="p-2 text-center font-medium text-muted-foreground">
+                            {y}%
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cocMatrix.map((row, i) => (
+                        <tr key={i}>
+                          <td className="p-2 font-medium">{row.downPayment}</td>
+                          {[4, 5, 6, 7, 8].map(y => {
+                            const coc = row[`yield${y}`];
+                            return (
+                              <td key={y} className="p-1">
+                                <div className={`p-2 text-center rounded font-semibold ${getCoCColor(coc)}`}>
+                                  {coc.toFixed(1)}%
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="flex items-center justify-center gap-4 mt-4 text-xs flex-wrap">
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded bg-emerald-500" />
+                    <span className="text-muted-foreground">≥10%</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded bg-emerald-400" />
+                    <span className="text-muted-foreground">6-10%</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded bg-green-400" />
+                    <span className="text-muted-foreground">3-6%</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded bg-yellow-400" />
+                    <span className="text-muted-foreground">0-3%</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded bg-red-500" />
+                    <span className="text-muted-foreground">&lt;0%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 }
