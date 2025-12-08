@@ -74,15 +74,15 @@ export function DirectoryFilters({
         {/* Membership Tier */}
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">Membership</label>
-          <Select
-            value={filters.membershipTier || ''}
-            onValueChange={(v) => onFilterChange('membershipTier', v || null)}
+        <Select
+            value={filters.membershipTier || 'all'}
+            onValueChange={(v) => onFilterChange('membershipTier', v === 'all' ? null : v)}
           >
             <SelectTrigger className="bg-muted/30 border-border/50">
               <SelectValue placeholder="All tiers" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All tiers</SelectItem>
+              <SelectItem value="all">All tiers</SelectItem>
               {tierOptions.map((tier) => (
                 <SelectItem key={tier.value} value={tier.value}>
                   {tier.label}
@@ -97,14 +97,14 @@ export function DirectoryFilters({
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">Country</label>
             <Select
-              value={filters.country || ''}
-              onValueChange={(v) => onFilterChange('country', v || null)}
+              value={filters.country || 'all'}
+              onValueChange={(v) => onFilterChange('country', v === 'all' ? null : v)}
             >
               <SelectTrigger className="bg-muted/30 border-border/50">
                 <SelectValue placeholder="All countries" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All countries</SelectItem>
+                <SelectItem value="all">All countries</SelectItem>
                 {filterOptions.countries.map((country) => (
                   <SelectItem key={country} value={country}>
                     {country}
@@ -120,14 +120,14 @@ export function DirectoryFilters({
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">Investment Goal</label>
             <Select
-              value={filters.investmentGoal || ''}
-              onValueChange={(v) => onFilterChange('investmentGoal', v || null)}
+              value={filters.investmentGoal || 'all'}
+              onValueChange={(v) => onFilterChange('investmentGoal', v === 'all' ? null : v)}
             >
               <SelectTrigger className="bg-muted/30 border-border/50">
                 <SelectValue placeholder="All goals" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All goals</SelectItem>
+                <SelectItem value="all">All goals</SelectItem>
                 {filterOptions.investmentGoals.map((goal) => (
                   <SelectItem key={goal} value={goal}>
                     {goal}
@@ -143,14 +143,14 @@ export function DirectoryFilters({
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">Budget Range</label>
             <Select
-              value={filters.budgetRange || ''}
-              onValueChange={(v) => onFilterChange('budgetRange', v || null)}
+              value={filters.budgetRange || 'all'}
+              onValueChange={(v) => onFilterChange('budgetRange', v === 'all' ? null : v)}
             >
               <SelectTrigger className="bg-muted/30 border-border/50">
                 <SelectValue placeholder="All budgets" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All budgets</SelectItem>
+                <SelectItem value="all">All budgets</SelectItem>
                 {filterOptions.budgetRanges.map((range) => (
                   <SelectItem key={range} value={range}>
                     {range}
@@ -166,14 +166,14 @@ export function DirectoryFilters({
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">Timeline</label>
             <Select
-              value={filters.timeline || ''}
-              onValueChange={(v) => onFilterChange('timeline', v || null)}
+              value={filters.timeline || 'all'}
+              onValueChange={(v) => onFilterChange('timeline', v === 'all' ? null : v)}
             >
               <SelectTrigger className="bg-muted/30 border-border/50">
                 <SelectValue placeholder="All timelines" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All timelines</SelectItem>
+                <SelectItem value="all">All timelines</SelectItem>
                 {filterOptions.timelines.map((timeline) => (
                   <SelectItem key={timeline} value={timeline}>
                     {timeline}
