@@ -1,5 +1,11 @@
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
+
+// Type extension for jsPDF with autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  autoTable: (options: any) => jsPDF;
+  lastAutoTable: { finalY: number };
+}
 
 interface TotalCostPDFData {
   propertyDetails: {
@@ -162,7 +168,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     .map(item => [item.label, data.formatValue(item.value)]);
   acquisitionTableData.push(['Total Acquisition Costs', data.formatValue(data.costs.acquisitionTotal)]);
 
-  autoTable(doc, {
+  (doc as jsPDFWithAutoTable).autoTable({
     startY: yPos,
     head: [['Fee', 'Amount']],
     body: acquisitionTableData,
@@ -171,11 +177,11 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     footStyles: { fillColor: [240, 240, 240], fontStyle: 'bold' },
     margin: { left: 14, right: 14 },
     didDrawPage: () => {
-      yPos = (doc as any).lastAutoTable.finalY + 10;
+      yPos = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 10;
     },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 15;
+  yPos = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
   checkPageBreak(80);
 
   // Ongoing Costs Table
@@ -187,7 +193,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
   ongoingTableData.push(['Total Annual Costs', data.formatValue(data.costs.ongoingTotal)]);
   ongoingTableData.push([`Total Over ${data.timeline.holdingPeriod} Years`, data.formatValue(data.costs.ongoingTotal * data.timeline.holdingPeriod)]);
 
-  autoTable(doc, {
+  (doc as jsPDFWithAutoTable).autoTable({
     startY: yPos,
     head: [['Cost Item', 'Annual Amount']],
     body: ongoingTableData,
@@ -196,7 +202,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     margin: { left: 14, right: 14 },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 15;
+  yPos = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
   checkPageBreak(80);
 
   // Exit Costs Table
@@ -207,7 +213,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     .map(item => [item.label, data.formatValue(item.value)]);
   exitTableData.push(['Total Exit Costs', data.formatValue(data.costs.exitTotal)]);
 
-  autoTable(doc, {
+  (doc as jsPDFWithAutoTable).autoTable({
     startY: yPos,
     head: [['Fee', 'Amount']],
     body: exitTableData,
@@ -216,7 +222,7 @@ export function generateTotalCostPDF(data: TotalCostPDFData): void {
     margin: { left: 14, right: 14 },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 15;
+  yPos = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
   checkPageBreak(100);
 
   // Investment Summary
