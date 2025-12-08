@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_strategies: {
+        Row: {
+          ai_response: string | null
+          created_at: string
+          id: string
+          parameters: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_response?: string | null
+          created_at?: string
+          id?: string
+          parameters?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_response?: string | null
+          created_at?: string
+          id?: string
+          parameters?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category: string

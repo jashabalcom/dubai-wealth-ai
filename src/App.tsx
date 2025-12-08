@@ -18,6 +18,7 @@ import ROICalculator from "./pages/tools/ROICalculator";
 import MortgageCalculator from "./pages/tools/MortgageCalculator";
 import RentVsBuyCalculator from "./pages/tools/RentVsBuyCalculator";
 import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
+import AIAssistant from "./pages/AIAssistant";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/tools/mortgage" element={<MortgageCalculator />} />
             <Route path="/tools/rent-vs-buy" element={<RentVsBuyCalculator />} />
             <Route path="/tools/airbnb" element={<AirbnbCalculator />} />
+            <Route path="/ai-assistant" element={<AIAssistant />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
