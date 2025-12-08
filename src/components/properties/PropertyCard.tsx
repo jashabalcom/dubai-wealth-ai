@@ -82,7 +82,8 @@ export function PropertyCard({
     >
       <Link to={`/properties/${property.slug}`} className="block h-full">
         <div className={cn(
-          "h-full rounded-2xl bg-card border overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-gold/5",
+          "h-full rounded-2xl bg-card border overflow-hidden transition-all duration-300",
+          "hover:-translate-y-2 hover:shadow-2xl hover:shadow-gold/10",
           isComparing ? "border-gold ring-2 ring-gold/20" : "border-border hover:border-gold/30"
         )}>
           {/* Image */}
@@ -90,45 +91,62 @@ export function PropertyCard({
             <img
               src={property.images[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'}
               alt={property.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
             />
+            {/* Image Overlay on Hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
             {/* Badges */}
             <div className="absolute top-3 left-3 flex flex-wrap gap-2">
               {property.is_off_plan && (
-                <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                <motion.span 
+                  className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full"
+                  initial={{ scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
                   Off-Plan
-                </span>
+                </motion.span>
               )}
               {property.is_featured && (
-                <span className="px-2 py-1 bg-gold text-primary-dark text-xs font-medium rounded-full">
+                <motion.span 
+                  className="px-2 py-1 bg-gold text-primary-dark text-xs font-medium rounded-full badge-pulse"
+                  initial={{ scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
                   Featured
-                </span>
+                </motion.span>
               )}
             </div>
 
             {/* Yield Badge */}
             {property.rental_yield_estimate && (
-              <div className="absolute top-3 right-3 px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1">
+              <div className="absolute top-3 right-3 px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1 backdrop-blur-sm">
                 <TrendingUp className="w-3 h-3" />
                 {property.rental_yield_estimate}% yield
               </div>
             )}
 
             {/* Action Buttons */}
-            <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <motion.div 
+              className="absolute bottom-3 right-3 flex gap-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 0, y: 10 }}
+              whileHover={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ opacity: 0 }}
+            >
               {isAuthenticated && onToggleSave && (
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="w-8 h-8 rounded-full bg-background/90 hover:bg-background"
+                  className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onToggleSave();
                   }}
                 >
-                  <Heart className={cn("w-4 h-4", isSaved && "fill-red-500 text-red-500")} />
+                  <Heart className={cn("w-4 h-4 transition-colors", isSaved && "fill-red-500 text-red-500")} />
                 </Button>
               )}
               {showCompareButton && onCompare && (
@@ -136,7 +154,7 @@ export function PropertyCard({
                   size="icon"
                   variant="secondary"
                   className={cn(
-                    "w-8 h-8 rounded-full bg-background/90 hover:bg-background",
+                    "w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110",
                     isComparing && "bg-gold text-primary-dark"
                   )}
                   onClick={(e) => {
@@ -151,7 +169,50 @@ export function PropertyCard({
               <Button
                 size="icon"
                 variant="secondary"
-                className="w-8 h-8 rounded-full bg-background/90 hover:bg-background"
+                className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
+                onClick={handleShare}
+              >
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </motion.div>
+            
+            {/* Persistent Action Buttons that show on group hover */}
+            <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+              {isAuthenticated && onToggleSave && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onToggleSave();
+                  }}
+                >
+                  <Heart className={cn("w-4 h-4 transition-colors", isSaved && "fill-red-500 text-red-500")} />
+                </Button>
+              )}
+              {showCompareButton && onCompare && (
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className={cn(
+                    "w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110",
+                    isComparing && "bg-gold text-primary-dark"
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onCompare();
+                  }}
+                >
+                  <Scale className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                size="icon"
+                variant="secondary"
+                className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />
@@ -162,7 +223,7 @@ export function PropertyCard({
           {/* Content */}
           <div className="p-5">
             {/* Location */}
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2 transition-colors group-hover:text-muted-foreground/80">
               <MapPin className="w-4 h-4" />
               {property.location_area}
               {property.developer_name && (
@@ -171,26 +232,26 @@ export function PropertyCard({
             </div>
 
             {/* Title */}
-            <h3 className="font-heading text-lg text-foreground mb-3 group-hover:text-gold transition-colors line-clamp-2">
+            <h3 className="font-heading text-lg text-foreground mb-3 group-hover:text-gold transition-colors duration-300 line-clamp-2">
               {property.title}
             </h3>
 
             {/* Price */}
-            <p className="font-heading text-xl text-gold mb-3">
+            <p className="font-heading text-xl text-gold mb-3 transition-all group-hover:scale-[1.02] origin-left">
               {formatPrice(property.price_aed)}
             </p>
 
             {/* Features */}
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
                 <Bed className="w-4 h-4" />
                 {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} BR`}
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
                 <Bath className="w-4 h-4" />
                 {property.bathrooms}
               </span>
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
                 <Maximize className="w-4 h-4" />
                 {property.size_sqft.toLocaleString()} sqft
               </span>

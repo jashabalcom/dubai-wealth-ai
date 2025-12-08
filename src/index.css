@@ -199,4 +199,92 @@
   .font-sans {
     font-family: 'Inter', system-ui, sans-serif;
   }
+
+  /* Button micro-interactions */
+  .btn-press {
+    @apply active:scale-[0.97] active:shadow-none transition-all duration-100;
+  }
+
+  /* Card hover lift effect */
+  .card-hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .card-hover-lift:hover {
+    @apply -translate-y-2 shadow-2xl;
+    box-shadow: 0 25px 50px -12px hsl(var(--gold) / 0.15);
+  }
+
+  /* Image zoom effect */
+  .img-zoom {
+    @apply transition-transform duration-500 ease-out;
+  }
+  .group:hover .img-zoom {
+    @apply scale-110;
+  }
+
+  /* Skeleton shimmer */
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.5) 50%,
+      hsl(var(--muted)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Focus glow for inputs */
+  .input-focus-glow:focus {
+    box-shadow: 0 0 0 3px hsl(var(--gold) / 0.15);
+    border-color: hsl(var(--gold));
+  }
+
+  /* Nav active indicator */
+  .nav-link-active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: hsl(var(--gold));
+    transform-origin: left;
+    animation: underline-grow 0.3s ease-out forwards;
+  }
+
+  @keyframes underline-grow {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+
+  /* Stat counter animation */
+  .stat-glow {
+    text-shadow: 0 0 30px hsl(var(--gold) / 0.3);
+  }
+
+  /* Badge pulse */
+  .badge-pulse {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Avatar ring pulse on hover */
+  .avatar-ring-pulse:hover {
+    animation: ring-pulse 1s ease-out;
+  }
+
+  @keyframes ring-pulse {
+    0% { box-shadow: 0 0 0 0 hsl(var(--gold) / 0.4); }
+    100% { box-shadow: 0 0 0 8px hsl(var(--gold) / 0); }
+  }
 }

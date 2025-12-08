@@ -5,30 +5,30 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 font-sans",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 font-sans active:scale-[0.97] active:transition-transform active:duration-75",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em]",
+          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md",
         outline:
-          "border border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em]",
+          "border border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-sm uppercase tracking-[0.1em]",
         ghost: 
           "hover:bg-accent hover:text-accent-foreground rounded-md",
         link: 
-          "text-primary underline-offset-4 hover:underline",
+          "text-primary underline-offset-4 hover:underline active:scale-100",
         gold:
-          "bg-gradient-to-r from-primary to-gold-light text-secondary hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em]",
+          "bg-gradient-to-r from-primary to-gold-light text-secondary hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50",
         hero:
-          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.15em] border border-primary/20",
+          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.15em] border border-primary/20 focus-visible:ring-gold/50",
         "hero-outline":
-          "bg-transparent border border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 rounded-sm uppercase tracking-[0.15em]",
+          "bg-transparent border border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/50 rounded-sm uppercase tracking-[0.15em]",
         nav:
-          "bg-transparent text-foreground hover:text-primary transition-colors uppercase tracking-[0.1em] text-xs",
+          "bg-transparent text-foreground hover:text-primary transition-colors uppercase tracking-[0.1em] text-xs active:scale-100",
       },
       size: {
         default: "h-12 px-8 py-3",

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useConnections } from "@/hooks/useConnections";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "Academy", href: "/academy", isRoute: true },
@@ -34,6 +35,7 @@ export function Navbar() {
   const { user, signOut } = useAuth();
   const { unreadCount } = useDirectMessages();
   const { pendingCount } = useConnections();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,23 +66,29 @@ export function Navbar() {
     await signOut();
   };
 
+  const isActiveLink = (href: string) => {
+    if (href === '/') return location.pathname === '/';
+    return location.pathname.startsWith(href);
+  };
+
   return (
     <>
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
           isScrolled
-            ? "bg-secondary/95 backdrop-blur-md border-b border-primary/10"
+            ? "bg-secondary/95 backdrop-blur-md border-b border-primary/10 shadow-lg shadow-black/5"
             : "bg-transparent"
-        }`}
+        )}
       >
         <div className="container-luxury">
           <nav className="flex items-center justify-between h-20 md:h-24">
             {/* Logo */}
-            <Link to="/" className="flex flex-col items-start">
-              <span className="font-serif text-xl md:text-2xl font-semibold text-secondary-foreground tracking-wide">
+            <Link to="/" className="flex flex-col items-start group">
+              <span className="font-serif text-xl md:text-2xl font-semibold text-secondary-foreground tracking-wide transition-colors group-hover:text-primary">
                 Dubai Wealth Hub
               </span>
               <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-sans">
@@ -90,19 +98,35 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-10">
-{navLinks.map((link) => {
+              {navLinks.map((link) => {
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
+                const isActive = link.isRoute && isActiveLink(link.href);
+                
                 return link.isRoute ? (
                   <Link
                     key={link.label}
                     to={link.href}
-                    className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans relative"
+                    className={cn(
+                      "relative text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
+                      isActive 
+                        ? "text-primary" 
+                        : "text-secondary-foreground/80 hover:text-primary"
+                    )}
                   >
                     {link.label}
+                    {isActive && (
+                      <motion.span
+                        layoutId="navbar-indicator"
+                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      />
+                    )}
                     {totalBadge > 0 && (
                       <Badge 
                         variant="default" 
-                        className="absolute -top-2 -right-4 h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
+                        className="absolute -top-2 -right-4 h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground animate-pulse-soft"
                       >
                         {totalBadge > 9 ? '9+' : totalBadge}
                       </Badge>
@@ -125,8 +149,8 @@ export function Navbar() {
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted/50 transition-colors">
-                      <Avatar className="h-9 w-9 ring-2 ring-gold/30">
+                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted/50 transition-all duration-200 hover:ring-2 hover:ring-gold/20">
+                      <Avatar className="h-9 w-9 ring-2 ring-gold/30 transition-all duration-300 hover:ring-gold/50">
                         <AvatarImage src={avatarUrl || undefined} />
                         <AvatarFallback className="bg-gold/20 text-gold text-sm">
                           {fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
@@ -173,7 +197,7 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-secondary-foreground"
+              className="lg:hidden p-2 text-secondary-foreground transition-transform duration-200 active:scale-90"
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -192,8 +216,10 @@ export function Navbar() {
             className="fixed inset-0 z-40 bg-secondary pt-24 lg:hidden"
           >
             <div className="container-luxury flex flex-col gap-8 py-8">
-              {navLinks.map((link, index) => (
-                link.isRoute ? (
+              {navLinks.map((link, index) => {
+                const isActive = link.isRoute && isActiveLink(link.href);
+                
+                return link.isRoute ? (
                   <motion.div
                     key={link.label}
                     initial={{ opacity: 0, x: -20 }}
@@ -203,9 +229,17 @@ export function Navbar() {
                     <Link
                       to={link.href}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="text-2xl font-serif text-secondary-foreground hover:text-primary transition-colors block"
+                      className={cn(
+                        "text-2xl font-serif transition-colors block",
+                        isActive 
+                          ? "text-primary" 
+                          : "text-secondary-foreground hover:text-primary"
+                      )}
                     >
                       {link.label}
+                      {isActive && (
+                        <span className="ml-2 inline-block w-2 h-2 rounded-full bg-primary" />
+                      )}
                     </Link>
                   </motion.div>
                 ) : (
@@ -220,8 +254,8 @@ export function Navbar() {
                   >
                     {link.label}
                   </motion.a>
-                )
-              ))}
+                );
+              })}
               <div className="flex flex-col gap-4 pt-8 border-t border-primary/20">
                 {user ? (
                   <>
