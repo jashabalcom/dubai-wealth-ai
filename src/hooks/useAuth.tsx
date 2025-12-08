@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -10,6 +10,7 @@ interface Profile {
   country: string | null;
   membership_tier: 'free' | 'investor' | 'elite';
   membership_status: 'active' | 'canceled' | 'trial' | 'expired';
+  membership_renews_at: string | null;
 }
 
 interface AuthContextType {
@@ -20,6 +21,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +31,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (!error && data) {
+      setProfile(data as Profile);
+    }
+  }, []);
+
+  const checkSubscription = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return;
+      }
+      
+      if (data && user) {
+        // Refresh profile to get updated tier
+        await fetchProfile(user.id);
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  }, [user, fetchProfile]);
+
+  const refreshSubscription = useCallback(async () => {
+    if (user) {
+      await checkSubscription();
+    }
+  }, [user, checkSubscription]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -42,6 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
+          
+          // Check subscription on login/token refresh
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setTimeout(() => {
+              checkSubscription();
+            }, 100);
+          }
         } else {
           setProfile(null);
         }
@@ -54,24 +99,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
+        // Check subscription on initial load
+        setTimeout(() => {
+          checkSubscription();
+        }, 500);
       }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfile, checkSubscription]);
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+  // Periodic subscription check every 5 minutes
+  useEffect(() => {
+    if (!user) return;
 
-    if (!error && data) {
-      setProfile(data as Profile);
-    }
-  };
+    const interval = setInterval(() => {
+      checkSubscription();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [user, checkSubscription]);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -107,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signUp, signIn, signOut, refreshSubscription }}>
       {children}
     </AuthContext.Provider>
   );
