@@ -109,6 +109,63 @@ export type Database = {
           },
         ]
       }
+      community_events: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          duration_minutes: number
+          event_date: string
+          event_type: string
+          id: string
+          is_published: boolean
+          max_attendees: number | null
+          meeting_id: string | null
+          meeting_platform: string
+          meeting_url: string | null
+          title: string
+          updated_at: string
+          visibility: Database["public"]["Enums"]["channel_visibility"]
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          duration_minutes?: number
+          event_date: string
+          event_type?: string
+          id?: string
+          is_published?: boolean
+          max_attendees?: number | null
+          meeting_id?: string | null
+          meeting_platform?: string
+          meeting_url?: string | null
+          title: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["channel_visibility"]
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          duration_minutes?: number
+          event_date?: string
+          event_type?: string
+          id?: string
+          is_published?: boolean
+          max_attendees?: number | null
+          meeting_id?: string | null
+          meeting_platform?: string
+          meeting_url?: string | null
+          title?: string
+          updated_at?: string
+          visibility?: Database["public"]["Enums"]["channel_visibility"]
+        }
+        Relationships: []
+      }
       community_posts: {
         Row: {
           channel_id: string
@@ -203,6 +260,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      event_registrations: {
+        Row: {
+          event_id: string
+          id: string
+          registered_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          registered_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          registered_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "community_events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       golden_visa_submissions: {
         Row: {
