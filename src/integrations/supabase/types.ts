@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          title: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          title: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          title?: string
+        }
+        Relationships: []
+      }
+      admin_metrics_snapshots: {
+        Row: {
+          arr: number | null
+          churn_count: number | null
+          created_at: string
+          elite_count: number | null
+          free_count: number | null
+          id: string
+          investor_count: number | null
+          mrr: number | null
+          new_signups_today: number | null
+          snapshot_date: string
+          total_revenue: number | null
+          total_users: number | null
+        }
+        Insert: {
+          arr?: number | null
+          churn_count?: number | null
+          created_at?: string
+          elite_count?: number | null
+          free_count?: number | null
+          id?: string
+          investor_count?: number | null
+          mrr?: number | null
+          new_signups_today?: number | null
+          snapshot_date: string
+          total_revenue?: number | null
+          total_users?: number | null
+        }
+        Update: {
+          arr?: number | null
+          churn_count?: number | null
+          created_at?: string
+          elite_count?: number | null
+          free_count?: number | null
+          id?: string
+          investor_count?: number | null
+          mrr?: number | null
+          new_signups_today?: number | null
+          snapshot_date?: string
+          total_revenue?: number | null
+          total_users?: number | null
+        }
+        Relationships: []
+      }
       ai_strategies: {
         Row: {
           ai_response: string | null
@@ -582,6 +654,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketing_campaigns: {
+        Row: {
+          ad_spend: number | null
+          campaign_id: string | null
+          campaign_name: string
+          clicks: number | null
+          conversions: number | null
+          created_at: string
+          date: string
+          id: string
+          impressions: number | null
+          notes: string | null
+          platform: string
+          revenue_attributed: number | null
+          updated_at: string
+        }
+        Insert: {
+          ad_spend?: number | null
+          campaign_id?: string | null
+          campaign_name: string
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          impressions?: number | null
+          notes?: string | null
+          platform: string
+          revenue_attributed?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ad_spend?: number | null
+          campaign_id?: string | null
+          campaign_name?: string
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          impressions?: number | null
+          notes?: string | null
+          platform?: string
+          revenue_attributed?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       message_reactions: {
         Row: {

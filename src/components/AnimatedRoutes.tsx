@@ -34,6 +34,8 @@ import AdminLessons from "@/pages/admin/AdminLessons";
 import AdminProperties from "@/pages/admin/AdminProperties";
 import AdminEvents from "@/pages/admin/AdminEvents";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
+import AdminRevenue from "@/pages/admin/AdminRevenue";
+import AdminMarketing from "@/pages/admin/AdminMarketing";
 import NotFound from "@/pages/NotFound";
 
 // Community Hub Pages
@@ -106,6 +108,8 @@ export function AnimatedRoutes() {
         <Route path="/admin/properties" element={<AnimatedPage><AdminProperties /></AnimatedPage>} />
         <Route path="/admin/events" element={<AnimatedPage><AdminEvents /></AnimatedPage>} />
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
+        <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
+        <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
     </AnimatePresence>

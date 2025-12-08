@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-welcome-email]
 verify_jwt = false
+
+[functions.admin-revenue-stats]
+verify_jwt = false
