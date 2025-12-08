@@ -2,8 +2,17 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const navLinks = [
   { label: "Academy", href: "/academy", isRoute: true },
@@ -17,7 +26,9 @@ const navLinks = [
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,6 +37,27 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Fetch user profile for avatar
+  useEffect(() => {
+    if (user?.id) {
+      supabase
+        .from('profiles')
+        .select('avatar_url, full_name')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setAvatarUrl(data.avatar_url);
+            setFullName(data.full_name);
+          }
+        });
+    }
+  }, [user?.id]);
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   return (
     <>
@@ -77,11 +109,37 @@ export function Navbar() {
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
               {user ? (
-                <Link to="/dashboard">
-                  <Button variant="hero" size="sm">
-                    Dashboard
-                  </Button>
-                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted/50 transition-colors">
+                      <Avatar className="h-9 w-9 ring-2 ring-gold/30">
+                        <AvatarImage src={avatarUrl || undefined} />
+                        <AvatarFallback className="bg-gold/20 text-gold text-sm">
+                          {fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                        <User className="h-4 w-4" />
+                        My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <>
                   <Link to="/auth">
@@ -152,11 +210,31 @@ export function Navbar() {
               ))}
               <div className="flex flex-col gap-4 pt-8 border-t border-primary/20">
                 {user ? (
-                  <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="hero" size="lg" className="w-full">
-                      Dashboard
+                  <>
+                    <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
+                        <User className="h-5 w-5 mr-2" />
+                        My Profile
+                      </Button>
+                    </Link>
+                    <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="hero" size="lg" className="w-full">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="lg"
+                      className="text-destructive justify-start w-full"
+                      onClick={() => {
+                        handleSignOut();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-5 w-5 mr-2" />
+                      Sign Out
                     </Button>
-                  </Link>
+                  </>
                 ) : (
                   <>
                     <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>

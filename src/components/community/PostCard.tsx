@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Crown, Send, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +29,7 @@ interface PostCardProps {
     likes_count: number;
     comments_count: number;
     created_at: string;
+    user_id?: string;
     author?: Author;
     has_liked?: boolean;
   };
@@ -83,10 +85,11 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
     >
       {/* Author Header */}
       <div className="flex items-center gap-4">
-        <div className="relative">
+        <Link to={post.user_id ? `/profile/${post.user_id}` : '#'} className="relative group">
           <Avatar className={cn(
             "h-12 w-12 ring-2 ring-offset-2 ring-offset-card transition-all",
-            isElite ? "ring-gold/50" : "ring-border/50"
+            isElite ? "ring-gold/50" : "ring-border/50",
+            post.user_id && "group-hover:ring-gold/70"
           )}>
             <AvatarImage src={post.author?.avatar_url || undefined} />
             <AvatarFallback className={cn(
@@ -101,10 +104,15 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
               <Crown className="h-3 w-3 text-gold" />
             </div>
           )}
-        </div>
+        </Link>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-semibold">{post.author?.full_name || 'Anonymous'}</span>
+            <Link 
+              to={post.user_id ? `/profile/${post.user_id}` : '#'} 
+              className="font-semibold hover:text-gold transition-colors"
+            >
+              {post.author?.full_name || 'Anonymous'}
+            </Link>
             {isElite && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}

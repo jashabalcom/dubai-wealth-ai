@@ -21,6 +21,7 @@ import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
 import AIAssistant from "./pages/AIAssistant";
 import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
+import Profile from "./pages/Profile";
 import GoldenVisaWizard from "./pages/GoldenVisaWizard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -62,6 +63,8 @@ const App = () => (
             <Route path="/ai-assistant" element={<AIAssistant />} />
             <Route path="/community" element={<Community />} />
             <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
