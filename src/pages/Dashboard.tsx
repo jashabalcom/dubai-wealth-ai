@@ -1,0 +1,204 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { 
+  GraduationCap, 
+  Building2, 
+  TrendingUp, 
+  Users, 
+  Brain, 
+  Crown,
+  ArrowRight,
+  LogOut
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+
+export default function Dashboard() {
+  const { user, profile, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const firstName = profile?.full_name?.split(' ')[0] || 'Investor';
+  const membershipTier = profile?.membership_tier || 'free';
+  const isElite = membershipTier === 'elite';
+  const isInvestor = membershipTier === 'investor';
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const quickActions = [
+    {
+      icon: GraduationCap,
+      title: 'Academy',
+      description: 'Continue learning Dubai real estate',
+      href: '/academy',
+      color: 'bg-blue-500/10 text-blue-500',
+    },
+    {
+      icon: Building2,
+      title: 'Properties',
+      description: 'Browse investment opportunities',
+      href: '/properties',
+      color: 'bg-emerald-500/10 text-emerald-500',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Tools',
+      description: 'ROI & investment calculators',
+      href: '/tools',
+      color: 'bg-purple-500/10 text-purple-500',
+    },
+    {
+      icon: Users,
+      title: 'Community',
+      description: 'Connect with investors',
+      href: '/community',
+      color: 'bg-orange-500/10 text-orange-500',
+    },
+    {
+      icon: Brain,
+      title: 'AI Assistant',
+      description: 'Get personalized advice',
+      href: '/ai',
+      color: 'bg-pink-500/10 text-pink-500',
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-lg bg-gold flex items-center justify-center">
+              <span className="text-primary-dark font-heading font-bold text-lg">DW</span>
+            </div>
+            <span className="font-heading text-xl text-foreground">Dubai Wealth Hub</span>
+          </a>
+
+          <div className="flex items-center gap-4">
+            {/* Membership Badge */}
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+              isElite 
+                ? 'bg-gold/20 text-gold border border-gold/30' 
+                : isInvestor 
+                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                  : 'bg-muted text-muted-foreground'
+            }`}>
+              {isElite && <Crown className="w-3 h-3 inline mr-1" />}
+              {membershipTier.charAt(0).toUpperCase() + membershipTier.slice(1)} Member
+            </div>
+
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h1 className="font-heading text-3xl md:text-4xl text-foreground mb-2">
+            Welcome back, {firstName}
+          </h1>
+          <p className="text-muted-foreground">
+            Here's what's happening with your Dubai investments
+          </p>
+        </motion.div>
+
+        {/* Upgrade CTA for non-Elite */}
+        {!isElite && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-gold/10 via-gold/5 to-transparent border border-gold/20"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-5 h-5 text-gold" />
+                  <span className="text-gold font-medium">Upgrade to Elite</span>
+                </div>
+                <p className="text-muted-foreground">
+                  Get priority access to off-plan launches, advanced AI tools, and portfolio tracking.
+                </p>
+              </div>
+              <Button variant="gold">
+                Upgrade Now
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Quick Actions Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h2 className="font-heading text-xl text-foreground mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {quickActions.map((action) => (
+              <a
+                key={action.title}
+                href={action.href}
+                className="group p-6 rounded-xl bg-card border border-border hover:border-gold/30 transition-all duration-300"
+              >
+                <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-4`}>
+                  <action.icon className="w-6 h-6" />
+                </div>
+                <h3 className="font-heading text-lg text-foreground mb-1 group-hover:text-gold transition-colors">
+                  {action.title}
+                </h3>
+                <p className="text-sm text-muted-foreground">{action.description}</p>
+              </a>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Market Insights Placeholder */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-8"
+        >
+          <h2 className="font-heading text-xl text-foreground mb-4">Market Insights</h2>
+          <div className="p-6 rounded-xl bg-card border border-border">
+            <p className="text-muted-foreground text-center py-8">
+              Market data and insights coming soon...
+            </p>
+          </div>
+        </motion.div>
+      </main>
+    </div>
+  );
+}
