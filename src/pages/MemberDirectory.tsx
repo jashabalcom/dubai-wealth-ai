@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Grid3X3, List, SortAsc } from 'lucide-react';
+import { Users, Grid3X3, List, SortAsc, UserCheck } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MemberCard } from '@/components/community/MemberCard';
@@ -16,7 +16,9 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemberDirectory } from '@/hooks/useMemberDirectory';
+import { useConnections } from '@/hooks/useConnections';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -33,6 +35,7 @@ const itemVariants = {
 
 export default function MemberDirectory() {
   const { user, loading: authLoading } = useAuth();
+  const { pendingCount } = useConnections();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const {
     members,
@@ -92,6 +95,24 @@ export default function MemberDirectory() {
 
             {/* View & Sort Controls */}
             <div className="flex items-center gap-3">
+              {/* My Connections Link */}
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="border-gold/30 hover:border-gold/50 hover:bg-gold/10"
+              >
+                <Link to="/connections" className="flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  My Connections
+                  {pendingCount > 0 && (
+                    <Badge variant="secondary" className="bg-destructive/20 text-destructive text-xs ml-1">
+                      {pendingCount}
+                    </Badge>
+                  )}
+                </Link>
+              </Button>
+
               <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/50">
                 <Button
                   variant="ghost"
