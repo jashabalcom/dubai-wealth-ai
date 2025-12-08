@@ -54,11 +54,54 @@ const areaCoordinates: Record<string, { lat: number; lng: number }> = {
   'Tilal Al Ghaf': { lat: 25.0300, lng: 55.1900 },
 };
 
+// Dubai neighborhood boundaries (approximate polygons)
+const neighborhoodBoundaries: Record<string, number[][]> = {
+  'Dubai Marina': [
+    [55.125, 25.070], [55.145, 25.065], [55.160, 25.075], [55.155, 25.095], [55.135, 25.095], [55.120, 25.085], [55.125, 25.070]
+  ],
+  'Downtown Dubai': [
+    [55.260, 25.185], [55.285, 25.185], [55.295, 25.200], [55.290, 25.215], [55.265, 25.215], [55.255, 25.200], [55.260, 25.185]
+  ],
+  'Palm Jumeirah': [
+    [55.105, 25.080], [55.175, 25.080], [55.175, 25.145], [55.105, 25.145], [55.105, 25.080]
+  ],
+  'Business Bay': [
+    [55.255, 25.175], [55.280, 25.175], [55.285, 25.195], [55.275, 25.205], [55.250, 25.200], [55.250, 25.185], [55.255, 25.175]
+  ],
+  'JVC': [
+    [55.195, 25.040], [55.230, 25.040], [55.235, 25.065], [55.220, 25.075], [55.195, 25.070], [55.190, 25.055], [55.195, 25.040]
+  ],
+  'Dubai Creek Harbour': [
+    [55.320, 25.190], [55.355, 25.190], [55.360, 25.215], [55.340, 25.225], [55.315, 25.215], [55.315, 25.200], [55.320, 25.190]
+  ],
+  'Emaar Beachfront': [
+    [55.105, 25.065], [55.135, 25.065], [55.140, 25.085], [55.125, 25.095], [55.105, 25.090], [55.100, 25.075], [55.105, 25.065]
+  ],
+  'MBR City': [
+    [55.300, 25.155], [55.345, 25.155], [55.350, 25.185], [55.330, 25.195], [55.300, 25.190], [55.295, 25.170], [55.300, 25.155]
+  ],
+};
+
+// GeoJSON for neighborhoods with feature IDs for hover state
+const createNeighborhoodGeoJSON = () => ({
+  type: 'FeatureCollection' as const,
+  features: Object.entries(neighborhoodBoundaries).map(([name, coords], index) => ({
+    type: 'Feature' as const,
+    id: index,
+    properties: { name },
+    geometry: {
+      type: 'Polygon' as const,
+      coordinates: [coords],
+    },
+  })),
+});
+
 export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [hoveredArea, setHoveredArea] = useState<string | null>(null);
   const { token, loading, error } = useMapboxToken();
 
   const getPropertyCoordinates = useCallback((property: Property) => {
@@ -91,7 +134,7 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
     }
   }, [getPropertyCoordinates, onPropertySelect]);
 
-  // Initialize map
+  // Initialize map with neighborhood layers
   useEffect(() => {
     if (!mapContainer.current || !token || map.current) return;
 
@@ -109,6 +152,123 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
       new mapboxgl.NavigationControl({ visualizePitch: true }),
       'top-right'
     );
+
+    // Add neighborhood boundaries on load
+    map.current.on('load', () => {
+      if (!map.current) return;
+
+      // Add source for neighborhoods
+      map.current.addSource('neighborhoods', {
+        type: 'geojson',
+        data: createNeighborhoodGeoJSON(),
+      });
+
+      // Add fill layer (invisible by default, visible on hover)
+      map.current.addLayer({
+        id: 'neighborhood-fill',
+        type: 'fill',
+        source: 'neighborhoods',
+        paint: {
+          'fill-color': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            'hsla(40, 40%, 55%, 0.25)',
+            'hsla(40, 40%, 55%, 0.05)'
+          ],
+          'fill-opacity': 1,
+        },
+      });
+
+      // Add outline layer
+      map.current.addLayer({
+        id: 'neighborhood-outline',
+        type: 'line',
+        source: 'neighborhoods',
+        paint: {
+          'line-color': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            'hsl(40, 40%, 65%)',
+            'hsla(40, 40%, 55%, 0.3)'
+          ],
+          'line-width': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            3,
+            1
+          ],
+        },
+      });
+
+      // Add label layer
+      map.current.addLayer({
+        id: 'neighborhood-labels',
+        type: 'symbol',
+        source: 'neighborhoods',
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': 12,
+          'text-anchor': 'center',
+          'text-allow-overlap': false,
+        },
+        paint: {
+          'text-color': 'hsl(40, 40%, 75%)',
+          'text-halo-color': 'hsl(220, 30%, 10%)',
+          'text-halo-width': 1.5,
+          'text-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'hover'], false],
+            1,
+            0.6
+          ],
+        },
+      });
+
+      let hoveredFeatureId: string | number | undefined = undefined;
+
+      // Handle mouse enter
+      map.current.on('mouseenter', 'neighborhood-fill', () => {
+        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
+      });
+
+      // Handle mouse move for hover state
+      map.current.on('mousemove', 'neighborhood-fill', (e) => {
+        if (!map.current || !e.features || e.features.length === 0) return;
+
+        if (hoveredFeatureId !== undefined) {
+          map.current.setFeatureState(
+            { source: 'neighborhoods', id: hoveredFeatureId },
+            { hover: false }
+          );
+        }
+
+        hoveredFeatureId = e.features[0].id;
+        const areaName = e.features[0].properties?.name || null;
+        setHoveredArea(areaName);
+
+        if (hoveredFeatureId !== undefined) {
+          map.current.setFeatureState(
+            { source: 'neighborhoods', id: hoveredFeatureId },
+            { hover: true }
+          );
+        }
+      });
+
+      // Handle mouse leave
+      map.current.on('mouseleave', 'neighborhood-fill', () => {
+        if (!map.current) return;
+        map.current.getCanvas().style.cursor = '';
+        
+        if (hoveredFeatureId !== undefined) {
+          map.current.setFeatureState(
+            { source: 'neighborhoods', id: hoveredFeatureId },
+            { hover: false }
+          );
+        }
+        hoveredFeatureId = undefined;
+        setHoveredArea(null);
+      });
+    });
 
     return () => {
       map.current?.remove();
@@ -290,6 +450,20 @@ export function PropertyMap({ properties, onPropertySelect }: PropertyMapProps) 
           <span className="text-muted-foreground">Featured</span>
         </div>
       </div>
+
+      {/* Hovered area tooltip */}
+      <AnimatePresence>
+        {hoveredArea && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-4 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground px-4 py-2 rounded-lg shadow-lg z-20"
+          >
+            <span className="font-heading font-semibold">{hoveredArea}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Property count */}
       <div className="absolute top-4 right-16 bg-card/90 backdrop-blur-sm border border-border rounded-lg px-3 py-2">
