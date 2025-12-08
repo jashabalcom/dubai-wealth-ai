@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
 import { AnimatedRoutes } from "@/components/AnimatedRoutes";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -16,9 +17,10 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <AnimatedRoutes />
-          </BrowserRouter>
+  <BrowserRouter>
+    <ScrollToTop />
+    <AnimatedRoutes />
+  </BrowserRouter>
         </TooltipProvider>
       </OnlinePresenceProvider>
     </AuthProvider>
