@@ -3,11 +3,42 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCountUp, useInView } from "@/hooks/useCountUp";
 import heroImage from "@/assets/hero-dubai-skyline.jpg";
+
+interface CountUpStatProps {
+  end: number;
+  suffix?: string;
+  prefix?: string;
+  decimals?: number;
+  label: string;
+  enabled: boolean;
+}
+
+function CountUpStat({ end, suffix = "", prefix = "", decimals = 0, label, enabled }: CountUpStatProps) {
+  const count = useCountUp({ end, duration: 2500, decimals, enabled });
+  
+  return (
+    <motion.div 
+      className="text-center"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="text-3xl md:text-4xl font-serif text-primary mb-1 stat-glow">
+        {prefix}{count.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}{suffix}
+      </div>
+      <div className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/50">
+        {label}
+      </div>
+    </motion.div>
+  );
+}
 
 export function HeroSection() {
   const navigate = useNavigate();
   const [videoOpen, setVideoOpen] = useState(false);
+  const { ref: statsRef, hasBeenInView } = useInView();
 
   return (
     <>
@@ -99,34 +130,36 @@ export function HeroSection() {
               </Button>
             </motion.div>
 
-          {/* Trust Indicators */}
+          {/* Trust Indicators with Count-Up Animation */}
           <motion.div
+            ref={statsRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 1.2 }}
             className="mt-20 pt-12 border-t border-primary/10"
           >
             <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-serif text-primary mb-1">$2.4B+</div>
-                <div className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/50">
-                  Investment Analyzed
-                </div>
-              </div>
+              <CountUpStat 
+                end={2.4} 
+                prefix="$" 
+                suffix="B+" 
+                decimals={1}
+                label="Investment Analyzed"
+                enabled={hasBeenInView}
+              />
               <div className="hidden md:block w-px h-12 bg-primary/20" />
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-serif text-primary mb-1">12,000+</div>
-                <div className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/50">
-                  Global Investors
-                </div>
-              </div>
+              <CountUpStat 
+                end={12000} 
+                suffix="+"
+                label="Global Investors"
+                enabled={hasBeenInView}
+              />
               <div className="hidden md:block w-px h-12 bg-primary/20" />
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-serif text-primary mb-1">47</div>
-                <div className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/50">
-                  Countries
-                </div>
-              </div>
+              <CountUpStat 
+                end={47}
+                label="Countries"
+                enabled={hasBeenInView}
+              />
             </div>
           </motion.div>
         </motion.div>
