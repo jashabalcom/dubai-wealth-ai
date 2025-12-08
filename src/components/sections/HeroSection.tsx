@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -39,27 +39,54 @@ export function HeroSection() {
   const navigate = useNavigate();
   const [videoOpen, setVideoOpen] = useState(false);
   const { ref: statsRef, hasBeenInView } = useInView();
+  
+  // Parallax setup
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"]
+  });
+  
+  // Parallax transforms - different speeds create depth
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
+  const decorativeLeftY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const decorativeRightY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 0.8]);
 
   return (
     <>
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div className="absolute inset-0">
-          <img
+      <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image with Parallax */}
+        <motion.div 
+          className="absolute inset-0"
+          style={{ y: backgroundY }}
+        >
+          <motion.img
             src={heroImage}
             alt="Dubai skyline at golden hour"
-            className="w-full h-full object-cover opacity-50"
+            className="w-full h-[120%] object-cover"
+            style={{ opacity: overlayOpacity }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/70 via-secondary/50 to-secondary" />
           <div className="absolute inset-0 bg-gradient-to-r from-secondary/60 via-transparent to-secondary/60" />
-        </div>
+        </motion.div>
 
-        {/* Decorative Elements */}
-        <div className="absolute top-1/4 left-10 w-px h-40 bg-gradient-to-b from-transparent via-primary/40 to-transparent" />
-        <div className="absolute top-1/3 right-10 w-px h-60 bg-gradient-to-b from-transparent via-primary/30 to-transparent" />
+        {/* Decorative Elements with Parallax */}
+        <motion.div 
+          className="absolute top-1/4 left-10 w-px h-40 bg-gradient-to-b from-transparent via-primary/40 to-transparent"
+          style={{ y: decorativeLeftY }}
+        />
+        <motion.div 
+          className="absolute top-1/3 right-10 w-px h-60 bg-gradient-to-b from-transparent via-primary/30 to-transparent"
+          style={{ y: decorativeRightY }}
+        />
 
-        {/* Content */}
-        <div className="relative z-10 container-luxury text-center pt-32 pb-24 md:pt-40 md:pb-32">
+        {/* Content with subtle parallax */}
+        <motion.div 
+          className="relative z-10 container-luxury text-center pt-32 pb-24 md:pt-40 md:pb-32"
+          style={{ y: contentY }}
+        >
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +190,7 @@ export function HeroSection() {
             </div>
           </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
 
       {/* Scroll Indicator */}
       <motion.div
