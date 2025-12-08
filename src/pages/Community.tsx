@@ -153,7 +153,7 @@ export default function Community() {
                     </div>
                   </div>
                   <CreatePostDialog
-                    onSubmit={(title, content) => createPost.mutate({ title, content })}
+                    onSubmit={(title, content, images) => createPost.mutate({ title, content, images })}
                     isSubmitting={createPost.isPending}
                   />
                 </motion.div>
@@ -203,7 +203,7 @@ export default function Community() {
                     Be the first to start a conversation in this channel!
                   </p>
                   <CreatePostDialog
-                    onSubmit={(title, content) => createPost.mutate({ title, content })}
+                    onSubmit={(title, content, images) => createPost.mutate({ title, content, images })}
                     isSubmitting={createPost.isPending}
                   />
                 </motion.div>

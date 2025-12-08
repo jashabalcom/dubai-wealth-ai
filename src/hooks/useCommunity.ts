@@ -22,6 +22,7 @@ interface Post {
   likes_count: number;
   comments_count: number;
   created_at: string;
+  images?: string[];
   author?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -109,8 +110,28 @@ export function useCommunity() {
   });
 
   const createPost = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
+    mutationFn: async ({ title, content, images }: { title: string; content: string; images: File[] }) => {
       if (!user || !selectedChannelId) throw new Error('Not authenticated or no channel selected');
+      
+      // Upload images if any
+      const imageUrls: string[] = [];
+      for (const image of images) {
+        const fileName = `${user.id}/${Date.now()}-${image.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('post-images')
+          .upload(fileName, image);
+        
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          continue;
+        }
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(fileName);
+        
+        imageUrls.push(publicUrl);
+      }
       
       const { error } = await supabase
         .from('community_posts')
@@ -119,6 +140,7 @@ export function useCommunity() {
           user_id: user.id,
           title,
           content,
+          images: imageUrls,
         });
       
       if (error) throw error;

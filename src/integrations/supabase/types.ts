@@ -116,6 +116,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          images: Json | null
           likes_count: number
           title: string
           updated_at: string
@@ -127,6 +128,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          images?: Json | null
           likes_count?: number
           title: string
           updated_at?: string
@@ -138,6 +140,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          images?: Json | null
           likes_count?: number
           title?: string
           updated_at?: string
