@@ -11,9 +11,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
+import { useConnections } from "@/hooks/useConnections";
 import { supabase } from "@/integrations/supabase/client";
 
 const navLinks = [
@@ -21,7 +22,7 @@ const navLinks = [
   { label: "Properties", href: "/properties", isRoute: true },
   { label: "Tools", href: "/tools", isRoute: true },
   { label: "AI Assistant", href: "/ai-assistant", isRoute: true },
-  { label: "Community", href: "/community", isRoute: true },
+  { label: "Community", href: "/community", isRoute: true, hasBadge: true },
   { label: "Membership", href: "#membership", isRoute: false },
 ];
 
@@ -32,6 +33,7 @@ export function Navbar() {
   const [fullName, setFullName] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { unreadCount } = useDirectMessages();
+  const { pendingCount } = useConnections();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -88,14 +90,23 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-10">
-              {navLinks.map((link) => (
-                link.isRoute ? (
+{navLinks.map((link) => {
+                const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
+                return link.isRoute ? (
                   <Link
                     key={link.label}
                     to={link.href}
-                    className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans"
+                    className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans relative"
                   >
                     {link.label}
+                    {totalBadge > 0 && (
+                      <Badge 
+                        variant="default" 
+                        className="absolute -top-2 -right-4 h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
+                      >
+                        {totalBadge > 9 ? '9+' : totalBadge}
+                      </Badge>
+                    )}
                   </Link>
                 ) : (
                   <a
@@ -105,8 +116,8 @@ export function Navbar() {
                   >
                     {link.label}
                   </a>
-                )
-              ))}
+                );
+              })}
             </div>
 
             {/* CTA Buttons */}
@@ -128,19 +139,6 @@ export function Navbar() {
                       <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                         <User className="h-4 w-4" />
                         My Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/messages" className="flex items-center justify-between cursor-pointer">
-                        <span className="flex items-center gap-2">
-                          <MessageCircle className="h-4 w-4" />
-                          Messages
-                        </span>
-                        {unreadCount > 0 && (
-                          <Badge variant="default" className="h-5 min-w-[20px] px-1.5 text-xs">
-                            {unreadCount > 9 ? '9+' : unreadCount}
-                          </Badge>
-                        )}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

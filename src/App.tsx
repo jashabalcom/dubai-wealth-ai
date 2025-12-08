@@ -21,12 +21,8 @@ import RentVsBuyCalculator from "./pages/tools/RentVsBuyCalculator";
 import AirbnbCalculator from "./pages/tools/AirbnbCalculator";
 import TotalCostCalculator from "./pages/tools/TotalCostCalculator";
 import AIAssistant from "./pages/AIAssistant";
-import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
 import Profile from "./pages/Profile";
-import MemberDirectory from "./pages/MemberDirectory";
-import Connections from "./pages/Connections";
-import Messages from "./pages/Messages";
 import GoldenVisaWizard from "./pages/GoldenVisaWizard";
 import Pricing from "./pages/Pricing";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
@@ -39,6 +35,14 @@ import AdminProperties from "./pages/admin/AdminProperties";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import NotFound from "./pages/NotFound";
+
+// Community Hub Pages
+import { CommunityLayout } from "./components/community/CommunityLayout";
+import DiscussionsPage from "./pages/community/DiscussionsPage";
+import EventsPage from "./pages/community/EventsPage";
+import MembersPage from "./pages/community/MembersPage";
+import ConnectionsPage from "./pages/community/ConnectionsPage";
+import MessagesPage from "./pages/community/MessagesPage";
 
 const queryClient = new QueryClient();
 
@@ -73,15 +77,21 @@ const App = () => (
             <Route path="/tools/airbnb" element={<AirbnbCalculator />} />
             <Route path="/tools/total-cost" element={<TotalCostCalculator />} />
             <Route path="/ai-assistant" element={<AIAssistant />} />
-            <Route path="/community" element={<Community />} />
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
-            <Route path="/members" element={<MemberDirectory />} />
-            <Route path="/connections" element={<Connections />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/messages/:userId" element={<Messages />} />
-            <Route path="/messages/group/:groupId" element={<Messages />} />
+            
+            {/* Community Hub Routes */}
+            <Route path="/community" element={<CommunityLayout />}>
+              <Route index element={<DiscussionsPage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="connections" element={<ConnectionsPage />} />
+              <Route path="messages" element={<MessagesPage />} />
+              <Route path="messages/:oderId" element={<MessagesPage />} />
+              <Route path="messages/group/:groupId" element={<MessagesPage />} />
+            </Route>
+            
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/join" element={<MembershipFunnel />} />
