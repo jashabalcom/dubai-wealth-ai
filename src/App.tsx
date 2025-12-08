@@ -26,6 +26,7 @@ import GoldenVisaWizard from "./pages/GoldenVisaWizard";
 import Pricing from "./pages/Pricing";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import MembershipFunnel from "./pages/MembershipFunnel";
+import EliteFunnel from "./pages/EliteFunnel";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCourses from "./pages/admin/AdminCourses";
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/join" element={<MembershipFunnel />} />
+            <Route path="/join-elite" element={<EliteFunnel />} />
             <Route path="/subscription-success" element={<SubscriptionSuccess />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
