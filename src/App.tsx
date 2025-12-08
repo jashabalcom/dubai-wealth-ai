@@ -23,6 +23,7 @@ import AIAssistant from "./pages/AIAssistant";
 import Community from "./pages/Community";
 import Portfolio from "./pages/Portfolio";
 import Profile from "./pages/Profile";
+import MemberDirectory from "./pages/MemberDirectory";
 import GoldenVisaWizard from "./pages/GoldenVisaWizard";
 import Pricing from "./pages/Pricing";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/portfolio" element={<Portfolio />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
+            <Route path="/members" element={<MemberDirectory />} />
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/join" element={<MembershipFunnel />} />
