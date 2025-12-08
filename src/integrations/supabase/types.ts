@@ -804,7 +804,9 @@ export type Database = {
           images: Json | null
           is_featured: boolean
           is_off_plan: boolean
+          latitude: number | null
           location_area: string
+          longitude: number | null
           payment_plan_json: Json | null
           price_aed: number
           property_type: string
@@ -828,7 +830,9 @@ export type Database = {
           images?: Json | null
           is_featured?: boolean
           is_off_plan?: boolean
+          latitude?: number | null
           location_area: string
+          longitude?: number | null
           payment_plan_json?: Json | null
           price_aed: number
           property_type?: string
@@ -852,7 +856,9 @@ export type Database = {
           images?: Json | null
           is_featured?: boolean
           is_off_plan?: boolean
+          latitude?: number | null
           location_area?: string
+          longitude?: number | null
           payment_plan_json?: Json | null
           price_aed?: number
           property_type?: string
