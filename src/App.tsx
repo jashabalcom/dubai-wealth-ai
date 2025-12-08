@@ -81,6 +81,7 @@ const App = () => (
             <Route path="/connections" element={<Connections />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/messages/:userId" element={<Messages />} />
+            <Route path="/messages/group/:groupId" element={<Messages />} />
             <Route path="/golden-visa" element={<GoldenVisaWizard />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/join" element={<MembershipFunnel />} />
