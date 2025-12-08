@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConnectionCard } from '@/components/community/ConnectionCard';
+import { PageTransition } from '@/components/community/PageTransition';
 import { useConnections } from '@/hooks/useConnections';
 
 function EmptyState({
@@ -55,7 +56,8 @@ export default function ConnectionsPage() {
                     cancelRequest.isPending || removeConnection.isPending;
 
   return (
-    <div className="space-y-5">
+    <PageTransition>
+      <div className="space-y-5">
       <div>
         <h2 className="text-xl font-serif font-semibold">My Connections</h2>
         <p className="text-sm text-muted-foreground">
@@ -188,5 +190,6 @@ export default function ConnectionsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  </PageTransition>
   );
 }

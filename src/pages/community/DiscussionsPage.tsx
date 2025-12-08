@@ -4,6 +4,7 @@ import { Hash, MessageSquarePlus } from 'lucide-react';
 import { ChannelList } from '@/components/community/ChannelList';
 import { PostCard } from '@/components/community/PostCard';
 import { CreatePostDialog } from '@/components/community/CreatePostDialog';
+import { PageTransition } from '@/components/community/PageTransition';
 import { useCommunity } from '@/hooks/useCommunity';
 
 const containerVariants = {
@@ -43,8 +44,9 @@ export default function DiscussionsPage() {
   const selectedChannel = channels.find((c) => c.id === selectedChannelId);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      {/* Sidebar - Channel List */}
+    <PageTransition>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar - Channel List */}
       <motion.aside
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -165,9 +167,10 @@ export default function DiscussionsPage() {
                 />
               </motion.div>
             ))}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

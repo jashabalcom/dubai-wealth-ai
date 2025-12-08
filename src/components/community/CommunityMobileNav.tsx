@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
   Calendar, 
@@ -71,28 +72,43 @@ export function CommunityMobileNav() {
             <Link
               key={item.path}
               to={item.path}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors relative",
-                active ? "text-gold" : "text-muted-foreground"
-              )}
+              className="relative"
             >
-              <div className="relative">
-                <item.icon className="h-5 w-5" />
-                {badgeCount > 0 && (
-                  <Badge 
-                    variant="secondary" 
-                    className={cn(
-                      "absolute -top-2 -right-2 h-4 min-w-[16px] px-1 text-[10px]",
-                      item.badgeKey === 'pending' 
-                        ? "bg-destructive text-destructive-foreground" 
-                        : "bg-gold text-primary-foreground"
-                    )}
-                  >
-                    {badgeCount > 9 ? '9+' : badgeCount}
-                  </Badge>
+              <motion.div
+                whileTap={{ scale: 0.9 }}
+                transition={{ duration: 0.1 }}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors",
+                  active ? "text-gold" : "text-muted-foreground"
                 )}
-              </div>
-              <span className="text-[10px] font-medium">{item.label}</span>
+              >
+                <div className="relative">
+                  <item.icon className="h-5 w-5" />
+                  {badgeCount > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className={cn(
+                        "absolute -top-2 -right-2 h-4 min-w-[16px] px-1 text-[10px]",
+                        item.badgeKey === 'pending' 
+                          ? "bg-destructive text-destructive-foreground" 
+                          : "bg-gold text-primary-foreground"
+                      )}
+                    >
+                      {badgeCount > 9 ? '9+' : badgeCount}
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium">{item.label}</span>
+                
+                {/* Active indicator */}
+                {active && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gold rounded-full"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+              </motion.div>
             </Link>
           );
         })}

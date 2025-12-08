@@ -9,6 +9,7 @@ import { ConversationList } from '@/components/messages/ConversationList';
 import { ChatWindow } from '@/components/messages/ChatWindow';
 import { GroupList } from '@/components/messages/GroupList';
 import { GroupChatWindow } from '@/components/messages/GroupChatWindow';
+import { PageTransition } from '@/components/community/PageTransition';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -97,9 +98,11 @@ export default function MessagesPage() {
 
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Please log in to view messages.</p>
-      </div>
+      <PageTransition>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Please log in to view messages.</p>
+        </div>
+      </PageTransition>
     );
   }
 
@@ -142,7 +145,8 @@ export default function MessagesPage() {
     }
 
     return (
-      <div className="space-y-4 pb-16">
+      <PageTransition>
+        <div className="space-y-4 pb-16">
         <div>
           <h2 className="text-xl font-serif font-semibold">Messages</h2>
           <p className="text-sm text-muted-foreground">
@@ -181,13 +185,15 @@ export default function MessagesPage() {
           </TabsContent>
         </Tabs>
       </div>
+    </PageTransition>
     );
   }
 
   // Desktop: Side-by-side layout
   return (
-    <div className="space-y-5">
-      <div>
+    <PageTransition>
+      <div className="space-y-5">
+        <div>
         <h2 className="text-xl font-serif font-semibold">Messages</h2>
         <p className="text-sm text-muted-foreground">
           Chat with your connections and groups
@@ -253,5 +259,6 @@ export default function MessagesPage() {
         )}
       </div>
     </div>
+  </PageTransition>
   );
 }
