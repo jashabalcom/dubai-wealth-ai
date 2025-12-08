@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,6 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Debounce refs to prevent rate limiting
+  const lastSubscriptionCheck = useRef<number>(0);
+  const subscriptionCheckInProgress = useRef<boolean>(false);
+  const subscriptionCheckTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -44,7 +49,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const checkSubscription = useCallback(async () => {
+  const checkSubscription = useCallback(async (force = false) => {
+    // Prevent concurrent calls and rate limiting
+    const now = Date.now();
+    const minInterval = 30000; // 30 seconds minimum between checks
+    
+    if (!force && (now - lastSubscriptionCheck.current < minInterval)) {
+      console.log('[AUTH] Subscription check skipped - too soon');
+      return;
+    }
+    
+    if (subscriptionCheckInProgress.current) {
+      console.log('[AUTH] Subscription check already in progress');
+      return;
+    }
+
+    subscriptionCheckInProgress.current = true;
+    lastSubscriptionCheck.current = now;
+
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
@@ -53,20 +75,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      if (data && user) {
-        // Refresh profile to get updated tier
-        await fetchProfile(user.id);
+      // Refresh profile to get updated tier from the server
+      const currentUser = (await supabase.auth.getUser()).data.user;
+      if (currentUser) {
+        await fetchProfile(currentUser.id);
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
+    } finally {
+      subscriptionCheckInProgress.current = false;
     }
-  }, [user, fetchProfile]);
+  }, [fetchProfile]);
 
   const refreshSubscription = useCallback(async () => {
-    if (user) {
-      await checkSubscription();
-    }
-  }, [user, checkSubscription]);
+    await checkSubscription(true);
+  }, [checkSubscription]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -81,11 +104,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id);
           }, 0);
           
-          // Check subscription on login/token refresh
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            setTimeout(() => {
+          // Check subscription only on sign in (not token refresh to reduce calls)
+          if (event === 'SIGNED_IN') {
+            // Clear any pending timeout
+            if (subscriptionCheckTimeout.current) {
+              clearTimeout(subscriptionCheckTimeout.current);
+            }
+            // Delay the check to avoid race conditions
+            subscriptionCheckTimeout.current = setTimeout(() => {
               checkSubscription();
-            }, 100);
+            }, 2000);
           }
         } else {
           setProfile(null);
@@ -99,24 +127,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       if (session?.user) {
         fetchProfile(session.user.id);
-        // Check subscription on initial load
-        setTimeout(() => {
+        // Initial subscription check with delay
+        subscriptionCheckTimeout.current = setTimeout(() => {
           checkSubscription();
-        }, 500);
+        }, 3000);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (subscriptionCheckTimeout.current) {
+        clearTimeout(subscriptionCheckTimeout.current);
+      }
+    };
   }, [fetchProfile, checkSubscription]);
 
-  // Periodic subscription check every 5 minutes
+  // Periodic subscription check every 10 minutes (reduced from 5)
   useEffect(() => {
     if (!user) return;
 
     const interval = setInterval(() => {
       checkSubscription();
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 10 * 60 * 1000); // 10 minutes
 
     return () => clearInterval(interval);
   }, [user, checkSubscription]);
