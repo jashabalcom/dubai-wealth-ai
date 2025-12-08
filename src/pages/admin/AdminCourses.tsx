@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit, Trash2, Eye, EyeOff, BookOpen } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,7 @@ const CATEGORIES = ['Dubai Basics', 'Investment Strategies', 'Legal & Tax', 'Mar
 const LEVELS = ['beginner', 'intermediate', 'advanced'];
 
 export default function AdminCourses() {
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const queryClient = useQueryClient();
@@ -278,6 +280,14 @@ export default function AdminCourses() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => navigate(`/admin/courses/${course.id}/lessons`)}
+                        title="Manage Lessons"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(course)}>
                         <Edit className="h-4 w-4" />
                       </Button>
