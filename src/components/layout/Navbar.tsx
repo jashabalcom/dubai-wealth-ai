@@ -9,6 +9,7 @@ const navLinks = [
   { label: "Academy", href: "/academy", isRoute: true },
   { label: "Properties", href: "/properties", isRoute: true },
   { label: "Tools", href: "/tools", isRoute: true },
+  { label: "AI Assistant", href: "/ai-assistant", isRoute: true },
   { label: "Why Dubai", href: "#why-dubai", isRoute: false },
   { label: "Membership", href: "#membership", isRoute: false },
 ];
