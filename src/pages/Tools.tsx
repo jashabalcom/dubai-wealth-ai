@@ -9,7 +9,8 @@ import {
   Percent,
   DollarSign,
   Calendar,
-  Award
+  Award,
+  Wallet
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -48,6 +49,14 @@ const tools = [
     href: '/tools/airbnb',
   },
   {
+    id: 'total-cost',
+    title: 'Total Cost of Ownership',
+    description: 'See the complete financial picture including all acquisition, ongoing, and exit costs over your investment timeline.',
+    icon: Wallet,
+    color: 'teal',
+    href: '/tools/total-cost',
+  },
+  {
     id: 'golden-visa',
     title: 'Golden Visa Wizard',
     description: 'Get AI-powered personalized guidance for your UAE Golden Visa eligibility and investment recommendations.',
@@ -81,6 +90,12 @@ const colorClasses: Record<string, { bg: string; border: string; text: string; g
     border: 'border-orange-500/20',
     text: 'text-orange-500',
     glow: 'group-hover:shadow-orange-500/20',
+  },
+  teal: {
+    bg: 'bg-teal-500/10',
+    border: 'border-teal-500/20',
+    text: 'text-teal-500',
+    glow: 'group-hover:shadow-teal-500/20',
   },
   gold: {
     bg: 'bg-gold/10',
