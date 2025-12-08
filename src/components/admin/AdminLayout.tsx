@@ -9,7 +9,9 @@ import {
   Settings,
   ChevronLeft,
   Shield,
-  Calendar
+  Calendar,
+  DollarSign,
+  Target
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -22,6 +24,8 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Revenue', href: '/admin/revenue', icon: DollarSign },
+  { label: 'Marketing', href: '/admin/marketing', icon: Target },
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Courses', href: '/admin/courses', icon: GraduationCap },
   { label: 'Properties', href: '/admin/properties', icon: Building2 },
