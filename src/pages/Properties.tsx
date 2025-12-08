@@ -12,6 +12,7 @@ import { PropertyCard } from '@/components/properties/PropertyCard';
 import { PropertyFilters, priceRanges } from '@/components/properties/PropertyFilters';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
+import { PropertyMap } from '@/components/properties/PropertyMap';
 import { Link } from 'react-router-dom';
 
 interface Property {
@@ -31,6 +32,8 @@ interface Property {
   images: string[];
   completion_date: string | null;
   is_featured: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export default function Properties() {
@@ -51,6 +54,7 @@ export default function Properties() {
   const selectedPrice = searchParams.get('price') || 'all';
   const showOffPlanOnly = searchParams.get('offplan') === 'true';
   const sortBy = searchParams.get('sort') || 'featured';
+  const viewMode = (searchParams.get('view') as 'grid' | 'map') || 'grid';
 
   useEffect(() => {
     fetchProperties();
@@ -69,6 +73,8 @@ export default function Properties() {
         price_aed: Number(p.price_aed),
         size_sqft: Number(p.size_sqft),
         rental_yield_estimate: Number(p.rental_yield_estimate),
+        latitude: p.latitude ? Number(p.latitude) : undefined,
+        longitude: p.longitude ? Number(p.longitude) : undefined,
       })));
     }
     setLoading(false);
@@ -170,6 +176,8 @@ export default function Properties() {
             onSortChange={(v) => updateFilter('sort', v)}
             onClearFilters={clearFilters}
             resultCount={filteredAndSortedProperties.length}
+            viewMode={viewMode}
+            onViewModeChange={(mode) => updateFilter('view', mode)}
           />
         </div>
       </section>
@@ -185,6 +193,8 @@ export default function Properties() {
               <p className="text-muted-foreground mb-4">Try adjusting your filters.</p>
               <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
             </div>
+          ) : viewMode === 'map' ? (
+            <PropertyMap properties={filteredAndSortedProperties} />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAndSortedProperties.map((property, index) => (
