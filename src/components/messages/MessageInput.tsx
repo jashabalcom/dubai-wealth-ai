@@ -5,11 +5,12 @@ import { Send, Loader2 } from 'lucide-react';
 
 interface MessageInputProps {
   onSend: (content: string) => void;
+  onTyping?: (isTyping: boolean) => void;
   isLoading?: boolean;
   disabled?: boolean;
 }
 
-export function MessageInput({ onSend, isLoading, disabled }: MessageInputProps) {
+export function MessageInput({ onSend, onTyping, isLoading, disabled }: MessageInputProps) {
   const [content, setContent] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -17,7 +18,14 @@ export function MessageInput({ onSend, isLoading, disabled }: MessageInputProps)
     if (content.trim() && !isLoading && !disabled) {
       onSend(content.trim());
       setContent('');
+      onTyping?.(false);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+    onTyping?.(newContent.length > 0);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -40,7 +48,7 @@ export function MessageInput({ onSend, isLoading, disabled }: MessageInputProps)
       <Textarea
         ref={textareaRef}
         value={content}
-        onChange={(e) => setContent(e.target.value)}
+        onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder="Type your message..."
         className="min-h-[44px] max-h-[120px] resize-none"
