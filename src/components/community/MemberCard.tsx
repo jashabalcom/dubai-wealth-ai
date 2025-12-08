@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ConnectButton } from '@/components/community/ConnectButton';
 import { cn } from '@/lib/utils';
 import type { DirectoryMember } from '@/hooks/useMemberDirectory';
 
@@ -108,11 +109,18 @@ export function MemberCard({ member }: MemberCardProps) {
               <Calendar className="h-3 w-3" />
               Joined {format(new Date(member.created_at), 'MMM yyyy')}
             </span>
-            <Link to={`/profile/${member.id}`}>
-              <Button variant="ghost" size="sm" className="text-xs hover:text-gold hover:bg-gold/10">
-                View Profile
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              <ConnectButton 
+                userId={member.id} 
+                userName={member.full_name || undefined}
+                className="text-xs h-8"
+              />
+              <Link to={`/profile/${member.id}`}>
+                <Button variant="ghost" size="sm" className="text-xs hover:text-gold hover:bg-gold/10">
+                  View
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

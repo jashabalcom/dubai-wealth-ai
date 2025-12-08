@@ -213,6 +213,36 @@ export type Database = {
           },
         ]
       }
+      connections: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          recipient_id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          recipient_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          recipient_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category: string
