@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -220,6 +220,47 @@ export function useCommunity() {
       toast.success('Comment added');
     },
   });
+
+  // Subscribe to realtime updates for posts and comments
+  useEffect(() => {
+    if (!selectedChannelId || !user) return;
+
+    const postsChannel = supabase
+      .channel('community-posts-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'community_posts',
+          filter: `channel_id=eq.${selectedChannelId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['community-posts', selectedChannelId] });
+        }
+      )
+      .subscribe();
+
+    const commentsChannel = supabase
+      .channel('community-comments-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'community_comments',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['community-posts', selectedChannelId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(postsChannel);
+      supabase.removeChannel(commentsChannel);
+    };
+  }, [selectedChannelId, user, queryClient]);
 
   return {
     channels,
