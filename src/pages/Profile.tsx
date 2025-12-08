@@ -311,10 +311,18 @@ export default function Profile() {
                     </Button>
                   )}
                   {!isOwnProfile && targetUserId && (
-                    <ConnectButton 
-                      userId={targetUserId} 
-                      userName={profile.full_name || undefined}
-                    />
+                    <div className="flex items-center gap-2">
+                      <ConnectButton 
+                        userId={targetUserId} 
+                        userName={profile.full_name || undefined}
+                      />
+                      <Button asChild variant="outline" size="sm">
+                        <Link to={`/messages/${targetUserId}`}>
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Message
+                        </Link>
+                      </Button>
+                    </div>
                   )}
                 </div>
 

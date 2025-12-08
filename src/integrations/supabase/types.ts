@@ -291,6 +291,33 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       event_registrations: {
         Row: {
           event_id: string
@@ -744,6 +771,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      are_connected: {
+        Args: { user_a: string; user_b: string }
+        Returns: boolean
+      }
       can_access_channel: {
         Args: {
           channel_visibility: Database["public"]["Enums"]["channel_visibility"]

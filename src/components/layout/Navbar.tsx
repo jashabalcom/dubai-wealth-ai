@@ -10,8 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Menu, X, User, LogOut, LayoutDashboard, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { supabase } from "@/integrations/supabase/client";
 
 const navLinks = [
@@ -29,6 +31,7 @@ export function Navbar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
   const { user, signOut } = useAuth();
+  const { unreadCount } = useDirectMessages();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -125,6 +128,19 @@ export function Navbar() {
                       <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                         <User className="h-4 w-4" />
                         My Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/messages" className="flex items-center justify-between cursor-pointer">
+                        <span className="flex items-center gap-2">
+                          <MessageCircle className="h-4 w-4" />
+                          Messages
+                        </span>
+                        {unreadCount > 0 && (
+                          <Badge variant="default" className="h-5 min-w-[20px] px-1.5 text-xs">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                          </Badge>
+                        )}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

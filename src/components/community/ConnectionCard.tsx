@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { Crown, UserMinus, Check, X, Clock } from 'lucide-react';
+import { Crown, UserMinus, Check, X, Clock, MessageCircle } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -122,11 +122,22 @@ export function ConnectionCard({
                   asChild
                   className="border-border/50 hover:border-gold/50 hover:text-gold"
                 >
-                  <Link to={`/profile/${profile.id}`}>View Profile</Link>
+                  <Link to={`/messages/${profile.id}`}>
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    Message
+                  </Link>
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
+                  asChild
+                  className="border-border/50 hover:border-gold/50 hover:text-gold"
+                >
+                  <Link to={`/profile/${profile.id}`}>View</Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => onRemove?.(connection.id)}
                   disabled={isLoading}
                   className="text-muted-foreground hover:text-destructive"
