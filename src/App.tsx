@@ -14,6 +14,7 @@ import Course from "./pages/Course";
 import Lesson from "./pages/Lesson";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
+import SavedProperties from "./pages/SavedProperties";
 import Tools from "./pages/Tools";
 import ROICalculator from "./pages/tools/ROICalculator";
 import MortgageCalculator from "./pages/tools/MortgageCalculator";
