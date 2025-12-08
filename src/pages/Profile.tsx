@@ -33,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { ConnectButton } from '@/components/community/ConnectButton';
 import { cn } from '@/lib/utils';
 
 export default function Profile() {
@@ -308,6 +309,12 @@ export default function Profile() {
                       <Edit3 className="h-4 w-4 mr-2" />
                       Edit Profile
                     </Button>
+                  )}
+                  {!isOwnProfile && targetUserId && (
+                    <ConnectButton 
+                      userId={targetUserId} 
+                      userName={profile.full_name || undefined}
+                    />
                   )}
                 </div>
 
