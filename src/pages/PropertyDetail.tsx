@@ -21,6 +21,7 @@ import { PropertyAIAnalysis } from '@/components/properties/PropertyAIAnalysis';
 import { AgentContactCard } from '@/components/properties/AgentContactCard';
 import { FloorPlansGallery } from '@/components/properties/FloorPlansGallery';
 import { PropertyFeaturesGrid } from '@/components/properties/PropertyFeaturesGrid';
+import { AirbnbYieldCard } from '@/components/properties/AirbnbYieldCard';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -624,6 +625,15 @@ export default function PropertyDetail() {
                   Get AI Investment Analysis
                 </Button>
               </div>
+
+              {/* STR Yield Card */}
+              <AirbnbYieldCard
+                propertyPrice={property.price_aed}
+                areaName={property.location_area}
+                bedrooms={property.bedrooms}
+                propertyType={property.property_type}
+                ltrYield={property.rental_yield_estimate}
+              />
 
               {/* Agent Contact Card */}
               {property.agent && (
