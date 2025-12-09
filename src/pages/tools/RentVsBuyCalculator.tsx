@@ -11,6 +11,7 @@ import { RentVsBuyCharts } from '@/components/tools/RentVsBuyCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, AREA_SERVICE_CHARGES, DEFAULT_RENTAL_COSTS } from '@/lib/dubaiRealEstateFees';
+import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
 export default function RentVsBuyCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -149,6 +150,7 @@ export default function RentVsBuyCalculator() {
                 <h1 className="font-heading text-3xl md:text-4xl text-foreground">Rent vs Buy Calculator</h1>
               </div>
               <p className="text-muted-foreground">Compare with all Dubai fees included.</p>
+              <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
             <CurrencySelector selectedCurrency={selectedCurrency} onCurrencyChange={setSelectedCurrency} supportedCurrencies={supportedCurrencies} />
           </div>

@@ -12,6 +12,7 @@ import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
+import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
 export default function MortgageCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -148,6 +149,7 @@ export default function MortgageCalculator() {
               <p className="text-muted-foreground">
                 Calculate your true cost of financing with all Dubai mortgage fees.
               </p>
+              <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
 
             <CurrencySelector

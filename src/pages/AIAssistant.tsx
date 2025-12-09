@@ -432,8 +432,8 @@ export default function AIAssistant() {
                       </Button>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-2 text-center">
-                      AI responses are for informational purposes only. Always consult with 
-                      licensed professionals before making investment decisions.
+                      AI responses are for educational purposes only and do not constitute financial, legal, or real estate advice. 
+                      Always consult with licensed professionals before making investment decisions.
                     </p>
                   </form>
                 </CardContent>

@@ -42,6 +42,7 @@ import {
   DEFAULT_MORTGAGE_FEES,
   FEE_DESCRIPTIONS
 } from '@/lib/dubaiRealEstateFees';
+import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
 type UsageType = 'personal' | 'long-term' | 'short-term';
 

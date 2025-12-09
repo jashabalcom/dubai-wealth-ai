@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
 const tools = [
   {
@@ -228,6 +229,13 @@ export default function Tools() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Disclaimer */}
+      <section className="pb-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <InvestmentDisclaimer />
         </div>
       </section>
 

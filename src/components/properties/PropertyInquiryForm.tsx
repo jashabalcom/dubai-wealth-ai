@@ -220,7 +220,7 @@ export function PropertyInquiryForm({ propertyTitle, propertyId }: PropertyInqui
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              By submitting, you agree to be contacted about this property.
+              By submitting, you agree to be contacted by a licensed RERA-registered agent regarding this property.
             </p>
           </motion.form>
         )}
