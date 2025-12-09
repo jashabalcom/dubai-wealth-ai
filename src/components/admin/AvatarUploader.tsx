@@ -7,6 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -166,6 +167,9 @@ export function AvatarUploader({ currentAvatarUrl, onUpload, folder = 'agents' }
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Crop Avatar</DialogTitle>
+            <DialogDescription>
+              Adjust and crop the image to create your avatar
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
