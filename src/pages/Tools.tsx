@@ -10,7 +10,8 @@ import {
   DollarSign,
   Calendar,
   Award,
-  Wallet
+  Wallet,
+  ArrowLeftRight
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -48,6 +49,14 @@ const tools = [
     icon: Calendar,
     color: 'orange',
     href: '/tools/airbnb',
+  },
+  {
+    id: 'str-vs-ltr',
+    title: 'STR vs LTR Comparison',
+    description: 'Compare short-term (Airbnb) vs long-term rental strategies with detailed yield analysis.',
+    icon: ArrowLeftRight,
+    color: 'pink',
+    href: '/tools/str-vs-ltr',
   },
   {
     id: 'total-cost',
@@ -97,6 +106,12 @@ const colorClasses: Record<string, { bg: string; border: string; text: string; g
     border: 'border-teal-500/20',
     text: 'text-teal-500',
     glow: 'group-hover:shadow-teal-500/20',
+  },
+  pink: {
+    bg: 'bg-pink-500/10',
+    border: 'border-pink-500/20',
+    text: 'text-pink-500',
+    glow: 'group-hover:shadow-pink-500/20',
   },
   gold: {
     bg: 'bg-gold/10',
