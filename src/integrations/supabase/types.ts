@@ -94,14 +94,23 @@ export type Database = {
           brokerage_id: string | null
           created_at: string
           email: string | null
+          featured_listings_remaining: number | null
           full_name: string
           id: string
           is_active: boolean | null
           is_verified: boolean | null
           languages: string[] | null
+          max_listings: number | null
           phone: string | null
+          priority_ranking: number | null
           rera_brn: string | null
+          show_direct_contact: boolean | null
           specializations: string[] | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_expires_at: string | null
+          subscription_status: string | null
+          subscription_tier: Database["public"]["Enums"]["agent_tier"] | null
           total_listings: number | null
           updated_at: string
           user_id: string | null
@@ -115,14 +124,23 @@ export type Database = {
           brokerage_id?: string | null
           created_at?: string
           email?: string | null
+          featured_listings_remaining?: number | null
           full_name: string
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
           languages?: string[] | null
+          max_listings?: number | null
           phone?: string | null
+          priority_ranking?: number | null
           rera_brn?: string | null
+          show_direct_contact?: boolean | null
           specializations?: string[] | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: Database["public"]["Enums"]["agent_tier"] | null
           total_listings?: number | null
           updated_at?: string
           user_id?: string | null
@@ -136,14 +154,23 @@ export type Database = {
           brokerage_id?: string | null
           created_at?: string
           email?: string | null
+          featured_listings_remaining?: number | null
           full_name?: string
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
           languages?: string[] | null
+          max_listings?: number | null
           phone?: string | null
+          priority_ranking?: number | null
           rera_brn?: string | null
+          show_direct_contact?: boolean | null
           specializations?: string[] | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
+          subscription_tier?: Database["public"]["Enums"]["agent_tier"] | null
           total_listings?: number | null
           updated_at?: string
           user_id?: string | null
@@ -1778,6 +1805,7 @@ export type Database = {
       }
     }
     Enums: {
+      agent_tier: "basic" | "preferred" | "premium"
       app_role: "admin" | "moderator" | "user"
       channel_visibility: "all_members" | "elite_only"
       membership_status: "active" | "canceled" | "trial" | "expired"
@@ -1909,6 +1937,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agent_tier: ["basic", "preferred", "premium"],
       app_role: ["admin", "moderator", "user"],
       channel_visibility: ["all_members", "elite_only"],
       membership_status: ["active", "canceled", "trial", "expired"],
