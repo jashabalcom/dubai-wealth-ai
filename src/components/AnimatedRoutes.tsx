@@ -41,6 +41,8 @@ import AdminRevenue from "@/pages/admin/AdminRevenue";
 import AdminMarketing from "@/pages/admin/AdminMarketing";
 import NotFound from "@/pages/NotFound";
 import Disclaimer from "@/pages/Disclaimer";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -119,6 +121,8 @@ export function AnimatedRoutes() {
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
         <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
+        <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
+        <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
     </AnimatePresence>
