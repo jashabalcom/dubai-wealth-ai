@@ -1,5 +1,8 @@
 project_id = "bswllmynuxkhekqqeznr"
 
+[functions.sync-airdna-market]
+verify_jwt = false
+
 [functions.ai-calculator-analysis]
 verify_jwt = false
 
