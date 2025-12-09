@@ -345,28 +345,56 @@ export function DubaiPresets({ onSelectPreset, activePreset, showDetails = false
   const activeData = DUBAI_AREA_PRESETS.find(p => p.name === activePreset);
   
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <MapPin className="w-4 h-4 text-gold" />
         <span className="text-sm font-medium text-foreground">Dubai Area Presets</span>
+        <span className="text-xs text-muted-foreground">({DUBAI_AREA_PRESETS.length} areas)</span>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {DUBAI_AREA_PRESETS.map((preset) => (
-          <Button
-            key={preset.name}
-            variant="outline"
-            size="sm"
-            onClick={() => onSelectPreset(preset)}
-            className={`text-xs transition-all ${
-              activePreset === preset.name 
-                ? 'bg-gold/20 border-gold/50 text-gold' 
-                : 'hover:bg-gold/10 hover:border-gold/30'
-            }`}
-          >
-            {preset.name}
-          </Button>
-        ))}
-      </div>
+      
+      {AREA_CATEGORIES.map((category) => (
+        <div key={category.name} className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {category.name}
+            </span>
+            <div className="flex-1 h-px bg-border" />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {category.areas.map((preset) => {
+              const yieldPercent = preset.annualRent && preset.propertyPrice 
+                ? ((preset.annualRent / preset.propertyPrice) * 100).toFixed(1)
+                : null;
+              return (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSelectPreset(preset)}
+                  className={`text-xs transition-all ${
+                    activePreset === preset.name 
+                      ? 'bg-gold/20 border-gold/50 text-gold' 
+                      : 'hover:bg-gold/10 hover:border-gold/30'
+                  }`}
+                >
+                  {preset.name}
+                  {yieldPercent && (
+                    <span className={`ml-1.5 text-[10px] px-1 py-0.5 rounded ${
+                      parseFloat(yieldPercent) >= 7 
+                        ? 'bg-emerald-500/20 text-emerald-400' 
+                        : parseFloat(yieldPercent) >= 5.5 
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {yieldPercent}%
+                    </span>
+                  )}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
       
       {showDetails && activeData && (
         <div className="mt-3 pt-3 border-t border-border grid grid-cols-2 gap-2 text-xs">
