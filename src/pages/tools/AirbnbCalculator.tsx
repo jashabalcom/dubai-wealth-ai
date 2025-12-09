@@ -11,6 +11,7 @@ import { AirbnbCharts } from '@/components/tools/AirbnbCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { DEFAULT_SHORT_TERM_COSTS, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
+import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
 export default function AirbnbCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -148,6 +149,7 @@ export default function AirbnbCalculator() {
                 <h1 className="font-heading text-3xl md:text-4xl text-foreground">Airbnb Yield Calculator</h1>
               </div>
               <p className="text-muted-foreground">Calculate short-term rental income with all Dubai licensing & fees.</p>
+              <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
             <CurrencySelector selectedCurrency={selectedCurrency} onCurrencyChange={setSelectedCurrency} supportedCurrencies={supportedCurrencies} />
           </div>

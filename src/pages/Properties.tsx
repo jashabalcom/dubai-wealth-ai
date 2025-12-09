@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { PropertyFilters, priceRanges } from '@/components/properties/PropertyFi
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
 import { PropertyMap } from '@/components/properties/PropertyMap';
-import { Link } from 'react-router-dom';
+import { PropertyDisclaimer } from '@/components/ui/disclaimers';
 
 interface Property {
   id: string;
@@ -145,6 +145,7 @@ export default function Properties() {
             <p className="text-lg text-muted-foreground">
               Discover premium investment opportunities across Dubai's most sought-after locations.
             </p>
+            <PropertyDisclaimer variant="inline" className="mt-2" />
             {user && (
               <Link to="/properties/saved" className="inline-flex mt-4">
                 <Button variant="outline" size="sm">

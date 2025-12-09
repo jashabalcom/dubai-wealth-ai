@@ -13,6 +13,7 @@ import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
+import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
 export default function ROICalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -139,6 +140,7 @@ export default function ROICalculator() {
               <p className="text-muted-foreground">
                 Calculate your total return with all Dubai real estate fees included.
               </p>
+              <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
 
             <CurrencySelector

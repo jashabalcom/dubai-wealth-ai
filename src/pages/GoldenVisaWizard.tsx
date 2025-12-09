@@ -16,6 +16,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { GoldenVisaDisclaimer } from '@/components/ui/disclaimers';
 
 interface GoldenVisaAnalysis {
   eligibilityScore: number;
@@ -395,6 +396,7 @@ export default function GoldenVisaWizard() {
             <p className="text-muted-foreground">
               Get personalized AI-powered guidance for your UAE Golden Visa journey
             </p>
+            <p className="text-xs text-muted-foreground mt-2">Results are for informational purposes only — not legal or immigration advice.</p>
           </div>
 
           {/* Progress Steps */}
@@ -476,6 +478,9 @@ export default function GoldenVisaWizard() {
               </div>
             )}
           </div>
+
+          {/* Disclaimer after form */}
+          <GoldenVisaDisclaimer className="mt-6" />
         </div>
       </main>
 

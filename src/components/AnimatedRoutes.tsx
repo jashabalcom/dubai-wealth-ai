@@ -40,6 +40,7 @@ import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminRevenue from "@/pages/admin/AdminRevenue";
 import AdminMarketing from "@/pages/admin/AdminMarketing";
 import NotFound from "@/pages/NotFound";
+import Disclaimer from "@/pages/Disclaimer";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -77,6 +78,7 @@ export function AnimatedRoutes() {
         <Route path="/academy/:courseSlug/:lessonSlug" element={<AnimatedPage><Lesson /></AnimatedPage>} />
         <Route path="/properties" element={<AnimatedPage><Properties /></AnimatedPage>} />
         <Route path="/properties/:slug" element={<AnimatedPage><PropertyDetail /></AnimatedPage>} />
+        <Route path="/properties/saved" element={<ProtectedRoute><AnimatedPage><SavedProperties /></AnimatedPage></ProtectedRoute>} />
         <Route path="/tools" element={<AnimatedPage><Tools /></AnimatedPage>} />
         <Route path="/tools/roi" element={<AnimatedPage><ROICalculator /></AnimatedPage>} />
         <Route path="/tools/mortgage" element={<AnimatedPage><MortgageCalculator /></AnimatedPage>} />
@@ -116,6 +118,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
         <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
+        <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
     </AnimatePresence>

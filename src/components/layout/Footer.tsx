@@ -1,14 +1,17 @@
 import { motion } from "framer-motion";
 
+import { Link } from "react-router-dom";
+import { Shield } from "lucide-react";
+
 const footerLinks = {
   platform: {
     title: "Platform",
     links: [
-      { label: "Academy", href: "#academy" },
-      { label: "AI Assistant", href: "#" },
-      { label: "Investment Tools", href: "#" },
-      { label: "Property Search", href: "#" },
-      { label: "Community", href: "#" },
+      { label: "Academy", href: "/academy" },
+      { label: "AI Assistant", href: "/ai-assistant" },
+      { label: "Investment Tools", href: "/tools" },
+      { label: "Property Search", href: "/properties" },
+      { label: "Community", href: "/community" },
     ],
   },
   resources: {
@@ -16,7 +19,7 @@ const footerLinks = {
     links: [
       { label: "Market Reports", href: "#" },
       { label: "Off-Plan Guide", href: "#" },
-      { label: "Golden Visa Info", href: "#" },
+      { label: "Golden Visa Wizard", href: "/golden-visa" },
       { label: "Developer Directory", href: "#" },
       { label: "Blog", href: "#" },
     ],
@@ -37,7 +40,7 @@ const footerLinks = {
       { label: "Privacy Policy", href: "#" },
       { label: "Terms of Service", href: "#" },
       { label: "Cookie Policy", href: "#" },
-      { label: "Disclaimer", href: "#" },
+      { label: "Disclaimer", href: "/disclaimer" },
     ],
   },
 };
@@ -95,6 +98,29 @@ export function Footer() {
               </ul>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Platform Disclaimer */}
+      <div className="border-t border-secondary-foreground/10">
+        <div className="container-luxury py-8">
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-secondary-foreground/5 border border-secondary-foreground/10">
+            <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <p className="text-sm text-secondary-foreground/80 font-medium">
+                Education & Referral Platform
+              </p>
+              <p className="text-xs text-secondary-foreground/60 leading-relaxed">
+                Dubai Wealth Hub is an educational platform and referral network. We are not a licensed real estate brokerage. 
+                Properties are presented by licensed RERA-registered agents and developers. All investment analysis, 
+                projections, and AI-generated content are for educational purposes only and do not constitute financial, 
+                legal, or investment advice. Past performance does not guarantee future results.{' '}
+                <Link to="/disclaimer" className="text-primary hover:underline">
+                  Read full disclaimer
+                </Link>
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
