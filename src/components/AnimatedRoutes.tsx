@@ -32,6 +32,9 @@ import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminCourses from "@/pages/admin/AdminCourses";
 import AdminLessons from "@/pages/admin/AdminLessons";
 import AdminProperties from "@/pages/admin/AdminProperties";
+import AdminAgents from "@/pages/admin/AdminAgents";
+import AdminBrokerages from "@/pages/admin/AdminBrokerages";
+import AdminDevelopers from "@/pages/admin/AdminDevelopers";
 import AdminEvents from "@/pages/admin/AdminEvents";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminRevenue from "@/pages/admin/AdminRevenue";
@@ -106,6 +109,9 @@ export function AnimatedRoutes() {
         <Route path="/admin/courses" element={<AnimatedPage><AdminCourses /></AnimatedPage>} />
         <Route path="/admin/courses/:courseId/lessons" element={<AnimatedPage><AdminLessons /></AnimatedPage>} />
         <Route path="/admin/properties" element={<AnimatedPage><AdminProperties /></AnimatedPage>} />
+        <Route path="/admin/agents" element={<AnimatedPage><AdminAgents /></AnimatedPage>} />
+        <Route path="/admin/brokerages" element={<AnimatedPage><AdminBrokerages /></AnimatedPage>} />
+        <Route path="/admin/developers" element={<AnimatedPage><AdminDevelopers /></AnimatedPage>} />
         <Route path="/admin/events" element={<AnimatedPage><AdminEvents /></AnimatedPage>} />
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />

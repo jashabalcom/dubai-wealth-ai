@@ -86,6 +86,80 @@ export type Database = {
         }
         Relationships: []
       }
+      agents: {
+        Row: {
+          areas_covered: string[] | null
+          avatar_url: string | null
+          bio: string | null
+          brokerage_id: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          languages: string[] | null
+          phone: string | null
+          rera_brn: string | null
+          specializations: string[] | null
+          total_listings: number | null
+          updated_at: string
+          user_id: string | null
+          whatsapp: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          areas_covered?: string[] | null
+          avatar_url?: string | null
+          bio?: string | null
+          brokerage_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          languages?: string[] | null
+          phone?: string | null
+          rera_brn?: string | null
+          specializations?: string[] | null
+          total_listings?: number | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          areas_covered?: string[] | null
+          avatar_url?: string | null
+          bio?: string | null
+          brokerage_id?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          languages?: string[] | null
+          phone?: string | null
+          rera_brn?: string | null
+          specializations?: string[] | null
+          total_listings?: number | null
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agents_brokerage_id_fkey"
+            columns: ["brokerage_id"]
+            isOneToOne: false
+            referencedRelation: "brokerages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_strategies: {
         Row: {
           ai_response: string | null
@@ -115,6 +189,239 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      areas: {
+        Row: {
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          slug: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          slug: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      brokerages: {
+        Row: {
+          address: string | null
+          city: string | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          name: string
+          phone: string | null
+          rera_orn: string | null
+          total_agents: number | null
+          total_listings: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          rera_orn?: string | null
+          total_agents?: number | null
+          total_listings?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          rera_orn?: string | null
+          total_agents?: number | null
+          total_listings?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      buildings: {
+        Row: {
+          address: string | null
+          amenities: Json | null
+          community_id: string | null
+          created_at: string
+          description: string | null
+          developer_id: string | null
+          has_district_cooling: boolean | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          parking_floors: number | null
+          service_charge_per_sqft: number | null
+          slug: string
+          total_floors: number | null
+          total_units: number | null
+          updated_at: string
+          year_built: number | null
+        }
+        Insert: {
+          address?: string | null
+          amenities?: Json | null
+          community_id?: string | null
+          created_at?: string
+          description?: string | null
+          developer_id?: string | null
+          has_district_cooling?: boolean | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          parking_floors?: number | null
+          service_charge_per_sqft?: number | null
+          slug: string
+          total_floors?: number | null
+          total_units?: number | null
+          updated_at?: string
+          year_built?: number | null
+        }
+        Update: {
+          address?: string | null
+          amenities?: Json | null
+          community_id?: string | null
+          created_at?: string
+          description?: string | null
+          developer_id?: string | null
+          has_district_cooling?: boolean | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          parking_floors?: number | null
+          service_charge_per_sqft?: number | null
+          slug?: string
+          total_floors?: number | null
+          total_units?: number | null
+          updated_at?: string
+          year_built?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buildings_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buildings_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communities: {
+        Row: {
+          area_id: string | null
+          avg_price_per_sqft: number | null
+          avg_rental_yield: number | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          slug: string
+          total_properties: number | null
+          transit_score: number | null
+          updated_at: string
+          walkability_score: number | null
+        }
+        Insert: {
+          area_id?: string | null
+          avg_price_per_sqft?: number | null
+          avg_rental_yield?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          slug: string
+          total_properties?: number | null
+          transit_score?: number | null
+          updated_at?: string
+          walkability_score?: number | null
+        }
+        Update: {
+          area_id?: string | null
+          avg_price_per_sqft?: number | null
+          avg_rental_yield?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          slug?: string
+          total_properties?: number | null
+          transit_score?: number | null
+          updated_at?: string
+          walkability_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communities_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       community_channels: {
         Row: {
@@ -363,6 +670,57 @@ export type Database = {
         }
         Relationships: []
       }
+      developers: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          established_year: number | null
+          headquarters: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          logo_url: string | null
+          name: string
+          slug: string
+          total_projects: number | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          established_year?: number | null
+          headquarters?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name: string
+          slug: string
+          total_projects?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          established_year?: number | null
+          headquarters?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          name?: string
+          slug?: string
+          total_projects?: number | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           content: string
@@ -421,6 +779,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_definitions: {
+        Row: {
+          category: string
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       golden_visa_submissions: {
         Row: {
@@ -912,84 +1297,411 @@ export type Database = {
       }
       properties: {
         Row: {
+          agent_id: string | null
           amenities: Json | null
           bathrooms: number
           bedrooms: number
+          brokerage_id: string | null
+          building_id: string | null
+          community_id: string | null
           completion_date: string | null
           created_at: string
           description: string | null
+          developer_id: string | null
           developer_name: string | null
+          expires_at: string | null
+          floor_number: number | null
+          furnishing: string | null
           highlights: Json | null
           id: string
           images: Json | null
+          inquiries_count: number | null
           is_featured: boolean
           is_off_plan: boolean
           latitude: number | null
+          listing_type: string | null
           location_area: string
           longitude: number | null
+          parking_spaces: number | null
           payment_plan_json: Json | null
           price_aed: number
           property_type: string
+          published_at: string | null
+          rental_frequency: string | null
           rental_yield_estimate: number | null
+          rera_permit_expiry: string | null
+          rera_permit_number: string | null
+          service_charge_per_sqft: number | null
           size_sqft: number
           slug: string
           status: string
           title: string
+          total_floors: number | null
           updated_at: string
+          video_url: string | null
+          view_type: string | null
+          views_count: number | null
+          virtual_tour_url: string | null
+          year_built: number | null
         }
         Insert: {
+          agent_id?: string | null
           amenities?: Json | null
           bathrooms?: number
           bedrooms?: number
+          brokerage_id?: string | null
+          building_id?: string | null
+          community_id?: string | null
           completion_date?: string | null
           created_at?: string
           description?: string | null
+          developer_id?: string | null
           developer_name?: string | null
+          expires_at?: string | null
+          floor_number?: number | null
+          furnishing?: string | null
           highlights?: Json | null
           id?: string
           images?: Json | null
+          inquiries_count?: number | null
           is_featured?: boolean
           is_off_plan?: boolean
           latitude?: number | null
+          listing_type?: string | null
           location_area: string
           longitude?: number | null
+          parking_spaces?: number | null
           payment_plan_json?: Json | null
           price_aed: number
           property_type?: string
+          published_at?: string | null
+          rental_frequency?: string | null
           rental_yield_estimate?: number | null
+          rera_permit_expiry?: string | null
+          rera_permit_number?: string | null
+          service_charge_per_sqft?: number | null
           size_sqft: number
           slug: string
           status?: string
           title: string
+          total_floors?: number | null
           updated_at?: string
+          video_url?: string | null
+          view_type?: string | null
+          views_count?: number | null
+          virtual_tour_url?: string | null
+          year_built?: number | null
         }
         Update: {
+          agent_id?: string | null
           amenities?: Json | null
           bathrooms?: number
           bedrooms?: number
+          brokerage_id?: string | null
+          building_id?: string | null
+          community_id?: string | null
           completion_date?: string | null
           created_at?: string
           description?: string | null
+          developer_id?: string | null
           developer_name?: string | null
+          expires_at?: string | null
+          floor_number?: number | null
+          furnishing?: string | null
           highlights?: Json | null
           id?: string
           images?: Json | null
+          inquiries_count?: number | null
           is_featured?: boolean
           is_off_plan?: boolean
           latitude?: number | null
+          listing_type?: string | null
           location_area?: string
           longitude?: number | null
+          parking_spaces?: number | null
           payment_plan_json?: Json | null
           price_aed?: number
           property_type?: string
+          published_at?: string | null
+          rental_frequency?: string | null
           rental_yield_estimate?: number | null
+          rera_permit_expiry?: string | null
+          rera_permit_number?: string | null
+          service_charge_per_sqft?: number | null
           size_sqft?: number
           slug?: string
           status?: string
           title?: string
+          total_floors?: number | null
           updated_at?: string
+          video_url?: string | null
+          view_type?: string | null
+          views_count?: number | null
+          virtual_tour_url?: string | null
+          year_built?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_brokerage_id_fkey"
+            columns: ["brokerage_id"]
+            isOneToOne: false
+            referencedRelation: "brokerages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_features: {
+        Row: {
+          feature_id: string
+          id: string
+          property_id: string
+        }
+        Insert: {
+          feature_id: string
+          id?: string
+          property_id: string
+        }
+        Update: {
+          feature_id?: string
+          id?: string
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "feature_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_features_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_floor_plans: {
+        Row: {
+          created_at: string
+          floor_number: number | null
+          id: string
+          order_index: number | null
+          property_id: string
+          storage_path: string | null
+          title: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          floor_number?: number | null
+          id?: string
+          order_index?: number | null
+          property_id: string
+          storage_path?: string | null
+          title?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string
+          floor_number?: number | null
+          id?: string
+          order_index?: number | null
+          property_id?: string
+          storage_path?: string | null
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_floor_plans_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_images: {
+        Row: {
+          caption: string | null
+          category: string | null
+          created_at: string
+          height: number | null
+          id: string
+          is_primary: boolean | null
+          order_index: number | null
+          property_id: string
+          storage_path: string | null
+          url: string
+          width: number | null
+        }
+        Insert: {
+          caption?: string | null
+          category?: string | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_primary?: boolean | null
+          order_index?: number | null
+          property_id: string
+          storage_path?: string | null
+          url: string
+          width?: number | null
+        }
+        Update: {
+          caption?: string | null
+          category?: string | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_primary?: boolean | null
+          order_index?: number | null
+          property_id?: string
+          storage_path?: string | null
+          url?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_images_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_inquiries: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          email: string
+          id: string
+          inquiry_type: string | null
+          message: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          property_id: string
+          source: string | null
+          status: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          inquiry_type?: string | null
+          message?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          property_id: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          inquiry_type?: string | null
+          message?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          property_id?: string
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_inquiries_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_inquiries_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_views: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          session_id: string | null
+          source: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          session_id?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          session_id?: string | null
+          source?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_views_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_properties: {
         Row: {
