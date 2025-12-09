@@ -217,6 +217,96 @@ export type Database = {
         }
         Relationships: []
       }
+      area_market_stats: {
+        Row: {
+          apartment_avg_price: number | null
+          apartment_count: number | null
+          area_name: string
+          avg_price_sqft: number | null
+          avg_price_sqm: number | null
+          created_at: string
+          id: string
+          max_price_sqm: number | null
+          median_price_sqm: number | null
+          min_price_sqm: number | null
+          mom_price_change: number | null
+          offplan_avg_price: number | null
+          offplan_count: number | null
+          period_end: string
+          period_start: string
+          period_type: string
+          qoq_price_change: number | null
+          ready_avg_price: number | null
+          ready_count: number | null
+          total_sales_value: number | null
+          total_transactions: number | null
+          townhouse_avg_price: number | null
+          townhouse_count: number | null
+          updated_at: string
+          villa_avg_price: number | null
+          villa_count: number | null
+          yoy_price_change: number | null
+        }
+        Insert: {
+          apartment_avg_price?: number | null
+          apartment_count?: number | null
+          area_name: string
+          avg_price_sqft?: number | null
+          avg_price_sqm?: number | null
+          created_at?: string
+          id?: string
+          max_price_sqm?: number | null
+          median_price_sqm?: number | null
+          min_price_sqm?: number | null
+          mom_price_change?: number | null
+          offplan_avg_price?: number | null
+          offplan_count?: number | null
+          period_end: string
+          period_start: string
+          period_type: string
+          qoq_price_change?: number | null
+          ready_avg_price?: number | null
+          ready_count?: number | null
+          total_sales_value?: number | null
+          total_transactions?: number | null
+          townhouse_avg_price?: number | null
+          townhouse_count?: number | null
+          updated_at?: string
+          villa_avg_price?: number | null
+          villa_count?: number | null
+          yoy_price_change?: number | null
+        }
+        Update: {
+          apartment_avg_price?: number | null
+          apartment_count?: number | null
+          area_name?: string
+          avg_price_sqft?: number | null
+          avg_price_sqm?: number | null
+          created_at?: string
+          id?: string
+          max_price_sqm?: number | null
+          median_price_sqm?: number | null
+          min_price_sqm?: number | null
+          mom_price_change?: number | null
+          offplan_avg_price?: number | null
+          offplan_count?: number | null
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          qoq_price_change?: number | null
+          ready_avg_price?: number | null
+          ready_count?: number | null
+          total_sales_value?: number | null
+          total_transactions?: number | null
+          townhouse_avg_price?: number | null
+          townhouse_count?: number | null
+          updated_at?: string
+          villa_avg_price?: number | null
+          villa_count?: number | null
+          yoy_price_change?: number | null
+        }
+        Relationships: []
+      }
       areas: {
         Row: {
           country: string | null
@@ -1066,6 +1156,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      market_transactions: {
+        Row: {
+          actual_worth: number | null
+          area_name: string
+          building_name: string | null
+          created_at: string
+          developer_name: string | null
+          has_parking: boolean | null
+          id: string
+          instance_date: string
+          meter_sale_price: number | null
+          nearest_mall: string | null
+          nearest_metro: string | null
+          procedure_area_sqft: number | null
+          procedure_area_sqm: number | null
+          project_name: string | null
+          property_sub_type: string | null
+          property_type: string | null
+          property_usage: string | null
+          raw_data: Json | null
+          reg_type: string | null
+          rooms: string | null
+          sqft_sale_price: number | null
+          trans_group: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          actual_worth?: number | null
+          area_name: string
+          building_name?: string | null
+          created_at?: string
+          developer_name?: string | null
+          has_parking?: boolean | null
+          id?: string
+          instance_date: string
+          meter_sale_price?: number | null
+          nearest_mall?: string | null
+          nearest_metro?: string | null
+          procedure_area_sqft?: number | null
+          procedure_area_sqm?: number | null
+          project_name?: string | null
+          property_sub_type?: string | null
+          property_type?: string | null
+          property_usage?: string | null
+          raw_data?: Json | null
+          reg_type?: string | null
+          rooms?: string | null
+          sqft_sale_price?: number | null
+          trans_group: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          actual_worth?: number | null
+          area_name?: string
+          building_name?: string | null
+          created_at?: string
+          developer_name?: string | null
+          has_parking?: boolean | null
+          id?: string
+          instance_date?: string
+          meter_sale_price?: number | null
+          nearest_mall?: string | null
+          nearest_metro?: string | null
+          procedure_area_sqft?: number | null
+          procedure_area_sqm?: number | null
+          project_name?: string | null
+          property_sub_type?: string | null
+          property_type?: string | null
+          property_usage?: string | null
+          raw_data?: Json | null
+          reg_type?: string | null
+          rooms?: string | null
+          sqft_sale_price?: number | null
+          trans_group?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       marketing_campaigns: {
         Row: {
