@@ -1,14 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminRevenue } from '@/hooks/useAdminRevenue';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Camera } from 'lucide-react';
+import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Camera, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area 
 } from 'recharts';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays, parseISO, addMonths } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -84,11 +84,43 @@ export default function AdminRevenue() {
 
     const mrrGrowth = previousMRR > 0 ? ((currentMRR - previousMRR) / previousMRR) * 100 : 0;
     const userGrowth = previousUsers > 0 ? ((currentUsers - previousUsers) / previousUsers) * 100 : 0;
+    const monthlyGrowthRate = mrrGrowth / 100;
 
-    return { mrrGrowth, userGrowth, currentMRR, previousMRR, currentUsers, previousUsers };
+    return { mrrGrowth, userGrowth, currentMRR, previousMRR, currentUsers, previousUsers, monthlyGrowthRate };
   };
 
   const growth = calculateGrowth();
+
+  // Calculate forecasted MRR for next 12 months
+  const calculateForecast = () => {
+    const currentMRR = stats?.mrr || 0;
+    const growthRate = growth?.monthlyGrowthRate || 0.05; // Default 5% if no historical data
+    
+    const forecasts = [];
+    const today = new Date();
+    
+    for (let i = 0; i <= 12; i++) {
+      const forecastDate = addMonths(today, i);
+      const projectedMRR = currentMRR * Math.pow(1 + growthRate, i);
+      const conservativeMRR = currentMRR * Math.pow(1 + (growthRate * 0.5), i);
+      const optimisticMRR = currentMRR * Math.pow(1 + (growthRate * 1.5), i);
+      
+      forecasts.push({
+        month: format(forecastDate, 'MMM yyyy'),
+        projected: Math.round(projectedMRR),
+        conservative: Math.round(conservativeMRR),
+        optimistic: Math.round(optimisticMRR),
+        isActual: i === 0,
+      });
+    }
+    
+    return forecasts;
+  };
+
+  const forecastData = calculateForecast();
+  const projectedARR = forecastData[12]?.projected * 12 || 0;
+  const conservativeARR = forecastData[12]?.conservative * 12 || 0;
+  const optimisticARR = forecastData[12]?.optimistic * 12 || 0;
 
   // Prepare chart data
   const mrrChartData = snapshots?.map(s => ({
@@ -232,8 +264,88 @@ export default function AdminRevenue() {
                     <span className={`text-xs font-medium ${stat.growth >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
                       {stat.growth >= 0 ? '↑' : '↓'} {Math.abs(stat.growth).toFixed(1)}%
                     </span>
-                  )}
+            )}
+          </div>
+
+          {/* Revenue Forecast Chart */}
+          <div className="bg-card border border-border rounded-xl p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Target className="h-5 w-5 text-gold" />
+                  12-Month Revenue Forecast
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Based on {growth?.mrrGrowth !== undefined ? `${growth.mrrGrowth.toFixed(1)}% MoM growth` : '5% assumed growth'}
+                </p>
+              </div>
+              <div className="flex gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                  <span className="text-muted-foreground">Optimistic</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-gold" />
+                  <span className="text-muted-foreground">Projected</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                  <span className="text-muted-foreground">Conservative</span>
+                </div>
+              </div>
+            </div>
+            
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={forecastData}>
+                <defs>
+                  <linearGradient id="optimisticGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="projectedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#CBB89E" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#CBB89E" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="conservativeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    `$${value.toLocaleString()}`,
+                    name === 'optimistic' ? 'Optimistic' : name === 'projected' ? 'Projected' : 'Conservative'
+                  ]}
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                />
+                <Area type="monotone" dataKey="optimistic" stroke="#22c55e" strokeWidth={2} fill="url(#optimisticGradient)" strokeDasharray="5 5" />
+                <Area type="monotone" dataKey="projected" stroke="#CBB89E" strokeWidth={2} fill="url(#projectedGradient)" />
+                <Area type="monotone" dataKey="conservative" stroke="#3b82f6" strokeWidth={2} fill="url(#conservativeGradient)" strokeDasharray="5 5" />
+              </AreaChart>
+            </ResponsiveContainer>
+
+            {/* Forecast Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
+              <div className="bg-blue-500/10 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Conservative (12mo)</p>
+                <p className="text-xl font-bold text-blue-500">${forecastData[12]?.conservative.toLocaleString()}/mo</p>
+                <p className="text-xs text-muted-foreground mt-1">ARR: ${conservativeARR.toLocaleString()}</p>
+              </div>
+              <div className="bg-gold/10 rounded-lg p-4 ring-2 ring-gold/30">
+                <p className="text-sm text-muted-foreground mb-1">Projected (12mo)</p>
+                <p className="text-xl font-bold text-gold">${forecastData[12]?.projected.toLocaleString()}/mo</p>
+                <p className="text-xs text-muted-foreground mt-1">ARR: ${projectedARR.toLocaleString()}</p>
+              </div>
+              <div className="bg-emerald-500/10 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">Optimistic (12mo)</p>
+                <p className="text-xl font-bold text-emerald-500">${forecastData[12]?.optimistic.toLocaleString()}/mo</p>
+                <p className="text-xs text-muted-foreground mt-1">ARR: ${optimisticARR.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
                 <p className="text-xs text-muted-foreground mt-1">{stat.subtext}</p>
               </div>
             ))}
