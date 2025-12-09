@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
 
 export default function Dashboard() {
   const { user, profile, loading, signOut } = useAuth();
@@ -184,19 +185,14 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Market Insights Placeholder */}
+        {/* AI-Powered Insights */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="mt-8"
         >
-          <h2 className="font-heading text-xl text-foreground mb-4">Market Insights</h2>
-          <div className="p-6 rounded-xl bg-card border border-border">
-            <p className="text-muted-foreground text-center py-8">
-              Market data and insights coming soon...
-            </p>
-          </div>
+          <AIInsightsCard />
         </motion.div>
       </main>
     </div>
