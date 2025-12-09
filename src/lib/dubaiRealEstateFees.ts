@@ -120,28 +120,92 @@ export const DEFAULT_EXIT_COSTS: ExitCosts = {
 
 // Area-specific service charges (AED per sqft per year)
 export const AREA_SERVICE_CHARGES: Record<string, number> = {
+  // Premium Areas
   'Dubai Marina': 18,
   'Downtown Dubai': 25,
   'Palm Jumeirah': 35,
-  'JVC': 12,
-  'Business Bay': 16,
   'JBR': 22,
   'DIFC': 30,
-  'Dubai Hills': 14,
-  'Arabian Ranches': 8,
+  'Bluewaters Island': 32,
+  'City Walk': 28,
+  'Emirates Hills': 10,
   'Dubai Creek Harbour': 20,
+  
+  // Mid-Range Areas
+  'Business Bay': 16,
+  'Dubai Hills': 14,
+  'MBR City': 16,
+  'Sobha Hartland': 18,
+  'JLT': 14,
+  'Meydan': 14,
+  'The Greens': 15,
+  'The Views': 15,
+  'Jumeirah Village Circle': 12,
+  'JVC': 12,
+  
+  // Affordable Areas
+  'Arabian Ranches': 8,
+  'Sports City': 10,
+  'Motor City': 12,
+  'Silicon Oasis': 11,
+  'Town Square': 10,
+  'Damac Hills': 12,
+  'Damac Hills 2': 9,
+  'Dubai South': 9,
+  'Al Furjan': 11,
+  'Discovery Gardens': 8,
+  'International City': 6,
+  'Production City': 8,
+  'Dubailand': 10,
+  'Remraam': 9,
+  'Al Barsha': 12,
+  'Jumeirah': 15,
+  'Umm Suqeim': 12,
 };
 
 // Area-specific district cooling (AED per month average)
 export const AREA_CHILLER_FEES: Record<string, number> = {
+  // Premium Areas (high district cooling)
   'Dubai Marina': 800,
   'Downtown Dubai': 1200,
   'Palm Jumeirah': 1500,
-  'JVC': 0, // Usually included in DEWA
-  'Business Bay': 900,
   'JBR': 1000,
   'DIFC': 1500,
+  'Bluewaters Island': 1400,
+  'City Walk': 1200,
+  'Dubai Creek Harbour': 900,
+  
+  // Mid-Range Areas
+  'Business Bay': 900,
   'Dubai Hills': 600,
+  'MBR City': 700,
+  'Sobha Hartland': 800,
+  'JLT': 700,
+  'Meydan': 650,
+  'The Greens': 600,
+  'The Views': 600,
+  
+  // Areas without district cooling (included in DEWA)
+  'JVC': 0,
+  'Jumeirah Village Circle': 0,
+  'Arabian Ranches': 0,
+  'Sports City': 0,
+  'Motor City': 0,
+  'Silicon Oasis': 0,
+  'Town Square': 0,
+  'Damac Hills': 0,
+  'Damac Hills 2': 0,
+  'Dubai South': 0,
+  'Al Furjan': 0,
+  'Discovery Gardens': 0,
+  'International City': 0,
+  'Production City': 0,
+  'Dubailand': 0,
+  'Remraam': 0,
+  'Al Barsha': 0,
+  'Emirates Hills': 0,
+  'Jumeirah': 0,
+  'Umm Suqeim': 0,
 };
 
 // Calculator helper functions
