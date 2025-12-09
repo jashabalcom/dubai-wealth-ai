@@ -9,6 +9,7 @@ import { AnimatedRoutes } from "@/components/AnimatedRoutes";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { SmoothScrollHandler } from "@/components/SmoothScrollHandler";
 import { NavigationProgress } from "@/components/NavigationProgress";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
     <ScrollToTop />
     <SmoothScrollHandler />
     <AnimatedRoutes />
+    <CookieConsent />
   </BrowserRouter>
         </TooltipProvider>
       </OnlinePresenceProvider>
