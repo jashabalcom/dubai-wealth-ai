@@ -35,3 +35,21 @@ verify_jwt = false
 
 [functions.send-contact-email]
 verify_jwt = false
+
+[functions.property-inquiry]
+verify_jwt = false
+
+[functions.get-mapbox-token]
+verify_jwt = false
+
+[functions.agent-checkout]
+verify_jwt = false
+
+[functions.agent-check-subscription]
+verify_jwt = false
+
+[functions.agent-customer-portal]
+verify_jwt = false
+
+[functions.sync-dubai-pulse]
+verify_jwt = false
