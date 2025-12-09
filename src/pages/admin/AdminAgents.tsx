@@ -287,10 +287,13 @@ export default function AdminAgents() {
                 </div>
                 <div className="space-y-2">
                   <Label>Brokerage</Label>
-                  <Select value={formData.brokerage_id} onValueChange={(value) => setFormData({ ...formData, brokerage_id: value })}>
+                  <Select 
+                    value={formData.brokerage_id || "none"} 
+                    onValueChange={(value) => setFormData({ ...formData, brokerage_id: value === "none" ? "" : value })}
+                  >
                     <SelectTrigger><SelectValue placeholder="Select brokerage" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {brokerages.map((b) => (
                         <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                       ))}
