@@ -1,6 +1,8 @@
-import { Phone, Mail, MessageCircle, BadgeCheck, MapPin, Briefcase } from 'lucide-react';
+import { Phone, Mail, MessageCircle, BadgeCheck, Briefcase, Star, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { AgentTier } from '@/lib/agent-tiers-config';
 
 interface Agent {
   id: string;
@@ -13,6 +15,8 @@ interface Agent {
   years_experience: number;
   is_verified: boolean;
   specializations: string[];
+  subscription_tier?: AgentTier | null;
+  show_direct_contact?: boolean | null;
   brokerage?: {
     name: string;
     logo_url: string | null;
@@ -24,26 +28,52 @@ interface AgentContactCardProps {
   propertyTitle?: string;
 }
 
+function TierBadge({ tier }: { tier: AgentTier | null | undefined }) {
+  if (!tier || tier === 'basic') return null;
+  
+  if (tier === 'preferred') {
+    return (
+      <Badge className="bg-blue-500 text-white text-xs">
+        <Star className="h-3 w-3 mr-1" />
+        Preferred
+      </Badge>
+    );
+  }
+  if (tier === 'premium') {
+    return (
+      <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black text-xs">
+        <Crown className="h-3 w-3 mr-1" />
+        Premium
+      </Badge>
+    );
+  }
+  return null;
+}
+
 export function AgentContactCard({ agent, propertyTitle }: AgentContactCardProps) {
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // Determine if direct contact should be shown
+  const tier = agent.subscription_tier || 'basic';
+  const canShowDirectContact = agent.show_direct_contact === true && (tier === 'preferred' || tier === 'premium');
+
   const handleCall = () => {
-    if (agent.phone) {
+    if (agent.phone && canShowDirectContact) {
       window.location.href = `tel:${agent.phone}`;
     }
   };
 
   const handleEmail = () => {
-    if (agent.email) {
+    if (agent.email && canShowDirectContact) {
       const subject = propertyTitle ? `Inquiry about ${propertyTitle}` : 'Property Inquiry';
       window.location.href = `mailto:${agent.email}?subject=${encodeURIComponent(subject)}`;
     }
   };
 
   const handleWhatsApp = () => {
-    if (agent.whatsapp) {
+    if (agent.whatsapp && canShowDirectContact) {
       const phone = agent.whatsapp.replace(/[^0-9]/g, '');
       const message = propertyTitle 
         ? `Hi, I'm interested in ${propertyTitle}. Can you provide more details?`
@@ -54,7 +84,10 @@ export function AgentContactCard({ agent, propertyTitle }: AgentContactCardProps
 
   return (
     <div className="p-6 rounded-xl bg-card border border-border">
-      <h3 className="font-heading text-lg text-foreground mb-4">Listing Agent</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-heading text-lg text-foreground">Listing Agent</h3>
+        <TierBadge tier={tier} />
+      </div>
       
       <div className="flex items-start gap-4 mb-4">
         <Avatar className="h-16 w-16 border-2 border-gold/20">
@@ -106,45 +139,53 @@ export function AgentContactCard({ agent, propertyTitle }: AgentContactCardProps
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-2">
-        {agent.phone && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={handleCall}
-          >
-            <Phone className="h-4 w-4" />
-          </Button>
-        )}
-        
-        {agent.email && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={handleEmail}
-          >
-            <Mail className="h-4 w-4" />
-          </Button>
-        )}
-        
-        {agent.whatsapp && (
-          <Button
-            variant="default"
-            size="sm"
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-            onClick={handleWhatsApp}
-          >
-            <MessageCircle className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      {!agent.phone && !agent.email && !agent.whatsapp && (
-        <p className="text-sm text-muted-foreground text-center">
-          Contact information not available
-        </p>
+      {canShowDirectContact ? (
+        // Show direct contact buttons for Preferred/Premium agents
+        <div className="grid grid-cols-3 gap-2">
+          {agent.phone && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={handleCall}
+            >
+              <Phone className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {agent.email && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={handleEmail}
+            >
+              <Mail className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {agent.whatsapp && (
+            <Button
+              variant="default"
+              size="sm"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+              onClick={handleWhatsApp}
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      ) : (
+        // Show message for Basic tier agents - contact goes through platform
+        <div className="p-3 bg-muted/50 rounded-lg text-center">
+          <div className="flex items-center justify-center gap-2 text-muted-foreground mb-1">
+            <Lock className="h-4 w-4" />
+            <span className="text-sm font-medium">Contact via Inquiry Form</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Submit an inquiry below and our team will connect you with this agent.
+          </p>
+        </div>
       )}
     </div>
   );
