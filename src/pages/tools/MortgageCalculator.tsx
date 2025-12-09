@@ -9,6 +9,7 @@ import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, AreaPreset } from '@/components/tools/DubaiPresets';
 import { MortgageCharts } from '@/components/tools/MortgageCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
+import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
 
@@ -298,7 +299,22 @@ export default function MortgageCalculator() {
                   <p className="font-heading text-4xl md:text-5xl text-blue-400 mb-2">
                     {formatAED(monthlyPayment)}
                   </p>
-                  <p className="text-lg text-muted-foreground">{formatCurrency(monthlyPayment)}</p>
+                  <p className="text-lg text-muted-foreground mb-4">{formatCurrency(monthlyPayment)}</p>
+                  
+                  <CalculatorAIAnalysis
+                    calculatorType="mortgage"
+                    inputs={inputs}
+                    results={{
+                      downPaymentAmount,
+                      loanAmount,
+                      monthlyPayment,
+                      totalInterest,
+                      totalMortgageFees,
+                      totalUpfront: downPaymentAmount + acquisitionCosts.totalBaseCosts + totalMortgageFees,
+                      totalCostOfOwnership,
+                    }}
+                    buttonText="Explain My Options"
+                  />
                 </div>
               </div>
 
