@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, BadgeCheck, Phone, Mail, Building2 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { AvatarUploader } from '@/components/admin/AvatarUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +76,7 @@ export default function AdminAgents() {
     specializations: [] as string[],
     areas_covered: [] as string[],
     bio: '',
+    avatar_url: '',
     years_experience: 0,
     is_verified: false,
     is_active: true,
@@ -126,6 +128,7 @@ export default function AdminAgents() {
       const insertData = {
         ...data,
         brokerage_id: data.brokerage_id || null,
+        avatar_url: data.avatar_url || null,
       };
       const { error } = await supabase.from('agents').insert(insertData);
       if (error) throw error;
@@ -145,6 +148,7 @@ export default function AdminAgents() {
       const updateData = {
         ...data,
         brokerage_id: data.brokerage_id || null,
+        avatar_url: data.avatar_url || null,
       };
       const { error } = await supabase.from('agents').update(updateData).eq('id', id);
       if (error) throw error;
@@ -178,6 +182,7 @@ export default function AdminAgents() {
       specializations: [],
       areas_covered: [],
       bio: '',
+      avatar_url: '',
       years_experience: 0,
       is_verified: false,
       is_active: true,
@@ -199,6 +204,7 @@ export default function AdminAgents() {
       specializations: agent.specializations || [],
       areas_covered: agent.areas_covered || [],
       bio: agent.bio || '',
+      avatar_url: agent.avatar_url || '',
       years_experience: agent.years_experience || 0,
       is_verified: agent.is_verified,
       is_active: agent.is_active,
@@ -236,6 +242,15 @@ export default function AdminAgents() {
               <DialogTitle>{editingAgent ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Avatar Upload Section */}
+              <div className="flex justify-center pb-4 border-b border-border">
+                <AvatarUploader
+                  currentAvatarUrl={formData.avatar_url}
+                  onUpload={(url) => setFormData({ ...formData, avatar_url: url })}
+                  folder="agents"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 space-y-2">
                   <Label>Full Name *</Label>
@@ -402,10 +417,21 @@ export default function AdminAgents() {
               {agents.map((agent) => (
                 <TableRow key={agent.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {agent.is_verified && <BadgeCheck className="h-4 w-4 text-blue-500" />}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                        {agent.avatar_url ? (
+                          <img src={agent.avatar_url} alt={agent.full_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm font-medium">
+                            {agent.full_name.charAt(0)}
+                          </div>
+                        )}
+                      </div>
                       <div>
-                        <span className="font-medium">{agent.full_name}</span>
+                        <div className="flex items-center gap-1">
+                          {agent.is_verified && <BadgeCheck className="h-4 w-4 text-blue-500" />}
+                          <span className="font-medium">{agent.full_name}</span>
+                        </div>
                         {agent.years_experience > 0 && (
                           <p className="text-xs text-muted-foreground">{agent.years_experience} years exp.</p>
                         )}
