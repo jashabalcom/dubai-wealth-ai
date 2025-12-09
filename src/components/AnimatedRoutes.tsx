@@ -43,6 +43,7 @@ import NotFound from "@/pages/NotFound";
 import Disclaimer from "@/pages/Disclaimer";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Contact from "@/pages/Contact";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -123,6 +124,7 @@ export function AnimatedRoutes() {
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
         <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
+        <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
     </AnimatePresence>
