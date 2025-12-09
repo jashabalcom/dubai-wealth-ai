@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Star, MapPin } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, MapPin, User, Building2 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -30,11 +30,36 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
-const LOCATIONS = ['Downtown Dubai', 'Dubai Marina', 'Palm Jumeirah', 'Business Bay', 'JVC', 'Dubai Hills', 'DIFC', 'JBR'];
 const PROPERTY_TYPES = ['apartment', 'villa', 'townhouse', 'penthouse', 'studio'];
 const STATUSES = ['available', 'sold', 'reserved'];
+const LISTING_TYPES = ['sale', 'rent'];
+const FURNISHING_OPTIONS = ['unfurnished', 'furnished', 'semi-furnished'];
+const VIEW_TYPES = ['sea', 'city', 'garden', 'pool', 'landmark', 'canal', 'golf', 'community'];
+const RENTAL_FREQUENCIES = ['yearly', 'monthly', 'weekly', 'daily'];
+
+interface Agent {
+  id: string;
+  full_name: string;
+  brokerage?: { name: string } | null;
+}
+
+interface Brokerage {
+  id: string;
+  name: string;
+}
+
+interface Community {
+  id: string;
+  name: string;
+}
+
+interface Developer {
+  id: string;
+  name: string;
+}
 
 export default function AdminProperties() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -45,7 +70,7 @@ export default function AdminProperties() {
     title: '',
     slug: '',
     description: '',
-    location_area: 'Downtown Dubai',
+    location_area: '',
     property_type: 'apartment',
     price_aed: 0,
     size_sqft: 0,
@@ -56,6 +81,24 @@ export default function AdminProperties() {
     is_featured: false,
     is_off_plan: false,
     status: 'available',
+    // New fields
+    listing_type: 'sale',
+    agent_id: '',
+    brokerage_id: '',
+    community_id: '',
+    developer_id: '',
+    rera_permit_number: '',
+    rera_permit_expiry: '',
+    service_charge_per_sqft: 0,
+    furnishing: 'unfurnished',
+    view_type: '',
+    floor_number: 0,
+    total_floors: 0,
+    year_built: 0,
+    parking_spaces: 0,
+    virtual_tour_url: '',
+    video_url: '',
+    rental_frequency: 'yearly',
   });
 
   const { data: properties = [], isLoading } = useQuery({
@@ -63,7 +106,12 @@ export default function AdminProperties() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('properties')
-        .select('*')
+        .select(`
+          *,
+          agent:agents(id, full_name),
+          brokerage:brokerages(id, name),
+          community:communities(id, name)
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -71,9 +119,73 @@ export default function AdminProperties() {
     },
   });
 
+  const { data: agents = [] } = useQuery({
+    queryKey: ['agents-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('agents')
+        .select('id, full_name, brokerage:brokerages(name)')
+        .eq('is_active', true)
+        .order('full_name');
+      if (error) throw error;
+      return data as Agent[];
+    },
+  });
+
+  const { data: brokerages = [] } = useQuery({
+    queryKey: ['brokerages-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('brokerages')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data as Brokerage[];
+    },
+  });
+
+  const { data: communities = [] } = useQuery({
+    queryKey: ['communities-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('communities')
+        .select('id, name')
+        .order('name');
+      if (error) throw error;
+      return data as Community[];
+    },
+  });
+
+  const { data: developers = [] } = useQuery({
+    queryKey: ['developers-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('developers')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data as Developer[];
+    },
+  });
+
   const createProperty = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from('properties').insert(data);
+      const insertData = {
+        ...data,
+        agent_id: data.agent_id || null,
+        brokerage_id: data.brokerage_id || null,
+        community_id: data.community_id || null,
+        developer_id: data.developer_id || null,
+        rera_permit_expiry: data.rera_permit_expiry || null,
+        view_type: data.view_type || null,
+        service_charge_per_sqft: data.service_charge_per_sqft || null,
+        floor_number: data.floor_number || null,
+        total_floors: data.total_floors || null,
+        year_built: data.year_built || null,
+      };
+      const { error } = await supabase.from('properties').insert(insertData);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -88,7 +200,20 @@ export default function AdminProperties() {
 
   const updateProperty = useMutation({
     mutationFn: async ({ id, ...data }: typeof formData & { id: string }) => {
-      const { error } = await supabase.from('properties').update(data).eq('id', id);
+      const updateData = {
+        ...data,
+        agent_id: data.agent_id || null,
+        brokerage_id: data.brokerage_id || null,
+        community_id: data.community_id || null,
+        developer_id: data.developer_id || null,
+        rera_permit_expiry: data.rera_permit_expiry || null,
+        view_type: data.view_type || null,
+        service_charge_per_sqft: data.service_charge_per_sqft || null,
+        floor_number: data.floor_number || null,
+        total_floors: data.total_floors || null,
+        year_built: data.year_built || null,
+      };
+      const { error } = await supabase.from('properties').update(updateData).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -114,7 +239,7 @@ export default function AdminProperties() {
       title: '',
       slug: '',
       description: '',
-      location_area: 'Downtown Dubai',
+      location_area: '',
       property_type: 'apartment',
       price_aed: 0,
       size_sqft: 0,
@@ -125,6 +250,23 @@ export default function AdminProperties() {
       is_featured: false,
       is_off_plan: false,
       status: 'available',
+      listing_type: 'sale',
+      agent_id: '',
+      brokerage_id: '',
+      community_id: '',
+      developer_id: '',
+      rera_permit_number: '',
+      rera_permit_expiry: '',
+      service_charge_per_sqft: 0,
+      furnishing: 'unfurnished',
+      view_type: '',
+      floor_number: 0,
+      total_floors: 0,
+      year_built: 0,
+      parking_spaces: 0,
+      virtual_tour_url: '',
+      video_url: '',
+      rental_frequency: 'yearly',
     });
     setEditingProperty(null);
     setIsDialogOpen(false);
@@ -147,6 +289,23 @@ export default function AdminProperties() {
       is_featured: property.is_featured,
       is_off_plan: property.is_off_plan,
       status: property.status,
+      listing_type: property.listing_type || 'sale',
+      agent_id: property.agent_id || '',
+      brokerage_id: property.brokerage_id || '',
+      community_id: property.community_id || '',
+      developer_id: property.developer_id || '',
+      rera_permit_number: property.rera_permit_number || '',
+      rera_permit_expiry: property.rera_permit_expiry || '',
+      service_charge_per_sqft: property.service_charge_per_sqft || 0,
+      furnishing: property.furnishing || 'unfurnished',
+      view_type: property.view_type || '',
+      floor_number: property.floor_number || 0,
+      total_floors: property.total_floors || 0,
+      year_built: property.year_built || 0,
+      parking_spaces: property.parking_spaces || 0,
+      virtual_tour_url: property.virtual_tour_url || '',
+      video_url: property.video_url || '',
+      rental_frequency: property.rental_frequency || 'yearly',
     });
     setIsDialogOpen(true);
   };
@@ -175,91 +334,257 @@ export default function AdminProperties() {
               Add Property
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingProperty ? 'Edit Property' : 'Create New Property'}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label>Title</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Slug</Label>
-                  <Input value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Developer</Label>
-                  <Input value={formData.developer_name} onChange={(e) => setFormData({ ...formData, developer_name: e.target.value })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Location</Label>
-                  <Select value={formData.location_area} onValueChange={(value) => setFormData({ ...formData, location_area: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {LOCATIONS.map((loc) => <SelectItem key={loc} value={loc}>{loc}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Property Type</Label>
-                  <Select value={formData.property_type} onValueChange={(value) => setFormData({ ...formData, property_type: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {PROPERTY_TYPES.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Price (AED)</Label>
-                  <Input type="number" value={formData.price_aed} onChange={(e) => setFormData({ ...formData, price_aed: Number(e.target.value) })} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Size (sqft)</Label>
-                  <Input type="number" value={formData.size_sqft} onChange={(e) => setFormData({ ...formData, size_sqft: Number(e.target.value) })} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bedrooms</Label>
-                  <Input type="number" value={formData.bedrooms} onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bathrooms</Label>
-                  <Input type="number" value={formData.bathrooms} onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Rental Yield (%)</Label>
-                  <Input type="number" step="0.1" value={formData.rental_yield_estimate} onChange={(e) => setFormData({ ...formData, rental_yield_estimate: Number(e.target.value) })} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Description</Label>
-                  <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-                </div>
-                <div className="col-span-2 flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Switch checked={formData.is_featured} onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })} />
-                    <Label>Featured</Label>
+            <form onSubmit={handleSubmit}>
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-4">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="agent">Agent & RERA</TabsTrigger>
+                  <TabsTrigger value="media">Media</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 space-y-2">
+                      <Label>Title *</Label>
+                      <Input
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Slug</Label>
+                      <Input value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Listing Type</Label>
+                      <Select value={formData.listing_type} onValueChange={(value) => setFormData({ ...formData, listing_type: value })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {LISTING_TYPES.map((type) => <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Community</Label>
+                      <Select value={formData.community_id} onValueChange={(value) => setFormData({ ...formData, community_id: value })}>
+                        <SelectTrigger><SelectValue placeholder="Select community" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {communities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Location Area</Label>
+                      <Input value={formData.location_area} onChange={(e) => setFormData({ ...formData, location_area: e.target.value })} placeholder="e.g. Dubai Marina" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Property Type</Label>
+                      <Select value={formData.property_type} onValueChange={(value) => setFormData({ ...formData, property_type: value })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {PROPERTY_TYPES.map((type) => <SelectItem key={type} value={type} className="capitalize">{type}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Price (AED) *</Label>
+                      <Input type="number" value={formData.price_aed} onChange={(e) => setFormData({ ...formData, price_aed: Number(e.target.value) })} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Size (sqft) *</Label>
+                      <Input type="number" value={formData.size_sqft} onChange={(e) => setFormData({ ...formData, size_sqft: Number(e.target.value) })} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Bedrooms</Label>
+                      <Input type="number" value={formData.bedrooms} onChange={(e) => setFormData({ ...formData, bedrooms: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Bathrooms</Label>
+                      <Input type="number" value={formData.bathrooms} onChange={(e) => setFormData({ ...formData, bathrooms: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {STATUSES.map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 space-y-2">
+                      <Label>Description</Label>
+                      <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} />
+                    </div>
+                    <div className="col-span-2 flex items-center gap-6">
+                      <div className="flex items-center gap-2">
+                        <Switch checked={formData.is_featured} onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })} />
+                        <Label>Featured</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={formData.is_off_plan} onCheckedChange={(checked) => setFormData({ ...formData, is_off_plan: checked })} />
+                        <Label>Off-Plan</Label>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch checked={formData.is_off_plan} onCheckedChange={(checked) => setFormData({ ...formData, is_off_plan: checked })} />
-                    <Label>Off-Plan</Label>
+                </TabsContent>
+
+                <TabsContent value="details" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Furnishing</Label>
+                      <Select value={formData.furnishing} onValueChange={(value) => setFormData({ ...formData, furnishing: value })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {FURNISHING_OPTIONS.map((f) => <SelectItem key={f} value={f} className="capitalize">{f.replace('-', ' ')}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>View Type</Label>
+                      <Select value={formData.view_type} onValueChange={(value) => setFormData({ ...formData, view_type: value })}>
+                        <SelectTrigger><SelectValue placeholder="Select view" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {VIEW_TYPES.map((v) => <SelectItem key={v} value={v} className="capitalize">{v}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Floor Number</Label>
+                      <Input type="number" value={formData.floor_number} onChange={(e) => setFormData({ ...formData, floor_number: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Total Floors</Label>
+                      <Input type="number" value={formData.total_floors} onChange={(e) => setFormData({ ...formData, total_floors: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Year Built</Label>
+                      <Input type="number" value={formData.year_built} onChange={(e) => setFormData({ ...formData, year_built: Number(e.target.value) })} placeholder="e.g. 2020" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Parking Spaces</Label>
+                      <Input type="number" value={formData.parking_spaces} onChange={(e) => setFormData({ ...formData, parking_spaces: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Service Charge (AED/sqft)</Label>
+                      <Input type="number" step="0.01" value={formData.service_charge_per_sqft} onChange={(e) => setFormData({ ...formData, service_charge_per_sqft: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Rental Yield (%)</Label>
+                      <Input type="number" step="0.1" value={formData.rental_yield_estimate} onChange={(e) => setFormData({ ...formData, rental_yield_estimate: Number(e.target.value) })} />
+                    </div>
+                    {formData.listing_type === 'rent' && (
+                      <div className="space-y-2">
+                        <Label>Rental Frequency</Label>
+                        <Select value={formData.rental_frequency} onValueChange={(value) => setFormData({ ...formData, rental_frequency: value })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {RENTAL_FREQUENCIES.map((f) => <SelectItem key={f} value={f} className="capitalize">{f}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label>Developer</Label>
+                      <Select value={formData.developer_id} onValueChange={(value) => setFormData({ ...formData, developer_id: value })}>
+                        <SelectTrigger><SelectValue placeholder="Select developer" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {developers.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Developer Name (legacy)</Label>
+                      <Input value={formData.developer_name} onChange={(e) => setFormData({ ...formData, developer_name: e.target.value })} placeholder="Text field for older data" />
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
+                </TabsContent>
+
+                <TabsContent value="agent" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Listing Agent</Label>
+                      <Select value={formData.agent_id} onValueChange={(value) => setFormData({ ...formData, agent_id: value })}>
+                        <SelectTrigger><SelectValue placeholder="Select agent" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {agents.map((a) => (
+                            <SelectItem key={a.id} value={a.id}>
+                              {a.full_name} {a.brokerage ? `(${a.brokerage.name})` : ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Brokerage</Label>
+                      <Select value={formData.brokerage_id} onValueChange={(value) => setFormData({ ...formData, brokerage_id: value })}>
+                        <SelectTrigger><SelectValue placeholder="Select brokerage" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {brokerages.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2 border-t border-border pt-4 mt-2">
+                      <h4 className="font-medium mb-3">RERA Permit Details</h4>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>RERA Permit Number</Label>
+                      <Input 
+                        value={formData.rera_permit_number} 
+                        onChange={(e) => setFormData({ ...formData, rera_permit_number: e.target.value })} 
+                        placeholder="e.g. 12345678"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>RERA Permit Expiry</Label>
+                      <Input 
+                        type="date" 
+                        value={formData.rera_permit_expiry} 
+                        onChange={(e) => setFormData({ ...formData, rera_permit_expiry: e.target.value })} 
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="media" className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <Label>Virtual Tour URL</Label>
+                      <Input 
+                        type="url" 
+                        value={formData.virtual_tour_url} 
+                        onChange={(e) => setFormData({ ...formData, virtual_tour_url: e.target.value })} 
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Video URL</Label>
+                      <Input 
+                        type="url" 
+                        value={formData.video_url} 
+                        onChange={(e) => setFormData({ ...formData, video_url: e.target.value })} 
+                        placeholder="https://youtube.com/..."
+                      />
+                    </div>
+                    <div className="p-4 border border-dashed border-border rounded-lg text-center text-muted-foreground">
+                      <p className="text-sm">Image gallery management coming soon</p>
+                      <p className="text-xs">Use the property_images table to manage photos</p>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-border">
                 <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
                 <Button type="submit" className="bg-gold hover:bg-gold/90 text-background">
                   {editingProperty ? 'Update' : 'Create'}
@@ -281,27 +606,58 @@ export default function AdminProperties() {
                 <TableHead>Location</TableHead>
                 <TableHead>Price</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Agent</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {properties.map((property) => (
+              {properties.map((property: any) => (
                 <TableRow key={property.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {property.is_featured && <Star className="h-4 w-4 text-gold fill-gold" />}
-                      <span className="font-medium">{property.title}</span>
+                      <div>
+                        <span className="font-medium">{property.title}</span>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="capitalize">{property.listing_type || 'sale'}</span>
+                          {property.rera_permit_number && (
+                            <span className="text-emerald-500">RERA #{property.rera_permit_number}</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <MapPin className="h-3 w-3" />
-                      {property.location_area}
+                      <span>{property.community?.name || property.location_area}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-gold font-medium">{formatPrice(property.price_aed)}</TableCell>
-                  <TableCell className="capitalize">{property.property_type}</TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <span className="capitalize">{property.property_type}</span>
+                      {property.furnishing && property.furnishing !== 'unfurnished' && (
+                        <span className="text-xs text-muted-foreground block capitalize">{property.furnishing}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {property.agent ? (
+                      <div className="flex items-center gap-1 text-sm">
+                        <User className="h-3 w-3 text-muted-foreground" />
+                        <span>{property.agent.full_name}</span>
+                      </div>
+                    ) : property.brokerage ? (
+                      <div className="flex items-center gap-1 text-sm">
+                        <Building2 className="h-3 w-3 text-muted-foreground" />
+                        <span>{property.brokerage.name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">-</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       property.status === 'available' ? 'bg-emerald-500/10 text-emerald-500' :
