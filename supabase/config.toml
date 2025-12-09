@@ -3,6 +3,9 @@ project_id = "bswllmynuxkhekqqeznr"
 [functions.ai-investment-assistant]
 verify_jwt = false
 
+[functions.ai-property-analysis]
+verify_jwt = false
+
 [functions.golden-visa-wizard]
 verify_jwt = false
 

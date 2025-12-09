@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Bed, Bath, Maximize, TrendingUp, Calendar, Building2, CheckCircle2, Heart, Share2, Plus, Home, DollarSign } from 'lucide-react';
+import { ArrowLeft, MapPin, Bed, Bath, Maximize, TrendingUp, Calendar, Building2, CheckCircle2, Heart, Share2, Plus, Home, DollarSign, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -12,6 +12,7 @@ import { PropertyGallery } from '@/components/properties/PropertyGallery';
 import { SimilarProperties } from '@/components/properties/SimilarProperties';
 import { PropertyInquiryForm } from '@/components/properties/PropertyInquiryForm';
 import { InlineROICalculator } from '@/components/properties/InlineROICalculator';
+import { PropertyAIAnalysis } from '@/components/properties/PropertyAIAnalysis';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -49,6 +50,7 @@ export default function PropertyDetail() {
   const { toggleSave, isSaved } = useSavedProperties();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
 
   useEffect(() => {
     if (slug) fetchProperty();
@@ -186,6 +188,16 @@ export default function PropertyDetail() {
                   <div className="p-4 rounded-lg bg-muted/50"><div className="flex items-center justify-between"><span className="text-sm text-muted-foreground flex items-center gap-1"><Calendar className="w-4 h-4" /> Est. Annual Rent</span><span className="font-heading text-lg text-foreground">AED {estimatedAnnualRent.toLocaleString()}</span></div></div>
                   <div className="p-4 rounded-lg bg-muted/50"><div className="flex items-center justify-between"><span className="text-sm text-muted-foreground flex items-center gap-1"><Maximize className="w-4 h-4" /> Price per sqft</span><span className="font-heading text-lg text-foreground">AED {pricePerSqft.toLocaleString()}</span></div></div>
                 </div>
+                
+                {/* AI Analysis Button */}
+                <Button 
+                  variant="gold" 
+                  className="w-full mt-4" 
+                  onClick={() => setShowAIAnalysis(true)}
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Get AI Investment Analysis
+                </Button>
               </div>
 
               <PropertyInquiryForm propertyTitle={property.title} propertyId={property.id} />
@@ -196,6 +208,16 @@ export default function PropertyDetail() {
       </section>
 
       <Footer />
+
+      {/* AI Analysis Modal */}
+      {property && (
+        <PropertyAIAnalysis
+          propertyId={property.id}
+          propertyTitle={property.title}
+          isOpen={showAIAnalysis}
+          onClose={() => setShowAIAnalysis(false)}
+        />
+      )}
     </div>
   );
 }

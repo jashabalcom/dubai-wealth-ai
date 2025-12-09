@@ -1,50 +1,36 @@
 import { useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
-export type Message = {
-  role: "user" | "assistant";
-  content: string;
-};
+const ANALYSIS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-property-analysis`;
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-investment-assistant`;
-
-export function useAIChat() {
+export function usePropertyAnalysis() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [analysis, setAnalysis] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendMessage = useCallback(async (input: string) => {
-    const userMsg: Message = { role: "user", content: input };
-    setMessages(prev => [...prev, userMsg]);
+  const analyzeProperty = useCallback(async (propertyId: string) => {
     setIsLoading(true);
     setError(null);
+    setAnalysis("");
 
-    let assistantSoFar = "";
+    let analysisSoFar = "";
 
-    const upsertAssistant = (nextChunk: string) => {
-      assistantSoFar += nextChunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
-          return prev.map((m, i) => 
-            i === prev.length - 1 ? { ...m, content: assistantSoFar } : m
-          );
-        }
-        return [...prev, { role: "assistant", content: assistantSoFar }];
-      });
+    const appendAnalysis = (chunk: string) => {
+      analysisSoFar += chunk;
+      setAnalysis(analysisSoFar);
     };
 
     try {
-      const resp = await fetch(CHAT_URL, {
+      const resp = await fetch(ANALYSIS_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ 
-          messages: [...messages, userMsg],
-          userId: user?.id // Pass user ID for context injection
+          propertyId,
+          userId: user?.id
         }),
       });
 
@@ -83,7 +69,7 @@ export function useAIChat() {
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) upsertAssistant(content);
+            if (content) appendAnalysis(content);
           } catch {
             textBuffer = line + "\n" + textBuffer;
             break;
@@ -103,22 +89,22 @@ export function useAIChat() {
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) upsertAssistant(content);
+            if (content) appendAnalysis(content);
           } catch { /* ignore */ }
         }
       }
     } catch (err) {
-      console.error("AI chat error:", err);
-      setError(err instanceof Error ? err.message : "Failed to get AI response");
+      console.error("Property analysis error:", err);
+      setError(err instanceof Error ? err.message : "Failed to analyze property");
     } finally {
       setIsLoading(false);
     }
-  }, [messages, user?.id]);
+  }, [user?.id]);
 
-  const clearMessages = useCallback(() => {
-    setMessages([]);
+  const clearAnalysis = useCallback(() => {
+    setAnalysis("");
     setError(null);
   }, []);
 
-  return { messages, isLoading, error, sendMessage, clearMessages };
+  return { analysis, isLoading, error, analyzeProperty, clearAnalysis };
 }

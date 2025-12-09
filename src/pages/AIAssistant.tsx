@@ -31,13 +31,44 @@ interface SavedStrategy {
   created_at: string;
 }
 
-const QUICK_PROMPTS = [
-  "What's the best area in Dubai for rental income?",
-  "How do off-plan payment plans work?",
-  "What are the Golden Visa property requirements?",
-  "Compare Downtown vs Marina for investment",
-  "What rental yield can I expect in JVC?",
-];
+// Dynamic quick prompts based on user context
+const getQuickPrompts = (profile: { budget_range?: string; investment_goal?: string; membership_tier?: string } | null, savedCount: number) => {
+  const base = [
+    "What's the best area in Dubai for rental income?",
+    "How do off-plan payment plans work?",
+    "What are the Golden Visa property requirements?",
+  ];
+  
+  if (!profile) return base;
+  
+  const personalized: string[] = [];
+  
+  // Budget-based prompts
+  if (profile.budget_range) {
+    personalized.push(`What properties match my ${profile.budget_range} budget?`);
+  }
+  
+  // Goal-based prompts
+  if (profile.investment_goal === "Rental Income") {
+    personalized.push("What areas have the highest rental yields?");
+  } else if (profile.investment_goal === "Capital Growth") {
+    personalized.push("Which areas are expected to appreciate the most?");
+  } else if (profile.investment_goal === "Golden Visa") {
+    personalized.push("What's the best Golden Visa strategy for my budget?");
+  }
+  
+  // Saved properties prompts
+  if (savedCount > 0) {
+    personalized.push("Analyze my saved properties for investment potential");
+  }
+  
+  // Elite-specific prompts
+  if (profile.membership_tier === "elite") {
+    personalized.push("Create a diversified portfolio strategy for me");
+  }
+  
+  return [...personalized, ...base].slice(0, 5);
+};
 
 export default function AIAssistant() {
   const { messages, isLoading, error, sendMessage, clearMessages } = useAIChat();
@@ -45,9 +76,12 @@ export default function AIAssistant() {
   const { toast } = useToast();
   const [input, setInput] = useState("");
   const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
+  const [savedPropertiesCount, setSavedPropertiesCount] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isElite = profile?.membership_tier === "elite";
+  
+  const quickPrompts = getQuickPrompts(profile, savedPropertiesCount);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -56,8 +90,19 @@ export default function AIAssistant() {
   }, [messages]);
 
   useEffect(() => {
-    if (user && isElite) {
-      fetchSavedStrategies();
+    if (user) {
+      // Fetch saved properties count
+      supabase
+        .from("saved_properties")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .then(({ count }) => {
+          if (count !== null) setSavedPropertiesCount(count);
+        });
+      
+      if (isElite) {
+        fetchSavedStrategies();
+      }
     }
   }, [user, isElite]);
 
@@ -284,7 +329,7 @@ export default function AIAssistant() {
                         
                         {/* Quick Prompts */}
                         <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-                          {QUICK_PROMPTS.map((prompt) => (
+                          {quickPrompts.map((prompt) => (
                             <Button
                               key={prompt}
                               variant="outline"
