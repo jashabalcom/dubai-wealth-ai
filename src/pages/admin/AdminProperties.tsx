@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Star, MapPin, User, Building2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, MapPin, User, Building2, Image as ImageIcon, FileImage } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ImageGalleryManager } from '@/components/admin/ImageGalleryManager';
+import { FloorPlansManager } from '@/components/admin/FloorPlansManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,6 +67,7 @@ export default function AdminProperties() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [galleryPropertyId, setGalleryPropertyId] = useState<string | null>(null);
+  const [floorPlansPropertyId, setFloorPlansPropertyId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
@@ -579,18 +581,29 @@ export default function AdminProperties() {
                       />
                     </div>
                     {editingProperty ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setGalleryPropertyId(editingProperty.id)}
-                      >
-                        <ImageIcon className="h-4 w-4 mr-2" />
-                        Manage Image Gallery
-                      </Button>
+                      <div className="space-y-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setGalleryPropertyId(editingProperty.id)}
+                        >
+                          <ImageIcon className="h-4 w-4 mr-2" />
+                          Manage Image Gallery
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => setFloorPlansPropertyId(editingProperty.id)}
+                        >
+                          <FileImage className="h-4 w-4 mr-2" />
+                          Manage Floor Plans
+                        </Button>
+                      </div>
                     ) : (
                       <div className="p-4 border border-dashed border-border rounded-lg text-center text-muted-foreground">
-                        <p className="text-sm">Save the property first to add images</p>
+                        <p className="text-sm">Save the property first to add images and floor plans</p>
                       </div>
                     )}
                   </div>
@@ -684,6 +697,9 @@ export default function AdminProperties() {
                       <Button variant="ghost" size="icon" onClick={() => setGalleryPropertyId(property.id)} title="Manage Images">
                         <ImageIcon className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setFloorPlansPropertyId(property.id)} title="Manage Floor Plans">
+                        <FileImage className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(property)} title="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -704,6 +720,13 @@ export default function AdminProperties() {
         propertyId={galleryPropertyId || ''}
         open={!!galleryPropertyId}
         onOpenChange={(open) => !open && setGalleryPropertyId(null)}
+      />
+
+      {/* Floor Plans Manager Modal */}
+      <FloorPlansManager
+        propertyId={floorPlansPropertyId || ''}
+        open={!!floorPlansPropertyId}
+        onOpenChange={(open) => !open && setFloorPlansPropertyId(null)}
       />
     </AdminLayout>
   );
