@@ -3,6 +3,9 @@ project_id = "bswllmynuxkhekqqeznr"
 [functions.ai-calculator-analysis]
 verify_jwt = false
 
+[functions.ai-dashboard-insights]
+verify_jwt = false
+
 [functions.ai-investment-assistant]
 verify_jwt = false
 
