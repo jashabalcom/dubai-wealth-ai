@@ -10,6 +10,7 @@ import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
 import { ROICharts } from '@/components/tools/ROICharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
+import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 
@@ -290,7 +291,7 @@ export default function ROICalculator() {
               <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20">
                 <h2 className="font-heading text-xl text-foreground mb-6">Key Returns</h2>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="p-4 rounded-xl bg-card/50">
                     <p className="text-sm text-muted-foreground mb-1">Total ROI</p>
                     <p className="font-heading text-3xl text-emerald-400">{totalROI.toFixed(1)}%</p>
@@ -302,6 +303,25 @@ export default function ROICalculator() {
                     <p className="text-xs text-muted-foreground">Per year</p>
                   </div>
                 </div>
+
+                <CalculatorAIAnalysis
+                  calculatorType="roi"
+                  inputs={inputs}
+                  results={{
+                    grossYield,
+                    netYield,
+                    cashOnCash,
+                    totalROI,
+                    annualizedROI,
+                    totalInitialInvestment,
+                    netRentalIncome,
+                    capitalGain,
+                    futureValue,
+                    totalReturn,
+                  }}
+                  area={inputs.selectedArea}
+                  buttonText="Get AI Analysis"
+                />
               </div>
 
               {/* Yield Analysis */}

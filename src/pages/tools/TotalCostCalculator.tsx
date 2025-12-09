@@ -31,6 +31,7 @@ import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { TotalCostCharts } from '@/components/tools/TotalCostCharts';
 import { SensitivityAnalysisCharts } from '@/components/tools/SensitivityAnalysisCharts';
+import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { generateTotalCostPDF } from '@/lib/pdfExport';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -369,13 +370,46 @@ export default function TotalCostCalculator() {
                 </p>
               </div>
             </div>
-            <Button 
-              onClick={handleExportPDF}
-              className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export PDF Report
-            </Button>
+            <div className="flex gap-3">
+              <CalculatorAIAnalysis
+                calculatorType="total-cost"
+                inputs={{
+                  purchasePrice,
+                  propertySize,
+                  useMortgage,
+                  downPayment,
+                  interestRate,
+                  loanTerm,
+                  usageType,
+                  annualRent,
+                  dailyRate,
+                  occupancyRate,
+                  holdingPeriod,
+                  appreciationRate,
+                }}
+                results={{
+                  acquisitionTotal: calculations.acquisition.grandTotal,
+                  annualOngoing: calculations.annualOngoing.total,
+                  totalFinancingCosts: calculations.totalFinancingCosts,
+                  exitTotal: calculations.exit.total,
+                  totalCostOfOwnership: calculations.totalCostOfOwnership,
+                  netProfit: calculations.netProfit,
+                  roi: calculations.roi,
+                  annualizedRoi: calculations.annualizedRoi,
+                  breakEvenYear: calculations.breakEvenYear,
+                  exitPropertyValue: calculations.exitPropertyValue,
+                }}
+                area={selectedArea}
+                buttonText="Get AI Analysis"
+              />
+              <Button 
+                onClick={handleExportPDF}
+                className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Export PDF Report
+              </Button>
+            </div>
           </motion.div>
         </div>
       </section>
