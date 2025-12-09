@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MapPin, Bed, Bath, Maximize, TrendingUp, Calendar, Building2, CheckCircle2, Heart, Share2, Plus, Home, DollarSign, Sparkles } from 'lucide-react';
+import { 
+  ArrowLeft, MapPin, Bed, Bath, Maximize, TrendingUp, Calendar, 
+  Building2, CheckCircle2, Heart, Share2, Plus, Home, DollarSign, 
+  Sparkles, Car, Sofa, Eye, Layers, Building
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -13,6 +18,9 @@ import { SimilarProperties } from '@/components/properties/SimilarProperties';
 import { PropertyInquiryForm } from '@/components/properties/PropertyInquiryForm';
 import { InlineROICalculator } from '@/components/properties/InlineROICalculator';
 import { PropertyAIAnalysis } from '@/components/properties/PropertyAIAnalysis';
+import { AgentContactCard } from '@/components/properties/AgentContactCard';
+import { FloorPlansGallery } from '@/components/properties/FloorPlansGallery';
+import { PropertyFeaturesGrid } from '@/components/properties/PropertyFeaturesGrid';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -32,11 +40,84 @@ interface Property {
   rental_yield_estimate: number;
   images: string[];
   completion_date: string | null;
-  payment_plan_json: { down_payment: number; during_construction: number; on_handover: number; post_handover: number; post_handover_years: number; } | null;
+  payment_plan_json: { 
+    down_payment: number; 
+    during_construction: number; 
+    on_handover: number; 
+    post_handover: number; 
+    post_handover_years: number; 
+  } | null;
   description: string;
   amenities: string[];
   highlights: string[];
   is_featured: boolean;
+  // New fields
+  listing_type: string;
+  furnishing: string;
+  view_type: string | null;
+  floor_number: number | null;
+  total_floors: number | null;
+  year_built: number | null;
+  parking_spaces: number;
+  service_charge_per_sqft: number | null;
+  rera_permit_number: string | null;
+  rental_frequency: string;
+  virtual_tour_url: string | null;
+  video_url: string | null;
+  agent_id: string | null;
+  brokerage_id: string | null;
+  community_id: string | null;
+  agent?: {
+    id: string;
+    full_name: string;
+    email: string | null;
+    phone: string | null;
+    whatsapp: string | null;
+    rera_brn: string | null;
+    avatar_url: string | null;
+    years_experience: number;
+    is_verified: boolean;
+    specializations: string[];
+    brokerage?: {
+      name: string;
+      logo_url: string | null;
+    } | null;
+  } | null;
+  community?: {
+    name: string;
+    avg_price_per_sqft: number | null;
+    avg_rental_yield: number | null;
+  } | null;
+  developer?: {
+    name: string;
+    slug: string;
+  } | null;
+}
+
+interface PropertyImage {
+  id: string;
+  url: string;
+  category: string;
+  is_primary: boolean;
+  order_index: number;
+}
+
+interface FloorPlan {
+  id: string;
+  url: string;
+  title: string | null;
+  floor_number: number | null;
+  order_index: number;
+}
+
+interface PropertyFeature {
+  id: string;
+  feature_definitions: {
+    name: string;
+    slug: string;
+    category: string;
+    icon: string | null;
+  };
 }
 
 function formatPrice(price: number): string {
@@ -57,8 +138,26 @@ export default function PropertyDetail() {
   }, [slug]);
 
   const fetchProperty = async () => {
-    const { data, error } = await supabase.from('properties').select('*').eq('slug', slug).maybeSingle();
-    if (error || !data) { navigate('/properties'); return; }
+    const { data, error } = await supabase
+      .from('properties')
+      .select(`
+        *,
+        agent:agents(
+          id, full_name, email, phone, whatsapp, rera_brn, 
+          avatar_url, years_experience, is_verified, specializations,
+          brokerage:brokerages(name, logo_url)
+        ),
+        community:communities(name, avg_price_per_sqft, avg_rental_yield),
+        developer:developers(name, slug)
+      `)
+      .eq('slug', slug)
+      .maybeSingle();
+    
+    if (error || !data) { 
+      navigate('/properties'); 
+      return; 
+    }
+    
     setProperty({
       ...data,
       images: Array.isArray(data.images) ? (data.images as string[]) : [],
@@ -68,9 +167,62 @@ export default function PropertyDetail() {
       price_aed: Number(data.price_aed),
       size_sqft: Number(data.size_sqft),
       rental_yield_estimate: Number(data.rental_yield_estimate),
+      agent: data.agent as Property['agent'],
+      community: data.community as Property['community'],
+      developer: data.developer as Property['developer'],
     });
     setLoading(false);
   };
+
+  // Fetch property images from property_images table
+  const { data: propertyImages = [] } = useQuery({
+    queryKey: ['property-images', property?.id],
+    queryFn: async () => {
+      if (!property?.id) return [];
+      const { data, error } = await supabase
+        .from('property_images')
+        .select('*')
+        .eq('property_id', property.id)
+        .order('order_index');
+      if (error) return [];
+      return data as PropertyImage[];
+    },
+    enabled: !!property?.id,
+  });
+
+  // Fetch floor plans
+  const { data: floorPlans = [] } = useQuery({
+    queryKey: ['property-floor-plans', property?.id],
+    queryFn: async () => {
+      if (!property?.id) return [];
+      const { data, error } = await supabase
+        .from('property_floor_plans')
+        .select('*')
+        .eq('property_id', property.id)
+        .order('order_index');
+      if (error) return [];
+      return data as FloorPlan[];
+    },
+    enabled: !!property?.id,
+  });
+
+  // Fetch property features
+  const { data: propertyFeatures = [] } = useQuery({
+    queryKey: ['property-features', property?.id],
+    queryFn: async () => {
+      if (!property?.id) return [];
+      const { data, error } = await supabase
+        .from('property_features')
+        .select(`
+          id,
+          feature_definitions(name, slug, category, icon)
+        `)
+        .eq('property_id', property.id);
+      if (error) return [];
+      return data as PropertyFeature[];
+    },
+    enabled: !!property?.id,
+  });
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -82,23 +234,49 @@ export default function PropertyDetail() {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /></div>;
+  if (loading) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+    </div>
+  );
+  
   if (!property) return null;
+
+  // Use property_images if available, fallback to legacy images array
+  const galleryImages = propertyImages.length > 0 
+    ? propertyImages.map(img => img.url) 
+    : property.images;
 
   const pricePerSqft = Math.round(property.price_aed / property.size_sqft);
   const estimatedMonthlyRent = Math.round((property.price_aed * (property.rental_yield_estimate / 100)) / 12);
   const estimatedAnnualRent = estimatedMonthlyRent * 12;
   const propertyIsSaved = isSaved(property.id);
 
+  const furnishingLabel = property.furnishing === 'semi-furnished' ? 'Semi-Furnished' : 
+    property.furnishing.charAt(0).toUpperCase() + property.furnishing.slice(1);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <section className="pt-20">
-        <PropertyGallery images={property.images} title={property.title} />
+        <PropertyGallery images={galleryImages} title={property.title} />
         <div className="absolute top-24 left-4 flex flex-wrap gap-2 z-10">
-          {property.is_off_plan && <span className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full">Off-Plan</span>}
-          {property.is_featured && <span className="px-3 py-1 bg-gold text-primary-dark text-sm font-medium rounded-full">Featured</span>}
+          {property.is_off_plan && (
+            <span className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full">
+              Off-Plan
+            </span>
+          )}
+          {property.is_featured && (
+            <span className="px-3 py-1 bg-gold text-primary-dark text-sm font-medium rounded-full">
+              Featured
+            </span>
+          )}
+          {property.listing_type === 'rent' && (
+            <span className="px-3 py-1 bg-purple-500 text-white text-sm font-medium rounded-full">
+              For Rent
+            </span>
+          )}
         </div>
       </section>
 
@@ -120,73 +298,320 @@ export default function PropertyDetail() {
               </Button>
               {user && profile?.membership_tier === 'elite' && (
                 <Link to="/portfolio">
-                  <Button variant="gold" size="sm"><Plus className="w-4 h-4 mr-2" /> Add to Portfolio</Button>
+                  <Button variant="gold" size="sm">
+                    <Plus className="w-4 h-4 mr-2" /> Add to Portfolio
+                  </Button>
                 </Link>
               )}
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                {/* Location & Developer */}
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <MapPin className="w-4 h-4" /> {property.location_area} {property.developer_name && <span>• {property.developer_name}</span>}
+                  <MapPin className="w-4 h-4" /> 
+                  {property.community?.name || property.location_area}
+                  {(property.developer?.name || property.developer_name) && (
+                    <span>• {property.developer?.name || property.developer_name}</span>
+                  )}
                 </div>
-                <h1 className="font-heading text-3xl md:text-4xl text-foreground mb-4">{property.title}</h1>
-                <div className="flex flex-wrap items-center gap-6 text-muted-foreground mb-4">
-                  <span className="flex items-center gap-2"><Bed className="w-5 h-5" /> {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bedrooms`}</span>
-                  <span className="flex items-center gap-2"><Bath className="w-5 h-5" /> {property.bathrooms} Bathrooms</span>
-                  <span className="flex items-center gap-2"><Maximize className="w-5 h-5" /> {property.size_sqft.toLocaleString()} sqft</span>
-                  <span className="flex items-center gap-2"><Home className="w-5 h-5" /> {property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)}</span>
+                
+                {/* Title */}
+                <h1 className="font-heading text-3xl md:text-4xl text-foreground mb-4">
+                  {property.title}
+                </h1>
+                
+                {/* Key Stats */}
+                <div className="flex flex-wrap items-center gap-4 md:gap-6 text-muted-foreground mb-4">
+                  <span className="flex items-center gap-2">
+                    <Bed className="w-5 h-5" /> 
+                    {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Bath className="w-5 h-5" /> 
+                    {property.bathrooms} Bath
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Maximize className="w-5 h-5" /> 
+                    {property.size_sqft.toLocaleString()} sqft
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <Home className="w-5 h-5" /> 
+                    {property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)}
+                  </span>
+                  {property.parking_spaces > 0 && (
+                    <span className="flex items-center gap-2">
+                      <Car className="w-5 h-5" /> 
+                      {property.parking_spaces} Parking
+                    </span>
+                  )}
                 </div>
-                <p className="font-heading text-3xl text-gold">{formatPrice(property.price_aed)}</p>
+
+                {/* Price */}
+                <p className="font-heading text-3xl text-gold">
+                  {formatPrice(property.price_aed)}
+                  {property.listing_type === 'rent' && (
+                    <span className="text-lg text-muted-foreground">
+                      /{property.rental_frequency || 'year'}
+                    </span>
+                  )}
+                </p>
+
+                {/* RERA Badge */}
+                {property.rera_permit_number && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    RERA Permit: {property.rera_permit_number}
+                  </p>
+                )}
               </motion.div>
 
+              {/* Property Details Grid */}
+              <div className="p-6 rounded-xl bg-card border border-border">
+                <h2 className="font-heading text-xl text-foreground mb-4">Property Details</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Sofa className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Furnishing</p>
+                      <p className="text-sm font-medium text-foreground">{furnishingLabel}</p>
+                    </div>
+                  </div>
+                  
+                  {property.view_type && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Eye className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">View</p>
+                        <p className="text-sm font-medium text-foreground capitalize">{property.view_type}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {property.floor_number && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Layers className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Floor</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {property.floor_number}
+                          {property.total_floors && ` of ${property.total_floors}`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {property.year_built && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Building className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Year Built</p>
+                        <p className="text-sm font-medium text-foreground">{property.year_built}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {property.service_charge_per_sqft && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Service Charge</p>
+                        <p className="text-sm font-medium text-foreground">
+                          AED {property.service_charge_per_sqft}/sqft
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Highlights */}
               {property.highlights.length > 0 && (
                 <div className="p-6 rounded-xl bg-card border border-border">
                   <h2 className="font-heading text-xl text-foreground mb-4">Key Highlights</h2>
-                  <div className="flex flex-wrap gap-2">{property.highlights.map((h, i) => <span key={i} className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 text-sm rounded-full">{h}</span>)}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {property.highlights.map((h, i) => (
+                      <span key={i} className="px-3 py-1 bg-gold/10 text-gold border border-gold/20 text-sm rounded-full">
+                        {h}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
+              {/* Description */}
               {property.description && (
                 <div className="p-6 rounded-xl bg-card border border-border">
                   <h2 className="font-heading text-xl text-foreground mb-4">Description</h2>
-                  <p className="text-muted-foreground leading-relaxed">{property.description}</p>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {property.description}
+                  </p>
                 </div>
               )}
 
+              {/* Floor Plans */}
+              <FloorPlansGallery floorPlans={floorPlans} />
+
+              {/* Features from property_features table */}
+              {propertyFeatures.length > 0 && (
+                <PropertyFeaturesGrid features={propertyFeatures} />
+              )}
+
+              {/* Legacy Amenities (fallback) */}
+              {propertyFeatures.length === 0 && property.amenities.length > 0 && (
+                <div className="p-6 rounded-xl bg-card border border-border">
+                  <h2 className="font-heading text-xl text-foreground mb-4">Amenities</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {property.amenities.map((a, i) => (
+                      <div key={i} className="flex items-center gap-2 text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-gold" />
+                        {a}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Plan */}
               {property.is_off_plan && property.payment_plan_json && (
                 <div className="p-6 rounded-xl bg-card border border-border">
                   <h2 className="font-heading text-xl text-foreground mb-4">Payment Plan</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-lg bg-muted/50 text-center"><p className="text-2xl font-heading text-gold">{property.payment_plan_json.down_payment}%</p><p className="text-sm text-muted-foreground">Down Payment</p></div>
-                    <div className="p-4 rounded-lg bg-muted/50 text-center"><p className="text-2xl font-heading text-foreground">{property.payment_plan_json.during_construction}%</p><p className="text-sm text-muted-foreground">During Construction</p></div>
-                    <div className="p-4 rounded-lg bg-muted/50 text-center"><p className="text-2xl font-heading text-foreground">{property.payment_plan_json.on_handover}%</p><p className="text-sm text-muted-foreground">On Handover</p></div>
-                    {property.payment_plan_json.post_handover > 0 && <div className="p-4 rounded-lg bg-muted/50 text-center"><p className="text-2xl font-heading text-foreground">{property.payment_plan_json.post_handover}%</p><p className="text-sm text-muted-foreground">Post-Handover ({property.payment_plan_json.post_handover_years} yrs)</p></div>}
+                    <div className="p-4 rounded-lg bg-muted/50 text-center">
+                      <p className="text-2xl font-heading text-gold">
+                        {property.payment_plan_json.down_payment}%
+                      </p>
+                      <p className="text-sm text-muted-foreground">Down Payment</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-muted/50 text-center">
+                      <p className="text-2xl font-heading text-foreground">
+                        {property.payment_plan_json.during_construction}%
+                      </p>
+                      <p className="text-sm text-muted-foreground">During Construction</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-muted/50 text-center">
+                      <p className="text-2xl font-heading text-foreground">
+                        {property.payment_plan_json.on_handover}%
+                      </p>
+                      <p className="text-sm text-muted-foreground">On Handover</p>
+                    </div>
+                    {property.payment_plan_json.post_handover > 0 && (
+                      <div className="p-4 rounded-lg bg-muted/50 text-center">
+                        <p className="text-2xl font-heading text-foreground">
+                          {property.payment_plan_json.post_handover}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Post-Handover ({property.payment_plan_json.post_handover_years} yrs)
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {property.completion_date && <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 text-muted-foreground"><Calendar className="w-4 h-4" /> Expected: {new Date(property.completion_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>}
+                  {property.completion_date && (
+                    <div className="mt-4 pt-4 border-t border-border flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="w-4 h-4" /> 
+                      Expected: {new Date(property.completion_date).toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        year: 'numeric' 
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {property.amenities.length > 0 && (
+              {/* Virtual Tour */}
+              {property.virtual_tour_url && (
                 <div className="p-6 rounded-xl bg-card border border-border">
-                  <h2 className="font-heading text-xl text-foreground mb-4">Amenities</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">{property.amenities.map((a, i) => <div key={i} className="flex items-center gap-2 text-muted-foreground"><CheckCircle2 className="w-4 h-4 text-gold" />{a}</div>)}</div>
+                  <h2 className="font-heading text-xl text-foreground mb-4">Virtual Tour</h2>
+                  <a 
+                    href={property.virtual_tour_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-gold hover:underline"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View 360° Virtual Tour
+                  </a>
                 </div>
               )}
 
-              <InlineROICalculator purchasePrice={property.price_aed} estimatedYield={property.rental_yield_estimate} sizeSquft={property.size_sqft} />
+              <InlineROICalculator 
+                purchasePrice={property.price_aed} 
+                estimatedYield={property.rental_yield_estimate} 
+                sizeSquft={property.size_sqft} 
+              />
             </div>
 
+            {/* Sidebar */}
             <div className="space-y-6">
+              {/* Investment Metrics */}
               <div className="p-6 rounded-xl bg-card border border-border sticky top-32">
                 <h2 className="font-heading text-xl text-foreground mb-4">Investment Metrics</h2>
                 <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20"><div className="flex items-center justify-between"><span className="text-sm text-muted-foreground flex items-center gap-1"><TrendingUp className="w-4 h-4" /> Est. Rental Yield</span><span className="font-heading text-xl text-emerald-400">{property.rental_yield_estimate}%</span></div></div>
-                  <div className="p-4 rounded-lg bg-muted/50"><div className="flex items-center justify-between"><span className="text-sm text-muted-foreground flex items-center gap-1"><DollarSign className="w-4 h-4" /> Est. Monthly Rent</span><span className="font-heading text-lg text-foreground">AED {estimatedMonthlyRent.toLocaleString()}</span></div></div>
-                  <div className="p-4 rounded-lg bg-muted/50"><div className="flex items-center justify-between"><span className="text-sm text-muted-foreground flex items-center gap-1"><Calendar className="w-4 h-4" /> Est. Annual Rent</span><span className="font-heading text-lg text-foreground">AED {estimatedAnnualRent.toLocaleString()}</span></div></div>
-                  <div className="p-4 rounded-lg bg-muted/50"><div className="flex items-center justify-between"><span className="text-sm text-muted-foreground flex items-center gap-1"><Maximize className="w-4 h-4" /> Price per sqft</span><span className="font-heading text-lg text-foreground">AED {pricePerSqft.toLocaleString()}</span></div></div>
+                  <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <TrendingUp className="w-4 h-4" /> Est. Rental Yield
+                      </span>
+                      <span className="font-heading text-xl text-emerald-400">
+                        {property.rental_yield_estimate}%
+                      </span>
+                    </div>
+                    {property.community?.avg_rental_yield && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Area avg: {property.community.avg_rental_yield}%
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <DollarSign className="w-4 h-4" /> Est. Monthly Rent
+                      </span>
+                      <span className="font-heading text-lg text-foreground">
+                        AED {estimatedMonthlyRent.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Calendar className="w-4 h-4" /> Est. Annual Rent
+                      </span>
+                      <span className="font-heading text-lg text-foreground">
+                        AED {estimatedAnnualRent.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Maximize className="w-4 h-4" /> Price per sqft
+                      </span>
+                      <span className="font-heading text-lg text-foreground">
+                        AED {pricePerSqft.toLocaleString()}
+                      </span>
+                    </div>
+                    {property.community?.avg_price_per_sqft && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Area avg: AED {property.community.avg_price_per_sqft.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 
                 {/* AI Analysis Button */}
@@ -200,8 +625,22 @@ export default function PropertyDetail() {
                 </Button>
               </div>
 
+              {/* Agent Contact Card */}
+              {property.agent && (
+                <AgentContactCard 
+                  agent={property.agent} 
+                  propertyTitle={property.title} 
+                />
+              )}
+
               <PropertyInquiryForm propertyTitle={property.title} propertyId={property.id} />
-              <SimilarProperties currentPropertyId={property.id} locationArea={property.location_area} priceAed={property.price_aed} propertyType={property.property_type} />
+              
+              <SimilarProperties 
+                currentPropertyId={property.id} 
+                locationArea={property.location_area} 
+                priceAed={property.price_aed} 
+                propertyType={property.property_type} 
+              />
             </div>
           </div>
         </div>
