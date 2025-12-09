@@ -16,6 +16,7 @@ import ROICalculator from "@/pages/tools/ROICalculator";
 import MortgageCalculator from "@/pages/tools/MortgageCalculator";
 import RentVsBuyCalculator from "@/pages/tools/RentVsBuyCalculator";
 import AirbnbCalculator from "@/pages/tools/AirbnbCalculator";
+import StrVsLtrCalculator from "@/pages/tools/StrVsLtrCalculator";
 import TotalCostCalculator from "@/pages/tools/TotalCostCalculator";
 import AIAssistant from "@/pages/AIAssistant";
 import Portfolio from "@/pages/Portfolio";
@@ -87,6 +88,7 @@ export function AnimatedRoutes() {
         <Route path="/tools/mortgage" element={<AnimatedPage><MortgageCalculator /></AnimatedPage>} />
         <Route path="/tools/rent-vs-buy" element={<AnimatedPage><RentVsBuyCalculator /></AnimatedPage>} />
         <Route path="/tools/airbnb" element={<AnimatedPage><AirbnbCalculator /></AnimatedPage>} />
+        <Route path="/tools/str-vs-ltr" element={<AnimatedPage><StrVsLtrCalculator /></AnimatedPage>} />
         <Route path="/tools/total-cost" element={<AnimatedPage><TotalCostCalculator /></AnimatedPage>} />
         <Route path="/ai-assistant" element={<AnimatedPage><AIAssistant /></AnimatedPage>} />
         <Route path="/portfolio" element={<AnimatedPage><Portfolio /></AnimatedPage>} />
