@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const inquirySchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -44,24 +45,47 @@ export function PropertyInquiryForm({ propertyTitle, propertyId }: PropertyInqui
   const onSubmit = async (data: InquiryFormData) => {
     setIsSubmitting(true);
     
-    // Simulate API call - in production, this would send to a backend
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log('Inquiry submitted:', { ...data, propertyId, type: inquiryType });
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    toast({
-      title: inquiryType === 'viewing' ? 'Viewing Requested' : 'Enquiry Sent',
-      description: "We'll get back to you within 24 hours.",
-    });
-    
-    // Reset after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      reset();
-    }, 3000);
+    try {
+      const { data: response, error } = await supabase.functions.invoke('property-inquiry', {
+        body: {
+          propertyId,
+          propertyTitle,
+          inquiryType,
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          message: data.message,
+        }
+      });
+
+      if (error) throw error;
+
+      console.log('Inquiry submitted:', response);
+      
+      setIsSubmitted(true);
+      
+      toast({
+        title: inquiryType === 'viewing' ? 'Viewing Requested' : 'Enquiry Sent',
+        description: response?.routed_to === 'agent' 
+          ? "The listing agent will contact you shortly."
+          : "Our team will review and connect you with the right agent.",
+      });
+      
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false);
+        reset();
+      }, 3000);
+    } catch (error) {
+      console.error('Inquiry error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit inquiry. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -104,7 +128,7 @@ export function PropertyInquiryForm({ propertyTitle, propertyId }: PropertyInqui
             </div>
             <h3 className="font-heading text-xl text-foreground mb-2">Request Submitted!</h3>
             <p className="text-muted-foreground">
-              Our team will contact you shortly.
+              We'll get back to you within 24 hours.
             </p>
           </motion.div>
         ) : (
