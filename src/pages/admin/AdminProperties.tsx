@@ -376,10 +376,10 @@ export default function AdminProperties() {
                     </div>
                     <div className="space-y-2">
                       <Label>Community</Label>
-                      <Select value={formData.community_id} onValueChange={(value) => setFormData({ ...formData, community_id: value })}>
+                      <Select value={formData.community_id || "none"} onValueChange={(value) => setFormData({ ...formData, community_id: value === "none" ? "" : value })}>
                         <SelectTrigger><SelectValue placeholder="Select community" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {communities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -452,10 +452,10 @@ export default function AdminProperties() {
                     </div>
                     <div className="space-y-2">
                       <Label>View Type</Label>
-                      <Select value={formData.view_type} onValueChange={(value) => setFormData({ ...formData, view_type: value })}>
+                      <Select value={formData.view_type || "none"} onValueChange={(value) => setFormData({ ...formData, view_type: value === "none" ? "" : value })}>
                         <SelectTrigger><SelectValue placeholder="Select view" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {VIEW_TYPES.map((v) => <SelectItem key={v} value={v} className="capitalize">{v}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -497,10 +497,10 @@ export default function AdminProperties() {
                     )}
                     <div className="space-y-2">
                       <Label>Developer</Label>
-                      <Select value={formData.developer_id} onValueChange={(value) => setFormData({ ...formData, developer_id: value })}>
+                      <Select value={formData.developer_id || "none"} onValueChange={(value) => setFormData({ ...formData, developer_id: value === "none" ? "" : value })}>
                         <SelectTrigger><SelectValue placeholder="Select developer" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {developers.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -516,10 +516,10 @@ export default function AdminProperties() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Listing Agent</Label>
-                      <Select value={formData.agent_id} onValueChange={(value) => setFormData({ ...formData, agent_id: value })}>
+                      <Select value={formData.agent_id || "none"} onValueChange={(value) => setFormData({ ...formData, agent_id: value === "none" ? "" : value })}>
                         <SelectTrigger><SelectValue placeholder="Select agent" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {agents.map((a) => (
                             <SelectItem key={a.id} value={a.id}>
                               {a.full_name} {a.brokerage ? `(${a.brokerage.name})` : ''}
@@ -530,10 +530,10 @@ export default function AdminProperties() {
                     </div>
                     <div className="space-y-2">
                       <Label>Brokerage</Label>
-                      <Select value={formData.brokerage_id} onValueChange={(value) => setFormData({ ...formData, brokerage_id: value })}>
+                      <Select value={formData.brokerage_id || "none"} onValueChange={(value) => setFormData({ ...formData, brokerage_id: value === "none" ? "" : value })}>
                         <SelectTrigger><SelectValue placeholder="Select brokerage" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {brokerages.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
