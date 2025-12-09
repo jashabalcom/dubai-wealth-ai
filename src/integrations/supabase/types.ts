@@ -217,6 +217,66 @@ export type Database = {
         }
         Relationships: []
       }
+      airbnb_market_data: {
+        Row: {
+          active_listings_count: number | null
+          area_name: string
+          avg_annual_revenue: number | null
+          avg_daily_rate: number | null
+          avg_occupancy: number | null
+          bedrooms: number
+          created_at: string
+          data_date: string
+          id: string
+          low_daily_rate: number | null
+          low_occupancy: number | null
+          peak_daily_rate: number | null
+          peak_occupancy: number | null
+          property_type: string
+          revenue_percentile_25: number | null
+          revenue_percentile_75: number | null
+          updated_at: string
+        }
+        Insert: {
+          active_listings_count?: number | null
+          area_name: string
+          avg_annual_revenue?: number | null
+          avg_daily_rate?: number | null
+          avg_occupancy?: number | null
+          bedrooms?: number
+          created_at?: string
+          data_date?: string
+          id?: string
+          low_daily_rate?: number | null
+          low_occupancy?: number | null
+          peak_daily_rate?: number | null
+          peak_occupancy?: number | null
+          property_type?: string
+          revenue_percentile_25?: number | null
+          revenue_percentile_75?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active_listings_count?: number | null
+          area_name?: string
+          avg_annual_revenue?: number | null
+          avg_daily_rate?: number | null
+          avg_occupancy?: number | null
+          bedrooms?: number
+          created_at?: string
+          data_date?: string
+          id?: string
+          low_daily_rate?: number | null
+          low_occupancy?: number | null
+          peak_daily_rate?: number | null
+          peak_occupancy?: number | null
+          property_type?: string
+          revenue_percentile_25?: number | null
+          revenue_percentile_75?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       area_market_stats: {
         Row: {
           apartment_avg_price: number | null

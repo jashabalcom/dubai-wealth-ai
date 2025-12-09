@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Info } from 'lucide-react';
+import { ArrowLeft, Calendar, Info, Database, Loader2 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencySelector } from '@/components/tools/CurrencySelector';
@@ -12,10 +12,17 @@ import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { DEFAULT_SHORT_TERM_COSTS, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
+import { useAirbnbMarketData, useHasAirbnbMarketData } from '@/hooks/useAirbnbMarketData';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 export default function AirbnbCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
   const [activePreset, setActivePreset] = useState<string>();
+  
+  // Market data integration
+  const { data: hasMarketData } = useHasAirbnbMarketData();
 
   const [inputs, setInputs] = useState({
     propertyPrice: 2000000,
@@ -62,6 +69,30 @@ export default function AirbnbCalculator() {
       selectedArea: preset.name,
     }));
     setActivePreset(preset.name);
+  };
+
+  // Fetch market data for selected area and bedrooms
+  const { data: marketData, isLoading: isLoadingMarketData } = useAirbnbMarketData({
+    areaName: inputs.selectedArea,
+    bedrooms: inputs.bedrooms,
+  });
+
+  const handleUseMarketData = () => {
+    if (!marketData) {
+      toast.info('No market data available yet. Connect AirDNA API to enable this feature.');
+      return;
+    }
+
+    setInputs(prev => ({
+      ...prev,
+      nightlyRatePeak: marketData.peak_daily_rate || prev.nightlyRatePeak,
+      nightlyRateMid: marketData.avg_daily_rate || prev.nightlyRateMid,
+      nightlyRateLow: marketData.low_daily_rate || prev.nightlyRateLow,
+      occupancyPeak: marketData.peak_occupancy || prev.occupancyPeak,
+      occupancyMid: marketData.avg_occupancy || prev.occupancyMid,
+      occupancyLow: marketData.low_occupancy || prev.occupancyLow,
+    }));
+    toast.success('Rates updated with real market data!');
   };
 
   // Season definitions
@@ -160,6 +191,61 @@ export default function AirbnbCalculator() {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-6">
+              {/* Market Data Integration Banner */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <Database className="w-5 h-5 text-blue-400" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">AirDNA Market Data</p>
+                      <p className="text-xs text-muted-foreground">
+                        {hasMarketData 
+                          ? 'Real market data available' 
+                          : 'Connect API for real rates & occupancy'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {marketData && (
+                      <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                        Data Available
+                      </Badge>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={marketData ? "default" : "outline"}
+                      onClick={handleUseMarketData}
+                      disabled={isLoadingMarketData || !hasMarketData}
+                      className="text-xs"
+                    >
+                      {isLoadingMarketData ? (
+                        <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Loading...</>
+                      ) : hasMarketData ? (
+                        'Use Market Data'
+                      ) : (
+                        'Coming Soon'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                {marketData && (
+                  <div className="mt-3 pt-3 border-t border-blue-500/10 grid grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Avg Daily Rate</span>
+                      <p className="font-medium text-foreground">{formatAED(marketData.avg_daily_rate || 0)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Avg Occupancy</span>
+                      <p className="font-medium text-foreground">{marketData.avg_occupancy?.toFixed(0) || '--'}%</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Active Listings</span>
+                      <p className="font-medium text-foreground">{marketData.active_listings_count?.toLocaleString() || '--'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="p-6 rounded-2xl bg-card border border-border">
                 <DubaiPresets onSelectPreset={handlePresetSelect} activePreset={activePreset} showDetails />
               </div>
