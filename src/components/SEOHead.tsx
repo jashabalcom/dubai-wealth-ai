@@ -88,9 +88,10 @@ export function SEOHead({
 export function HomePageSEO() {
   return (
     <SEOHead
-      title="Dubai Wealth Hub — AI-Powered Real Estate Investment Platform"
-      description="Build wealth through Dubai real estate with AI-powered analysis, exclusive education, and priority access to off-plan opportunities. Join 12,000+ global investors."
+      title="Dubai Real Estate Investing — AI-Powered Investment Platform | Dubai Wealth Hub"
+      description="Start Dubai real estate investing with AI-powered analysis, exclusive education, and priority off-plan access. Join 12,000+ global investors building wealth in UAE."
       keywords={[
+        'Dubai real estate investing',
         'Dubai real estate investment',
         'invest in Dubai property',
         'buy property Dubai',
