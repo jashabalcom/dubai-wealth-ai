@@ -74,6 +74,10 @@ export default function Pricing() {
 
   const handleTierClick = async (tierId: 'free' | 'investor' | 'elite') => {
     if (!user) {
+      // Store intent and redirect to auth
+      if (tierId !== 'free') {
+        localStorage.setItem('pending_checkout_tier', tierId);
+      }
       navigate('/auth');
       return;
     }
@@ -83,14 +87,26 @@ export default function Pricing() {
       return;
     }
 
-    // If user already has this tier or higher
-    if (profile?.membership_tier === tierId || 
-        (tierId === 'investor' && profile?.membership_tier === 'elite')) {
+    const currentTier = profile?.membership_tier;
+    const isExpired = profile?.membership_status === 'expired';
+
+    // If user already has this tier (and not expired)
+    if (currentTier === tierId && !isExpired) {
       openCustomerPortal();
       return;
     }
 
-    await startCheckout(tierId);
+    // If user wants to downgrade from elite to investor
+    if (tierId === 'investor' && currentTier === 'elite' && !isExpired) {
+      openCustomerPortal();
+      return;
+    }
+
+    // Determine if this is an upgrade
+    const isUpgrade = currentTier !== 'free' && !isExpired;
+    
+    // Navigate to embedded checkout
+    navigate(`/checkout/${tierId}${isUpgrade ? '?upgrade=true' : ''}`);
   };
 
   const getButtonText = (tierId: 'free' | 'investor' | 'elite', defaultCta: string) => {

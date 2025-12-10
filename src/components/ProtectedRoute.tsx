@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requiredTier }: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -20,6 +21,17 @@ export function ProtectedRoute({ children, requiredTier }: ProtectedRouteProps) 
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Check if subscription expired - redirect to upgrade page
+  if (profile?.membership_status === 'expired' && profile?.membership_tier !== 'free') {
+    // Only redirect if trying to access gated features (not settings, profile, etc.)
+    const ungatedPaths = ['/settings', '/profile', '/upgrade', '/checkout', '/pricing'];
+    const isUngatedPath = ungatedPaths.some(path => location.pathname.startsWith(path));
+    
+    if (!isUngatedPath && requiredTier && requiredTier !== 'free') {
+      return <Navigate to="/upgrade" replace />;
+    }
   }
 
   // Check membership tier if required
