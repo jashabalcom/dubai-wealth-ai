@@ -13,7 +13,6 @@ export interface DirectoryMember {
   timeline: string | null;
   bio: string | null;
   looking_for: string | null;
-  linkedin_url: string | null;
   created_at: string;
 }
 
@@ -39,18 +38,14 @@ export function useMemberDirectory() {
   });
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
-  // Fetch all directory-visible members
+  // Fetch all directory-visible members using secure function
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['directory-members'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url, country, membership_tier, investment_goal, budget_range, timeline, bio, looking_for, linkedin_url, created_at')
-        .eq('is_visible_in_directory', true)
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_directory_members');
 
       if (error) throw error;
-      return data as DirectoryMember[];
+      return (data || []) as DirectoryMember[];
     },
   });
 

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Crown, MapPin, Target, Briefcase, Calendar, Linkedin } from 'lucide-react';
+import { Crown, MapPin, Target, Briefcase, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -97,16 +97,6 @@ export function MemberCard({ member, index = 0 }: MemberCardProps) {
                 )}
               </div>
             </div>
-            {member.linkedin_url && (
-              <a
-                href={member.linkedin_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-lg hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-all hover:scale-110"
-              >
-                <Linkedin className="h-4 w-4" />
-              </a>
-            )}
           </div>
 
           {/* Bio */}
