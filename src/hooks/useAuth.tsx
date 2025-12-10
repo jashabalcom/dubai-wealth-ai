@@ -11,6 +11,8 @@ interface Profile {
   membership_tier: 'free' | 'investor' | 'elite';
   membership_status: 'active' | 'canceled' | 'trial' | 'expired';
   membership_renews_at: string | null;
+  onboarding_completed_at: string | null;
+  onboarding_step: number | null;
 }
 
 interface AuthContextType {

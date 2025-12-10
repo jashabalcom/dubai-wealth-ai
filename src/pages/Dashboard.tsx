@@ -13,11 +13,28 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
+import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
+import { ProfileWizard } from '@/components/onboarding/ProfileWizard';
+import { FirstActionPrompts } from '@/components/onboarding/FirstActionPrompts';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 
 export default function Dashboard() {
   const { user, profile, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const {
+    showWelcomeModal,
+    showProfileWizard,
+    isCompleted: onboardingCompleted,
+    actionsCompleted,
+    dismissWelcomeModal,
+    startProfileWizard,
+    closeProfileWizard,
+    completeOnboarding,
+    skipOnboarding,
+    markActionComplete,
+  } = useOnboarding();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -85,6 +102,33 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Onboarding Modals */}
+      <WelcomeModal
+        isOpen={showWelcomeModal}
+        userName={firstName}
+        onStartWizard={startProfileWizard}
+        onExplore={() => {
+          dismissWelcomeModal();
+          skipOnboarding();
+        }}
+      />
+
+      <ProfileWizard
+        isOpen={showProfileWizard}
+        onClose={closeProfileWizard}
+        onComplete={completeOnboarding}
+      />
+
+      {/* Onboarding Checklist Widget */}
+      {!onboardingCompleted && (
+        <OnboardingChecklist
+          profileComplete={!!profile?.onboarding_completed_at}
+          actionsCompleted={actionsCompleted}
+          onOpenWizard={startProfileWizard}
+          onDismiss={skipOnboarding}
+        />
+      )}
+
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -157,6 +201,14 @@ export default function Dashboard() {
               </Button>
             </div>
           </motion.div>
+        )}
+
+        {/* First Action Prompts (for new users) */}
+        {!onboardingCompleted && (
+          <FirstActionPrompts
+            actionsCompleted={actionsCompleted}
+            onActionClick={markActionComplete}
+          />
         )}
 
         {/* Quick Actions Grid */}
