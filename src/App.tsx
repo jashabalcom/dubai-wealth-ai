@@ -10,6 +10,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { SmoothScrollHandler } from "@/components/SmoothScrollHandler";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { CookieConsent } from "@/components/CookieConsent";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
           <Toaster />
           <Sonner />
   <BrowserRouter>
+    <GoogleAnalytics />
     <NavigationProgress />
     <ScrollToTop />
     <SmoothScrollHandler />
