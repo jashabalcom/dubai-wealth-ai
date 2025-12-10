@@ -7,6 +7,8 @@ interface SubscriptionStatus {
   subscribed: boolean;
   tier: SubscriptionTier;
   subscription_end: string | null;
+  is_trialing: boolean;
+  trial_end: string | null;
 }
 
 export function useSubscription() {

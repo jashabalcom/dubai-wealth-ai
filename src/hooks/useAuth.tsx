@@ -9,7 +9,7 @@ interface Profile {
   avatar_url: string | null;
   country: string | null;
   membership_tier: 'free' | 'investor' | 'elite';
-  membership_status: 'active' | 'canceled' | 'trial' | 'expired';
+  membership_status: 'active' | 'canceled' | 'trialing' | 'expired';
   membership_renews_at: string | null;
   onboarding_completed_at: string | null;
   onboarding_step: number | null;

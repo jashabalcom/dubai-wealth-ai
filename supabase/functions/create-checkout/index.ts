@@ -61,6 +61,9 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: 14,
+      },
       success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing`,
       metadata: {
@@ -68,6 +71,8 @@ serve(async (req) => {
         tier: tier,
       },
     });
+
+    logStep("Checkout session created with 14-day trial", { sessionId: session.id });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 

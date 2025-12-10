@@ -82,44 +82,60 @@ serve(async (req) => {
       .update({ stripe_customer_id: customerId })
       .eq('id', user.id);
 
+    // Include trialing subscriptions as well as active
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
       limit: 10,
     });
     
-    const hasActiveSub = subscriptions.data.length > 0;
+    // Filter to active or trialing subscriptions
+    const validSubscriptions = subscriptions.data.filter(
+      (sub: Stripe.Subscription) => sub.status === 'active' || sub.status === 'trialing'
+    );
+    
+    const hasActiveSub = validSubscriptions.length > 0;
     let tier: 'free' | 'investor' | 'elite' = 'free';
     let subscriptionEnd = null;
+    let isTrialing = false;
+    let trialEnd = null;
 
     if (hasActiveSub) {
       // Find the highest tier subscription
-      for (const subscription of subscriptions.data) {
+      for (const subscription of validSubscriptions) {
         const productId = subscription.items.data[0].price.product as string;
         const subTier = PRODUCT_TIER_MAP[productId];
         
         if (subTier === 'elite') {
           tier = 'elite';
           subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          isTrialing = subscription.status === 'trialing';
+          if (subscription.trial_end) {
+            trialEnd = new Date(subscription.trial_end * 1000).toISOString();
+          }
           break;
         } else if (subTier === 'investor') {
           if (tier === 'free') {
             tier = 'investor';
             subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+            isTrialing = subscription.status === 'trialing';
+            if (subscription.trial_end) {
+              trialEnd = new Date(subscription.trial_end * 1000).toISOString();
+            }
           }
         }
       }
-      logStep("Active subscription found", { tier, subscriptionEnd });
+      logStep("Active/trialing subscription found", { tier, subscriptionEnd, isTrialing, trialEnd });
     } else {
       logStep("No active subscription found");
     }
 
     // Update the profile in Supabase
+    const membershipStatus = isTrialing ? 'trialing' : (hasActiveSub ? 'active' : 'expired');
     const { error: updateError } = await supabaseClient
       .from('profiles')
       .update({ 
         membership_tier: tier,
-        membership_status: hasActiveSub ? 'active' : 'expired',
+        membership_status: membershipStatus,
         membership_renews_at: subscriptionEnd
       })
       .eq('id', user.id);
@@ -127,13 +143,15 @@ serve(async (req) => {
     if (updateError) {
       logStep("Error updating profile", { error: updateError.message });
     } else {
-      logStep("Profile updated successfully", { tier });
+      logStep("Profile updated successfully", { tier, status: membershipStatus });
     }
 
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
       tier: tier,
-      subscription_end: subscriptionEnd
+      subscription_end: subscriptionEnd,
+      is_trialing: isTrialing,
+      trial_end: trialEnd
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
