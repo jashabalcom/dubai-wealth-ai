@@ -16,23 +16,39 @@ const DEV_TIER_KEY = 'lovable_dev_tier';
 
 export function useDevModeProvider() {
   const [isDevMode, setIsDevMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(DEV_MODE_KEY) === 'true';
+    try {
+      if (typeof window === 'undefined') return false;
+      return localStorage.getItem(DEV_MODE_KEY) === 'true';
+    } catch {
+      return false;
+    }
   });
   
   const [devTier, setDevTierState] = useState<DevTier>(() => {
-    if (typeof window === 'undefined') return 'elite';
-    return (localStorage.getItem(DEV_TIER_KEY) as DevTier) || 'elite';
+    try {
+      if (typeof window === 'undefined') return 'elite';
+      return (localStorage.getItem(DEV_TIER_KEY) as DevTier) || 'elite';
+    } catch {
+      return 'elite';
+    }
   });
 
   const setDevMode = (enabled: boolean) => {
-    setIsDevMode(enabled);
-    localStorage.setItem(DEV_MODE_KEY, String(enabled));
+    try {
+      setIsDevMode(enabled);
+      localStorage.setItem(DEV_MODE_KEY, String(enabled));
+    } catch {
+      setIsDevMode(enabled);
+    }
   };
 
   const setDevTier = (tier: DevTier) => {
-    setDevTierState(tier);
-    localStorage.setItem(DEV_TIER_KEY, tier);
+    try {
+      setDevTierState(tier);
+      localStorage.setItem(DEV_TIER_KEY, tier);
+    } catch {
+      setDevTierState(tier);
+    }
   };
 
   return {
@@ -54,7 +70,6 @@ export function DevModeProvider({ children, value }: { children: ReactNode; valu
 export function useDevMode() {
   const context = useContext(DevModeContext);
   if (!context) {
-    // Return safe defaults if not in provider
     return {
       isDevMode: false,
       devTier: 'free' as DevTier,
@@ -65,7 +80,6 @@ export function useDevMode() {
   return context;
 }
 
-// Mock user for dev mode
 export function getDevModeUser() {
   return {
     id: 'dev-user-id-12345',

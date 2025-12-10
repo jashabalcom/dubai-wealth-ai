@@ -14,6 +14,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
 import { DevModeToggle } from "@/components/DevModeToggle";
 import { DevModeProvider, useDevModeProvider } from "@/hooks/useDevMode";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -21,26 +22,28 @@ function AppContent() {
   const devModeState = useDevModeProvider();
   
   return (
-    <DevModeProvider value={devModeState}>
-      <AuthProvider>
-        <OnlinePresenceProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <GoogleAnalytics />
-              <NavigationProgress />
-              <ScrollToTop />
-              <SmoothScrollHandler />
-              <TrialBannerWrapper />
-              <AnimatedRoutes />
-              <CookieConsent />
-              <DevModeToggle />
-            </BrowserRouter>
-          </TooltipProvider>
-        </OnlinePresenceProvider>
-      </AuthProvider>
-    </DevModeProvider>
+    <ErrorBoundary>
+      <DevModeProvider value={devModeState}>
+        <AuthProvider>
+          <OnlinePresenceProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <GoogleAnalytics />
+                <NavigationProgress />
+                <ScrollToTop />
+                <SmoothScrollHandler />
+                <TrialBannerWrapper />
+                <AnimatedRoutes />
+                <CookieConsent />
+                <DevModeToggle />
+              </BrowserRouter>
+            </TooltipProvider>
+          </OnlinePresenceProvider>
+        </AuthProvider>
+      </DevModeProvider>
+    </ErrorBoundary>
   );
 }
 
