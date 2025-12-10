@@ -13,7 +13,7 @@ import PlanSummary from "@/components/checkout/PlanSummary";
 import { SEOHead } from "@/components/SEOHead";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 
-const stripePromise = loadStripe(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "");
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
 const Checkout = () => {
   const { tier } = useParams<{ tier: string }>();
