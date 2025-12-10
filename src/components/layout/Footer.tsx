@@ -144,6 +144,25 @@ export function Footer() {
           </p>
         </div>
       </div>
+
+      {/* Agency Credit */}
+      <div className="border-t border-secondary-foreground/5">
+        <div className="container-luxury py-4 flex items-center justify-center">
+          <a 
+            href="https://www.majorleadsagency.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-secondary-foreground/30 hover:text-secondary-foreground/50 transition-colors group"
+          >
+            <span className="text-xs tracking-wide">Built by</span>
+            <img 
+              src="/images/mla-logo.png" 
+              alt="Major Leads Agency" 
+              className="h-4 opacity-40 group-hover:opacity-60 transition-opacity"
+            />
+          </a>
+        </div>
+      </div>
     </footer>
   );
 }
