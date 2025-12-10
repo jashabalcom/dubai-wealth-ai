@@ -1,10 +1,15 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Cache configuration
+const CACHE_TTL_DAYS = 7;
+const FUNCTION_NAME = "ai-calculator-analysis";
 
 // Dubai market benchmarks for context
 const MARKET_BENCHMARKS = {
@@ -30,6 +35,92 @@ interface CalculatorData {
   area?: string;
 }
 
+// Normalize inputs for caching (round to reduce cache fragmentation)
+function normalizeInputs(inputs: Record<string, any>): Record<string, any> {
+  const normalized: Record<string, any> = {};
+  
+  for (const [key, value] of Object.entries(inputs)) {
+    if (typeof value === 'number') {
+      // Round prices to nearest 50K
+      if (key.toLowerCase().includes('price') || key.toLowerCase().includes('value')) {
+        normalized[key] = Math.round(value / 50000) * 50000;
+      }
+      // Round percentages to nearest 0.5
+      else if (key.toLowerCase().includes('rate') || key.toLowerCase().includes('percent') || key.toLowerCase().includes('yield') || key.toLowerCase().includes('appreciation')) {
+        normalized[key] = Math.round(value * 2) / 2;
+      }
+      // Round other numbers to nearest 100
+      else {
+        normalized[key] = Math.round(value / 100) * 100;
+      }
+    } else {
+      normalized[key] = value;
+    }
+  }
+  
+  return normalized;
+}
+
+// Generate cache key
+function generateCacheKey(calculatorType: string, inputs: Record<string, any>, area?: string): string {
+  const normalized = normalizeInputs(inputs);
+  const data = JSON.stringify({ calculatorType, inputs: normalized, area: area || '' });
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `calc_${calculatorType}_${Math.abs(hash).toString(16)}`;
+}
+
+// Check cache
+async function checkCache(supabase: any, cacheKey: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from("ai_response_cache")
+      .select("response, id, hit_count")
+      .eq("cache_key", cacheKey)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (error || !data) return null;
+
+    // Increment hit count
+    supabase.from("ai_response_cache")
+      .update({ hit_count: (data.hit_count || 0) + 1 })
+      .eq("id", data.id)
+      .then(() => {});
+
+    console.log(`Cache HIT for key: ${cacheKey}`);
+    return data.response;
+  } catch (e) {
+    console.log("Cache check error:", e);
+    return null;
+  }
+}
+
+// Store in cache
+async function storeCache(supabase: any, cacheKey: string, response: string, inputHash: string): Promise<void> {
+  try {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + CACHE_TTL_DAYS);
+
+    await supabase.from("ai_response_cache").upsert({
+      cache_key: cacheKey,
+      function_name: FUNCTION_NAME,
+      response,
+      input_hash: inputHash,
+      expires_at: expiresAt.toISOString(),
+      hit_count: 0,
+    }, { onConflict: "cache_key" });
+
+    console.log(`Cache STORE for key: ${cacheKey}`);
+  } catch (e) {
+    console.log("Cache store error:", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -38,9 +129,31 @@ serve(async (req) => {
   try {
     const { calculatorType, inputs, results, area } = await req.json() as CalculatorData;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    // Initialize Supabase client for caching
+    let supabase: any = null;
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    }
+
+    // Generate cache key
+    const cacheKey = generateCacheKey(calculatorType, inputs, area);
+    
+    // Check cache first
+    if (supabase) {
+      const cachedResponse = await checkCache(supabase, cacheKey);
+      if (cachedResponse) {
+        const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: cachedResponse } }] })}\n\ndata: [DONE]\n\n`;
+        return new Response(sseData, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+        });
+      }
     }
 
     // Build context based on calculator type
@@ -178,6 +291,52 @@ serve(async (req) => {
       }
       
       throw new Error(`AI gateway error: ${response.status}`);
+    }
+
+    // Collect and cache the response
+    if (supabase && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+      const chunks: Uint8Array[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        chunks.push(value);
+        const text = decoder.decode(value, { stream: true });
+        
+        const lines = text.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ") && line !== "data: [DONE]") {
+            try {
+              const json = JSON.parse(line.slice(6));
+              const content = json.choices?.[0]?.delta?.content;
+              if (content) fullResponse += content;
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+        }
+      }
+
+      // Store in cache
+      if (fullResponse.length > 0) {
+        storeCache(supabase, cacheKey, fullResponse, cacheKey);
+      }
+
+      // Return collected response
+      const concatenated = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+      let offset = 0;
+      for (const chunk of chunks) {
+        concatenated.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      return new Response(concatenated, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
     }
 
     return new Response(response.body, {

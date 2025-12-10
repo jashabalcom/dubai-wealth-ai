@@ -187,6 +187,39 @@ export type Database = {
           },
         ]
       }
+      ai_response_cache: {
+        Row: {
+          cache_key: string
+          created_at: string
+          expires_at: string
+          function_name: string
+          hit_count: number
+          id: string
+          input_hash: string | null
+          response: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string
+          expires_at: string
+          function_name: string
+          hit_count?: number
+          id?: string
+          input_hash?: string | null
+          response: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string
+          expires_at?: string
+          function_name?: string
+          hit_count?: number
+          id?: string
+          input_hash?: string | null
+          response?: string
+        }
+        Relationships: []
+      }
       ai_strategies: {
         Row: {
           ai_response: string | null
