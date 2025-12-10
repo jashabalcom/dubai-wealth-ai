@@ -167,27 +167,30 @@ export function HeroSection() {
           >
             <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
               <CountUpStat 
-                end={2.4} 
+                end={850} 
                 prefix="$" 
-                suffix="B+" 
-                decimals={1}
+                suffix="M+" 
+                decimals={0}
                 label="Investment Analyzed"
                 enabled={hasBeenInView}
               />
               <div className="hidden md:block w-px h-12 bg-primary/20" />
               <CountUpStat 
-                end={12000} 
+                end={2500} 
                 suffix="+"
                 label="Global Investors"
                 enabled={hasBeenInView}
               />
               <div className="hidden md:block w-px h-12 bg-primary/20" />
               <CountUpStat 
-                end={47}
+                end={35}
                 label="Countries"
                 enabled={hasBeenInView}
               />
             </div>
+            <p className="text-xs text-muted-foreground/50 mt-4 text-center">
+              *Platform goals and projections
+            </p>
           </motion.div>
         </motion.div>
       </motion.div>

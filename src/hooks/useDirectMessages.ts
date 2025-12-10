@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Message {
   id: string;
@@ -29,7 +30,7 @@ export function useDirectMessages(conversationUserId?: string) {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [realtimeEnabled, setRealtimeEnabled] = useState(false);
+  const channelRef = useRef<RealtimeChannel | null>(null);
 
   // Fetch all conversations with last message
   const { data: conversations = [], isLoading: conversationsLoading } = useQuery({
@@ -191,9 +192,12 @@ export function useDirectMessages(conversationUserId?: string) {
     },
   });
 
-  // Set up realtime subscription
+  // Set up realtime subscription using ref to prevent infinite loop
   useEffect(() => {
-    if (!user?.id || realtimeEnabled) return;
+    if (!user?.id) return;
+    
+    // Only create channel if one doesn't exist
+    if (channelRef.current) return;
 
     const channel = supabase
       .channel('direct-messages')
@@ -225,13 +229,15 @@ export function useDirectMessages(conversationUserId?: string) {
       )
       .subscribe();
 
-    setRealtimeEnabled(true);
+    channelRef.current = channel;
 
     return () => {
-      supabase.removeChannel(channel);
-      setRealtimeEnabled(false);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user?.id, queryClient, realtimeEnabled]);
+  }, [user?.id, queryClient]);
 
   return {
     conversations,
