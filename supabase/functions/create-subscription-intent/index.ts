@@ -18,9 +18,21 @@ const TIER_PRICES: Record<string, string> = {
   elite: "price_1Sbv2UHVQx2jO318S54njLC4",
 };
 
+// Reverse lookup: price ID to tier
+const PRICE_TO_TIER: Record<string, string> = {
+  "price_1Sbv2KHVQx2jO318h20jYHWa": "investor",
+  "price_1Sbv2UHVQx2jO318S54njLC4": "elite",
+};
+
 const TIER_NAMES: Record<string, string> = {
   investor: "Dubai Investor",
   elite: "Dubai Elite Investor",
+};
+
+// Helper to get current tier from subscription
+const getTierFromSubscription = (subscription: Stripe.Subscription): string | null => {
+  const priceId = subscription.items.data[0]?.price?.id;
+  return priceId ? PRICE_TO_TIER[priceId] || null : null;
 };
 
 serve(async (req) => {
@@ -51,30 +63,31 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { tier, isUpgrade } = await req.json();
+    const { tier, isUpgrade: explicitUpgrade } = await req.json();
     if (!tier || !TIER_PRICES[tier]) {
       throw new Error(`Invalid tier: ${tier}`);
     }
-    logStep("Processing tier", { tier, isUpgrade });
+    logStep("Processing tier", { tier, explicitUpgrade });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Find or create customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string;
+    let existingTier: string | null = null;
+    let hasExistingSubscription = false;
 
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       logStep("Found existing customer", { customerId });
 
-      // Check for existing active subscription
+      // Check for existing active or trialing subscriptions
       const subscriptions = await stripe.subscriptions.list({
         customer: customerId,
         status: "active",
         limit: 10,
       });
 
-      // Also check trialing subscriptions
       const trialingSubscriptions = await stripe.subscriptions.list({
         customer: customerId,
         status: "trialing",
@@ -82,16 +95,36 @@ serve(async (req) => {
       });
 
       const allActiveSubs = [...subscriptions.data, ...trialingSubscriptions.data];
+      hasExistingSubscription = allActiveSubs.length > 0;
 
-      if (allActiveSubs.length > 0 && isUpgrade) {
-        // Cancel existing subscriptions for upgrade
-        for (const sub of allActiveSubs) {
-          await stripe.subscriptions.cancel(sub.id, { prorate: true });
-          logStep("Cancelled existing subscription for upgrade", { subId: sub.id });
+      if (hasExistingSubscription) {
+        // Get the current tier from existing subscription
+        existingTier = getTierFromSubscription(allActiveSubs[0]);
+        logStep("Found existing subscription", { 
+          existingTier, 
+          requestedTier: tier,
+          subscriptionStatus: allActiveSubs[0].status 
+        });
+
+        // Smart upgrade detection:
+        // 1. Explicit upgrade flag passed from frontend
+        // 2. OR requesting a DIFFERENT tier than current (implicit upgrade)
+        const isActualUpgrade = explicitUpgrade || (existingTier !== null && existingTier !== tier);
+
+        if (isActualUpgrade) {
+          // Cancel existing subscriptions for upgrade - user pays immediately, no trial
+          for (const sub of allActiveSubs) {
+            await stripe.subscriptions.cancel(sub.id, { prorate: true });
+            logStep("Cancelled existing subscription for upgrade", { 
+              subId: sub.id, 
+              previousTier: existingTier,
+              newTier: tier 
+            });
+          }
+        } else {
+          // Same tier requested and not an explicit upgrade - redirect to portal
+          throw new Error("You already have an active subscription for this tier. Please use the customer portal to manage it.");
         }
-      } else if (allActiveSubs.length > 0 && !isUpgrade) {
-        // Already has active subscription - redirect to customer portal instead
-        throw new Error("You already have an active subscription. Please use the customer portal to manage it.");
       }
     } else {
       const customer = await stripe.customers.create({
@@ -108,8 +141,9 @@ serve(async (req) => {
         .eq('id', user.id);
     }
 
-    const hasTrial = !isUpgrade;
-    logStep("Trial decision", { hasTrial, isUpgrade });
+    // Trial decision: no trial for upgrades (when they had an existing subscription)
+    const hasTrial = !hasExistingSubscription;
+    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier });
 
     // Create subscription - for trials, we use pending_setup_intent; for immediate charges, payment_intent
     const subscription = await stripe.subscriptions.create({
@@ -125,6 +159,7 @@ serve(async (req) => {
       metadata: {
         tier,
         supabase_user_id: user.id,
+        upgraded_from: existingTier || undefined,
       },
     });
 
@@ -172,6 +207,7 @@ serve(async (req) => {
       tierName: TIER_NAMES[tier],
       trialDays: hasTrial ? 14 : 0,
       intentType,
+      upgradedFrom: existingTier,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
