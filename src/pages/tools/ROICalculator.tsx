@@ -14,6 +14,8 @@ import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
+import { SEOHead } from '@/components/SEOHead';
+import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 
 export default function ROICalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -111,6 +113,14 @@ export default function ROICalculator() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        {...PAGE_SEO.roiCalculator} 
+        structuredData={generateSoftwareApplicationSchema({
+          name: 'Dubai Property ROI Calculator',
+          description: PAGE_SEO.roiCalculator.description,
+          url: `${SITE_CONFIG.url}/tools/roi`,
+        })}
+      />
       <Navbar />
 
       <section className="pt-32 pb-8">

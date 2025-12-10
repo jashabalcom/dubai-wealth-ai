@@ -16,6 +16,8 @@ import {
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
+import { SEOHead } from '@/components/SEOHead';
+import { PAGE_SEO } from '@/lib/seo-config';
 
 const tools = [
   {
@@ -124,6 +126,7 @@ const colorClasses: Record<string, { bg: string; border: string; text: string; g
 export default function Tools() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead {...PAGE_SEO.tools} />
       <Navbar />
 
       {/* Hero Section */}

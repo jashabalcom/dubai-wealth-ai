@@ -8,6 +8,8 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { SEOHead } from '@/components/SEOHead';
+import { PAGE_SEO } from '@/lib/seo-config';
 
 interface Course {
   id: string;
@@ -124,6 +126,7 @@ export default function Academy() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead {...PAGE_SEO.academy} />
       <Navbar />
 
       {/* Hero Section */}

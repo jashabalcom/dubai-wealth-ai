@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,6 +12,8 @@ import { toast } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { SEOHead } from "@/components/SEOHead";
+import { PAGE_SEO } from "@/lib/seo-config";
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -57,10 +58,7 @@ const Contact = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Contact Us | Dubai Wealth Hub</title>
-        <meta name="description" content="Get in touch with Dubai Wealth Hub. We're here to help with your Dubai real estate investment journey." />
-      </Helmet>
+      <SEOHead {...PAGE_SEO.contact} />
 
       <Navbar />
 
