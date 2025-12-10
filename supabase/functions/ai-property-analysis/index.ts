@@ -6,7 +6,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Dubai area statistics (simplified - in production, this would come from real market data)
+// Cache configuration
+const CACHE_TTL_HOURS = 24;
+const FUNCTION_NAME = "ai-property-analysis";
+
+// Dubai area statistics
 const AREA_STATS: Record<string, { avgPricePerSqft: number; avgYield: number; growth2024: number }> = {
   "Downtown Dubai": { avgPricePerSqft: 2800, avgYield: 4.5, growth2024: 12 },
   "Dubai Marina": { avgPricePerSqft: 2200, avgYield: 5.5, growth2024: 10 },
@@ -20,11 +24,70 @@ const AREA_STATS: Record<string, { avgPricePerSqft: number; avgYield: number; gr
   "Dubai Creek Harbour": { avgPricePerSqft: 2100, avgYield: 5.2, growth2024: 14 },
 };
 
+// Generate cache key based on property data
+function generateCacheKey(propertyId: string, propertyUpdatedAt: string): string {
+  const data = `${propertyId}:${propertyUpdatedAt}`;
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `prop_${propertyId}_${Math.abs(hash).toString(16)}`;
+}
+
+// Check cache for existing response
+async function checkCache(supabase: any, cacheKey: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from("ai_response_cache")
+      .select("response, id")
+      .eq("cache_key", cacheKey)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (error || !data) return null;
+
+    // Increment hit count asynchronously
+    supabase.from("ai_response_cache")
+      .update({ hit_count: data.hit_count + 1 })
+      .eq("id", data.id)
+      .then(() => {});
+
+    console.log(`Cache HIT for key: ${cacheKey}`);
+    return data.response;
+  } catch (e) {
+    console.log("Cache check error:", e);
+    return null;
+  }
+}
+
+// Store response in cache
+async function storeCache(supabase: any, cacheKey: string, response: string, inputHash: string): Promise<void> {
+  try {
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + CACHE_TTL_HOURS);
+
+    await supabase.from("ai_response_cache").upsert({
+      cache_key: cacheKey,
+      function_name: FUNCTION_NAME,
+      response,
+      input_hash: inputHash,
+      expires_at: expiresAt.toISOString(),
+      hit_count: 0,
+    }, { onConflict: "cache_key" });
+
+    console.log(`Cache STORE for key: ${cacheKey}`);
+  } catch (e) {
+    console.log("Cache store error:", e);
+  }
+}
+
 // Fee calculations
 function calculateAcquisitionCosts(priceAed: number, isMortgage: boolean = false, loanAmount: number = 0) {
   const dldFee = priceAed * 0.04;
   const agentCommission = priceAed * 0.02;
-  const trusteeFee = 4200 * 1.05; // + VAT
+  const trusteeFee = 4200 * 1.05;
   const titleDeed = 520;
   const nocFee = 1000;
   const mortgageRegistration = isMortgage ? loanAmount * 0.0025 : 0;
@@ -68,6 +131,21 @@ serve(async (req) => {
       throw new Error("Property not found");
     }
 
+    // Generate cache key based on property ID and last update
+    const cacheKey = generateCacheKey(propertyId, property.updated_at);
+    
+    // Check cache first (only for non-user-specific requests)
+    if (!userId) {
+      const cachedResponse = await checkCache(supabase, cacheKey);
+      if (cachedResponse) {
+        // Return cached response as SSE format for compatibility
+        const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content: cachedResponse } }] })}\n\ndata: [DONE]\n\n`;
+        return new Response(sseData, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+        });
+      }
+    }
+
     // Fetch area comparables
     const { data: areaProperties } = await supabase
       .from("properties")
@@ -76,7 +154,6 @@ serve(async (req) => {
       .neq("id", propertyId)
       .limit(20);
 
-    // Calculate area averages
     let areaAvgPricePerSqft = AREA_STATS[property.location_area]?.avgPricePerSqft || 1500;
     let areaAvgYield = AREA_STATS[property.location_area]?.avgYield || 6.0;
     
@@ -117,7 +194,7 @@ Consider whether this property fits the user's stated goals and budget.
     const totalInvestment = Number(property.price_aed) + acquisitionCosts.total;
     const annualRent = Number(property.price_aed) * (Number(property.rental_yield_estimate) / 100);
     const monthlyRent = Math.round(annualRent / 12);
-    const netYield = ((annualRent - (Number(property.size_sqft) * 25)) / totalInvestment * 100).toFixed(1); // After service charges
+    const netYield = ((annualRent - (Number(property.size_sqft) * 25)) / totalInvestment * 100).toFixed(1);
 
     const systemPrompt = `You are analyzing a specific Dubai property for a potential investor. Provide a thorough but concise investment analysis.
 
@@ -215,6 +292,53 @@ Keep the analysis practical and actionable. Use specific numbers from the data p
         JSON.stringify({ error: "AI service temporarily unavailable" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // For non-user-specific requests, collect and cache the response
+    if (!userId && response.body) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+      const chunks: Uint8Array[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        chunks.push(value);
+        const text = decoder.decode(value, { stream: true });
+        
+        // Parse SSE to extract content
+        const lines = text.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ") && line !== "data: [DONE]") {
+            try {
+              const json = JSON.parse(line.slice(6));
+              const content = json.choices?.[0]?.delta?.content;
+              if (content) fullResponse += content;
+            } catch (e) {
+              // Ignore parse errors for incomplete chunks
+            }
+          }
+        }
+      }
+
+      // Store in cache
+      if (fullResponse.length > 0) {
+        storeCache(supabase, cacheKey, fullResponse, propertyId);
+      }
+
+      // Reconstruct the stream for the response
+      const concatenated = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
+      let offset = 0;
+      for (const chunk of chunks) {
+        concatenated.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      return new Response(concatenated, {
+        headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      });
     }
 
     return new Response(response.body, {

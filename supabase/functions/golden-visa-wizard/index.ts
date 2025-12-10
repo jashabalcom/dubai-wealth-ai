@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Cache configuration
+const CACHE_TTL_DAYS = 7;
+const FUNCTION_NAME = "golden-visa-wizard";
 
 interface GoldenVisaInput {
   fullName: string;
@@ -16,6 +21,87 @@ interface GoldenVisaInput {
   additionalNotes?: string;
 }
 
+// Normalize budget to range for better cache hits
+function normalizeBudget(budget: string): string {
+  const budgetLower = budget.toLowerCase();
+  if (budgetLower.includes('2') && budgetLower.includes('3')) return '2-3m';
+  if (budgetLower.includes('3') && budgetLower.includes('5')) return '3-5m';
+  if (budgetLower.includes('5') && budgetLower.includes('10')) return '5-10m';
+  if (budgetLower.includes('10')) return '10m+';
+  return budget.substring(0, 10).toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+// Generate cache key based on normalized inputs
+function generateCacheKey(input: GoldenVisaInput): string {
+  const normalized = {
+    budget: normalizeBudget(input.investmentBudget),
+    type: input.investmentType.toLowerCase().replace(/[^a-z]/g, ''),
+    timeline: input.timeline.toLowerCase().replace(/[^a-z0-9]/g, ''),
+    familySize: input.familySize > 4 ? '5+' : String(input.familySize),
+  };
+  
+  const data = JSON.stringify(normalized);
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `visa_${normalized.budget}_${normalized.type}_${Math.abs(hash).toString(16)}`;
+}
+
+// Check cache
+async function checkCache(supabase: any, cacheKey: string): Promise<any | null> {
+  try {
+    const { data, error } = await supabase
+      .from("ai_response_cache")
+      .select("response, id, hit_count")
+      .eq("cache_key", cacheKey)
+      .gt("expires_at", new Date().toISOString())
+      .single();
+
+    if (error || !data) return null;
+
+    // Increment hit count
+    supabase.from("ai_response_cache")
+      .update({ hit_count: (data.hit_count || 0) + 1 })
+      .eq("id", data.id)
+      .then(() => {});
+
+    console.log(`Cache HIT for key: ${cacheKey}`);
+    
+    try {
+      return JSON.parse(data.response);
+    } catch {
+      return null;
+    }
+  } catch (e) {
+    console.log("Cache check error:", e);
+    return null;
+  }
+}
+
+// Store in cache
+async function storeCache(supabase: any, cacheKey: string, response: any, inputHash: string): Promise<void> {
+  try {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + CACHE_TTL_DAYS);
+
+    await supabase.from("ai_response_cache").upsert({
+      cache_key: cacheKey,
+      function_name: FUNCTION_NAME,
+      response: JSON.stringify(response),
+      input_hash: inputHash,
+      expires_at: expiresAt.toISOString(),
+      hit_count: 0,
+    }, { onConflict: "cache_key" });
+
+    console.log(`Cache STORE for key: ${cacheKey}`);
+  } catch (e) {
+    console.log("Cache store error:", e);
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -26,8 +112,31 @@ serve(async (req) => {
     console.log('Processing Golden Visa analysis for:', input.fullName);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
     if (!LOVABLE_API_KEY) {
       throw new Error('LOVABLE_API_KEY is not configured');
+    }
+
+    // Initialize Supabase client for caching
+    let supabase: any = null;
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    }
+
+    // Generate cache key (based on normalized inputs, not personal data)
+    const cacheKey = generateCacheKey(input);
+    
+    // Check cache first
+    if (supabase) {
+      const cachedResponse = await checkCache(supabase, cacheKey);
+      if (cachedResponse) {
+        console.log('Returning cached Golden Visa analysis');
+        return new Response(JSON.stringify(cachedResponse), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const systemPrompt = `You are an expert Dubai Golden Visa consultant with deep knowledge of UAE immigration and investment requirements. Provide personalized, actionable advice based on the user's profile.
@@ -130,6 +239,11 @@ Provide a comprehensive analysis with specific property recommendations if appli
         nextSteps: ["Contact a Golden Visa specialist", "Review property options", "Prepare documentation"],
         considerations: ["Processing times may vary", "Consult with immigration experts"]
       };
+    }
+
+    // Store in cache (only if we have supabase client)
+    if (supabase) {
+      storeCache(supabase, cacheKey, analysis, cacheKey);
     }
 
     console.log('Successfully generated Golden Visa analysis');
