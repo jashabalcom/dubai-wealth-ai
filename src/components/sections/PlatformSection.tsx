@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { GraduationCap, Bot, BarChart3, Building, Users, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BrowserFrame } from "./BrowserFrame";
+import { DashboardMockup } from "./DashboardMockup";
 
 const features = [
   {
@@ -125,18 +127,9 @@ export function PlatformSection() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mt-20"
         >
-          <div className="relative rounded-2xl overflow-hidden border border-secondary-foreground/10 bg-secondary-foreground/5">
-            <div className="aspect-[16/9] bg-gradient-to-br from-secondary via-navy-light to-secondary flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-6">
-                  <Bot className="w-10 h-10 text-primary" />
-                </div>
-                <p className="text-secondary-foreground/60 text-sm uppercase tracking-[0.2em]">
-                  Platform Preview Coming Soon
-                </p>
-              </div>
-            </div>
-          </div>
+          <BrowserFrame url="dubaiwealthhub.com/dashboard">
+            <DashboardMockup />
+          </BrowserFrame>
         </motion.div>
       </div>
     </section>
