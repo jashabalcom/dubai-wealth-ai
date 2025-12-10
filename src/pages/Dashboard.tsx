@@ -36,6 +36,20 @@ export default function Dashboard() {
     markActionComplete,
   } = useOnboarding();
 
+  // Check for pending OAuth checkout intent
+  useEffect(() => {
+    const pendingOAuth = localStorage.getItem('pending_oauth_checkout');
+    const pendingTier = localStorage.getItem('pending_checkout_tier');
+    
+    if (pendingOAuth && pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
+      localStorage.removeItem('pending_oauth_checkout');
+      localStorage.removeItem('pending_checkout_tier');
+      localStorage.removeItem('pending_checkout_upgrade');
+      navigate(`/checkout/${pendingTier}`);
+      return;
+    }
+  }, [navigate]);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');

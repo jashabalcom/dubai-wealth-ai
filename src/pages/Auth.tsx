@@ -29,10 +29,19 @@ export default function Auth() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
+  // Redirect if already logged in - check for pending checkout intent
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      const pendingTier = localStorage.getItem('pending_checkout_tier');
+      const pendingUpgrade = localStorage.getItem('pending_checkout_upgrade');
+      
+      if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
+        localStorage.removeItem('pending_checkout_tier');
+        localStorage.removeItem('pending_checkout_upgrade');
+        navigate(`/checkout/${pendingTier}${pendingUpgrade === 'true' ? '?upgrade=true' : ''}`);
+      } else {
+        navigate('/dashboard');
+      }
     }
   }, [user, navigate]);
 
@@ -118,11 +127,25 @@ export default function Auth() {
             });
           }
         } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'You have successfully signed in.',
-          });
-          navigate('/dashboard');
+          // Check for pending checkout intent
+          const pendingTier = localStorage.getItem('pending_checkout_tier');
+          const pendingUpgrade = localStorage.getItem('pending_checkout_upgrade');
+          
+          if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
+            localStorage.removeItem('pending_checkout_tier');
+            localStorage.removeItem('pending_checkout_upgrade');
+            toast({
+              title: 'Welcome back!',
+              description: 'Continuing to checkout...',
+            });
+            navigate(`/checkout/${pendingTier}${pendingUpgrade === 'true' ? '?upgrade=true' : ''}`);
+          } else {
+            toast({
+              title: 'Welcome back!',
+              description: 'You have successfully signed in.',
+            });
+            navigate('/dashboard');
+          }
         }
       } else {
         const { error } = await signUp(email, password, fullName);
@@ -141,11 +164,25 @@ export default function Auth() {
             });
           }
         } else {
-          toast({
-            title: 'Welcome to Dubai Wealth Hub!',
-            description: 'Your account has been created successfully.',
-          });
-          navigate('/dashboard');
+          // Check for pending checkout intent
+          const pendingTier = localStorage.getItem('pending_checkout_tier');
+          const pendingUpgrade = localStorage.getItem('pending_checkout_upgrade');
+          
+          if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
+            localStorage.removeItem('pending_checkout_tier');
+            localStorage.removeItem('pending_checkout_upgrade');
+            toast({
+              title: 'Welcome to Dubai Wealth Hub!',
+              description: 'Continuing to checkout...',
+            });
+            navigate(`/checkout/${pendingTier}${pendingUpgrade === 'true' ? '?upgrade=true' : ''}`);
+          } else {
+            toast({
+              title: 'Welcome to Dubai Wealth Hub!',
+              description: 'Your account has been created successfully.',
+            });
+            navigate('/dashboard');
+          }
         }
       }
     } finally {
@@ -269,10 +306,20 @@ export default function Auth() {
                 onClick={async () => {
                   setIsLoading(true);
                   try {
+                    // For Google OAuth, we need to handle checkout intent via the redirect URL
+                    // The Dashboard will check for pending_checkout_tier on load
+                    const pendingTier = localStorage.getItem('pending_checkout_tier');
+                    let redirectUrl = `${window.location.origin}/dashboard`;
+                    
+                    // Store that we're doing OAuth so Dashboard knows to check
+                    if (pendingTier) {
+                      localStorage.setItem('pending_oauth_checkout', 'true');
+                    }
+                    
                     const { error } = await supabase.auth.signInWithOAuth({
                       provider: 'google',
                       options: {
-                        redirectTo: `${window.location.origin}/dashboard`,
+                        redirectTo: redirectUrl,
                       },
                     });
                     if (error) {
