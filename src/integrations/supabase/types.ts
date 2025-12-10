@@ -1507,6 +1507,8 @@ export type Database = {
           membership_renews_at: string | null
           membership_status: Database["public"]["Enums"]["membership_status"]
           membership_tier: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed_at: string | null
+          onboarding_step: number | null
           stripe_customer_id: string | null
           timeline: string | null
           updated_at: string
@@ -1527,6 +1529,8 @@ export type Database = {
           membership_renews_at?: string | null
           membership_status?: Database["public"]["Enums"]["membership_status"]
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed_at?: string | null
+          onboarding_step?: number | null
           stripe_customer_id?: string | null
           timeline?: string | null
           updated_at?: string
@@ -1547,6 +1551,8 @@ export type Database = {
           membership_renews_at?: string | null
           membership_status?: Database["public"]["Enums"]["membership_status"]
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
+          onboarding_completed_at?: string | null
+          onboarding_step?: number | null
           stripe_customer_id?: string | null
           timeline?: string | null
           updated_at?: string
