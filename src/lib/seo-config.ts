@@ -16,6 +16,7 @@ export const SITE_CONFIG = {
 // Primary keyword clusters for different page types
 export const KEYWORDS = {
   home: [
+    'Dubai real estate investing', // Primary keyword - 9K+ monthly searches
     'Dubai real estate investment',
     'invest in Dubai property',
     'Dubai property investment platform',
@@ -78,6 +79,8 @@ export const KEYWORDS = {
     'Dubai property rent or buy calculator',
   ],
   academy: [
+    'Dubai real estate investing course',
+    'Dubai real estate investing education',
     'Dubai real estate course',
     'property investment course Dubai',
     'learn Dubai real estate',
@@ -102,8 +105,8 @@ export const KEYWORDS = {
 // Page-specific SEO templates
 export const PAGE_SEO = {
   home: {
-    title: 'Dubai Wealth Hub — AI-Powered Real Estate Investment Platform',
-    description: 'Build wealth through Dubai real estate with AI-powered analysis, exclusive education, and priority access to off-plan opportunities. Join 12,000+ global investors.',
+    title: 'Dubai Real Estate Investing — AI-Powered Investment Platform | Dubai Wealth Hub',
+    description: 'Start Dubai real estate investing with AI-powered analysis, exclusive education, and priority off-plan access. Join 12,000+ global investors building wealth in UAE.',
     keywords: KEYWORDS.home,
   },
   properties: {
@@ -142,7 +145,7 @@ export const PAGE_SEO = {
     keywords: KEYWORDS.tools,
   },
   academy: {
-    title: 'Dubai Real Estate Academy — Investment Courses & Education',
+    title: 'Dubai Real Estate Investing Course — Expert-Led Education & Training',
     description: 'Master Dubai real estate investing with 50+ expert-led video lessons. Learn off-plan strategies, due diligence, market analysis, and wealth building in the UAE.',
     keywords: KEYWORDS.academy,
   },
