@@ -12,44 +12,28 @@ import { NavigationProgress } from "@/components/NavigationProgress";
 import { CookieConsent } from "@/components/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
-import { DevModeToggle } from "@/components/DevModeToggle";
-import { DevModeProvider, useDevModeProvider } from "@/hooks/useDevMode";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
-function AppContent() {
-  const devModeState = useDevModeProvider();
-  
-  return (
-    <ErrorBoundary>
-      <DevModeProvider value={devModeState}>
-        <AuthProvider>
-          <OnlinePresenceProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <GoogleAnalytics />
-                <NavigationProgress />
-                <ScrollToTop />
-                <SmoothScrollHandler />
-                <TrialBannerWrapper />
-                <AnimatedRoutes />
-                <CookieConsent />
-                <DevModeToggle />
-              </BrowserRouter>
-            </TooltipProvider>
-          </OnlinePresenceProvider>
-        </AuthProvider>
-      </DevModeProvider>
-    </ErrorBoundary>
-  );
-}
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AppContent />
+    <AuthProvider>
+      <OnlinePresenceProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+  <BrowserRouter>
+    <GoogleAnalytics />
+    <NavigationProgress />
+    <ScrollToTop />
+    <SmoothScrollHandler />
+    <TrialBannerWrapper />
+    <AnimatedRoutes />
+    <CookieConsent />
+  </BrowserRouter>
+        </TooltipProvider>
+      </OnlinePresenceProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

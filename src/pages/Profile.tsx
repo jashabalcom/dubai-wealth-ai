@@ -34,16 +34,12 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { ConnectButton } from '@/components/community/ConnectButton';
-import { useDevMode, getDevModeProfile } from '@/hooks/useDevMode';
 import { cn } from '@/lib/utils';
 
 export default function Profile() {
   const { userId } = useParams();
   const { user, loading: authLoading } = useAuth();
-  const { isDevMode, devTier } = useDevMode();
-  const devProfile = isDevMode ? getDevModeProfile(devTier) : null;
-  
-  const targetUserId = userId || user?.id || (isDevMode ? 'dev-user-id-12345' : undefined);
+  const targetUserId = userId || user?.id;
   const {
     profile,
     posts,
@@ -64,10 +60,7 @@ export default function Profile() {
   const [editLinkedin, setEditLinkedin] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Use dev profile if in dev mode and no real profile
-  const effectiveProfile = profile || (isDevMode ? devProfile : null);
-
-  if ((authLoading || profileLoading) && !isDevMode) {
+  if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
@@ -75,7 +68,7 @@ export default function Profile() {
     );
   }
 
-  if (!user && !isDevMode) {
+  if (!user) {
     return <Navigate to="/auth" replace />;
   }
 

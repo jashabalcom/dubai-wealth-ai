@@ -104,7 +104,7 @@ export function AnimatedRoutes() {
           <Route path="members" element={<MembersPage />} />
           <Route path="connections" element={<ConnectionsPage />} />
           <Route path="messages" element={<MessagesPage />} />
-          <Route path="messages/:conversationId" element={<MessagesPage />} />
+          <Route path="messages/:oderId" element={<MessagesPage />} />
           <Route path="messages/group/:groupId" element={<MessagesPage />} />
         </Route>
         
