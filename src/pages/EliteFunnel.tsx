@@ -14,6 +14,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { SEOHead } from "@/components/SEOHead";
+import { PAGE_SEO, generateFAQSchema } from "@/lib/seo-config";
 
 const EliteFunnel = () => {
   const navigate = useNavigate();
@@ -143,6 +145,10 @@ const EliteFunnel = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        {...PAGE_SEO.elite} 
+        structuredData={generateFAQSchema(faqs)}
+      />
       <Navbar />
       
       {/* Hero Section */}

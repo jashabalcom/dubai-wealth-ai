@@ -6,6 +6,8 @@ import { Check, Star, Zap, Crown, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
+import { SEOHead } from "@/components/SEOHead";
+import { PAGE_SEO } from "@/lib/seo-config";
 
 const tiers = [
   {
@@ -112,6 +114,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead {...PAGE_SEO.pricing} />
       <Navbar />
 
       <main className="pt-24 pb-20">

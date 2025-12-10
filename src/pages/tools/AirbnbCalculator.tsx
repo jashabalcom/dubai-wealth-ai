@@ -16,6 +16,8 @@ import { useAirbnbMarketData, useHasAirbnbMarketData } from '@/hooks/useAirbnbMa
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { SEOHead } from '@/components/SEOHead';
+import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 
 export default function AirbnbCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -163,6 +165,14 @@ export default function AirbnbCalculator() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        {...PAGE_SEO.airbnbCalculator} 
+        structuredData={generateSoftwareApplicationSchema({
+          name: 'Dubai Airbnb Yield Calculator',
+          description: PAGE_SEO.airbnbCalculator.description,
+          url: `${SITE_CONFIG.url}/tools/airbnb`,
+        })}
+      />
       <Navbar />
 
       <section className="pt-32 pb-8">

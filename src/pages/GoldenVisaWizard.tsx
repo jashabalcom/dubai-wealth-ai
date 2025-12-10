@@ -17,6 +17,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { GoldenVisaDisclaimer } from '@/components/ui/disclaimers';
+import { SEOHead } from '@/components/SEOHead';
+import { PAGE_SEO } from '@/lib/seo-config';
 
 interface GoldenVisaAnalysis {
   eligibilityScore: number;
@@ -383,6 +385,7 @@ export default function GoldenVisaWizard() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead {...PAGE_SEO.goldenVisa} />
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8">

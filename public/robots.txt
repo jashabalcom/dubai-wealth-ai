@@ -1,3 +1,6 @@
+# Dubai Wealth Hub - robots.txt
+# https://dubaiwealthhub.com
+
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +13,18 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://dubaiwealthhub.com/sitemap.xml
+
+# Disallow admin and API routes
+Disallow: /admin/
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /messages

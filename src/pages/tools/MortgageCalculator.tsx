@@ -13,6 +13,8 @@ import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
 import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
+import { SEOHead } from '@/components/SEOHead';
+import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 
 export default function MortgageCalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
@@ -120,6 +122,14 @@ export default function MortgageCalculator() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        {...PAGE_SEO.mortgageCalculator} 
+        structuredData={generateSoftwareApplicationSchema({
+          name: 'Dubai Mortgage Calculator',
+          description: PAGE_SEO.mortgageCalculator.description,
+          url: `${SITE_CONFIG.url}/tools/mortgage`,
+        })}
+      />
       <Navbar />
 
       <section className="pt-32 pb-8">
