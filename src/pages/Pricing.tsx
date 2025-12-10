@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Zap, Crown, Loader2 } from "lucide-react";
+import { Check, Star, Zap, Crown, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
@@ -134,10 +134,14 @@ export default function Pricing() {
               <br />
               <span className="text-gradient-gold">Investment Path</span>
             </h1>
-            <p className="text-muted-foreground text-lg leading-relaxed">
+            <p className="text-muted-foreground text-lg leading-relaxed mb-4">
               Select the membership that matches your investment goals. 
               Upgrade or downgrade anytime.
             </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">14-Day Free Trial • Credit Card Required</span>
+            </div>
           </motion.div>
 
           {/* Pricing Cards */}

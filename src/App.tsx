@@ -11,6 +11,7 @@ import { SmoothScrollHandler } from "@/components/SmoothScrollHandler";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { CookieConsent } from "@/components/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
     <NavigationProgress />
     <ScrollToTop />
     <SmoothScrollHandler />
+    <TrialBannerWrapper />
     <AnimatedRoutes />
     <CookieConsent />
   </BrowserRouter>
