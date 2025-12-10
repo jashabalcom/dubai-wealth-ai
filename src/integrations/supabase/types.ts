@@ -2066,6 +2066,39 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_directory_members: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          bio: string
+          budget_range: string
+          country: string
+          created_at: string
+          full_name: string
+          id: string
+          investment_goal: string
+          looking_for: string
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          timeline: string
+        }[]
+      }
+      get_public_profile: {
+        Args: { profile_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          budget_range: string
+          country: string
+          created_at: string
+          full_name: string
+          id: string
+          investment_goal: string
+          linkedin_url: string
+          looking_for: string
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          timeline: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
