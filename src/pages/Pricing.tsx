@@ -1,80 +1,30 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Zap, Crown, Loader2, Sparkles } from "lucide-react";
+import { Check, X, Star, Zap, Crown, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { PAGE_SEO } from "@/lib/seo-config";
+import { MEMBERSHIP_TIERS, FEATURE_COMPARISON, PRICING_TESTIMONIALS } from "@/lib/membership-tiers-config";
 
 const tiers = [
-  {
-    id: 'free' as const,
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Get started with basic insights and community access.",
-    features: [
-      "Limited market reports",
-      "Basic community access",
-      "Property listings browser",
-      "Newsletter & updates",
-    ],
-    cta: "Get Started",
-    highlighted: false,
-  },
-  {
-    id: 'investor' as const,
-    name: "Dubai Investor",
-    price: "$29",
-    period: "/month",
-    description: "Full access to education, tools, and community for serious investors.",
-    features: [
-      "Full Academy access (50+ lessons)",
-      "All investment tools & calculators",
-      "Core community channels",
-      "Monthly market reports",
-      "Basic AI Assistant",
-      "Off-plan project browser",
-      "Email support",
-    ],
-    cta: "Start Investing",
-    highlighted: true,
-    badge: "Most Popular",
-  },
-  {
-    id: 'elite' as const,
-    name: "Dubai Elite Investor",
-    price: "$97",
-    period: "/month",
-    description: "Priority access, advanced AI, and elite networking for serious wealth builders.",
-    features: [
-      "Everything in Dubai Investor, plus:",
-      "Priority off-plan allocations",
-      "AI Investment Blueprint Generator",
-      "Portfolio tracking dashboard",
-      "Elite-only community & deal room",
-      "Weekly market intelligence",
-      "Monthly live investor calls",
-      "Direct expert consultation",
-      "Elite badge on profile",
-    ],
-    cta: "Go Elite",
-    highlighted: false,
-    badge: "Best Value",
-  },
+  MEMBERSHIP_TIERS.free,
+  MEMBERSHIP_TIERS.investor,
+  MEMBERSHIP_TIERS.elite,
 ];
 
 export default function Pricing() {
   const { user, profile } = useAuth();
   const { loading, startCheckout, openCustomerPortal } = useSubscription();
   const navigate = useNavigate();
+  const [showComparison, setShowComparison] = useState(false);
 
   const handleTierClick = async (tierId: 'free' | 'investor' | 'elite') => {
     if (!user) {
-      // Store intent and redirect to auth
       if (tierId !== 'free') {
         localStorage.setItem('pending_checkout_tier', tierId);
       }
@@ -90,22 +40,17 @@ export default function Pricing() {
     const currentTier = profile?.membership_tier;
     const isExpired = profile?.membership_status === 'expired';
 
-    // If user already has this tier (and not expired)
     if (currentTier === tierId && !isExpired) {
       openCustomerPortal();
       return;
     }
 
-    // If user wants to downgrade from elite to investor
     if (tierId === 'investor' && currentTier === 'elite' && !isExpired) {
       openCustomerPortal();
       return;
     }
 
-    // Determine if this is an upgrade
     const isUpgrade = currentTier !== 'free' && !isExpired;
-    
-    // Navigate to embedded checkout
     navigate(`/checkout/${tierId}${isUpgrade ? '?upgrade=true' : ''}`);
   };
 
@@ -128,6 +73,9 @@ export default function Pricing() {
     return profile?.membership_tier === tierId;
   };
 
+  // Group features by category for comparison table
+  const categories = [...new Set(FEATURE_COMPARISON.map(f => f.category))];
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead {...PAGE_SEO.pricing} />
@@ -140,7 +88,7 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center max-w-3xl mx-auto mb-20"
+            className="text-center max-w-3xl mx-auto mb-16"
           >
             <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans mb-4 block">
               Membership Plans
@@ -161,7 +109,7 @@ export default function Pricing() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto mb-12">
             {tiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
@@ -173,7 +121,7 @@ export default function Pricing() {
                 {tier.badge && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                     <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.1em] font-sans">
-                      {tier.name === "Dubai Investor" ? <Zap size={12} /> : <Star size={12} />}
+                      {tier.id === "investor" ? <Zap size={12} /> : <Star size={12} />}
                       {tier.badge}
                     </span>
                   </div>
@@ -201,24 +149,26 @@ export default function Pricing() {
                     <h3 className="text-xl font-serif text-foreground mb-2">{tier.name}</h3>
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-4xl md:text-5xl font-serif text-foreground">
-                        {tier.price}
+                        {tier.priceDisplay}
                       </span>
                       <span className="text-muted-foreground text-sm">{tier.period}</span>
                     </div>
                     <p className="text-muted-foreground text-sm mt-4">{tier.description}</p>
                   </div>
 
-                  <ul className="space-y-4 mb-10">
+                  <ul className="space-y-3 mb-10">
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground/80">{feature}</span>
+                        <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${tier.id === 'elite' ? 'text-gold' : 'text-primary'}`} />
+                        <span className={`text-sm ${i === 0 && tier.id === 'elite' ? 'font-medium text-foreground' : 'text-foreground/80'}`}>
+                          {feature}
+                        </span>
                       </li>
                     ))}
                   </ul>
 
                   <Button
-                    variant={tier.highlighted ? "default" : "outline"}
+                    variant={tier.highlighted ? "default" : tier.id === 'elite' ? "gold" : "outline"}
                     size="lg"
                     className="w-full"
                     onClick={() => handleTierClick(tier.id)}
@@ -235,16 +185,166 @@ export default function Pricing() {
             ))}
           </div>
 
+          {/* Compare Features Toggle */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-center mb-8"
+          >
+            <Button
+              variant="ghost"
+              onClick={() => setShowComparison(!showComparison)}
+              className="gap-2"
+            >
+              {showComparison ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {showComparison ? "Hide" : "Compare"} All Features
+            </Button>
+          </motion.div>
+
+          {/* Feature Comparison Table */}
+          <AnimatePresence>
+            {showComparison && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="max-w-5xl mx-auto mb-16 overflow-hidden"
+              >
+                <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                  {/* Table Header */}
+                  <div className="grid grid-cols-4 gap-4 p-4 md:p-6 border-b border-border bg-muted/30">
+                    <div className="font-medium text-foreground">Features</div>
+                    <div className="text-center">
+                      <div className="font-medium text-foreground">Free</div>
+                      <div className="text-sm text-muted-foreground">$0</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-medium text-primary">Investor</div>
+                      <div className="text-sm text-muted-foreground">$29/mo</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 font-medium text-gold">
+                        <Crown className="w-4 h-4" />
+                        Elite
+                      </div>
+                      <div className="text-sm text-gold/70">$97/mo</div>
+                    </div>
+                  </div>
+
+                  {/* Table Body by Category */}
+                  {categories.map((category) => (
+                    <div key={category}>
+                      <div className="px-4 md:px-6 py-3 bg-muted/20 border-b border-border">
+                        <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                          {category}
+                        </span>
+                      </div>
+                      {FEATURE_COMPARISON.filter(f => f.category === category).map((item, index) => (
+                        <div
+                          key={item.feature}
+                          className={`grid grid-cols-4 gap-4 px-4 md:px-6 py-3 ${
+                            index !== FEATURE_COMPARISON.filter(f => f.category === category).length - 1 
+                              ? 'border-b border-border/50' 
+                              : ''
+                          }`}
+                        >
+                          <div className="text-sm text-foreground/80">{item.feature}</div>
+                          <div className="flex justify-center">
+                            {item.free ? (
+                              <Check className="w-5 h-5 text-green-500" />
+                            ) : (
+                              <X className="w-5 h-5 text-muted-foreground/30" />
+                            )}
+                          </div>
+                          <div className="flex justify-center">
+                            {item.investor ? (
+                              <Check className="w-5 h-5 text-primary" />
+                            ) : (
+                              <X className="w-5 h-5 text-muted-foreground/30" />
+                            )}
+                          </div>
+                          <div className="flex justify-center">
+                            {item.elite ? (
+                              <Check className="w-5 h-5 text-gold" />
+                            ) : (
+                              <X className="w-5 h-5 text-muted-foreground/30" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Money-back guarantee */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-center mt-12"
+            className="text-center mb-16"
           >
             <p className="text-muted-foreground text-sm">
               30-day money-back guarantee · Cancel anytime · No questions asked
             </p>
+          </motion.div>
+
+          {/* Testimonials Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-6xl mx-auto mb-16"
+          >
+            <div className="text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-serif text-foreground mb-3">
+                What Our <span className="text-gradient-gold">Members</span> Say
+              </h2>
+              <p className="text-muted-foreground">Join thousands of investors building wealth in Dubai</p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {PRICING_TESTIMONIALS.map((testimonial, index) => (
+                <motion.div
+                  key={testimonial.author}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors"
+                >
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-gold text-gold" />
+                    ))}
+                  </div>
+                  <p className="text-foreground mb-6 italic text-sm leading-relaxed">"{testimonial.quote}"</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      testimonial.tier === 'elite' ? 'bg-gold/20' : 'bg-primary/20'
+                    }`}>
+                      {testimonial.tier === 'elite' ? (
+                        <Crown className="w-5 h-5 text-gold" />
+                      ) : (
+                        <Zap className="w-5 h-5 text-primary" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-medium text-foreground text-sm">{testimonial.author}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {testimonial.role}
+                        {testimonial.investment && ` • ${testimonial.investment}`}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
 
           {/* Manage Subscription for users with active/trialing subscriptions */}
@@ -253,7 +353,7 @@ export default function Pricing() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-center mt-8"
+              className="text-center"
             >
               <Button
                 variant="outline"
