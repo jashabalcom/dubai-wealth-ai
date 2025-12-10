@@ -407,13 +407,13 @@ export default function Auth() {
                     <Label htmlFor="name" className="text-pearl/80 font-medium">Full Name</Label>
                     <div className="relative group">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gold/60 group-focus-within:text-gold transition-colors" />
-                      <Input
+                    <Input
                         id="name"
                         type="text"
                         placeholder="John Smith"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
-                        className="pl-12 h-14 bg-secondary/50 border-pearl/10 text-pearl placeholder:text-pearl/30 focus:border-gold/50 focus:ring-gold/20 rounded-xl transition-all"
+                        className="pl-12 h-14 bg-background/80 border-pearl/30 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-2 focus:ring-gold/30 focus:bg-background rounded-xl transition-all shadow-sm"
                       />
                     </div>
                     {errors.name && (
@@ -432,7 +432,7 @@ export default function Auth() {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-12 h-14 bg-secondary/50 border-pearl/10 text-pearl placeholder:text-pearl/30 focus:border-gold/50 focus:ring-gold/20 rounded-xl transition-all"
+                      className="pl-12 h-14 bg-background/80 border-pearl/30 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-2 focus:ring-gold/30 focus:bg-background rounded-xl transition-all shadow-sm"
                     />
                   </div>
                   {errors.email && (
@@ -461,7 +461,7 @@ export default function Auth() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-12 pr-12 h-14 bg-secondary/50 border-pearl/10 text-pearl placeholder:text-pearl/30 focus:border-gold/50 focus:ring-gold/20 rounded-xl transition-all"
+                      className="pl-12 pr-12 h-14 bg-background/80 border-pearl/30 text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-2 focus:ring-gold/30 focus:bg-background rounded-xl transition-all shadow-sm"
                     />
                     <button
                       type="button"
