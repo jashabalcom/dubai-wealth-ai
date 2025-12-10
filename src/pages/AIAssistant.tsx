@@ -357,7 +357,7 @@ export default function AIAssistant() {
                                 className={`max-w-[80%] p-4 rounded-2xl ${
                                   msg.role === "user"
                                     ? "bg-primary text-primary-foreground rounded-br-md"
-                                    : "bg-secondary rounded-bl-md"
+                                    : "bg-secondary text-secondary-foreground rounded-bl-md"
                                 }`}
                               >
                                 {msg.role === "assistant" && (
