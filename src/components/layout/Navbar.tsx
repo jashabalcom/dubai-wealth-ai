@@ -37,6 +37,12 @@ export function Navbar() {
   const { pendingCount } = useConnections();
   const location = useLocation();
 
+  // Determine if current page has a dark hero (homepage only)
+  const isDarkHeroPage = location.pathname === '/';
+  
+  // Use dark text on light pages when not scrolled
+  const useDarkText = !isDarkHeroPage && !isScrolled;
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -88,7 +94,10 @@ export function Navbar() {
           <nav className="flex items-center justify-between h-20 md:h-24">
             {/* Logo */}
             <Link to="/" className="flex flex-col items-start group">
-              <span className="font-serif text-xl md:text-2xl font-semibold text-secondary-foreground tracking-wide transition-colors group-hover:text-primary">
+              <span className={cn(
+                "font-serif text-xl md:text-2xl font-semibold tracking-wide transition-colors group-hover:text-primary",
+                useDarkText ? "text-foreground" : "text-secondary-foreground"
+              )}>
                 Dubai Wealth Hub
               </span>
               <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-sans">
@@ -110,7 +119,9 @@ export function Navbar() {
                       "relative text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
                       isActive 
                         ? "text-primary" 
-                        : "text-secondary-foreground/80 hover:text-primary"
+                        : useDarkText 
+                          ? "text-foreground/80 hover:text-primary"
+                          : "text-secondary-foreground/80 hover:text-primary"
                     )}
                   >
                     {link.label}
@@ -136,7 +147,10 @@ export function Navbar() {
                   <a
                     key={link.label}
                     href={link.href}
-                    className="text-xs uppercase tracking-[0.15em] text-secondary-foreground/80 hover:text-primary transition-colors duration-300 font-sans"
+                    className={cn(
+                      "text-xs uppercase tracking-[0.15em] hover:text-primary transition-colors duration-300 font-sans",
+                      useDarkText ? "text-foreground/80" : "text-secondary-foreground/80"
+                    )}
                   >
                     {link.label}
                   </a>
@@ -187,7 +201,10 @@ export function Navbar() {
               ) : (
                 <>
                   <Link to="/auth">
-                    <Button variant="ghost" size="sm" className="text-secondary-foreground hover:text-primary">
+                    <Button variant="ghost" size="sm" className={cn(
+                      "hover:text-primary",
+                      useDarkText ? "text-foreground" : "text-secondary-foreground"
+                    )}>
                       Sign In
                     </Button>
                   </Link>
@@ -203,7 +220,10 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-secondary-foreground transition-transform duration-200 active:scale-90"
+              className={cn(
+                "lg:hidden p-2 transition-transform duration-200 active:scale-90",
+                useDarkText ? "text-foreground" : "text-secondary-foreground"
+              )}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
