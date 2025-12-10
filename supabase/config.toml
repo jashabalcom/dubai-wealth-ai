@@ -56,3 +56,18 @@ verify_jwt = false
 
 [functions.sync-dubai-pulse]
 verify_jwt = false
+
+[functions.create-subscription-intent]
+verify_jwt = false
+
+[functions.send-getting-started-email]
+verify_jwt = false
+
+[functions.send-trial-ending-email]
+verify_jwt = false
+
+[functions.send-subscription-confirmed-email]
+verify_jwt = false
+
+[functions.send-payment-failed-email]
+verify_jwt = false
