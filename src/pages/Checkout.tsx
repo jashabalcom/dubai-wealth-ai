@@ -141,18 +141,39 @@ const Checkout = () => {
   }
 
   if (error) {
+    const hasActiveSubscription = error.includes("already have an active subscription");
+    
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="max-w-md w-full text-center">
-          <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-8">
-            <h2 className="text-xl font-semibold text-foreground mb-2">Checkout Error</h2>
-            <p className="text-muted-foreground mb-6">{error}</p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => navigate("/pricing")}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Pricing
-              </Button>
-              <Button onClick={createSubscriptionIntent}>Try Again</Button>
+          <div className={`${hasActiveSubscription ? 'bg-primary/10 border-primary/20' : 'bg-destructive/10 border-destructive/20'} border rounded-2xl p-8`}>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              {hasActiveSubscription ? "You're Already Subscribed!" : "Checkout Error"}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {hasActiveSubscription 
+                ? "You already have an active subscription. Use the customer portal to manage your plan, upgrade, or update payment methods."
+                : error}
+            </p>
+            <div className="flex gap-3 justify-center flex-wrap">
+              {hasActiveSubscription ? (
+                <>
+                  <Button variant="outline" onClick={() => navigate("/dashboard")}>
+                    Go to Dashboard
+                  </Button>
+                  <Button onClick={() => navigate("/settings")}>
+                    Manage Subscription
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => navigate("/pricing")}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Pricing
+                  </Button>
+                  <Button onClick={createSubscriptionIntent}>Try Again</Button>
+                </>
+              )}
             </div>
           </div>
         </div>
