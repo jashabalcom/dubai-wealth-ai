@@ -10,6 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { SEOHead } from '@/components/SEOHead';
+import { generateRealEstateListingSchema, generateBreadcrumbSchema, SITE_CONFIG } from '@/lib/seo-config';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
@@ -256,8 +258,49 @@ export default function PropertyDetail() {
   const furnishingLabel = property.furnishing === 'semi-furnished' ? 'Semi-Furnished' : 
     property.furnishing.charAt(0).toUpperCase() + property.furnishing.slice(1);
 
+  // Generate SEO data
+  const seoTitle = `${property.title} | ${property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`} ${property.property_type} in ${property.location_area}`;
+  const seoDescription = `${property.listing_type === 'rent' ? 'Rent' : 'Buy'} this ${property.bedrooms === 0 ? 'studio' : `${property.bedrooms}-bedroom`} ${property.property_type} in ${property.location_area}, Dubai for ${formatPrice(property.price_aed)}. ${property.size_sqft.toLocaleString()} sqft${property.rental_yield_estimate ? `, ${property.rental_yield_estimate}% rental yield` : ''}. ${property.is_off_plan ? 'Off-plan with payment plan.' : 'Ready to move.'}`;
+  const propertyUrl = `${SITE_CONFIG.url}/properties/${property.slug}`;
+  const primaryImage = galleryImages[0] || 'https://lovable.dev/opengraph-image-p98pqg.png';
+
+  const structuredData = [
+    generateRealEstateListingSchema({
+      title: property.title,
+      description: property.description,
+      price: property.price_aed,
+      currency: 'AED',
+      location: property.location_area,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      size: property.size_sqft,
+      images: galleryImages,
+      url: propertyUrl,
+    }),
+    generateBreadcrumbSchema([
+      { name: 'Home', url: SITE_CONFIG.url },
+      { name: 'Properties', url: `${SITE_CONFIG.url}/properties` },
+      { name: property.title, url: propertyUrl },
+    ]),
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        keywords={[
+          `${property.property_type} for ${property.listing_type === 'rent' ? 'rent' : 'sale'} ${property.location_area}`,
+          `Dubai ${property.property_type}`,
+          `${property.bedrooms} bedroom ${property.location_area}`,
+          property.developer_name ? `${property.developer_name} property` : '',
+          property.is_off_plan ? 'off-plan Dubai' : 'ready property Dubai',
+        ].filter(Boolean)}
+        canonical={propertyUrl}
+        ogImage={primaryImage}
+        ogType="product"
+        structuredData={structuredData}
+      />
       <Navbar />
 
       <section className="pt-20">
