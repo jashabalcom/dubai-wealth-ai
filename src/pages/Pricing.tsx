@@ -39,18 +39,24 @@ export default function Pricing() {
 
     const currentTier = profile?.membership_tier;
     const isExpired = profile?.membership_status === 'expired';
+    const isTrialing = profile?.membership_status === 'trialing';
 
-    if (currentTier === tierId && !isExpired) {
+    // Same tier and not expired/trialing - manage via portal
+    if (currentTier === tierId && !isExpired && !isTrialing) {
       openCustomerPortal();
       return;
     }
 
+    // Downgrade from elite to investor - manage via portal
     if (tierId === 'investor' && currentTier === 'elite' && !isExpired) {
       openCustomerPortal();
       return;
     }
 
-    const isUpgrade = currentTier !== 'free' && !isExpired;
+    // Upgrade scenarios:
+    // 1. Paid tier that's not expired (changing tiers or converting trial early)
+    // 2. Trial users upgrading to different tier
+    const isUpgrade = (currentTier !== 'free' && !isExpired) || isTrialing;
     navigate(`/checkout/${tierId}${isUpgrade ? '?upgrade=true' : ''}`);
   };
 

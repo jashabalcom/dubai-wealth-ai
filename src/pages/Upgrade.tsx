@@ -16,9 +16,11 @@ const Upgrade = () => {
 
   const currentTier = profile?.membership_tier || "free";
   const isExpired = profile?.membership_status === "expired";
+  const isTrialing = profile?.membership_status === "trialing";
 
   const handleSelectPlan = (tier: "investor" | "elite") => {
-    const isUpgrade = currentTier !== "free" && !isExpired;
+    // Upgrade if: paid tier that's not expired, OR currently trialing
+    const isUpgrade = (currentTier !== "free" && !isExpired) || isTrialing;
     navigate(`/checkout/${tier}${isUpgrade ? "?upgrade=true" : ""}`);
   };
 
