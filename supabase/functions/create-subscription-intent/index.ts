@@ -90,7 +90,7 @@ serve(async (req) => {
           logStep("Cancelled existing subscription for upgrade", { subId: sub.id });
         }
       } else if (allActiveSubs.length > 0 && !isUpgrade) {
-        // Already has active subscription
+        // Already has active subscription - redirect to customer portal instead
         throw new Error("You already have an active subscription. Please use the customer portal to manage it.");
       }
     } else {
@@ -108,36 +108,70 @@ serve(async (req) => {
         .eq('id', user.id);
     }
 
-    // Create subscription with incomplete status to get client_secret
+    const hasTrial = !isUpgrade;
+    logStep("Trial decision", { hasTrial, isUpgrade });
+
+    // Create subscription - for trials, we use pending_setup_intent; for immediate charges, payment_intent
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: TIER_PRICES[tier] }],
       payment_behavior: "default_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"],
-      trial_period_days: isUpgrade ? undefined : 14, // No trial for upgrades
+      payment_settings: { 
+        save_default_payment_method: "on_subscription",
+        payment_method_types: ['card'],
+      },
+      expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
+      trial_period_days: hasTrial ? 14 : undefined,
       metadata: {
         tier,
         supabase_user_id: user.id,
       },
     });
 
-    logStep("Created subscription", { subscriptionId: subscription.id });
+    logStep("Created subscription", { 
+      subscriptionId: subscription.id, 
+      status: subscription.status,
+      hasPendingSetupIntent: !!subscription.pending_setup_intent,
+      hasLatestInvoice: !!subscription.latest_invoice 
+    });
 
-    const invoice = subscription.latest_invoice as Stripe.Invoice;
-    const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+    let clientSecret: string | null = null;
+    let intentType: 'setup' | 'payment' = 'payment';
 
-    if (!paymentIntent?.client_secret) {
+    // For trial subscriptions, Stripe creates a pending_setup_intent to collect payment method
+    if (subscription.pending_setup_intent) {
+      const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent;
+      clientSecret = setupIntent.client_secret;
+      intentType = 'setup';
+      logStep("Using setup intent for trial", { setupIntentId: setupIntent.id });
+    } else if (subscription.latest_invoice) {
+      // For immediate charges (upgrades), use payment intent from invoice
+      const invoice = subscription.latest_invoice as Stripe.Invoice;
+      const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+      if (paymentIntent?.client_secret) {
+        clientSecret = paymentIntent.client_secret;
+        intentType = 'payment';
+        logStep("Using payment intent", { paymentIntentId: paymentIntent.id });
+      }
+    }
+
+    if (!clientSecret) {
+      logStep("ERROR: No client secret obtained", { 
+        subscriptionStatus: subscription.status,
+        pendingSetupIntent: !!subscription.pending_setup_intent,
+        latestInvoice: !!subscription.latest_invoice 
+      });
       throw new Error("Failed to get payment intent client secret");
     }
 
-    logStep("Returning client secret");
+    logStep("Returning client secret", { intentType, subscriptionId: subscription.id });
 
     return new Response(JSON.stringify({
-      clientSecret: paymentIntent.client_secret,
+      clientSecret,
       subscriptionId: subscription.id,
       tierName: TIER_NAMES[tier],
-      trialDays: isUpgrade ? 0 : 14,
+      trialDays: hasTrial ? 14 : 0,
+      intentType,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -209,7 +209,7 @@ export default function Dashboard() {
                   Get priority access to off-plan launches, advanced AI tools, and portfolio tracking.
                 </p>
               </div>
-              <Button variant="gold">
+              <Button variant="gold" onClick={() => navigate('/upgrade')}>
                 Upgrade Now
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

@@ -16,9 +16,10 @@ interface CheckoutFormProps {
   };
   isUpgrade: boolean;
   subscriptionId: string;
+  intentType?: 'setup' | 'payment';
 }
 
-const CheckoutForm = ({ tier, tierConfig, isUpgrade, subscriptionId }: CheckoutFormProps) => {
+const CheckoutForm = ({ tier, tierConfig, isUpgrade, subscriptionId, intentType = 'payment' }: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -39,32 +40,65 @@ const CheckoutForm = ({ tier, tierConfig, isUpgrade, subscriptionId }: CheckoutF
     setErrorMessage(null);
 
     try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/subscription-success?tier=${tier}`,
-        },
-        redirect: "if_required",
-      });
+      const successUrl = `${window.location.origin}/subscription-success?tier=${tier}`;
 
-      if (error) {
-        setErrorMessage(error.message || "Payment failed. Please try again.");
-        toast({
-          title: "Payment Failed",
-          description: error.message || "An error occurred during payment.",
-          variant: "destructive",
-        });
-      } else if (paymentIntent && paymentIntent.status === "succeeded") {
-        // Refresh subscription status
-        await checkSubscription();
-        
-        toast({
-          title: "Welcome to Dubai Wealth Hub!",
-          description: `Your ${tierConfig.name} membership is now active.`,
+      // For trial subscriptions, use confirmSetup; for immediate charges, use confirmPayment
+      if (intentType === 'setup') {
+        // Setup Intent - collecting payment method for trial (no immediate charge)
+        const { error } = await stripe.confirmSetup({
+          elements,
+          confirmParams: {
+            return_url: successUrl,
+          },
+          redirect: "if_required",
         });
 
-        // Navigate to success page
-        navigate(`/subscription-success?tier=${tier}`);
+        if (error) {
+          setErrorMessage(error.message || "Setup failed. Please try again.");
+          toast({
+            title: "Setup Failed",
+            description: error.message || "An error occurred during setup.",
+            variant: "destructive",
+          });
+        } else {
+          // Setup succeeded - trial started
+          await checkSubscription();
+          
+          toast({
+            title: "Welcome to Dubai Wealth Hub!",
+            description: `Your ${tierConfig.name} trial has started. You won't be charged for 14 days.`,
+          });
+
+          navigate(`/subscription-success?tier=${tier}`);
+        }
+      } else {
+        // Payment Intent - immediate charge (upgrades or non-trial)
+        const { error, paymentIntent } = await stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: successUrl,
+          },
+          redirect: "if_required",
+        });
+
+        if (error) {
+          setErrorMessage(error.message || "Payment failed. Please try again.");
+          toast({
+            title: "Payment Failed",
+            description: error.message || "An error occurred during payment.",
+            variant: "destructive",
+          });
+        } else if (paymentIntent && paymentIntent.status === "succeeded") {
+          // Refresh subscription status
+          await checkSubscription();
+          
+          toast({
+            title: "Welcome to Dubai Wealth Hub!",
+            description: `Your ${tierConfig.name} membership is now active.`,
+          });
+
+          navigate(`/subscription-success?tier=${tier}`);
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred";
