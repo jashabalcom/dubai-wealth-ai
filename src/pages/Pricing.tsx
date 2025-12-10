@@ -247,8 +247,8 @@ export default function Pricing() {
             </p>
           </motion.div>
 
-          {/* Manage Subscription for existing subscribers */}
-          {user && profile?.membership_tier !== 'free' && (
+          {/* Manage Subscription for users with active/trialing subscriptions */}
+          {user && profile && (profile.membership_status === 'active' || profile.membership_status === 'trialing') && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
