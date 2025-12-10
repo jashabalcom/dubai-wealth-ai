@@ -9,14 +9,16 @@ import { CommunitySidebar } from './CommunitySidebar';
 import { CommunityMobileNav } from './CommunityMobileNav';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useDevMode } from '@/hooks/useDevMode';
 
 export function CommunityLayout() {
   const { user, loading: authLoading } = useAuth();
+  const { isDevMode } = useDevMode();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isMobile = useIsMobile();
   const location = useLocation();
 
-  if (authLoading) {
+  if (authLoading && !isDevMode) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
@@ -24,7 +26,7 @@ export function CommunityLayout() {
     );
   }
 
-  if (!user) {
+  if (!user && !isDevMode) {
     return <Navigate to="/auth" replace />;
   }
 

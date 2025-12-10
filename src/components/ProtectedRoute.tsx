@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useDevMode, getDevModeProfile } from '@/hooks/useDevMode';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,7 +10,26 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, requiredTier }: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth();
+  const { isDevMode, devTier } = useDevMode();
   const location = useLocation();
+
+  // Dev mode bypass
+  if (isDevMode) {
+    const devProfile = getDevModeProfile(devTier);
+    
+    // Check tier requirements even in dev mode
+    if (requiredTier) {
+      const tierOrder = { free: 0, investor: 1, elite: 2 };
+      const userTierLevel = tierOrder[devProfile.membership_tier] || 0;
+      const requiredTierLevel = tierOrder[requiredTier] || 0;
+
+      if (userTierLevel < requiredTierLevel) {
+        return <Navigate to="/upgrade" replace />;
+      }
+    }
+    
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (

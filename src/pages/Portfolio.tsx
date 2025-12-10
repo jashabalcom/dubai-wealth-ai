@@ -10,9 +10,14 @@ import { AddPropertyDialog } from '@/components/portfolio/AddPropertyDialog';
 import { PropertyList } from '@/components/portfolio/PropertyList';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useAuth } from '@/hooks/useAuth';
+import { useDevMode, getDevModeProfile } from '@/hooks/useDevMode';
 
 export default function Portfolio() {
   const { user, profile, loading: authLoading } = useAuth();
+  const { isDevMode, devTier } = useDevMode();
+  const devProfile = isDevMode ? getDevModeProfile(devTier) : null;
+  const effectiveProfile = isDevMode ? devProfile : profile;
+  
   const {
     portfolio,
     properties,
@@ -30,7 +35,7 @@ export default function Portfolio() {
     }
   }, [user, profile, portfolio, loading]);
 
-  if (authLoading) {
+  if (authLoading && !isDevMode) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
@@ -38,12 +43,12 @@ export default function Portfolio() {
     );
   }
 
-  if (!user) {
+  if (!user && !isDevMode) {
     return <Navigate to="/auth" replace />;
   }
 
   // Non-Elite access restriction
-  if (profile?.membership_tier !== 'elite') {
+  if (effectiveProfile?.membership_tier !== 'elite') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />

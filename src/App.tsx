@@ -12,28 +12,41 @@ import { NavigationProgress } from "@/components/NavigationProgress";
 import { CookieConsent } from "@/components/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
+import { DevModeToggle } from "@/components/DevModeToggle";
+import { DevModeProvider, useDevModeProvider } from "@/hooks/useDevMode";
 
 const queryClient = new QueryClient();
 
+function AppContent() {
+  const devModeState = useDevModeProvider();
+  
+  return (
+    <DevModeProvider value={devModeState}>
+      <AuthProvider>
+        <OnlinePresenceProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <GoogleAnalytics />
+              <NavigationProgress />
+              <ScrollToTop />
+              <SmoothScrollHandler />
+              <TrialBannerWrapper />
+              <AnimatedRoutes />
+              <CookieConsent />
+              <DevModeToggle />
+            </BrowserRouter>
+          </TooltipProvider>
+        </OnlinePresenceProvider>
+      </AuthProvider>
+    </DevModeProvider>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <OnlinePresenceProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-  <BrowserRouter>
-    <GoogleAnalytics />
-    <NavigationProgress />
-    <ScrollToTop />
-    <SmoothScrollHandler />
-    <TrialBannerWrapper />
-    <AnimatedRoutes />
-    <CookieConsent />
-  </BrowserRouter>
-        </TooltipProvider>
-      </OnlinePresenceProvider>
-    </AuthProvider>
+    <AppContent />
   </QueryClientProvider>
 );
 
