@@ -25,6 +25,7 @@ const Checkout = () => {
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [intentType, setIntentType] = useState<'setup' | 'payment'>('payment');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +77,7 @@ const Checkout = () => {
 
       setClientSecret(data.clientSecret);
       setSubscriptionId(data.subscriptionId);
+      setIntentType(data.intentType || 'payment');
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to initialize checkout";
       setError(message);
@@ -230,6 +232,7 @@ const Checkout = () => {
                       tierConfig={tierConfig}
                       isUpgrade={isUpgrade}
                       subscriptionId={subscriptionId!}
+                      intentType={intentType}
                     />
                   </Elements>
 
