@@ -115,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dubai Wealth Hub <billing@dubaiwealthhub.com>",
+        from: "Dubai Wealth Hub <onboarding@resend.dev>",
         to: [email],
         subject: "Action needed: Payment failed for your subscription",
         html,
