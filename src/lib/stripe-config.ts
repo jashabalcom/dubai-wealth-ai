@@ -1,4 +1,6 @@
 // Stripe product and price configuration
+export const STRIPE_PUBLISHABLE_KEY = "pk_live_51LhLUlHDoJDchB5lnxVmeb2NMNCepgzaROqmc7Dh9sE8JUP7PUL13Koeidi8y4x0dpgjJkgqxflieihGfwPnpAa600TVkjPUWc";
+
 export const STRIPE_TIERS = {
   investor: {
     product_id: "prod_TZ38QBXp8kGx7k",
