@@ -11,9 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import PlanSummary from "@/components/checkout/PlanSummary";
 import { SEOHead } from "@/components/SEOHead";
-import { STRIPE_TIERS } from "@/lib/stripe-config";
+import { STRIPE_TIERS, STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe-config";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
+const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
 const Checkout = () => {
   const { tier } = useParams<{ tier: string }>();
