@@ -18,9 +18,24 @@ interface NotificationRequest {
   metadata?: Record<string, unknown>;
 }
 
+// HTML escape function to prevent injection
+function escapeHtml(text: string | undefined | null): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 const getEmailTemplate = (type: string, title: string, body: string, link: string | null) => {
   const baseUrl = "https://dubaiwealthhub.com";
   const ctaUrl = link ? `${baseUrl}${link}` : baseUrl;
+  
+  // Escape user-provided content
+  const safeTitle = escapeHtml(title);
+  const safeBody = escapeHtml(body);
   
   const ctaTexts: Record<string, string> = {
     message: "View Message",
@@ -55,8 +70,8 @@ const getEmailTemplate = (type: string, title: string, body: string, link: strin
                 <!-- Content -->
                 <tr>
                   <td style="padding: 40px 32px;">
-                    <h2 style="margin: 0 0 16px 0; color: #0A0F1D; font-size: 20px; font-weight: 600;">${title}</h2>
-                    ${body ? `<p style="margin: 0 0 24px 0; color: #666666; font-size: 16px; line-height: 1.6;">${body}</p>` : ''}
+                    <h2 style="margin: 0 0 16px 0; color: #0A0F1D; font-size: 20px; font-weight: 600;">${safeTitle}</h2>
+                    ${safeBody ? `<p style="margin: 0 0 24px 0; color: #666666; font-size: 16px; line-height: 1.6;">${safeBody}</p>` : ''}
                     
                     <table cellpadding="0" cellspacing="0">
                       <tr>
