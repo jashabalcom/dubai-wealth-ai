@@ -11,6 +11,9 @@ import { useAIChat, Message } from "@/hooks/useAIChat";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAIUsage } from "@/hooks/useAIUsage";
+import { UsageLimitBanner } from "@/components/freemium/UsageLimitBanner";
+import { UpgradeModal } from "@/components/freemium/UpgradeModal";
 import { 
   Bot, 
   Send, 
@@ -74,10 +77,12 @@ export default function AIAssistant() {
   const { messages, isLoading, error, sendMessage, clearMessages } = useAIChat();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, isLoading: usageLoading } = useAIUsage();
   const [input, setInput] = useState("");
   const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
   const [savedPropertiesCount, setSavedPropertiesCount] = useState(0);
   const [showSaved, setShowSaved] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isElite = profile?.membership_tier === "elite";
   
@@ -117,15 +122,47 @@ export default function AIAssistant() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+    
+    // Check usage limit for free users
+    if (!isUnlimited && hasReachedLimit) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    
+    // Track usage before sending
+    if (!isUnlimited) {
+      const canProceed = await trackUsage();
+      if (!canProceed) {
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
+    
     sendMessage(input.trim());
     setInput("");
   };
 
-  const handleQuickPrompt = (prompt: string) => {
+  const handleQuickPrompt = async (prompt: string) => {
     if (isLoading) return;
+    
+    // Check usage limit for free users
+    if (!isUnlimited && hasReachedLimit) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    
+    // Track usage before sending
+    if (!isUnlimited) {
+      const canProceed = await trackUsage();
+      if (!canProceed) {
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
+    
     sendMessage(prompt);
   };
 
@@ -186,8 +223,19 @@ export default function AIAssistant() {
     <div className="min-h-screen bg-background">
       <Navbar />
       
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        feature="ai"
+      />
+      
       <main className="pt-24 pb-16">
         <div className="container-luxury">
+          {/* Usage Limit Banner for Free Users */}
+          {!isUnlimited && !usageLoading && (
+            <UsageLimitBanner remaining={remainingUses} total={5} type="ai" />
+          )}
+          
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

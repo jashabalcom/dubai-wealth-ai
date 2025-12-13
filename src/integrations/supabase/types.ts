@@ -250,6 +250,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_usage: {
+        Row: {
+          id: string
+          query_type: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          query_type?: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          query_type?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       airbnb_market_data: {
         Row: {
           active_listings_count: number | null
@@ -2028,6 +2049,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tool_usage: {
+        Row: {
+          id: string
+          tool_name: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          tool_name: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          tool_name?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

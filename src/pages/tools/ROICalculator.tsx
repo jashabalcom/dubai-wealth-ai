@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
@@ -16,10 +16,28 @@ import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARG
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
+import { useToolUsage } from '@/hooks/useToolUsage';
+import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
+import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 
 export default function ROICalculator() {
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, isLoading: usageLoading } = useToolUsage('roi');
   const [activePreset, setActivePreset] = useState<string>();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasTrackedUsage, setHasTrackedUsage] = useState(false);
+
+  // Track usage when user first interacts with calculator
+  useEffect(() => {
+    if (!hasTrackedUsage && !usageLoading && !isUnlimited) {
+      trackUsage().then(success => {
+        if (!success) {
+          setShowUpgradeModal(true);
+        }
+        setHasTrackedUsage(true);
+      });
+    }
+  }, [hasTrackedUsage, usageLoading, isUnlimited, trackUsage]);
 
   const [inputs, setInputs] = useState({
     purchasePrice: 2000000,
@@ -123,8 +141,19 @@ export default function ROICalculator() {
       />
       <Navbar />
 
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        feature="tools"
+        toolName="ROI Calculator"
+      />
+
       <section className="pt-32 pb-8">
         <div className="container mx-auto px-4">
+          {/* Usage Limit Banner for Free Users */}
+          {!isUnlimited && !usageLoading && (
+            <UsageLimitBanner remaining={remainingUses} total={3} type="tool" toolName="ROI Calculator" />
+          )}
           <Link
             to="/tools"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
