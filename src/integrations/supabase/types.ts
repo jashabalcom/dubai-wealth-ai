@@ -817,6 +817,7 @@ export type Database = {
           comments_count: number
           content: string
           created_at: string
+          gif_url: string | null
           id: string
           images: Json | null
           is_pinned: boolean | null
@@ -832,6 +833,7 @@ export type Database = {
           comments_count?: number
           content: string
           created_at?: string
+          gif_url?: string | null
           id?: string
           images?: Json | null
           is_pinned?: boolean | null
@@ -847,6 +849,7 @@ export type Database = {
           comments_count?: number
           content?: string
           created_at?: string
+          gif_url?: string | null
           id?: string
           images?: Json | null
           is_pinned?: boolean | null
@@ -1738,6 +1741,77 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_mentions: {
+        Row: {
+          comment_id: string | null
+          created_at: string | null
+          id: string
+          mentioned_user_id: string
+          post_id: string | null
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          mentioned_user_id: string
+          post_id?: string | null
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          mentioned_user_id?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_mentions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_mentions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_reactions: {
+        Row: {
+          created_at: string | null
+          emoji: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          emoji: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
