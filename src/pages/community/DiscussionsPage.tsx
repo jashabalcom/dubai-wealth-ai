@@ -5,7 +5,9 @@ import { ChannelList } from '@/components/community/ChannelList';
 import { PostCard } from '@/components/community/PostCard';
 import { CreatePostDialog } from '@/components/community/CreatePostDialog';
 import { PageTransition } from '@/components/community/PageTransition';
+import { ReadOnlyBadge } from '@/components/freemium/ReadOnlyBadge';
 import { useCommunity } from '@/hooks/useCommunity';
+import { useProfile } from '@/hooks/useProfile';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -21,6 +23,9 @@ const itemVariants = {
 };
 
 export default function DiscussionsPage() {
+  const { profile } = useProfile();
+  const canParticipate = profile?.membership_tier === 'investor' || profile?.membership_tier === 'elite';
+  
   const {
     channels,
     channelsLoading,
@@ -45,6 +50,11 @@ export default function DiscussionsPage() {
 
   return (
     <PageTransition>
+      {/* Read-only banner for free users */}
+      {!canParticipate && (
+        <ReadOnlyBadge message="Upgrade to post, comment, and engage with the community" />
+      )}
+      
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar - Channel List */}
       <motion.aside
@@ -100,10 +110,12 @@ export default function DiscussionsPage() {
                 )}
               </div>
             </div>
-            <CreatePostDialog
-              onSubmit={(title, content, images) => createPost.mutate({ title, content, images })}
-              isSubmitting={createPost.isPending}
-            />
+            {canParticipate && (
+              <CreatePostDialog
+                onSubmit={(title, content, images) => createPost.mutate({ title, content, images })}
+                isSubmitting={createPost.isPending}
+              />
+            )}
           </motion.div>
         )}
 
