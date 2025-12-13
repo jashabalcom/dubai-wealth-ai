@@ -10,8 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MemberLevelBadge } from '@/components/community/MemberLevelBadge';
 import { PollDisplay } from '@/components/community/PollDisplay';
 import { VideoEmbed } from '@/components/community/VideoEmbed';
+import { PostReactions } from '@/components/community/PostReactions';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
+import { usePostReactions } from '@/hooks/usePostReactions';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -51,6 +53,7 @@ interface PostCardProps {
     is_pinned?: boolean;
     post_type?: string;
     video_url?: string;
+    gif_url?: string;
   };
   onLike: (postId: string, hasLiked: boolean) => void;
   onComment: (postId: string, content: string) => void;
@@ -61,12 +64,15 @@ interface PostCardProps {
 
 export function PostCard({ post, onLike, onComment, getComments, canInteract = true, onPinToggle }: PostCardProps) {
   const { isAdmin } = useAdmin();
+  const { getReactionsForPost, toggleReaction } = usePostReactions([post.id]);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [poll, setPoll] = useState<Poll | null>(null);
+
+  const postReactions = getReactionsForPost(post.id);
 
   // Fetch poll if post type is poll
   useEffect(() => {
@@ -238,6 +244,15 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
         {post.post_type === 'video' && post.video_url && (
           <VideoEmbed url={post.video_url} />
         )}
+
+        {/* GIF Display */}
+        {post.post_type === 'gif' && post.gif_url && (
+          <img 
+            src={post.gif_url} 
+            alt="GIF" 
+            className="max-w-full rounded-xl"
+          />
+        )}
         
         {/* Poll Display */}
         {post.post_type === 'poll' && poll && (
@@ -284,6 +299,15 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
       {/* Decorative Divider */}
       <div className="relative h-px w-full bg-border/50">
         <div className="absolute left-0 top-0 w-12 h-px bg-gradient-to-r from-gold/50 to-transparent" />
+      </div>
+
+      {/* Reactions */}
+      <div className="group">
+        <PostReactions
+          reactions={postReactions}
+          onToggleReaction={(emoji) => toggleReaction({ postId: post.id, emoji })}
+          disabled={!canInteract}
+        />
       </div>
 
       {/* Actions */}

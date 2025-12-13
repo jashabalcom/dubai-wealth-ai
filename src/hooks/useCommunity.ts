@@ -56,7 +56,9 @@ interface CreatePostData {
   images: File[];
   postType?: string;
   videoUrl?: string;
+  gifUrl?: string;
   pollData?: { question: string; options: string[] };
+  mentionedUserIds?: string[];
 }
 
 export function useCommunity() {
@@ -125,7 +127,7 @@ export function useCommunity() {
   });
 
   const createPost = useMutation({
-    mutationFn: async ({ title, content, images, postType, videoUrl, pollData }: CreatePostData) => {
+    mutationFn: async ({ title, content, images, postType, videoUrl, gifUrl, pollData, mentionedUserIds }: CreatePostData) => {
       if (!user || !selectedChannelId) throw new Error('Not authenticated or no channel selected');
       
       // Upload images if any
@@ -159,6 +161,7 @@ export function useCommunity() {
           images: imageUrls,
           post_type: postType || 'discussion',
           video_url: videoUrl || null,
+          gif_url: gifUrl || null,
         })
         .select()
         .single();
