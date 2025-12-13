@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.send-notification]
 verify_jwt = false
+
+[functions.test-notifications]
+verify_jwt = false
