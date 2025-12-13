@@ -15,6 +15,17 @@ interface ContactFormRequest {
   message: string;
 }
 
+// HTML escape function to prevent injection
+function escapeHtml(text: string | undefined | null): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 const sendEmail = async (to: string[], subject: string, html: string) => {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -48,6 +59,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Received contact form submission:", { name, email, subject });
 
+    // Escape all user inputs
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safePhone = escapeHtml(phone);
+    const safeSubject = escapeHtml(subject);
+    const safeMessage = escapeHtml(message);
+
     const adminEmail = Deno.env.get("ADMIN_INQUIRY_EMAIL") || "admin@example.com";
     
     // Send notification email to admin
@@ -56,15 +74,15 @@ const handler = async (req: Request): Promise<Response> => {
         <h2 style="color: #0A0F1D; border-bottom: 2px solid #CBB89E; padding-bottom: 10px;">New Contact Form Submission</h2>
         
         <div style="background: #f8f8f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
-          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Name:</strong> ${safeName}</p>
+          <p><strong>Email:</strong> ${safeEmail}</p>
+          ${safePhone ? `<p><strong>Phone:</strong> ${safePhone}</p>` : ''}
+          <p><strong>Subject:</strong> ${safeSubject}</p>
         </div>
         
         <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 8px;">
           <h3 style="color: #0A0F1D; margin-top: 0;">Message:</h3>
-          <p style="white-space: pre-wrap; color: #333;">${message}</p>
+          <p style="white-space: pre-wrap; color: #333;">${safeMessage}</p>
         </div>
         
         <p style="color: #666; font-size: 12px; margin-top: 20px;">
@@ -73,16 +91,16 @@ const handler = async (req: Request): Promise<Response> => {
       </div>
     `;
 
-    await sendEmail([adminEmail], `New Contact Form: ${subject}`, adminEmailHtml);
+    await sendEmail([adminEmail], `New Contact Form: ${safeSubject}`, adminEmailHtml);
     console.log("Admin email sent successfully");
 
     // Send confirmation email to user
     const userEmailHtml = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #0A0F1D; font-size: 24px;">Thank you for contacting us, ${name}!</h1>
+        <h1 style="color: #0A0F1D; font-size: 24px;">Thank you for contacting us, ${safeName}!</h1>
         
         <p style="color: #333; line-height: 1.6;">
-          We have received your message regarding "<strong>${subject}</strong>" and will get back to you as soon as possible.
+          We have received your message regarding "<strong>${safeSubject}</strong>" and will get back to you as soon as possible.
         </p>
         
         <p style="color: #333; line-height: 1.6;">
@@ -103,7 +121,7 @@ const handler = async (req: Request): Promise<Response> => {
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
         
         <p style="color: #999; font-size: 12px; text-align: center;">
-          Balcom Privé LLC | Dubai Wealth Hub<br>
+          Balcom Prive LLC | Dubai Wealth Hub<br>
           This is an automated message. Please do not reply directly to this email.
         </p>
       </div>

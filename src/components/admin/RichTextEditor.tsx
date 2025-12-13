@@ -3,6 +3,7 @@ import { Bold, Italic, List, ListOrdered, Heading2, Heading3, Code, Quote, Link 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { sanitizeMarkdownHtml } from '@/lib/sanitize';
 
 interface RichTextEditorProps {
   value: string;
@@ -103,7 +104,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
             className="min-h-[300px] p-4 prose prose-invert max-w-none"
             dangerouslySetInnerHTML={{ 
               __html: value 
-                ? `<p class="text-muted-foreground">${renderPreview(value)}</p>` 
+                ? `<p class="text-muted-foreground">${sanitizeMarkdownHtml(renderPreview(value))}</p>` 
                 : '<p class="text-muted-foreground/50 italic">Nothing to preview yet...</p>' 
             }}
           />

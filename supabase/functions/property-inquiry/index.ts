@@ -16,6 +16,17 @@ const logStep = (step: string, details?: any) => {
 // Admin email for receiving Basic tier inquiries
 const ADMIN_EMAIL = Deno.env.get("ADMIN_INQUIRY_EMAIL") || "admin@dubaiwealth.club";
 
+// HTML escape function to prevent injection
+function escapeHtml(text: string | undefined | null): string {
+  if (!text) return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 interface InquiryRequest {
   propertyId: string;
   propertyTitle: string;
@@ -141,8 +152,12 @@ serve(async (req) => {
       maximumFractionDigits: 0,
     }).format(property.price_aed);
 
-    // Prepare email content
+    // Prepare email content with escaped user inputs
     const inquiryTypeLabel = inquiry.inquiryType === 'viewing' ? 'Viewing Request' : 'Property Enquiry';
+    const safeName = escapeHtml(inquiry.name);
+    const safeEmail = escapeHtml(inquiry.email);
+    const safePhone = escapeHtml(inquiry.phone);
+    const safeMessage = escapeHtml(inquiry.message);
     
     const emailSubject = `[${inquiryTypeLabel}] ${property.title}`;
     
@@ -189,14 +204,14 @@ serve(async (req) => {
             <div class="lead-box">
               <h3 style="margin-top: 0;">Lead Details</h3>
               <div class="label">Name</div>
-              <div class="value">${inquiry.name}</div>
+              <div class="value">${safeName}</div>
               <div class="label">Email</div>
-              <div class="value"><a href="mailto:${inquiry.email}">${inquiry.email}</a></div>
+              <div class="value"><a href="mailto:${safeEmail}">${safeEmail}</a></div>
               <div class="label">Phone</div>
-              <div class="value"><a href="tel:${inquiry.phone}">${inquiry.phone}</a></div>
-              ${inquiry.message ? `
+              <div class="value"><a href="tel:${safePhone}">${safePhone}</a></div>
+              ${safeMessage ? `
               <div class="label">Message</div>
-              <div class="value">${inquiry.message}</div>
+              <div class="value">${safeMessage}</div>
               ` : ''}
             </div>
           </div>
@@ -230,7 +245,7 @@ serve(async (req) => {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Thank You, ${inquiry.name}!</h1>
+            <h1>Thank You, ${safeName}!</h1>
           </div>
           <div class="content">
             <p>We've received your ${inquiry.inquiryType === 'viewing' ? 'viewing request' : 'enquiry'} for:</p>

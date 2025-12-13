@@ -2326,6 +2326,33 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          count: number
+          created_at: string
+          expires_at: string
+          id: string
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          key: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       saved_properties: {
         Row: {
           created_at: string
@@ -2417,6 +2444,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_expired_rate_limits: { Args: never; Returns: undefined }
       get_community_stats: {
         Args: never
         Returns: {

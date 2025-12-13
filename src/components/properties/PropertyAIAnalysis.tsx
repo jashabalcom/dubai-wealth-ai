@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePropertyAnalysis } from "@/hooks/usePropertyAnalysis";
 import { Bot, Loader2, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface PropertyAIAnalysisProps {
   propertyId: string;
@@ -48,21 +49,21 @@ export function PropertyAIAnalysis({ propertyId, propertyTitle, isOpen, onClose 
       }
       // Bullet points
       if (line.startsWith('- ')) {
-        const content = line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        const content = sanitizeHtml(line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'));
         return (
           <li key={i} className="text-muted-foreground ml-4 mb-1" dangerouslySetInnerHTML={{ __html: content }} />
         );
       }
       // Numbered items
       if (/^\d+\.\s/.test(line)) {
-        const content = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        const content = sanitizeHtml(line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'));
         return (
           <p key={i} className="text-muted-foreground mb-2" dangerouslySetInnerHTML={{ __html: content }} />
         );
       }
       // Regular text
       if (line.trim()) {
-        const content = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        const content = sanitizeHtml(line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'));
         return (
           <p key={i} className="text-muted-foreground mb-2" dangerouslySetInnerHTML={{ __html: content }} />
         );

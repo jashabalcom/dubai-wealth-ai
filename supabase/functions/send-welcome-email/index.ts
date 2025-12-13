@@ -23,7 +23,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending welcome email to: ${email}`);
 
-    const firstName = name?.split(" ")[0] || "Investor";
+    // Escape HTML to prevent injection
+    const escapeHtml = (text: string | undefined | null): string => {
+      if (!text) return '';
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    const rawFirstName = name?.split(" ")[0] || "Investor";
+    const firstName = escapeHtml(rawFirstName);
 
     const emailHtml = `
       <!DOCTYPE html>

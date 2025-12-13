@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
 import { VideoPlayer } from '@/components/lessons/VideoPlayer';
 import { ResourceList } from '@/components/lessons/ResourceList';
+import { sanitizeMarkdownHtml } from '@/lib/sanitize';
 
 interface Course {
   id: string;
@@ -380,12 +381,14 @@ export default function Lesson() {
                   <div 
                     className="text-foreground leading-relaxed space-y-4"
                     dangerouslySetInnerHTML={{ 
-                      __html: lesson.content
-                        .replace(/## (.*)/g, '<h2 class="font-heading text-xl text-foreground mt-8 mb-4">$1</h2>')
-                        .replace(/### (.*)/g, '<h3 class="font-heading text-lg text-foreground mt-6 mb-3">$1</h3>')
-                        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gold">$1</strong>')
-                        .replace(/- (.*)/g, '<li class="text-muted-foreground ml-4">$1</li>')
-                        .replace(/\n\n/g, '</p><p class="text-muted-foreground">')
+                      __html: sanitizeMarkdownHtml(
+                        lesson.content
+                          .replace(/## (.*)/g, '<h2 class="font-heading text-xl text-foreground mt-8 mb-4">$1</h2>')
+                          .replace(/### (.*)/g, '<h3 class="font-heading text-lg text-foreground mt-6 mb-3">$1</h3>')
+                          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gold">$1</strong>')
+                          .replace(/- (.*)/g, '<li class="text-muted-foreground ml-4">$1</li>')
+                          .replace(/\n\n/g, '</p><p class="text-muted-foreground">')
+                      )
                     }}
                   />
                 </div>
