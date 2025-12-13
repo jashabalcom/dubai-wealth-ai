@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import heroImage from '@/assets/hero-dubai-skyline.jpg';
@@ -40,6 +41,7 @@ export default function Auth() {
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
 
   const { signIn, signUp, user } = useAuth();
+  const { startCheckout } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -47,17 +49,16 @@ export default function Auth() {
   useEffect(() => {
     if (user) {
       const pendingTier = localStorage.getItem('pending_checkout_tier');
-      const pendingUpgrade = localStorage.getItem('pending_checkout_upgrade');
       
       if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
         localStorage.removeItem('pending_checkout_tier');
-        localStorage.removeItem('pending_checkout_upgrade');
-        navigate(`/checkout/${pendingTier}${pendingUpgrade === 'true' ? '?upgrade=true' : ''}`);
+        // Use Stripe hosted checkout instead of embedded
+        startCheckout(pendingTier as 'investor' | 'elite');
       } else {
         navigate('/dashboard');
       }
     }
-  }, [user, navigate]);
+  }, [user, navigate, startCheckout]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
@@ -142,16 +143,14 @@ export default function Auth() {
           }
         } else {
           const pendingTier = localStorage.getItem('pending_checkout_tier');
-          const pendingUpgrade = localStorage.getItem('pending_checkout_upgrade');
           
           if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
             localStorage.removeItem('pending_checkout_tier');
-            localStorage.removeItem('pending_checkout_upgrade');
             toast({
               title: 'Welcome back!',
               description: 'Continuing to checkout...',
             });
-            navigate(`/checkout/${pendingTier}${pendingUpgrade === 'true' ? '?upgrade=true' : ''}`);
+            startCheckout(pendingTier as 'investor' | 'elite');
           } else {
             toast({
               title: 'Welcome back!',
@@ -178,16 +177,14 @@ export default function Auth() {
           }
         } else {
           const pendingTier = localStorage.getItem('pending_checkout_tier');
-          const pendingUpgrade = localStorage.getItem('pending_checkout_upgrade');
           
           if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
             localStorage.removeItem('pending_checkout_tier');
-            localStorage.removeItem('pending_checkout_upgrade');
             toast({
               title: 'Welcome to Dubai Wealth Hub!',
               description: 'Continuing to checkout...',
             });
-            navigate(`/checkout/${pendingTier}${pendingUpgrade === 'true' ? '?upgrade=true' : ''}`);
+            startCheckout(pendingTier as 'investor' | 'elite');
           } else {
             toast({
               title: 'Welcome to Dubai Wealth Hub!',
