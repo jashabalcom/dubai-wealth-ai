@@ -1,7 +1,7 @@
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { AlertCircle, Crown, TrendingUp, ArrowRight, Check } from "lucide-react";
+import { AlertCircle, Crown, TrendingUp, ArrowRight, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,17 +11,14 @@ import { Footer } from "@/components/layout/Footer";
 import { STRIPE_TIERS } from "@/lib/stripe-config";
 
 const Upgrade = () => {
-  const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const { loading, startCheckout } = useSubscription();
 
   const currentTier = profile?.membership_tier || "free";
   const isExpired = profile?.membership_status === "expired";
-  const isTrialing = profile?.membership_status === "trialing";
 
-  const handleSelectPlan = (tier: "investor" | "elite") => {
-    // Upgrade if: paid tier that's not expired, OR currently trialing
-    const isUpgrade = (currentTier !== "free" && !isExpired) || isTrialing;
-    navigate(`/checkout/${tier}${isUpgrade ? "?upgrade=true" : ""}`);
+  const handleSelectPlan = async (tier: "investor" | "elite") => {
+    await startCheckout(tier);
   };
 
   return (
@@ -144,9 +141,16 @@ const Upgrade = () => {
                       onClick={() => handleSelectPlan("investor")}
                       variant="outline"
                       className="w-full"
+                      disabled={loading}
                     >
-                      {isExpired ? "Renew" : "Select"} Investor
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          {isExpired ? "Renew" : "Select"} Investor
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
@@ -198,9 +202,16 @@ const Upgrade = () => {
                     <Button
                       onClick={() => handleSelectPlan("elite")}
                       className="w-full bg-primary hover:bg-primary/90"
+                      disabled={loading}
                     >
-                      {isExpired ? "Renew" : "Select"} Elite
-                      <ArrowRight className="h-4 w-4 ml-2" />
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          {isExpired ? "Renew" : "Select"} Elite
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>

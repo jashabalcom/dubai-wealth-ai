@@ -53,11 +53,8 @@ export default function Pricing() {
       return;
     }
 
-    // Upgrade scenarios:
-    // 1. Paid tier that's not expired (changing tiers or converting trial early)
-    // 2. Trial users upgrading to different tier
-    const isUpgrade = (currentTier !== 'free' && !isExpired) || isTrialing;
-    navigate(`/checkout/${tierId}${isUpgrade ? '?upgrade=true' : ''}`);
+    // Use Stripe hosted checkout (opens in new tab)
+    await startCheckout(tierId);
   };
 
   const getButtonText = (tierId: 'free' | 'investor' | 'elite', defaultCta: string) => {
