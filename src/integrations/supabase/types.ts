@@ -776,6 +776,41 @@ export type Database = {
         }
         Relationships: []
       }
+      community_polls: {
+        Row: {
+          created_at: string | null
+          ends_at: string | null
+          id: string
+          options: Json
+          post_id: string
+          question: string
+        }
+        Insert: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          options?: Json
+          post_id: string
+          question: string
+        }
+        Update: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string
+          options?: Json
+          post_id?: string
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_polls_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_posts: {
         Row: {
           channel_id: string
@@ -784,7 +819,10 @@ export type Database = {
           created_at: string
           id: string
           images: Json | null
+          is_pinned: boolean | null
           likes_count: number
+          pinned_at: string | null
+          post_type: string | null
           title: string
           updated_at: string
           user_id: string
@@ -796,7 +834,10 @@ export type Database = {
           created_at?: string
           id?: string
           images?: Json | null
+          is_pinned?: boolean | null
           likes_count?: number
+          pinned_at?: string | null
+          post_type?: string | null
           title: string
           updated_at?: string
           user_id: string
@@ -808,7 +849,10 @@ export type Database = {
           created_at?: string
           id?: string
           images?: Json | null
+          is_pinned?: boolean | null
           likes_count?: number
+          pinned_at?: string | null
+          post_type?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -1446,6 +1490,42 @@ export type Database = {
         }
         Relationships: []
       }
+      member_follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reactions: {
         Row: {
           created_at: string
@@ -1513,6 +1593,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      poll_votes: {
+        Row: {
+          created_at: string | null
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "community_polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portfolio_properties: {
         Row: {
@@ -1638,6 +1757,7 @@ export type Database = {
           id: string
           investment_goal: string | null
           is_visible_in_directory: boolean | null
+          level: number | null
           linkedin_url: string | null
           looking_for: string | null
           membership_renews_at: string | null
@@ -1653,6 +1773,7 @@ export type Database = {
           notify_inapp_messages: boolean | null
           onboarding_completed_at: string | null
           onboarding_step: number | null
+          points: number | null
           stripe_customer_id: string | null
           timeline: string | null
           updated_at: string
@@ -1668,6 +1789,7 @@ export type Database = {
           id: string
           investment_goal?: string | null
           is_visible_in_directory?: boolean | null
+          level?: number | null
           linkedin_url?: string | null
           looking_for?: string | null
           membership_renews_at?: string | null
@@ -1683,6 +1805,7 @@ export type Database = {
           notify_inapp_messages?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_step?: number | null
+          points?: number | null
           stripe_customer_id?: string | null
           timeline?: string | null
           updated_at?: string
@@ -1698,6 +1821,7 @@ export type Database = {
           id?: string
           investment_goal?: string | null
           is_visible_in_directory?: boolean | null
+          level?: number | null
           linkedin_url?: string | null
           looking_for?: string | null
           membership_renews_at?: string | null
@@ -1713,6 +1837,7 @@ export type Database = {
           notify_inapp_messages?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_step?: number | null
+          points?: number | null
           stripe_customer_id?: string | null
           timeline?: string | null
           updated_at?: string
@@ -2200,12 +2325,23 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      community_stats: {
+        Row: {
+          elite_members: number | null
+          posts_this_week: number | null
+          total_members: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       are_connected: {
         Args: { user_a: string; user_b: string }
         Returns: boolean
+      }
+      award_points: {
+        Args: { action_type: string; user_uuid: string }
+        Returns: undefined
       }
       can_access_channel: {
         Args: {
