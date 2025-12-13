@@ -26,7 +26,7 @@ import Pricing from "@/pages/Pricing";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
 import MembershipFunnel from "@/pages/MembershipFunnel";
 import EliteFunnel from "@/pages/EliteFunnel";
-import Checkout from "@/pages/Checkout";
+import CheckoutRedirect from "@/pages/CheckoutRedirect";
 import Upgrade from "@/pages/Upgrade";
 import ResetPassword from "@/pages/ResetPassword";
 import Settings from "@/pages/Settings";
@@ -112,7 +112,7 @@ export function AnimatedRoutes() {
         <Route path="/pricing" element={<AnimatedPage><Pricing /></AnimatedPage>} />
         <Route path="/join" element={<AnimatedPage><MembershipFunnel /></AnimatedPage>} />
         <Route path="/join-elite" element={<AnimatedPage><EliteFunnel /></AnimatedPage>} />
-        <Route path="/checkout/:tier" element={<AnimatedPage><Checkout /></AnimatedPage>} />
+        <Route path="/checkout/:tier" element={<AnimatedPage><CheckoutRedirect /></AnimatedPage>} />
         <Route path="/upgrade" element={<AnimatedPage><Upgrade /></AnimatedPage>} />
         <Route path="/subscription-success" element={<AnimatedPage><SubscriptionSuccess /></AnimatedPage>} />
         <Route path="/admin" element={<AnimatedPage><AdminDashboard /></AnimatedPage>} />
