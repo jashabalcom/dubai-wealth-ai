@@ -79,26 +79,36 @@ export function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/academy" element={<AnimatedPage><Academy /></AnimatedPage>} />
-        <Route path="/academy/:slug" element={<AnimatedPage><Course /></AnimatedPage>} />
-        <Route path="/academy/:courseSlug/:lessonSlug" element={<AnimatedPage><Lesson /></AnimatedPage>} />
+        {/* Academy - Investor tier required */}
+        <Route path="/academy" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Academy /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/academy/:slug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Course /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/academy/:courseSlug/:lessonSlug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Lesson /></AnimatedPage></ProtectedRoute>} />
+        
+        {/* Properties - Public browse, saved requires auth */}
         <Route path="/properties" element={<AnimatedPage><Properties /></AnimatedPage>} />
         <Route path="/properties/:slug" element={<AnimatedPage><PropertyDetail /></AnimatedPage>} />
-        <Route path="/properties/saved" element={<ProtectedRoute><AnimatedPage><SavedProperties /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools" element={<AnimatedPage><Tools /></AnimatedPage>} />
-        <Route path="/tools/roi" element={<AnimatedPage><ROICalculator /></AnimatedPage>} />
-        <Route path="/tools/mortgage" element={<AnimatedPage><MortgageCalculator /></AnimatedPage>} />
-        <Route path="/tools/rent-vs-buy" element={<AnimatedPage><RentVsBuyCalculator /></AnimatedPage>} />
-        <Route path="/tools/airbnb" element={<AnimatedPage><AirbnbCalculator /></AnimatedPage>} />
-        <Route path="/tools/str-vs-ltr" element={<AnimatedPage><StrVsLtrCalculator /></AnimatedPage>} />
-        <Route path="/tools/total-cost" element={<AnimatedPage><TotalCostCalculator /></AnimatedPage>} />
-        <Route path="/ai-assistant" element={<AnimatedPage><AIAssistant /></AnimatedPage>} />
-        <Route path="/portfolio" element={<AnimatedPage><Portfolio /></AnimatedPage>} />
+        <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><SavedProperties /></AnimatedPage></ProtectedRoute>} />
+        
+        {/* Tools - Investor tier required */}
+        <Route path="/tools" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Tools /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/roi" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><ROICalculator /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/mortgage" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><MortgageCalculator /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/rent-vs-buy" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><RentVsBuyCalculator /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/airbnb" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><AirbnbCalculator /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/str-vs-ltr" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><StrVsLtrCalculator /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/total-cost" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><TotalCostCalculator /></AnimatedPage></ProtectedRoute>} />
+        
+        {/* AI Assistant - Investor tier required */}
+        <Route path="/ai-assistant" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
+        
+        {/* Portfolio - Elite tier required */}
+        <Route path="/portfolio" element={<ProtectedRoute requiredTier="elite"><AnimatedPage><Portfolio /></AnimatedPage></ProtectedRoute>} />
+        
         <Route path="/profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
         <Route path="/profile/:userId" element={<AnimatedPage><Profile /></AnimatedPage>} />
         
-        {/* Community Hub Routes */}
-        <Route path="/community" element={<CommunityLayout />}>
+        {/* Community Hub Routes - Investor tier required */}
+        <Route path="/community" element={<ProtectedRoute requiredTier="investor"><CommunityLayout /></ProtectedRoute>}>
           <Route index element={<DiscussionsPage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="members" element={<MembersPage />} />
@@ -108,7 +118,8 @@ export function AnimatedRoutes() {
           <Route path="messages/group/:groupId" element={<MessagesPage />} />
         </Route>
         
-        <Route path="/golden-visa" element={<AnimatedPage><GoldenVisaWizard /></AnimatedPage>} />
+        {/* Golden Visa - Elite tier required */}
+        <Route path="/golden-visa" element={<ProtectedRoute requiredTier="elite"><AnimatedPage><GoldenVisaWizard /></AnimatedPage></ProtectedRoute>} />
         <Route path="/pricing" element={<AnimatedPage><Pricing /></AnimatedPage>} />
         <Route path="/join" element={<AnimatedPage><MembershipFunnel /></AnimatedPage>} />
         <Route path="/join-elite" element={<AnimatedPage><EliteFunnel /></AnimatedPage>} />
