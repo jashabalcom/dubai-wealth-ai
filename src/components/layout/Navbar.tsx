@@ -18,13 +18,20 @@ import { useConnections } from "@/hooks/useConnections";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
+type NavLink = {
+  label: string;
+  href: string;
+  isRoute: boolean;
+  hasBadge?: boolean;
+  isUpgrade?: boolean;
+};
+
+const baseNavLinks: NavLink[] = [
   { label: "Academy", href: "/academy", isRoute: true },
   { label: "Properties", href: "/properties", isRoute: true },
   { label: "Tools", href: "/tools", isRoute: true },
   { label: "AI Assistant", href: "/ai-assistant", isRoute: true },
   { label: "Community", href: "/community", isRoute: true, hasBadge: true },
-  { label: "Membership", href: "#membership", isRoute: false },
 ];
 
 export function Navbar() {
@@ -32,6 +39,7 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
+  const [membershipTier, setMembershipTier] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { unreadCount } = useDirectMessages();
   const { pendingCount } = useConnections();
@@ -43,6 +51,25 @@ export function Navbar() {
   // Use dark text on light pages when not scrolled
   const useDarkText = !isDarkHeroPage && !isScrolled;
 
+  // Build navLinks dynamically based on user tier
+  const navLinks = (() => {
+    const links = [...baseNavLinks];
+    
+    if (!user) {
+      // Not logged in - show "Membership" → /pricing
+      links.push({ label: "Membership", href: "/pricing", isRoute: true });
+    } else if (membershipTier === 'free') {
+      // Free tier - show "Upgrade" → /pricing
+      links.push({ label: "Upgrade", href: "/pricing", isRoute: true, isUpgrade: true });
+    } else if (membershipTier === 'investor') {
+      // Investor tier - show "Upgrade" → /upgrade
+      links.push({ label: "Upgrade", href: "/upgrade", isRoute: true, isUpgrade: true });
+    }
+    // Elite tier - no membership link (already at max tier)
+    
+    return links;
+  })();
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -51,20 +78,23 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch user profile for avatar
+  // Fetch user profile for avatar and membership tier
   useEffect(() => {
     if (user?.id) {
       supabase
         .from('profiles')
-        .select('avatar_url, full_name')
+        .select('avatar_url, full_name, membership_tier')
         .eq('id', user.id)
         .maybeSingle()
         .then(({ data }) => {
           if (data) {
             setAvatarUrl(data.avatar_url);
             setFullName(data.full_name);
+            setMembershipTier(data.membership_tier);
           }
         });
+    } else {
+      setMembershipTier(null);
     }
   }, [user?.id]);
 
@@ -111,21 +141,23 @@ export function Navbar() {
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
                 const isActive = link.isRoute && isActiveLink(link.href);
                 
-                return link.isRoute ? (
+                return (
                   <Link
                     key={link.label}
                     to={link.href}
                     className={cn(
                       "relative text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
-                      isActive 
-                        ? "text-primary" 
-                        : useDarkText 
-                          ? "text-foreground/80 hover:text-primary"
-                          : "text-secondary-foreground/80 hover:text-primary"
+                      link.isUpgrade
+                        ? "text-gold hover:text-gold/80 font-medium"
+                        : isActive 
+                          ? "text-primary" 
+                          : useDarkText 
+                            ? "text-foreground/80 hover:text-primary"
+                            : "text-secondary-foreground/80 hover:text-primary"
                     )}
                   >
                     {link.label}
-                    {isActive && (
+                    {isActive && !link.isUpgrade && (
                       <motion.span
                         layoutId="navbar-indicator"
                         className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
@@ -143,17 +175,6 @@ export function Navbar() {
                       </Badge>
                     )}
                   </Link>
-                ) : (
-                  <a
-                    key={link.label}
-                    href={link.href}
-                    className={cn(
-                      "text-xs uppercase tracking-[0.15em] hover:text-primary transition-colors duration-300 font-sans",
-                      useDarkText ? "text-foreground/80" : "text-secondary-foreground/80"
-                    )}
-                  >
-                    {link.label}
-                  </a>
                 );
               })}
             </div>
@@ -245,7 +266,7 @@ export function Navbar() {
               {navLinks.map((link, index) => {
                 const isActive = link.isRoute && isActiveLink(link.href);
                 
-                return link.isRoute ? (
+                return (
                   <motion.div
                     key={link.label}
                     initial={{ opacity: 0, x: -20 }}
@@ -257,29 +278,19 @@ export function Navbar() {
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         "text-2xl font-serif transition-colors block",
-                        isActive 
-                          ? "text-primary" 
-                          : "text-secondary-foreground hover:text-primary"
+                        link.isUpgrade
+                          ? "text-gold hover:text-gold/80"
+                          : isActive 
+                            ? "text-primary" 
+                            : "text-secondary-foreground hover:text-primary"
                       )}
                     >
                       {link.label}
-                      {isActive && (
+                      {isActive && !link.isUpgrade && (
                         <span className="ml-2 inline-block w-2 h-2 rounded-full bg-primary" />
                       )}
                     </Link>
                   </motion.div>
-                ) : (
-                  <motion.a
-                    key={link.label}
-                    href={link.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-2xl font-serif text-secondary-foreground hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </motion.a>
                 );
               })}
               <div className="flex flex-col gap-4 pt-8 border-t border-primary/20">
