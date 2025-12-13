@@ -901,6 +901,52 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_members: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          budget_range: string | null
+          country: string | null
+          created_at: string | null
+          full_name: string
+          id: string
+          investment_goal: string | null
+          looking_for: string | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
+          timeline: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          budget_range?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name: string
+          id?: string
+          investment_goal?: string | null
+          looking_for?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          timeline?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          budget_range?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          investment_goal?: string | null
+          looking_for?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          timeline?: string | null
+        }
+        Relationships: []
+      }
       developers: {
         Row: {
           cover_image_url: string | null
