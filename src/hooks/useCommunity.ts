@@ -26,6 +26,7 @@ interface Post {
   images?: string[];
   is_pinned?: boolean;
   post_type?: string;
+  video_url?: string;
   author?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -47,6 +48,15 @@ interface Comment {
     avatar_url: string | null;
     membership_tier: string;
   };
+}
+
+interface CreatePostData {
+  title: string;
+  content: string;
+  images: File[];
+  postType?: string;
+  videoUrl?: string;
+  pollData?: { question: string; options: string[] };
 }
 
 export function useCommunity() {
@@ -115,7 +125,7 @@ export function useCommunity() {
   });
 
   const createPost = useMutation({
-    mutationFn: async ({ title, content, images }: { title: string; content: string; images: File[] }) => {
+    mutationFn: async ({ title, content, images, postType, videoUrl, pollData }: CreatePostData) => {
       if (!user || !selectedChannelId) throw new Error('Not authenticated or no channel selected');
       
       // Upload images if any
@@ -138,7 +148,8 @@ export function useCommunity() {
         imageUrls.push(publicUrl);
       }
       
-      const { error } = await supabase
+      // Create the post
+      const { data: newPost, error } = await supabase
         .from('community_posts')
         .insert({
           channel_id: selectedChannelId,
@@ -146,9 +157,30 @@ export function useCommunity() {
           title,
           content,
           images: imageUrls,
-        });
+          post_type: postType || 'discussion',
+          video_url: videoUrl || null,
+        })
+        .select()
+        .single();
       
       if (error) throw error;
+
+      // Create poll if poll data provided
+      if (pollData && newPost) {
+        const { error: pollError } = await supabase
+          .from('community_polls')
+          .insert({
+            post_id: newPost.id,
+            question: pollData.question,
+            options: pollData.options,
+          });
+        
+        if (pollError) {
+          console.error('Poll creation error:', pollError);
+        }
+      }
+
+      return newPost;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['community-posts', selectedChannelId] });
@@ -170,11 +202,6 @@ export function useCommunity() {
           .eq('post_id', postId)
           .eq('user_id', user.id);
         if (error) throw error;
-        
-        await supabase
-          .from('community_posts')
-          .update({ likes_count: supabase.rpc as any })
-          .eq('id', postId);
       } else {
         const { error } = await supabase
           .from('post_likes')

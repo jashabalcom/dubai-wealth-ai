@@ -1,13 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Crown, Send, ChevronDown, Pin } from 'lucide-react';
+import { Heart, MessageCircle, Crown, Send, ChevronDown, Pin, MoreVertical } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MemberLevelBadge } from '@/components/community/MemberLevelBadge';
+import { PollDisplay } from '@/components/community/PollDisplay';
+import { VideoEmbed } from '@/components/community/VideoEmbed';
 import { cn } from '@/lib/utils';
+import { useAdmin } from '@/hooks/useAdmin';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Author {
   full_name: string | null;
@@ -24,6 +30,12 @@ interface Comment {
   author?: Author;
 }
 
+interface Poll {
+  id: string;
+  question: string;
+  options: string[];
+}
+
 interface PostCardProps {
   post: {
     id: string;
@@ -37,19 +49,47 @@ interface PostCardProps {
     has_liked?: boolean;
     images?: string[];
     is_pinned?: boolean;
+    post_type?: string;
+    video_url?: string;
   };
   onLike: (postId: string, hasLiked: boolean) => void;
   onComment: (postId: string, content: string) => void;
   getComments: (postId: string) => Promise<Comment[]>;
   canInteract?: boolean;
+  onPinToggle?: () => void;
 }
 
-export function PostCard({ post, onLike, onComment, getComments, canInteract = true }: PostCardProps) {
+export function PostCard({ post, onLike, onComment, getComments, canInteract = true, onPinToggle }: PostCardProps) {
+  const { isAdmin } = useAdmin();
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [poll, setPoll] = useState<Poll | null>(null);
+
+  // Fetch poll if post type is poll
+  useEffect(() => {
+    if (post.post_type === 'poll') {
+      fetchPoll();
+    }
+  }, [post.id, post.post_type]);
+
+  const fetchPoll = async () => {
+    const { data } = await supabase
+      .from('community_polls')
+      .select('*')
+      .eq('post_id', post.id)
+      .maybeSingle();
+    
+    if (data) {
+      setPoll({
+        id: data.id,
+        question: data.question,
+        options: Array.isArray(data.options) ? data.options as string[] : [],
+      });
+    }
+  };
 
   const handleToggleComments = async () => {
     if (!showComments) {
@@ -70,7 +110,6 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
     if (!newComment.trim() || !canInteract) return;
     await onComment(post.id, newComment);
     setNewComment('');
-    // Refresh comments
     const fetchedComments = await getComments(post.id);
     setComments(fetchedComments);
   };
@@ -80,6 +119,25 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
     setIsLiking(true);
     onLike(post.id, !!post.has_liked);
     setTimeout(() => setIsLiking(false), 300);
+  };
+
+  const handlePin = async () => {
+    try {
+      const { error } = await supabase
+        .from('community_posts')
+        .update({ 
+          is_pinned: !post.is_pinned,
+          pinned_at: !post.is_pinned ? new Date().toISOString() : null
+        })
+        .eq('id', post.id);
+      
+      if (error) throw error;
+      toast.success(post.is_pinned ? 'Post unpinned' : 'Post pinned');
+      onPinToggle?.();
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+      toast.error('Failed to update pin status');
+    }
   };
 
   const isElite = post.author?.membership_tier === 'elite';
@@ -152,12 +210,43 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
             {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
           </span>
         </div>
+        
+        {/* Admin Menu */}
+        {isAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handlePin}>
+                <Pin className="h-4 w-4 mr-2" />
+                {post.is_pinned ? 'Unpin Post' : 'Pin Post'}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Post Content */}
       <div className="space-y-3">
         <h3 className="text-xl font-serif font-semibold leading-tight">{post.title}</h3>
         <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{post.content}</p>
+        
+        {/* Video Embed */}
+        {post.post_type === 'video' && post.video_url && (
+          <VideoEmbed url={post.video_url} />
+        )}
+        
+        {/* Poll Display */}
+        {post.post_type === 'poll' && poll && (
+          <PollDisplay
+            pollId={poll.id}
+            question={poll.question}
+            options={poll.options}
+          />
+        )}
         
         {/* Post Images */}
         {post.images && post.images.length > 0 && (

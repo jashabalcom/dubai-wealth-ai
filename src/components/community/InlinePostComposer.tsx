@@ -1,15 +1,19 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Image, Video, BarChart3, Smile, Send, X, Plus } from 'lucide-react';
+import { Image, Video, BarChart3, Smile, Send, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
+import { EmojiPicker } from './EmojiPicker';
+import { PollCreator } from './PollCreator';
+import { VideoEmbedModal } from './VideoEmbedModal';
+import { VideoEmbed } from './VideoEmbed';
 
 interface InlinePostComposerProps {
-  onSubmit: (title: string, content: string, images: File[]) => void;
+  onSubmit: (title: string, content: string, images: File[], postType?: string, videoUrl?: string, pollData?: { question: string; options: string[] }) => void;
   isSubmitting: boolean;
   canPost: boolean;
 }
@@ -21,7 +25,10 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
   const [content, setContent] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [pollData, setPollData] = useState<{ question: string; options: string[] } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -43,13 +50,48 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
     setPreviews(newPreviews);
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newContent = content.slice(0, start) + emoji + content.slice(end);
+      setContent(newContent);
+      // Reset cursor position after emoji
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+        textarea.focus();
+      }, 0);
+    } else {
+      setContent(content + emoji);
+    }
+  };
+
+  const handleVideoEmbed = (url: string) => {
+    setVideoUrl(url);
+    setPollData(null); // Clear poll if adding video
+  };
+
+  const handleCreatePoll = (question: string, options: string[]) => {
+    setPollData({ question, options });
+    setVideoUrl(null); // Clear video if adding poll
+  };
+
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) return;
-    onSubmit(title, content, images);
+    
+    let postType = 'discussion';
+    if (videoUrl) postType = 'video';
+    if (pollData) postType = 'poll';
+    
+    onSubmit(title, content, images, postType, videoUrl || undefined, pollData || undefined);
+    
     setTitle('');
     setContent('');
     setImages([]);
     setPreviews([]);
+    setVideoUrl(null);
+    setPollData(null);
     setIsExpanded(false);
   };
 
@@ -58,6 +100,8 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
     setContent('');
     setImages([]);
     setPreviews([]);
+    setVideoUrl(null);
+    setPollData(null);
     setIsExpanded(false);
   };
 
@@ -129,6 +173,7 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
                     className="bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 font-serif text-lg"
                   />
                   <Textarea
+                    ref={textareaRef}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="What's on your mind?"
@@ -154,6 +199,42 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
                           </button>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  
+                  {/* Video Preview */}
+                  {videoUrl && (
+                    <div className="relative">
+                      <VideoEmbed url={videoUrl} className="max-w-md" />
+                      <button
+                        onClick={() => setVideoUrl(null)}
+                        className="absolute top-2 right-2 p-1.5 bg-background/80 text-foreground rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Poll Preview */}
+                  {pollData && (
+                    <div className="relative bg-muted/30 rounded-xl p-4 border border-border/50">
+                      <button
+                        onClick={() => setPollData(null)}
+                        className="absolute top-2 right-2 p-1 bg-background/80 text-foreground rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                      <div className="flex items-center gap-2 mb-2">
+                        <BarChart3 className="h-4 w-4 text-gold" />
+                        <span className="font-medium">{pollData.question}</span>
+                      </div>
+                      <div className="space-y-1">
+                        {pollData.options.map((option, i) => (
+                          <div key={i} className="text-sm text-muted-foreground px-3 py-1.5 bg-background/50 rounded">
+                            {option}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </motion.div>
@@ -186,35 +267,46 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
                     variant="ghost"
                     size="sm"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={images.length >= 4}
+                    disabled={images.length >= 4 || !!videoUrl || !!pollData}
                     className="text-muted-foreground hover:text-gold hover:bg-gold/10"
                   >
                     <Image className="h-4 w-4" />
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-gold hover:bg-gold/10"
-                  >
-                    <Video className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-gold hover:bg-gold/10"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground hover:text-gold hover:bg-gold/10"
-                  >
-                    <Smile className="h-4 w-4" />
-                  </Button>
+                  <VideoEmbedModal 
+                    onEmbed={handleVideoEmbed}
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={!!pollData || images.length > 0}
+                        className={cn(
+                          "text-muted-foreground hover:text-gold hover:bg-gold/10",
+                          videoUrl && "text-gold bg-gold/10"
+                        )}
+                      >
+                        <Video className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                  <PollCreator 
+                    onCreatePoll={handleCreatePoll}
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={!!videoUrl || images.length > 0}
+                        className={cn(
+                          "text-muted-foreground hover:text-gold hover:bg-gold/10",
+                          pollData && "text-gold bg-gold/10"
+                        )}
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                  <EmojiPicker onSelect={handleEmojiSelect} />
                 </div>
                 
                 <div className="flex items-center gap-2">

@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/community/PageTransition';
 import { ReadOnlyBadge } from '@/components/freemium/ReadOnlyBadge';
 import { useCommunity } from '@/hooks/useCommunity';
 import { useProfile } from '@/hooks/useProfile';
+import { useQueryClient } from '@tanstack/react-query';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -133,7 +134,9 @@ export default function DiscussionsPage() {
 
           {/* Inline Post Composer */}
           <InlinePostComposer
-            onSubmit={(title, content, images) => createPost.mutate({ title, content, images })}
+            onSubmit={(title, content, images, postType, videoUrl, pollData) => 
+              createPost.mutate({ title, content, images, postType, videoUrl, pollData })
+            }
             isSubmitting={createPost.isPending}
             canPost={canParticipate}
           />
