@@ -134,8 +134,8 @@ export default function DiscussionsPage() {
 
           {/* Inline Post Composer */}
           <InlinePostComposer
-            onSubmit={(title, content, images, postType, videoUrl, pollData) => 
-              createPost.mutate({ title, content, images, postType, videoUrl, pollData })
+            onSubmit={(title, content, images, postType, videoUrl, pollData, gifUrl, mentionedUserIds) => 
+              createPost.mutate({ title, content, images, postType, videoUrl, pollData, gifUrl, mentionedUserIds })
             }
             isSubmitting={createPost.isPending}
             canPost={canParticipate}

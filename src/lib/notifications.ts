@@ -5,6 +5,8 @@ export type NotificationType =
   | 'connection_request'
   | 'connection_accepted'
   | 'post_comment'
+  | 'post_reaction'
+  | 'mention'
   | 'event_new'
   | 'event_reminder'
   | 'announcement';

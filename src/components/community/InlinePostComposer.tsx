@@ -1,19 +1,20 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Image, Video, BarChart3, Smile, Send, X } from 'lucide-react';
+import { Image, Video, BarChart3, Send, X } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { EmojiPicker } from './EmojiPicker';
 import { PollCreator } from './PollCreator';
 import { VideoEmbedModal } from './VideoEmbedModal';
 import { VideoEmbed } from './VideoEmbed';
+import { GifPicker } from './GifPicker';
+import { MentionInput, MentionInputRef } from './MentionInput';
 
 interface InlinePostComposerProps {
-  onSubmit: (title: string, content: string, images: File[], postType?: string, videoUrl?: string, pollData?: { question: string; options: string[] }) => void;
+  onSubmit: (title: string, content: string, images: File[], postType?: string, videoUrl?: string, pollData?: { question: string; options: string[] }, gifUrl?: string, mentionedUserIds?: string[]) => void;
   isSubmitting: boolean;
   canPost: boolean;
 }
@@ -26,9 +27,11 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [gifUrl, setGifUrl] = useState<string | null>(null);
   const [pollData, setPollData] = useState<{ question: string; options: string[] } | null>(null);
+  const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentionInputRef = useRef<MentionInputRef>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -51,30 +54,27 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.slice(0, start) + emoji + content.slice(end);
-      setContent(newContent);
-      // Reset cursor position after emoji
-      setTimeout(() => {
-        textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
-        textarea.focus();
-      }, 0);
-    } else {
-      setContent(content + emoji);
-    }
+    mentionInputRef.current?.insertText(emoji);
+  };
+
+  const handleGifSelect = (url: string) => {
+    setGifUrl(url);
+    setVideoUrl(null);
+    setPollData(null);
+    setImages([]);
+    setPreviews([]);
   };
 
   const handleVideoEmbed = (url: string) => {
     setVideoUrl(url);
-    setPollData(null); // Clear poll if adding video
+    setGifUrl(null);
+    setPollData(null);
   };
 
   const handleCreatePoll = (question: string, options: string[]) => {
     setPollData({ question, options });
-    setVideoUrl(null); // Clear video if adding poll
+    setVideoUrl(null);
+    setGifUrl(null);
   };
 
   const handleSubmit = () => {
@@ -82,16 +82,19 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
     
     let postType = 'discussion';
     if (videoUrl) postType = 'video';
+    if (gifUrl) postType = 'gif';
     if (pollData) postType = 'poll';
     
-    onSubmit(title, content, images, postType, videoUrl || undefined, pollData || undefined);
+    onSubmit(title, content, images, postType, videoUrl || undefined, pollData || undefined, gifUrl || undefined, mentionedUserIds);
     
     setTitle('');
     setContent('');
     setImages([]);
     setPreviews([]);
     setVideoUrl(null);
+    setGifUrl(null);
     setPollData(null);
+    setMentionedUserIds([]);
     setIsExpanded(false);
   };
 
@@ -101,7 +104,9 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
     setImages([]);
     setPreviews([]);
     setVideoUrl(null);
+    setGifUrl(null);
     setPollData(null);
+    setMentionedUserIds([]);
     setIsExpanded(false);
   };
 
@@ -172,13 +177,13 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
                     placeholder="Post title..."
                     className="bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 font-serif text-lg"
                   />
-                  <Textarea
-                    ref={textareaRef}
+                  <MentionInput
+                    ref={mentionInputRef}
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="What's on your mind?"
+                    onChange={setContent}
+                    onMentionsChange={setMentionedUserIds}
+                    placeholder="What's on your mind? Use @ to mention members..."
                     rows={4}
-                    className="bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 resize-none"
                   />
                   
                   {/* Image Previews */}
@@ -208,6 +213,19 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
                       <VideoEmbed url={videoUrl} className="max-w-md" />
                       <button
                         onClick={() => setVideoUrl(null)}
+                        className="absolute top-2 right-2 p-1.5 bg-background/80 text-foreground rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* GIF Preview */}
+                  {gifUrl && (
+                    <div className="relative">
+                      <img src={gifUrl} alt="GIF" className="max-w-md rounded-lg" />
+                      <button
+                        onClick={() => setGifUrl(null)}
                         className="absolute top-2 right-2 p-1.5 bg-background/80 text-foreground rounded-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
                       >
                         <X className="h-4 w-4" />
@@ -305,6 +323,10 @@ export function InlinePostComposer({ onSubmit, isSubmitting, canPost }: InlinePo
                         <BarChart3 className="h-4 w-4" />
                       </Button>
                     }
+                  />
+                  <GifPicker 
+                    onSelect={handleGifSelect}
+                    disabled={!!videoUrl || !!pollData || images.length > 0}
                   />
                   <EmojiPicker onSelect={handleEmojiSelect} />
                 </div>
