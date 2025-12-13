@@ -79,10 +79,10 @@ export function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
-        {/* Academy - Investor tier required */}
-        <Route path="/academy" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Academy /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/academy/:slug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Course /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/academy/:courseSlug/:lessonSlug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><Lesson /></AnimatedPage></ProtectedRoute>} />
+        {/* Academy - Free to browse, lesson access controlled in-page */}
+        <Route path="/academy" element={<AnimatedPage><Academy /></AnimatedPage>} />
+        <Route path="/academy/:slug" element={<AnimatedPage><Course /></AnimatedPage>} />
+        <Route path="/academy/:courseSlug/:lessonSlug" element={<ProtectedRoute><AnimatedPage><Lesson /></AnimatedPage></ProtectedRoute>} />
         
         {/* Properties - Public browse, saved requires auth */}
         <Route path="/properties" element={<AnimatedPage><Properties /></AnimatedPage>} />

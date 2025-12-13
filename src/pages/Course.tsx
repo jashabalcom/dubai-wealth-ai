@@ -122,9 +122,11 @@ export default function Course() {
 
   const canAccessLesson = (lesson: Lesson) => {
     if (lesson.is_free_preview) return true;
-    if (!user) return false;
-    // All logged-in users can access for now (membership check can be added later)
-    return true;
+    if (!user || !profile) return false;
+    // Check membership tier - investor or elite can access
+    const tierOrder = { free: 0, investor: 1, elite: 2 };
+    const userTierLevel = tierOrder[profile.membership_tier as keyof typeof tierOrder] || 0;
+    return userTierLevel >= 1;
   };
 
   const getNextLesson = () => {
