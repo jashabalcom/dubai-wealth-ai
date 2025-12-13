@@ -8,11 +8,13 @@ import {
   List,
   X,
   Clock,
+  Lock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useProfile } from '@/hooks/useProfile';
 import { VideoPlayer } from '@/components/lessons/VideoPlayer';
 import { ResourceList } from '@/components/lessons/ResourceList';
 
@@ -46,6 +48,7 @@ export default function Lesson() {
   const { courseSlug, lessonSlug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { profile } = useProfile();
   const { toast } = useToast();
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -55,12 +58,22 @@ export default function Lesson() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Check if user can access the lesson
+  const canAccessLesson = (lessonData: Lesson) => {
+    if (lessonData.is_free_preview) return true;
+    if (!profile) return false;
+    const tierOrder = { free: 0, investor: 1, elite: 2 };
+    const userTierLevel = tierOrder[profile.membership_tier as keyof typeof tierOrder] || 0;
+    return userTierLevel >= 1; // investor or elite can access
+  };
 
   useEffect(() => {
     if (courseSlug && lessonSlug) {
       fetchData();
     }
-  }, [courseSlug, lessonSlug]);
+  }, [courseSlug, lessonSlug, profile]);
 
   useEffect(() => {
     if (user && lesson) {
@@ -97,6 +110,14 @@ export default function Lesson() {
       // Find current lesson
       const currentLesson = lessonsData.find((l) => l.slug === lessonSlug);
       if (currentLesson) {
+        // Check access before showing lesson
+        if (!canAccessLesson(currentLesson)) {
+          setAccessDenied(true);
+          setLesson(currentLesson);
+          setLoading(false);
+          return;
+        }
+        setAccessDenied(false);
         setLesson(currentLesson);
       } else {
         navigate(`/academy/${courseSlug}`);
@@ -182,6 +203,38 @@ export default function Lesson() {
   }
 
   if (!course || !lesson) return null;
+
+  // Show upgrade prompt for locked lessons
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md text-center"
+        >
+          <div className="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-8 h-8 text-gold" />
+          </div>
+          <h1 className="font-heading text-2xl text-foreground mb-4">
+            Premium Content
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            This lesson is available to Dubai Investor and Elite members. Upgrade your membership to unlock the full academy.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button variant="outline" onClick={() => navigate(`/academy/${courseSlug}`)}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Course
+            </Button>
+            <Button variant="gold" onClick={() => navigate('/upgrade')}>
+              Upgrade Membership
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const prevLesson = getPrevLesson();
   const nextLesson = getNextLesson();
