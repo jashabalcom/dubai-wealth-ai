@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { sendNotification } from '@/lib/notifications';
 
 export interface Connection {
   id: string;
@@ -190,10 +191,29 @@ export function useConnections() {
         }
         throw error;
       }
+
+      return { recipientId };
     },
-    onSuccess: () => {
+    onSuccess: async ({ recipientId }) => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       toast.success('Connection request sent!');
+
+      // Get sender's profile for notification
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+
+      // Send notification to recipient
+      await sendNotification({
+        userId: recipientId,
+        type: 'connection_request',
+        title: `${senderProfile?.full_name || 'Someone'} wants to connect`,
+        body: 'You have a new connection request',
+        link: '/community/connections',
+        metadata: { requester_id: user?.id },
+      });
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to send request');
@@ -203,17 +223,45 @@ export function useConnections() {
   // Accept connection request
   const acceptRequest = useMutation({
     mutationFn: async (connectionId: string) => {
+      // First get the connection to find the requester
+      const { data: connection, error: fetchError } = await supabase
+        .from('connections')
+        .select('requester_id')
+        .eq('id', connectionId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from('connections')
         .update({ status: 'accepted' })
         .eq('id', connectionId);
 
       if (error) throw error;
+
+      return { requesterId: connection.requester_id };
     },
-    onSuccess: () => {
+    onSuccess: async ({ requesterId }) => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       queryClient.invalidateQueries({ queryKey: ['pending-connections'] });
       toast.success('Connection accepted!');
+
+      // Get accepter's profile for notification
+      const { data: accepterProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+
+      // Send notification to the original requester
+      await sendNotification({
+        userId: requesterId,
+        type: 'connection_accepted',
+        title: `${accepterProfile?.full_name || 'Someone'} accepted your connection`,
+        body: 'You can now message each other',
+        link: '/community/connections',
+        metadata: { accepter_id: user?.id },
+      });
     },
     onError: () => {
       toast.error('Failed to accept request');

@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
 
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
@@ -246,6 +247,9 @@ export default function Settings() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Notification Preferences */}
+              <NotificationPreferences />
 
               {/* Change Password */}
               <Card>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { sendNotification } from '@/lib/notifications';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Message {
@@ -158,11 +159,28 @@ export function useDirectMessages(conversationUserId?: string) {
         .single();
 
       if (error) throw error;
-      return data;
+      return { data, recipientId };
     },
-    onSuccess: () => {
+    onSuccess: async ({ recipientId }) => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+
+      // Get sender's profile for notification
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+
+      // Send notification to recipient
+      await sendNotification({
+        userId: recipientId,
+        type: 'message',
+        title: `${senderProfile?.full_name || 'Someone'} sent you a message`,
+        body: 'You have a new direct message',
+        link: '/community/messages',
+        metadata: { sender_id: user?.id },
+      });
     },
     onError: (error: Error) => {
       toast({
