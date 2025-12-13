@@ -71,3 +71,6 @@ verify_jwt = false
 
 [functions.send-payment-failed-email]
 verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false

@@ -17,6 +17,7 @@ import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useConnections } from "@/hooks/useConnections";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 type NavLink = {
   label: string;
@@ -182,43 +183,46 @@ export function Navbar() {
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
               {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted/50 transition-all duration-200 hover:ring-2 hover:ring-gold/20">
-                      <Avatar className="h-9 w-9 ring-2 ring-gold/30 transition-all duration-300 hover:ring-gold/50">
-                        <AvatarImage src={avatarUrl || undefined} />
-                        <AvatarFallback className="bg-gold/20 text-gold text-sm">
-                          {fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
-                        <User className="h-4 w-4" />
-                        My Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
-                        <LayoutDashboard className="h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
-                        <Settings className="h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
-                      <LogOut className="h-4 w-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <>
+                  <NotificationCenter className={useDarkText ? "text-foreground" : "text-secondary-foreground"} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted/50 transition-all duration-200 hover:ring-2 hover:ring-gold/20">
+                        <Avatar className="h-9 w-9 ring-2 ring-gold/30 transition-all duration-300 hover:ring-gold/50">
+                          <AvatarImage src={avatarUrl || undefined} />
+                          <AvatarFallback className="bg-gold/20 text-gold text-sm">
+                            {fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                          <User className="h-4 w-4" />
+                          My Profile
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                          <LayoutDashboard className="h-4 w-4" />
+                          Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                          <Settings className="h-4 w-4" />
+                          Settings
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
               ) : (
                 <>
                   <Link to="/auth">

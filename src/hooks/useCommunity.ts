@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { sendNotification } from '@/lib/notifications';
 
 interface Channel {
   id: string;
@@ -223,10 +224,10 @@ export function useCommunity() {
       
       if (error) throw error;
 
-      // Update comments count
+      // Get post info to find author and update count
       const { data: post } = await supabase
         .from('community_posts')
-        .select('comments_count')
+        .select('user_id, title, comments_count')
         .eq('id', postId)
         .single();
       
@@ -235,11 +236,33 @@ export function useCommunity() {
           .from('community_posts')
           .update({ comments_count: post.comments_count + 1 })
           .eq('id', postId);
+
+        return { postAuthorId: post.user_id, postTitle: post.title };
       }
+
+      return { postAuthorId: null, postTitle: null };
     },
-    onSuccess: () => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['community-posts', selectedChannelId] });
       toast.success('Comment added');
+
+      // Send notification to post author (if not commenting on own post)
+      if (data?.postAuthorId && data.postAuthorId !== user?.id) {
+        const { data: commenterProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user?.id)
+          .single();
+
+        await sendNotification({
+          userId: data.postAuthorId,
+          type: 'post_comment',
+          title: `${commenterProfile?.full_name || 'Someone'} commented on your post`,
+          body: data.postTitle || 'Your post received a new comment',
+          link: '/community',
+          metadata: { commenter_id: user?.id },
+        });
+      }
     },
   });
 
