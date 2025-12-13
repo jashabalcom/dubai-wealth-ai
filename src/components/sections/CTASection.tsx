@@ -1,8 +1,28 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export function CTASection() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { startCheckout, loading } = useSubscription();
+
+  const handleGetStarted = async () => {
+    if (!user) {
+      localStorage.setItem('pending_checkout_tier', 'investor');
+      navigate('/auth');
+      return;
+    }
+    await startCheckout('investor');
+  };
+
+  const handleScheduleCall = () => {
+    navigate('/contact');
+  };
+
   return (
     <section className="section-padding bg-background relative overflow-hidden">
       {/* Decorative gradient */}
@@ -30,11 +50,21 @@ export function CTASection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-12">
-            <Button variant="default" size="xl" className="group">
-              Get Started — $29/month
+            <Button 
+              variant="default" 
+              size="xl" 
+              className="group"
+              onClick={handleGetStarted}
+              disabled={loading}
+            >
+              {loading ? 'Redirecting...' : 'Get Started — $29/month'}
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="xl">
+            <Button 
+              variant="outline" 
+              size="xl"
+              onClick={handleScheduleCall}
+            >
               Schedule a Call
             </Button>
           </div>
