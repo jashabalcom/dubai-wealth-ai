@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, Star, Zap } from "lucide-react";
+import { Check, Star, Zap, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useState } from "react";
 
 const tiers = [
   {
@@ -18,6 +21,7 @@ const tiers = [
     cta: "Sign Up Free",
     variant: "outline" as const,
     highlighted: false,
+    tier: "free" as const,
   },
   {
     name: "Dubai Investor",
@@ -37,6 +41,7 @@ const tiers = [
     variant: "hero" as const,
     highlighted: true,
     badge: "Most Popular",
+    tier: "investor" as const,
   },
   {
     name: "Dubai Elite Investor",
@@ -58,11 +63,32 @@ const tiers = [
     variant: "secondary" as const,
     highlighted: false,
     badge: "Best Value",
+    tier: "elite" as const,
   },
 ];
 
 export function MembershipSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { startCheckout, loading } = useSubscription();
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  const handleTierClick = async (tier: "free" | "investor" | "elite") => {
+    if (tier === "free") {
+      navigate('/auth');
+      return;
+    }
+
+    if (!user) {
+      localStorage.setItem('pending_checkout_tier', tier);
+      navigate('/auth');
+      return;
+    }
+
+    setLoadingTier(tier);
+    await startCheckout(tier);
+    setLoadingTier(null);
+  };
   
   return (
     <section id="membership" className="section-padding bg-background relative overflow-hidden">
@@ -143,9 +169,17 @@ export function MembershipSection() {
                   variant={tier.variant}
                   size="lg"
                   className="w-full"
-                  onClick={() => navigate('/pricing')}
+                  onClick={() => handleTierClick(tier.tier)}
+                  disabled={loading || loadingTier === tier.tier}
                 >
-                  {tier.cta}
+                  {loadingTier === tier.tier ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Redirecting...
+                    </>
+                  ) : (
+                    tier.cta
+                  )}
                 </Button>
               </div>
             </motion.div>
