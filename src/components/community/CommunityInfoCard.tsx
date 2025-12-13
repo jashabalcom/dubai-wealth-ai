@@ -84,8 +84,13 @@ export function CommunityInfoCard() {
       {/* Community Info Card */}
       <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl overflow-hidden shadow-lg">
         {/* Banner */}
-        <div className="h-20 bg-gradient-to-br from-navy via-navy-light to-gold/20 relative">
-          <div className="absolute inset-0 bg-[url('/images/mla-logo.png')] bg-center bg-no-repeat bg-contain opacity-20" />
+        <div className="h-20 relative overflow-hidden">
+          <img 
+            src="/src/assets/hero-dubai-skyline.jpg" 
+            alt="Dubai skyline" 
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-navy/60 via-navy/40 to-gold/20" />
         </div>
         
         <div className="p-4 space-y-4">
