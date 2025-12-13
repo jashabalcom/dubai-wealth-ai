@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Crown, Send, ChevronDown } from 'lucide-react';
+import { Heart, MessageCircle, Crown, Send, ChevronDown, Pin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { MemberLevelBadge } from '@/components/community/MemberLevelBadge';
 import { cn } from '@/lib/utils';
 
 interface Author {
   full_name: string | null;
   avatar_url: string | null;
   membership_tier: string;
+  level?: number;
+  points?: number;
 }
 
 interface Comment {
@@ -33,13 +36,15 @@ interface PostCardProps {
     author?: Author;
     has_liked?: boolean;
     images?: string[];
+    is_pinned?: boolean;
   };
   onLike: (postId: string, hasLiked: boolean) => void;
   onComment: (postId: string, content: string) => void;
   getComments: (postId: string) => Promise<Comment[]>;
+  canInteract?: boolean;
 }
 
-export function PostCard({ post, onLike, onComment, getComments }: PostCardProps) {
+export function PostCard({ post, onLike, onComment, getComments, canInteract = true }: PostCardProps) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
@@ -62,7 +67,7 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
   };
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || !canInteract) return;
     await onComment(post.id, newComment);
     setNewComment('');
     // Refresh comments
@@ -71,6 +76,7 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
   };
 
   const handleLike = () => {
+    if (!canInteract) return;
     setIsLiking(true);
     onLike(post.id, !!post.has_liked);
     setTimeout(() => setIsLiking(false), 300);
@@ -82,8 +88,23 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
     <motion.div
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
-      className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 space-y-5 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-shadow duration-300"
+      className={cn(
+        "bg-card/80 backdrop-blur-sm border rounded-2xl p-6 space-y-5 shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 transition-shadow duration-300",
+        post.is_pinned ? "border-gold/30 ring-1 ring-gold/10" : "border-border/50"
+      )}
     >
+      {/* Pinned Indicator */}
+      {post.is_pinned && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gold/10 text-gold text-xs font-medium"
+        >
+          <Pin className="h-3 w-3" />
+          Pinned
+        </motion.div>
+      )}
+
       {/* Author Header */}
       <div className="flex items-center gap-4">
         <Link to={post.user_id ? `/profile/${post.user_id}` : '#'} className="relative group">
@@ -107,13 +128,16 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
           )}
         </Link>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Link 
               to={post.user_id ? `/profile/${post.user_id}` : '#'} 
               className="font-semibold hover:text-gold transition-colors"
             >
               {post.author?.full_name || 'Anonymous'}
             </Link>
+            {post.author?.level && post.author.level > 1 && (
+              <MemberLevelBadge level={post.author.level} size="sm" />
+            )}
             {isElite && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -178,9 +202,11 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
         <motion.button
           onClick={handleLike}
           whileTap={{ scale: 0.9 }}
+          disabled={!canInteract}
           className={cn(
             "flex items-center gap-2 text-sm font-medium transition-colors group",
-            post.has_liked ? "text-red-500" : "text-muted-foreground hover:text-red-500"
+            post.has_liked ? "text-red-500" : "text-muted-foreground hover:text-red-500",
+            !canInteract && "opacity-50 cursor-not-allowed"
           )}
         >
           <motion.div
@@ -190,7 +216,7 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
             <Heart className={cn(
               "h-5 w-5 transition-all",
               post.has_liked && "fill-current",
-              "group-hover:scale-110"
+              canInteract && "group-hover:scale-110"
             )} />
           </motion.div>
           <span>{post.likes_count}</span>
@@ -261,7 +287,7 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 bg-muted/50 rounded-xl p-3">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="font-medium text-sm">
                                 {comment.author?.full_name || 'Anonymous'}
                               </span>
@@ -280,27 +306,33 @@ export function PostCard({ post, onLike, onComment, getComments }: PostCardProps
                   </motion.div>
 
                   {/* New Comment Input */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex gap-3 pt-2"
-                  >
-                    <Textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Write a comment..."
-                      className="min-h-[70px] resize-none bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 rounded-xl"
-                    />
-                    <Button
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim()}
-                      size="icon"
-                      className="h-auto min-h-[70px] px-4 bg-gold hover:bg-gold/90 text-background rounded-xl transition-all hover:scale-105"
+                  {canInteract ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="flex gap-3 pt-2"
                     >
-                      <Send className="h-5 w-5" />
-                    </Button>
-                  </motion.div>
+                      <Textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Write a comment..."
+                        className="min-h-[70px] resize-none bg-muted/30 border-border/50 focus:border-gold/50 focus:ring-gold/20 rounded-xl"
+                      />
+                      <Button
+                        onClick={handleSubmitComment}
+                        disabled={!newComment.trim()}
+                        size="icon"
+                        className="h-auto min-h-[70px] px-4 bg-gold hover:bg-gold/90 text-background rounded-xl transition-all hover:scale-105"
+                      >
+                        <Send className="h-5 w-5" />
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <p className="text-center text-sm text-muted-foreground py-2">
+                      Upgrade to comment on posts
+                    </p>
+                  )}
                 </>
               )}
             </div>

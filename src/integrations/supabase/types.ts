@@ -2325,14 +2325,7 @@ export type Database = {
       }
     }
     Views: {
-      community_stats: {
-        Row: {
-          elite_members: number | null
-          posts_this_week: number | null
-          total_members: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       are_connected: {
@@ -2349,6 +2342,14 @@ export type Database = {
           user_tier: Database["public"]["Enums"]["membership_tier"]
         }
         Returns: boolean
+      }
+      get_community_stats: {
+        Args: never
+        Returns: {
+          elite_members: number
+          posts_this_week: number
+          total_members: number
+        }[]
       }
       get_directory_members: {
         Args: never

@@ -7,7 +7,8 @@ import {
   UserCheck, 
   MessagesSquare,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Trophy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,11 @@ const navItems = [
     icon: MessagesSquare,
     path: '/community/messages',
     badgeKey: 'unread',
+  },
+  {
+    label: 'Leaderboard',
+    icon: Trophy,
+    path: '/community/leaderboard',
   },
 ];
 
