@@ -24,10 +24,14 @@ interface Post {
   comments_count: number;
   created_at: string;
   images?: string[];
+  is_pinned?: boolean;
+  post_type?: string;
   author?: {
     full_name: string | null;
     avatar_url: string | null;
     membership_tier: string;
+    level?: number;
+    points?: number;
   };
   has_liked?: boolean;
 }
@@ -82,7 +86,7 @@ export function useCommunity() {
         (postsData || []).map(async (post) => {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, avatar_url, membership_tier')
+            .select('full_name, avatar_url, membership_tier, level, points')
             .eq('id', post.user_id)
             .maybeSingle();
 

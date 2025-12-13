@@ -55,6 +55,7 @@ import EventsPage from "@/pages/community/EventsPage";
 import MembersPage from "@/pages/community/MembersPage";
 import ConnectionsPage from "@/pages/community/ConnectionsPage";
 import MessagesPage from "@/pages/community/MessagesPage";
+import LeaderboardPage from "@/pages/community/LeaderboardPage";
 
 // Wrapper component for page transitions
 function AnimatedPage({ children }: { children: React.ReactNode }) {
@@ -116,6 +117,7 @@ export function AnimatedRoutes() {
           <Route path="messages" element={<MessagesPage />} />
           <Route path="messages/:oderId" element={<MessagesPage />} />
           <Route path="messages/group/:groupId" element={<MessagesPage />} />
+          <Route path="leaderboard" element={<LeaderboardPage />} />
         </Route>
         
         {/* Golden Visa - Elite tier required */}
