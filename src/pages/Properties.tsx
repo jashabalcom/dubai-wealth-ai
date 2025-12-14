@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building2, Heart } from 'lucide-react';
+import { Building2, Heart, Users, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -249,6 +249,34 @@ export default function Properties() {
 
       <section className="py-12">
         <div className="container mx-auto px-4">
+          {/* Explore Developers Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Link to="/developers" className="group block">
+              <div className="p-6 rounded-2xl bg-gradient-to-r from-gold/10 to-gold/5 border border-gold/20 hover:border-gold/40 transition-all duration-300">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-gold" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading text-lg text-foreground group-hover:text-gold transition-colors">
+                        Explore Developers
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        Browse Dubai's top developers and their portfolio of projects
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-gold group-hover:translate-x-2 transition-transform" />
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
           {loading ? (
             <PropertyGridSkeleton />
           ) : filteredAndSortedProperties.length === 0 ? (
