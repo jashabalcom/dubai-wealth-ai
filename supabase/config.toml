@@ -86,3 +86,6 @@ verify_jwt = false
 
 [functions.search-gifs]
 verify_jwt = false
+
+[functions.send-weekly-digest]
+verify_jwt = false

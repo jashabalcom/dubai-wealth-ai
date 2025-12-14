@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Bell, Mail, Smartphone } from 'lucide-react';
+import { Bell, Mail, Smartphone, Sparkles } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ interface NotificationPrefs {
   notify_email_connections: boolean;
   notify_email_comments: boolean;
   notify_email_events: boolean;
+  notify_email_digest: boolean;
   notify_inapp_messages: boolean;
   notify_inapp_connections: boolean;
   notify_inapp_comments: boolean;
@@ -24,6 +26,7 @@ const defaultPrefs: NotificationPrefs = {
   notify_email_connections: true,
   notify_email_comments: true,
   notify_email_events: true,
+  notify_email_digest: true,
   notify_inapp_messages: true,
   notify_inapp_connections: true,
   notify_inapp_comments: true,
@@ -36,6 +39,7 @@ export function NotificationPreferences() {
   const [prefs, setPrefs] = useState<NotificationPrefs>(defaultPrefs);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isElite, setIsElite] = useState(false);
 
   // Fetch preferences
   useEffect(() => {
@@ -49,10 +53,12 @@ export function NotificationPreferences() {
           notify_email_connections,
           notify_email_comments,
           notify_email_events,
+          notify_email_digest,
           notify_inapp_messages,
           notify_inapp_connections,
           notify_inapp_comments,
-          notify_inapp_events
+          notify_inapp_events,
+          membership_tier
         `)
         .eq('id', user.id)
         .single();
@@ -63,11 +69,13 @@ export function NotificationPreferences() {
           notify_email_connections: data.notify_email_connections ?? true,
           notify_email_comments: data.notify_email_comments ?? true,
           notify_email_events: data.notify_email_events ?? true,
+          notify_email_digest: data.notify_email_digest ?? true,
           notify_inapp_messages: data.notify_inapp_messages ?? true,
           notify_inapp_connections: data.notify_inapp_connections ?? true,
           notify_inapp_comments: data.notify_inapp_comments ?? true,
           notify_inapp_events: data.notify_inapp_events ?? true,
         });
+        setIsElite(data.membership_tier === 'elite');
       }
       setIsLoading(false);
     };
@@ -254,6 +262,28 @@ export function NotificationPreferences() {
                 id="email_events"
                 checked={prefs.notify_email_events}
                 onCheckedChange={(v) => updatePref('notify_email_events', v)}
+              />
+            </div>
+            
+            {/* Weekly Digest - Elite Only */}
+            <div className="flex items-center justify-between">
+              <Label htmlFor="email_digest" className="flex flex-col gap-1">
+                <span className="flex items-center gap-2">
+                  Weekly Market Digest
+                  <Badge variant="secondary" className="text-xs bg-accent/20 text-accent">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Elite
+                  </Badge>
+                </span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  Personalized AI investment insights every Sunday
+                </span>
+              </Label>
+              <Switch
+                id="email_digest"
+                checked={prefs.notify_email_digest}
+                onCheckedChange={(v) => updatePref('notify_email_digest', v)}
+                disabled={!isElite}
               />
             </div>
           </div>
