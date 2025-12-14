@@ -1644,6 +1644,264 @@ export type Database = {
           },
         ]
       }
+      neighborhood_pois: {
+        Row: {
+          address: string | null
+          annual_fees_from: number | null
+          annual_fees_to: number | null
+          created_at: string
+          cuisine: string | null
+          curriculum: string | null
+          description: string | null
+          grade_levels: string | null
+          id: string
+          image_url: string | null
+          is_delivery_available: boolean | null
+          is_featured: boolean | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          neighborhood_id: string
+          order_index: number | null
+          phone: string | null
+          poi_type: string
+          price_level: string | null
+          rating: number | null
+          review_count: number | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          annual_fees_from?: number | null
+          annual_fees_to?: number | null
+          created_at?: string
+          cuisine?: string | null
+          curriculum?: string | null
+          description?: string | null
+          grade_levels?: string | null
+          id?: string
+          image_url?: string | null
+          is_delivery_available?: boolean | null
+          is_featured?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          neighborhood_id: string
+          order_index?: number | null
+          phone?: string | null
+          poi_type: string
+          price_level?: string | null
+          rating?: number | null
+          review_count?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          annual_fees_from?: number | null
+          annual_fees_to?: number | null
+          created_at?: string
+          cuisine?: string | null
+          curriculum?: string | null
+          description?: string | null
+          grade_levels?: string | null
+          id?: string
+          image_url?: string | null
+          is_delivery_available?: boolean | null
+          is_featured?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          neighborhood_id?: string
+          order_index?: number | null
+          phone?: string | null
+          poi_type?: string
+          price_level?: string | null
+          rating?: number | null
+          review_count?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neighborhood_pois_neighborhood_id_fkey"
+            columns: ["neighborhood_id"]
+            isOneToOne: false
+            referencedRelation: "neighborhoods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neighborhood_stats: {
+        Row: {
+          avg_rent_price: number | null
+          avg_sale_price_sqft: number | null
+          created_at: string
+          days_on_market: number | null
+          id: string
+          neighborhood_id: string
+          occupancy_rate: number | null
+          stat_date: string
+          transaction_count: number | null
+        }
+        Insert: {
+          avg_rent_price?: number | null
+          avg_sale_price_sqft?: number | null
+          created_at?: string
+          days_on_market?: number | null
+          id?: string
+          neighborhood_id: string
+          occupancy_rate?: number | null
+          stat_date: string
+          transaction_count?: number | null
+        }
+        Update: {
+          avg_rent_price?: number | null
+          avg_sale_price_sqft?: number | null
+          created_at?: string
+          days_on_market?: number | null
+          id?: string
+          neighborhood_id?: string
+          occupancy_rate?: number | null
+          stat_date?: string
+          transaction_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neighborhood_stats_neighborhood_id_fkey"
+            columns: ["neighborhood_id"]
+            isOneToOne: false
+            referencedRelation: "neighborhoods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neighborhoods: {
+        Row: {
+          area_id: string | null
+          avg_price_sqft: number | null
+          avg_rent_1br: number | null
+          avg_rent_2br: number | null
+          avg_rent_3br: number | null
+          avg_rent_studio: number | null
+          avg_rental_yield: number | null
+          best_for: Json | null
+          cons: Json | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          developer_name: string | null
+          established_year: number | null
+          golden_visa_eligible: boolean | null
+          has_beach_access: boolean | null
+          has_mall_access: boolean | null
+          has_metro_access: boolean | null
+          id: string
+          image_url: string | null
+          is_freehold: boolean | null
+          is_published: boolean | null
+          latitude: number | null
+          lifestyle_type: string | null
+          longitude: number | null
+          name: string
+          order_index: number | null
+          overview: string | null
+          population_estimate: number | null
+          pros: Json | null
+          safety_score: number | null
+          slug: string
+          transit_score: number | null
+          updated_at: string
+          walkability_score: number | null
+          yoy_appreciation: number | null
+        }
+        Insert: {
+          area_id?: string | null
+          avg_price_sqft?: number | null
+          avg_rent_1br?: number | null
+          avg_rent_2br?: number | null
+          avg_rent_3br?: number | null
+          avg_rent_studio?: number | null
+          avg_rental_yield?: number | null
+          best_for?: Json | null
+          cons?: Json | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          developer_name?: string | null
+          established_year?: number | null
+          golden_visa_eligible?: boolean | null
+          has_beach_access?: boolean | null
+          has_mall_access?: boolean | null
+          has_metro_access?: boolean | null
+          id?: string
+          image_url?: string | null
+          is_freehold?: boolean | null
+          is_published?: boolean | null
+          latitude?: number | null
+          lifestyle_type?: string | null
+          longitude?: number | null
+          name: string
+          order_index?: number | null
+          overview?: string | null
+          population_estimate?: number | null
+          pros?: Json | null
+          safety_score?: number | null
+          slug: string
+          transit_score?: number | null
+          updated_at?: string
+          walkability_score?: number | null
+          yoy_appreciation?: number | null
+        }
+        Update: {
+          area_id?: string | null
+          avg_price_sqft?: number | null
+          avg_rent_1br?: number | null
+          avg_rent_2br?: number | null
+          avg_rent_3br?: number | null
+          avg_rent_studio?: number | null
+          avg_rental_yield?: number | null
+          best_for?: Json | null
+          cons?: Json | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          developer_name?: string | null
+          established_year?: number | null
+          golden_visa_eligible?: boolean | null
+          has_beach_access?: boolean | null
+          has_mall_access?: boolean | null
+          has_metro_access?: boolean | null
+          id?: string
+          image_url?: string | null
+          is_freehold?: boolean | null
+          is_published?: boolean | null
+          latitude?: number | null
+          lifestyle_type?: string | null
+          longitude?: number | null
+          name?: string
+          order_index?: number | null
+          overview?: string | null
+          population_estimate?: number | null
+          pros?: Json | null
+          safety_score?: number | null
+          slug?: string
+          transit_score?: number | null
+          updated_at?: string
+          walkability_score?: number | null
+          yoy_appreciation?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neighborhoods_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
