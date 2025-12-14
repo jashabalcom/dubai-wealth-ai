@@ -1,4 +1,4 @@
-import { Search, Filter, X, ChevronDown, Calendar, ArrowUpDown, Grid3X3, Map } from 'lucide-react';
+import { Search, Filter, X, ChevronDown, Calendar, ArrowUpDown, Grid3X3, Map, Sparkles, Award, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -58,8 +58,24 @@ export const priceRanges = [
   { value: '10m+', label: '10M+', min: 10000000, max: Infinity },
 ];
 
+export const scoreRanges = [
+  { value: 'all', label: 'Any Score', min: 0 },
+  { value: '60+', label: '60+ Good', min: 60 },
+  { value: '70+', label: '70+ Very Good', min: 70 },
+  { value: '80+', label: '80+ Excellent', min: 80 },
+];
+
+export const yieldRanges = [
+  { value: 'all', label: 'Any Yield', min: 0 },
+  { value: '5+', label: '5%+', min: 5 },
+  { value: '6+', label: '6%+', min: 6 },
+  { value: '7+', label: '7%+', min: 7 },
+  { value: '8+', label: '8%+', min: 8 },
+];
+
 export const sortOptions = [
   { value: 'featured', label: 'Featured First' },
+  { value: 'score-desc', label: 'Investment Score' },
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
   { value: 'yield-desc', label: 'Highest Yield' },
@@ -86,6 +102,15 @@ interface PropertyFiltersProps {
   resultCount: number;
   viewMode?: 'grid' | 'map';
   onViewModeChange?: (mode: 'grid' | 'map') => void;
+  // Smart investment filters
+  selectedScore?: string;
+  onScoreChange?: (value: string) => void;
+  selectedYield?: string;
+  onYieldChange?: (value: string) => void;
+  showGoldenVisaOnly?: boolean;
+  onGoldenVisaChange?: (value: boolean) => void;
+  showBelowMarketOnly?: boolean;
+  onBelowMarketChange?: (value: boolean) => void;
 }
 
 export function PropertyFilters({
@@ -107,6 +132,15 @@ export function PropertyFilters({
   resultCount,
   viewMode = 'grid',
   onViewModeChange,
+  // Smart filters
+  selectedScore = 'all',
+  onScoreChange,
+  selectedYield = 'all',
+  onYieldChange,
+  showGoldenVisaOnly = false,
+  onGoldenVisaChange,
+  showBelowMarketOnly = false,
+  onBelowMarketChange,
 }: PropertyFiltersProps) {
   const hasActiveFilters = 
     searchQuery || 
@@ -114,7 +148,11 @@ export function PropertyFilters({
     selectedType !== 'all' || 
     selectedBedrooms !== '-1' || 
     selectedPrice !== 'all' || 
-    showOffPlanOnly;
+    showOffPlanOnly ||
+    selectedScore !== 'all' ||
+    selectedYield !== 'all' ||
+    showGoldenVisaOnly ||
+    showBelowMarketOnly;
 
   const activeFilterCount = [
     searchQuery,
@@ -123,6 +161,17 @@ export function PropertyFilters({
     selectedBedrooms !== '-1',
     selectedPrice !== 'all',
     showOffPlanOnly,
+    selectedScore !== 'all',
+    selectedYield !== 'all',
+    showGoldenVisaOnly,
+    showBelowMarketOnly,
+  ].filter(Boolean).length;
+
+  const smartFilterCount = [
+    selectedScore !== 'all',
+    selectedYield !== 'all',
+    showGoldenVisaOnly,
+    showBelowMarketOnly,
   ].filter(Boolean).length;
 
   return (
@@ -161,7 +210,7 @@ export function PropertyFilters({
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh]">
+            <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Filters</SheetTitle>
               </SheetHeader>
@@ -177,6 +226,14 @@ export function PropertyFilters({
                   onPriceChange={onPriceChange}
                   sortBy={sortBy}
                   onSortChange={onSortChange}
+                  selectedScore={selectedScore}
+                  onScoreChange={onScoreChange}
+                  selectedYield={selectedYield}
+                  onYieldChange={onYieldChange}
+                  showGoldenVisaOnly={showGoldenVisaOnly}
+                  onGoldenVisaChange={onGoldenVisaChange}
+                  showBelowMarketOnly={showBelowMarketOnly}
+                  onBelowMarketChange={onBelowMarketChange}
                 />
               </div>
             </SheetContent>
@@ -268,6 +325,77 @@ export function PropertyFilters({
         </Select>
       </div>
 
+      {/* Smart Investment Filters Row */}
+      <div className="hidden lg:flex items-center gap-3 p-3 bg-gold/5 border border-gold/20 rounded-lg">
+        <div className="flex items-center gap-2 text-gold">
+          <Sparkles className="w-4 h-4" />
+          <span className="text-sm font-medium">Smart Filters</span>
+          {smartFilterCount > 0 && (
+            <Badge className="bg-gold text-navy h-5 px-1.5">
+              {smartFilterCount}
+            </Badge>
+          )}
+        </div>
+        
+        <div className="h-4 w-px bg-gold/30" />
+
+        {onScoreChange && (
+          <Select value={selectedScore} onValueChange={onScoreChange}>
+            <SelectTrigger className="w-[140px] border-gold/30 bg-transparent">
+              <TrendingUp className="w-4 h-4 mr-2 text-gold" />
+              <SelectValue placeholder="Score" />
+            </SelectTrigger>
+            <SelectContent>
+              {scoreRanges.map((range) => (
+                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {onYieldChange && (
+          <Select value={selectedYield} onValueChange={onYieldChange}>
+            <SelectTrigger className="w-[120px] border-gold/30 bg-transparent">
+              <SelectValue placeholder="Yield" />
+            </SelectTrigger>
+            <SelectContent>
+              {yieldRanges.map((range) => (
+                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {onGoldenVisaChange && (
+          <Button
+            variant={showGoldenVisaOnly ? 'gold' : 'outline'}
+            size="sm"
+            onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
+            className={cn(
+              "border-gold/30",
+              !showGoldenVisaOnly && "bg-transparent hover:bg-gold/10"
+            )}
+          >
+            <Award className="w-4 h-4 mr-2" />
+            Golden Visa
+          </Button>
+        )}
+
+        {onBelowMarketChange && (
+          <Button
+            variant={showBelowMarketOnly ? 'gold' : 'outline'}
+            size="sm"
+            onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
+            className={cn(
+              "border-gold/30",
+              !showBelowMarketOnly && "bg-transparent hover:bg-gold/10"
+            )}
+          >
+            Below Market
+          </Button>
+        )}
+      </div>
+
       {/* Active Filters */}
       {hasActiveFilters && (
         <div className="flex items-center gap-2">
@@ -295,6 +423,14 @@ function MobileFilterContent({
   onPriceChange,
   sortBy,
   onSortChange,
+  selectedScore,
+  onScoreChange,
+  selectedYield,
+  onYieldChange,
+  showGoldenVisaOnly,
+  onGoldenVisaChange,
+  showBelowMarketOnly,
+  onBelowMarketChange,
 }: {
   selectedArea: string;
   onAreaChange: (value: string) => void;
@@ -306,6 +442,14 @@ function MobileFilterContent({
   onPriceChange: (value: string) => void;
   sortBy: string;
   onSortChange: (value: string) => void;
+  selectedScore?: string;
+  onScoreChange?: (value: string) => void;
+  selectedYield?: string;
+  onYieldChange?: (value: string) => void;
+  showGoldenVisaOnly?: boolean;
+  onGoldenVisaChange?: (value: boolean) => void;
+  showBelowMarketOnly?: boolean;
+  onBelowMarketChange?: (value: boolean) => void;
 }) {
   return (
     <div className="space-y-6">
@@ -377,6 +521,71 @@ function MobileFilterContent({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Smart Investment Filters Section */}
+      <div className="pt-4 border-t border-gold/20">
+        <div className="flex items-center gap-2 text-gold mb-4">
+          <Sparkles className="w-4 h-4" />
+          <span className="text-sm font-medium">Smart Investment Filters</span>
+        </div>
+
+        {onScoreChange && (
+          <div className="mb-4">
+            <label className="text-sm font-medium mb-2 block">Investment Score</label>
+            <Select value={selectedScore || 'all'} onValueChange={onScoreChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {scoreRanges.map((range) => (
+                  <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {onYieldChange && (
+          <div className="mb-4">
+            <label className="text-sm font-medium mb-2 block">Min. Rental Yield</label>
+            <Select value={selectedYield || 'all'} onValueChange={onYieldChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {yieldRanges.map((range) => (
+                  <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2">
+          {onGoldenVisaChange && (
+            <Button
+              variant={showGoldenVisaOnly ? 'gold' : 'outline'}
+              size="sm"
+              onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
+              className="border-gold/30"
+            >
+              <Award className="w-4 h-4 mr-2" />
+              Golden Visa Only
+            </Button>
+          )}
+
+          {onBelowMarketChange && (
+            <Button
+              variant={showBelowMarketOnly ? 'gold' : 'outline'}
+              size="sm"
+              onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
+              className="border-gold/30"
+            >
+              Below Market Value
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

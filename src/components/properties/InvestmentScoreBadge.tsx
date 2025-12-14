@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { TrendingUp, Info } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -7,6 +7,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { 
+  calculateInvestmentScore, 
+  getScoreColor as getScoreColorClass, 
+  getScoreLabel,
+} from '@/lib/investmentScore';
 
 interface InvestmentScoreProps {
   price: number;
@@ -19,87 +24,7 @@ interface InvestmentScoreProps {
   className?: string;
 }
 
-// Area average benchmarks (AED per sqft)
-const AREA_BENCHMARKS: Record<string, { avgPriceSqft: number; avgYield: number }> = {
-  'Dubai Marina': { avgPriceSqft: 1800, avgYield: 6.5 },
-  'Downtown Dubai': { avgPriceSqft: 2200, avgYield: 5.5 },
-  'Palm Jumeirah': { avgPriceSqft: 2800, avgYield: 5.0 },
-  'JBR': { avgPriceSqft: 2000, avgYield: 6.0 },
-  'DIFC': { avgPriceSqft: 2500, avgYield: 5.5 },
-  'Business Bay': { avgPriceSqft: 1500, avgYield: 7.0 },
-  'Dubai Hills': { avgPriceSqft: 1600, avgYield: 6.0 },
-  'JVC': { avgPriceSqft: 900, avgYield: 8.5 },
-  'Jumeirah Village Circle': { avgPriceSqft: 900, avgYield: 8.5 },
-  'Sports City': { avgPriceSqft: 750, avgYield: 9.0 },
-  'Silicon Oasis': { avgPriceSqft: 800, avgYield: 8.0 },
-  'Town Square': { avgPriceSqft: 850, avgYield: 7.5 },
-  'MBR City': { avgPriceSqft: 1400, avgYield: 6.5 },
-  'Dubai Creek Harbour': { avgPriceSqft: 1800, avgYield: 5.5 },
-  'Al Furjan': { avgPriceSqft: 950, avgYield: 7.5 },
-  'Arabian Ranches': { avgPriceSqft: 1100, avgYield: 5.5 },
-};
-
-const DEFAULT_BENCHMARK = { avgPriceSqft: 1200, avgYield: 7.0 };
-
-// Top developers for reputation scoring
-const TOP_DEVELOPERS = [
-  'Emaar', 'DAMAC', 'Nakheel', 'Meraas', 'Dubai Properties',
-  'Sobha', 'Ellington', 'Omniyat', 'Azizi', 'MAG'
-];
-
-function calculateInvestmentScore(props: InvestmentScoreProps): {
-  score: number;
-  breakdown: { label: string; score: number; max: number }[];
-} {
-  const { price, sizeSqft, rentalYield, area, isOffPlan, developerName } = props;
-  const benchmark = AREA_BENCHMARKS[area] || DEFAULT_BENCHMARK;
-  const priceSqft = sizeSqft > 0 ? price / sizeSqft : 0;
-
-  const breakdown: { label: string; score: number; max: number }[] = [];
-
-  // 1. Price vs Area Average (0-30 points)
-  // Lower than avg = better score
-  const priceRatio = priceSqft / benchmark.avgPriceSqft;
-  let priceScore = 0;
-  if (priceRatio <= 0.8) priceScore = 30;
-  else if (priceRatio <= 0.9) priceScore = 25;
-  else if (priceRatio <= 1.0) priceScore = 20;
-  else if (priceRatio <= 1.1) priceScore = 15;
-  else if (priceRatio <= 1.2) priceScore = 10;
-  else priceScore = 5;
-  breakdown.push({ label: 'Price Value', score: priceScore, max: 30 });
-
-  // 2. Rental Yield (0-30 points)
-  let yieldScore = 0;
-  if (rentalYield >= 10) yieldScore = 30;
-  else if (rentalYield >= 8) yieldScore = 25;
-  else if (rentalYield >= 7) yieldScore = 20;
-  else if (rentalYield >= 6) yieldScore = 15;
-  else if (rentalYield >= 5) yieldScore = 10;
-  else yieldScore = 5;
-  breakdown.push({ label: 'Rental Yield', score: yieldScore, max: 30 });
-
-  // 3. Developer Reputation (0-20 points)
-  let devScore = 10; // Default
-  if (developerName) {
-    const isTopDeveloper = TOP_DEVELOPERS.some(dev => 
-      developerName.toLowerCase().includes(dev.toLowerCase())
-    );
-    devScore = isTopDeveloper ? 20 : 12;
-  }
-  breakdown.push({ label: 'Developer', score: devScore, max: 20 });
-
-  // 4. Off-Plan Discount Potential (0-20 points)
-  // Off-plan typically offers 10-20% below market on completion
-  const offPlanScore = isOffPlan ? 18 : 12;
-  breakdown.push({ label: isOffPlan ? 'Off-Plan Advantage' : 'Ready Property', score: offPlanScore, max: 20 });
-
-  const totalScore = breakdown.reduce((sum, item) => sum + item.score, 0);
-
-  return { score: totalScore, breakdown };
-}
-
-function getScoreColor(score: number): { bg: string; text: string; border: string } {
+function getScoreColors(score: number): { bg: string; text: string; border: string } {
   if (score >= 80) return { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30' };
   if (score >= 65) return { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30' };
   if (score >= 50) return { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30' };
@@ -107,22 +32,35 @@ function getScoreColor(score: number): { bg: string; text: string; border: strin
   return { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30' };
 }
 
-function getScoreLabel(score: number): string {
-  if (score >= 80) return 'Excellent';
-  if (score >= 65) return 'Good';
-  if (score >= 50) return 'Fair';
-  if (score >= 35) return 'Below Avg';
-  return 'Poor';
-}
-
 export function InvestmentScoreBadge({ 
   variant = 'badge',
   className,
-  ...props 
+  price,
+  sizeSqft,
+  rentalYield,
+  area,
+  isOffPlan,
+  developerName,
 }: InvestmentScoreProps) {
-  const { score, breakdown } = calculateInvestmentScore(props);
-  const colors = getScoreColor(score);
+  const { score, breakdown } = calculateInvestmentScore({
+    priceAed: price,
+    sizeSqft,
+    rentalYield,
+    area,
+    isOffPlan,
+    developerName,
+  });
+  
+  const colors = getScoreColors(score);
   const label = getScoreLabel(score);
+
+  // Create breakdown items for display
+  const breakdownItems = [
+    { label: 'Price Value', score: Math.round(breakdown.priceValue), max: 35 },
+    { label: 'Rental Yield', score: Math.round(breakdown.yieldScore), max: 35 },
+    { label: 'Developer', score: breakdown.developerScore, max: 20 },
+    { label: isOffPlan ? 'Off-Plan Advantage' : 'Ready Property', score: breakdown.offPlanBonus, max: 10 },
+  ];
 
   if (variant === 'badge') {
     return (
@@ -152,7 +90,7 @@ export function InvestmentScoreBadge({
                 <span className={cn('font-bold', colors.text)}>{score}/100 ({label})</span>
               </div>
               <div className="space-y-1.5">
-                {breakdown.map((item) => (
+                {breakdownItems.map((item) => (
                   <div key={item.label} className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{item.label}</span>
                     <div className="flex items-center gap-2">
@@ -200,7 +138,7 @@ export function InvestmentScoreBadge({
       </div>
 
       <div className="space-y-3">
-        {breakdown.map((item) => (
+        {breakdownItems.map((item) => (
           <div key={item.label} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{item.label}</span>
             <div className="flex items-center gap-2">
