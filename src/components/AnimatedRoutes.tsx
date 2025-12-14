@@ -106,6 +106,7 @@ export function AnimatedRoutes() {
         <Route path="/tools/total-cost" element={<ProtectedRoute><AnimatedPage><TotalCostCalculator /></AnimatedPage></ProtectedRoute>} />
         
         {/* AI Assistant - Auth required, usage-based gating in-page */}
+        <Route path="/ai" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
         <Route path="/ai-assistant" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
         
         {/* Portfolio - Elite tier required */}
