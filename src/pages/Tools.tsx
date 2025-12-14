@@ -11,15 +11,28 @@ import {
   Calendar,
   Award,
   Wallet,
-  ArrowLeftRight
+  ArrowLeftRight,
+  MessageSquare,
+  Sparkles
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO } from '@/lib/seo-config';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const tools = [
+  {
+    id: 'ai-assistant',
+    title: 'AI Investment Assistant',
+    description: 'Get personalized investment advice, market insights, and strategy recommendations powered by AI.',
+    icon: MessageSquare,
+    color: 'gold',
+    href: '/ai',
+    featured: true,
+  },
   {
     id: 'roi',
     title: 'ROI Calculator',
@@ -157,6 +170,7 @@ export default function Tools() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {tools.map((tool, index) => {
               const colors = colorClasses[tool.color];
+              const isFeatured = 'featured' in tool && tool.featured;
               return (
                 <motion.div
                   key={tool.id}
@@ -167,31 +181,50 @@ export default function Tools() {
                     y: -8,
                     transition: { duration: 0.2 }
                   }}
+                  className={isFeatured ? 'md:col-span-2' : ''}
                 >
                   <Link
                     to={tool.href}
                     className="group block h-full"
                   >
-                    <div className={`h-full p-8 rounded-2xl bg-card border border-border hover:border-gold/30 transition-all duration-300 hover:shadow-2xl ${colors.glow}`}>
-                      <motion.div 
-                        className={`w-14 h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center mb-6`}
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        transition={{ type: 'spring', stiffness: 400 }}
-                      >
-                        <tool.icon className={`w-7 h-7 ${colors.text}`} />
-                      </motion.div>
+                    <div className={cn(
+                      "h-full p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl",
+                      isFeatured 
+                        ? "border-gold/30 bg-gradient-to-r from-gold/5 to-transparent hover:border-gold/50" 
+                        : "border-border hover:border-gold/30",
+                      colors.glow
+                    )}>
+                      <div className="flex items-start gap-6">
+                        <motion.div 
+                          className={`w-14 h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ type: 'spring', stiffness: 400 }}
+                        >
+                          <tool.icon className={`w-7 h-7 ${colors.text}`} />
+                        </motion.div>
 
-                      <h2 className={`font-heading text-2xl text-foreground mb-3 group-hover:${colors.text} transition-colors`}>
-                        {tool.title}
-                      </h2>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h2 className={`font-heading text-2xl text-foreground group-hover:${colors.text} transition-colors`}>
+                              {tool.title}
+                            </h2>
+                            {isFeatured && (
+                              <Badge className="bg-gold/20 text-gold border-gold/30">
+                                <Sparkles className="w-3 h-3 mr-1" />
+                                Featured
+                              </Badge>
+                            )}
+                          </div>
 
-                      <p className="text-muted-foreground mb-6">
-                        {tool.description}
-                      </p>
+                          <p className="text-muted-foreground mb-4">
+                            {tool.description}
+                          </p>
 
-                      <div className={`flex items-center gap-2 ${colors.text}`}>
-                        <span className="text-sm font-medium">Open Calculator</span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                          <div className={`flex items-center gap-2 ${colors.text}`}>
+                            <span className="text-sm font-medium">{isFeatured ? 'Start Chat' : 'Open Calculator'}</span>
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Link>
