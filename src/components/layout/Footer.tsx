@@ -11,6 +11,7 @@ const footerLinks = {
       { label: "AI Assistant", href: "/ai-assistant" },
       { label: "Investment Tools", href: "/tools" },
       { label: "Property Search", href: "/properties" },
+      { label: "Neighborhoods", href: "/neighborhoods" },
       { label: "Community", href: "/community" },
     ],
   },
