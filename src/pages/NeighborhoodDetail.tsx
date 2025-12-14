@@ -17,6 +17,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import { NeighborhoodTierGate } from '@/components/neighborhoods/NeighborhoodTierGate';
 import { useCountUp, useInView } from '@/hooks/useCountUp';
+import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
 
 // Preview limits for free tier
 const SCHOOLS_PREVIEW_LIMIT = 3;
@@ -271,6 +272,11 @@ export default function NeighborhoodDetail() {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Market Estimate Disclaimer */}
+                  {(neighborhood.avg_price_sqft || neighborhood.avg_rental_yield) && (
+                    <MarketEstimateDisclaimer variant="inline" className="mt-4 justify-center" />
+                  )}
                 </div>
               </div>
             </motion.div>

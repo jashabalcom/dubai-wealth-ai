@@ -15,6 +15,7 @@ import { NeighborhoodCardSkeleton } from '@/components/neighborhoods/Neighborhoo
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useCountUp, useInView } from '@/hooks/useCountUp';
+import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
 
 const lifestyleOptions = [
   { value: 'all', label: 'All Lifestyles' },
@@ -273,6 +274,9 @@ export default function Neighborhoods() {
                 </div>
               </motion.div>
             )}
+
+            {/* Market Estimate Disclaimer */}
+            <MarketEstimateDisclaimer variant="compact" className="mb-8" />
 
             {/* Results Grid with Staggered Animation */}
             {isLoading ? (
