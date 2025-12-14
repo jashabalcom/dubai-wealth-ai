@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { InvestmentScoreBadge } from './InvestmentScoreBadge';
+import { GoldenVisaBadge } from './GoldenVisaBadge';
 
 interface Property {
   id: string;
@@ -96,7 +98,7 @@ export function PropertyCard({
             {/* Image Overlay on Hover */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
-            {/* Badges */}
+            {/* Top Left Badges */}
             <div className="absolute top-3 left-3 flex flex-wrap gap-2">
               {property.is_off_plan && (
                 <motion.span 
@@ -116,15 +118,27 @@ export function PropertyCard({
                   Featured
                 </motion.span>
               )}
+              <GoldenVisaBadge priceAed={property.price_aed} variant="badge" />
             </div>
 
-            {/* Yield Badge */}
-            {property.rental_yield_estimate && (
-              <div className="absolute top-3 right-3 px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1 backdrop-blur-sm">
-                <TrendingUp className="w-3 h-3" />
-                {property.rental_yield_estimate}% yield
-              </div>
-            )}
+            {/* Top Right Badges */}
+            <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
+              <InvestmentScoreBadge
+                price={property.price_aed}
+                sizeSqft={property.size_sqft}
+                rentalYield={property.rental_yield_estimate || 0}
+                area={property.location_area}
+                isOffPlan={property.is_off_plan}
+                developerName={property.developer_name}
+                variant="badge"
+              />
+              {property.rental_yield_estimate > 0 && (
+                <div className="px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1 backdrop-blur-sm">
+                  <TrendingUp className="w-3 h-3" />
+                  {property.rental_yield_estimate}% yield
+                </div>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <motion.div 

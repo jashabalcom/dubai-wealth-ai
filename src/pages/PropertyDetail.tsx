@@ -24,6 +24,9 @@ import { AgentContactCard } from '@/components/properties/AgentContactCard';
 import { FloorPlansGallery } from '@/components/properties/FloorPlansGallery';
 import { PropertyFeaturesGrid } from '@/components/properties/PropertyFeaturesGrid';
 import { AirbnbYieldCard } from '@/components/properties/AirbnbYieldCard';
+import { InvestmentScoreBadge } from '@/components/properties/InvestmentScoreBadge';
+import { GoldenVisaBadge } from '@/components/properties/GoldenVisaBadge';
+import { TrueCostCard } from '@/components/properties/TrueCostCard';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -599,8 +602,33 @@ export default function PropertyDetail() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Investment Score Card */}
+              <InvestmentScoreBadge
+                price={property.price_aed}
+                sizeSqft={property.size_sqft}
+                rentalYield={property.rental_yield_estimate || 0}
+                area={property.location_area}
+                isOffPlan={property.is_off_plan}
+                developerName={property.developer?.name || property.developer_name}
+                variant="card"
+              />
+
+              {/* Golden Visa Eligibility */}
+              <GoldenVisaBadge
+                priceAed={property.price_aed}
+                variant="card"
+              />
+
+              {/* True Cost of Ownership */}
+              <TrueCostCard
+                priceAed={property.price_aed}
+                sizeSqft={property.size_sqft}
+                area={property.location_area}
+                isOffPlan={property.is_off_plan}
+              />
+
               {/* Investment Metrics */}
-              <div className="p-6 rounded-xl bg-card border border-border sticky top-32">
+              <div className="p-6 rounded-xl bg-card border border-border">
                 <h2 className="font-heading text-xl text-foreground mb-4">Investment Metrics</h2>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
