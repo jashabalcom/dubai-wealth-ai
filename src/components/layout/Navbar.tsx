@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -145,16 +146,11 @@ export function Navbar() {
         <div className="container-luxury">
           <nav className="flex items-center justify-between h-20 md:h-24">
             {/* Logo */}
-            <Link to="/" className="flex flex-col items-start group">
-              <span className={cn(
-                "font-serif text-xl md:text-2xl font-semibold tracking-wide transition-colors group-hover:text-primary",
-                useDarkText ? "text-foreground" : "text-secondary-foreground"
-              )}>
-                Dubai Wealth Hub
-              </span>
-              <span className="text-[10px] md:text-xs uppercase tracking-[0.2em] text-primary font-sans">
-                by Balcom Privé
-              </span>
+            <Link to="/" className="group">
+              <BrandLogo 
+                variant={useDarkText ? "light" : "dark"} 
+                size="md" 
+              />
             </Link>
 
             {/* Desktop Navigation */}
