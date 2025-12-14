@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   Plus, Edit, Trash2, Eye, EyeOff, MapPin, Search, 
-  GraduationCap, Utensils, Building2, ChevronRight 
+  GraduationCap, Utensils, Building2, ChevronRight, Sparkles, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -96,6 +96,7 @@ export default function AdminNeighborhoods() {
   const [prosInput, setProsInput] = useState('');
   const [consInput, setConsInput] = useState('');
   const [bestForInput, setBestForInput] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const { data: neighborhoods, isLoading } = useQuery({
     queryKey: ['admin-neighborhoods', search],
@@ -208,6 +209,44 @@ export default function AdminNeighborhoods() {
   const updateField = (field: keyof Neighborhood, value: any) => {
     if (!editingNeighborhood) return;
     setEditingNeighborhood({ ...editingNeighborhood, [field]: value });
+  };
+
+  const generateAIContent = async () => {
+    if (!editingNeighborhood?.name) {
+      toast.error('Please enter a neighborhood name first');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-neighborhood-content', {
+        body: {
+          neighborhoodName: editingNeighborhood.name,
+          lifestyleType: editingNeighborhood.lifestyle_type,
+          isFreehold: editingNeighborhood.is_freehold,
+          hasMetro: editingNeighborhood.has_metro_access,
+          hasBeach: editingNeighborhood.has_beach_access,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        setEditingNeighborhood({
+          ...editingNeighborhood,
+          overview: data.overview || editingNeighborhood.overview,
+        });
+        setProsInput(data.pros?.join('\n') || prosInput);
+        setConsInput(data.cons?.join('\n') || consInput);
+        setBestForInput(data.best_for?.join('\n') || bestForInput);
+        toast.success('AI content generated! Review and edit as needed.');
+      }
+    } catch (error) {
+      console.error('AI generation error:', error);
+      toast.error('Failed to generate AI content. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
   };
 
   return (
@@ -582,6 +621,37 @@ export default function AdminNeighborhoods() {
               </TabsContent>
 
               <TabsContent value="content" className="space-y-4 mt-4">
+                {/* AI Generate Button */}
+                <div className="flex items-center justify-between p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <div>
+                    <h4 className="font-medium text-foreground flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      AI Content Generator
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Generate overview, pros, cons, and best-for content using AI
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={generateAIContent}
+                    disabled={isGeneratingAI || !editingNeighborhood.name}
+                    variant="outline"
+                    className="border-primary/30 hover:bg-primary/10"
+                  >
+                    {isGeneratingAI ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Generate with AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Overview (Long Description)</Label>
                   <Textarea

@@ -2,7 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   MapPin, TrendingUp, Home, Train, Waves, Shield, Check, X, 
-  GraduationCap, Utensils, Building2, ChevronRight, Star, Phone, Globe, ArrowLeft
+  GraduationCap, Utensils, Building2, ChevronRight, Star, Phone, Globe, ArrowLeft, Lock
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,12 @@ import { SEOHead } from '@/components/SEOHead';
 import { useNeighborhood, useNeighborhoodPOIs, useNeighborhoodProperties } from '@/hooks/useNeighborhoods';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { useAuth } from '@/hooks/useAuth';
+import { NeighborhoodTierGate } from '@/components/neighborhoods/NeighborhoodTierGate';
+
+// Preview limits for free tier
+const SCHOOLS_PREVIEW_LIMIT = 3;
+const RESTAURANTS_PREVIEW_LIMIT = 3;
 
 export default function NeighborhoodDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -20,6 +26,10 @@ export default function NeighborhoodDetail() {
   const { data: schools } = useNeighborhoodPOIs(neighborhood?.id || '', 'school');
   const { data: restaurants } = useNeighborhoodPOIs(neighborhood?.id || '', 'restaurant');
   const { data: properties } = useNeighborhoodProperties(neighborhood?.name || '');
+  const { profile } = useAuth();
+  
+  const userTier = profile?.membership_tier || 'free';
+  const hasFullAccess = userTier === 'investor' || userTier === 'elite';
 
   if (isLoading) {
     return (
@@ -274,7 +284,7 @@ export default function NeighborhoodDetail() {
                   <TabsContent value="schools" className="mt-6">
                     {schools && schools.length > 0 ? (
                       <div className="grid gap-4">
-                        {schools.map((school) => (
+                        {schools.slice(0, hasFullAccess ? undefined : SCHOOLS_PREVIEW_LIMIT).map((school, idx) => (
                           <Card key={school.id} className="border-border/50 bg-card/50">
                             <CardContent className="p-4">
                               <div className="flex items-start justify-between">
@@ -315,6 +325,24 @@ export default function NeighborhoodDetail() {
                             </CardContent>
                           </Card>
                         ))}
+                        
+                        {/* Show upgrade prompt if more schools available */}
+                        {!hasFullAccess && schools.length > SCHOOLS_PREVIEW_LIMIT && (
+                          <Card className="border-primary/30 bg-primary/5">
+                            <CardContent className="p-6 text-center">
+                              <Lock className="h-8 w-8 text-primary mx-auto mb-3" />
+                              <h4 className="font-semibold text-foreground mb-2">
+                                {schools.length - SCHOOLS_PREVIEW_LIMIT} More Schools Available
+                              </h4>
+                              <p className="text-sm text-muted-foreground mb-4">
+                                Upgrade to Investor tier to view all schools in {neighborhood.name}
+                              </p>
+                              <Button asChild variant="hero" size="sm">
+                                <Link to="/pricing">Upgrade Now</Link>
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
@@ -327,7 +355,7 @@ export default function NeighborhoodDetail() {
                   <TabsContent value="restaurants" className="mt-6">
                     {restaurants && restaurants.length > 0 ? (
                       <div className="grid md:grid-cols-2 gap-4">
-                        {restaurants.map((restaurant) => (
+                        {restaurants.slice(0, hasFullAccess ? undefined : RESTAURANTS_PREVIEW_LIMIT).map((restaurant) => (
                           <Card key={restaurant.id} className="border-border/50 bg-card/50">
                             <CardContent className="p-4">
                               <div className="flex items-start justify-between">
@@ -353,6 +381,24 @@ export default function NeighborhoodDetail() {
                             </CardContent>
                           </Card>
                         ))}
+                        
+                        {/* Show upgrade prompt if more restaurants available */}
+                        {!hasFullAccess && restaurants.length > RESTAURANTS_PREVIEW_LIMIT && (
+                          <Card className="border-primary/30 bg-primary/5">
+                            <CardContent className="p-6 text-center">
+                              <Lock className="h-8 w-8 text-primary mx-auto mb-3" />
+                              <h4 className="font-semibold text-foreground mb-2">
+                                {restaurants.length - RESTAURANTS_PREVIEW_LIMIT} More Restaurants
+                              </h4>
+                              <p className="text-sm text-muted-foreground mb-4">
+                                Upgrade to view the complete dining guide
+                              </p>
+                              <Button asChild variant="hero" size="sm">
+                                <Link to="/pricing">Upgrade Now</Link>
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        )}
                       </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
@@ -363,69 +409,71 @@ export default function NeighborhoodDetail() {
                   </TabsContent>
 
                   <TabsContent value="investment" className="mt-6">
-                    <Card className="border-border/50 bg-card/50">
-                      <CardHeader>
-                        <CardTitle>Investment Analysis</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid md:grid-cols-2 gap-6">
-                          <div>
-                            <h5 className="font-medium text-foreground mb-3">Average Rent Prices</h5>
-                            <div className="space-y-2">
-                              {neighborhood.avg_rent_studio && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Studio</span>
-                                  <span className="font-medium">AED {neighborhood.avg_rent_studio.toLocaleString()}/year</span>
-                                </div>
-                              )}
-                              {neighborhood.avg_rent_1br && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">1 Bedroom</span>
-                                  <span className="font-medium">AED {neighborhood.avg_rent_1br.toLocaleString()}/year</span>
-                                </div>
-                              )}
-                              {neighborhood.avg_rent_2br && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">2 Bedrooms</span>
-                                  <span className="font-medium">AED {neighborhood.avg_rent_2br.toLocaleString()}/year</span>
-                                </div>
-                              )}
-                              {neighborhood.avg_rent_3br && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">3 Bedrooms</span>
-                                  <span className="font-medium">AED {neighborhood.avg_rent_3br.toLocaleString()}/year</span>
-                                </div>
-                              )}
+                    <NeighborhoodTierGate requiredTier="investor" feature="investment analysis">
+                      <Card className="border-border/50 bg-card/50">
+                        <CardHeader>
+                          <CardTitle>Investment Analysis</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                              <h5 className="font-medium text-foreground mb-3">Average Rent Prices</h5>
+                              <div className="space-y-2">
+                                {neighborhood.avg_rent_studio && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Studio</span>
+                                    <span className="font-medium">AED {neighborhood.avg_rent_studio.toLocaleString()}/year</span>
+                                  </div>
+                                )}
+                                {neighborhood.avg_rent_1br && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">1 Bedroom</span>
+                                    <span className="font-medium">AED {neighborhood.avg_rent_1br.toLocaleString()}/year</span>
+                                  </div>
+                                )}
+                                {neighborhood.avg_rent_2br && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">2 Bedrooms</span>
+                                    <span className="font-medium">AED {neighborhood.avg_rent_2br.toLocaleString()}/year</span>
+                                  </div>
+                                )}
+                                {neighborhood.avg_rent_3br && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">3 Bedrooms</span>
+                                    <span className="font-medium">AED {neighborhood.avg_rent_3br.toLocaleString()}/year</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="font-medium text-foreground mb-3">Key Metrics</h5>
+                              <div className="space-y-2">
+                                {neighborhood.avg_price_sqft && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Avg. Price/sqft</span>
+                                    <span className="font-medium">AED {neighborhood.avg_price_sqft.toLocaleString()}</span>
+                                  </div>
+                                )}
+                                {neighborhood.avg_rental_yield && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Rental Yield</span>
+                                    <span className="font-medium text-primary">{neighborhood.avg_rental_yield.toFixed(1)}%</span>
+                                  </div>
+                                )}
+                                {neighborhood.yoy_appreciation && (
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">YoY Appreciation</span>
+                                    <span className={`font-medium ${neighborhood.yoy_appreciation >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                      {neighborhood.yoy_appreciation >= 0 ? '+' : ''}{neighborhood.yoy_appreciation.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div>
-                            <h5 className="font-medium text-foreground mb-3">Key Metrics</h5>
-                            <div className="space-y-2">
-                              {neighborhood.avg_price_sqft && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Avg. Price/sqft</span>
-                                  <span className="font-medium">AED {neighborhood.avg_price_sqft.toLocaleString()}</span>
-                                </div>
-                              )}
-                              {neighborhood.avg_rental_yield && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">Rental Yield</span>
-                                  <span className="font-medium text-primary">{neighborhood.avg_rental_yield.toFixed(1)}%</span>
-                                </div>
-                              )}
-                              {neighborhood.yoy_appreciation && (
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-muted-foreground">YoY Appreciation</span>
-                                  <span className={`font-medium ${neighborhood.yoy_appreciation >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                    {neighborhood.yoy_appreciation >= 0 ? '+' : ''}{neighborhood.yoy_appreciation.toFixed(1)}%
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </NeighborhoodTierGate>
                   </TabsContent>
                 </Tabs>
               </div>

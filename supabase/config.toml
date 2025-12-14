@@ -80,3 +80,9 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.ai-neighborhood-content]
+verify_jwt = false
+
+[functions.search-gifs]
+verify_jwt = false

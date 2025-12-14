@@ -44,8 +44,11 @@ const baseNavLinks: NavLink[] = [
   { label: "Community", href: "/community", isRoute: true, hasBadge: true },
 ];
 
+import { MapPin } from "lucide-react";
+
 const propertiesDropdownItems = [
   { label: "Browse Properties", href: "/properties", description: "Explore investment opportunities", icon: Building2 },
+  { label: "Neighborhoods", href: "/neighborhoods", description: "Explore Dubai areas & guides", icon: MapPin },
   { label: "Developers", href: "/developers", description: "Browse Dubai's top developers", icon: Users },
   { label: "Off-Plan Projects", href: "/properties?offplan=true", description: "Upcoming developments", icon: Calendar },
 ];
