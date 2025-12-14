@@ -80,6 +80,9 @@ interface EventFormData {
   visibility: 'all_members' | 'elite_only';
   max_attendees: string;
   is_published: boolean;
+  recording_url: string;
+  recording_visible: boolean;
+  recording_access: 'all_members' | 'elite_only';
 }
 
 const defaultFormData: EventFormData = {
@@ -95,6 +98,9 @@ const defaultFormData: EventFormData = {
   visibility: 'all_members',
   max_attendees: '',
   is_published: false,
+  recording_url: '',
+  recording_visible: false,
+  recording_access: 'all_members',
 };
 
 export default function AdminEvents() {
@@ -122,6 +128,9 @@ export default function AdminEvents() {
         visibility: event.visibility,
         max_attendees: event.max_attendees?.toString() || '',
         is_published: event.is_published,
+        recording_url: event.recording_url || '',
+        recording_visible: event.recording_visible,
+        recording_access: event.recording_access,
       });
     } else {
       setEditingEvent(null);
@@ -151,6 +160,9 @@ export default function AdminEvents() {
       max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
       is_published: formData.is_published,
       created_by: user.id,
+      recording_url: formData.recording_url || null,
+      recording_visible: formData.recording_visible,
+      recording_access: formData.recording_access,
     };
 
     if (editingEvent) {
@@ -524,6 +536,59 @@ export default function AdminEvents() {
                 checked={formData.is_published}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_published: checked })}
               />
+            </div>
+
+            {/* Recording Section - for past events */}
+            <div className="space-y-4 p-4 bg-muted/50 rounded-lg border border-gold/20">
+              <h4 className="font-medium flex items-center gap-2">
+                <Video className="h-4 w-4 text-gold" />
+                Event Recording
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Add a recording URL after the event ends for members to watch replays
+              </p>
+
+              <div className="space-y-2">
+                <Label htmlFor="recording_url">Recording URL</Label>
+                <Input
+                  id="recording_url"
+                  value={formData.recording_url}
+                  onChange={(e) => setFormData({ ...formData, recording_url: e.target.value })}
+                  placeholder="YouTube, Vimeo, or direct video URL"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Recording Access</Label>
+                  <Select
+                    value={formData.recording_access}
+                    onValueChange={(value: 'all_members' | 'elite_only') => setFormData({ ...formData, recording_access: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_members">Investor & Elite</SelectItem>
+                      <SelectItem value="elite_only">Elite Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-background rounded-lg">
+                  <div>
+                    <Label htmlFor="recording_visible" className="text-sm">Show Recording</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Make visible to members
+                    </p>
+                  </div>
+                  <Switch
+                    id="recording_visible"
+                    checked={formData.recording_visible}
+                    onCheckedChange={(checked) => setFormData({ ...formData, recording_visible: checked })}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

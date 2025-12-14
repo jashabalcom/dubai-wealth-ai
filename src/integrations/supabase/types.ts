@@ -734,6 +734,9 @@ export type Database = {
           meeting_id: string | null
           meeting_platform: string
           meeting_url: string | null
+          recording_access: string
+          recording_url: string | null
+          recording_visible: boolean
           title: string
           updated_at: string
           visibility: Database["public"]["Enums"]["channel_visibility"]
@@ -752,6 +755,9 @@ export type Database = {
           meeting_id?: string | null
           meeting_platform?: string
           meeting_url?: string | null
+          recording_access?: string
+          recording_url?: string | null
+          recording_visible?: boolean
           title: string
           updated_at?: string
           visibility?: Database["public"]["Enums"]["channel_visibility"]
@@ -770,6 +776,9 @@ export type Database = {
           meeting_id?: string | null
           meeting_platform?: string
           meeting_url?: string | null
+          recording_access?: string
+          recording_url?: string | null
+          recording_visible?: boolean
           title?: string
           updated_at?: string
           visibility?: Database["public"]["Enums"]["channel_visibility"]

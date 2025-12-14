@@ -20,6 +20,9 @@ export interface CommunityEvent {
   created_by: string;
   created_at: string;
   updated_at: string;
+  recording_url: string | null;
+  recording_visible: boolean;
+  recording_access: 'all_members' | 'elite_only';
   registrations_count?: number;
   is_registered?: boolean;
 }
