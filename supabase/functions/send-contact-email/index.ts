@@ -34,7 +34,7 @@ const sendEmail = async (to: string[], subject: string, html: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Dubai Wealth Hub <onboarding@resend.dev>",
+      from: "Dubai Wealth Hub <hello@dubairealestateinvestor.com>",
       to,
       subject,
       html,

@@ -122,7 +122,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dubai Wealth Hub <onboarding@resend.dev>",
+        from: "Dubai Wealth Hub <hello@dubairealestateinvestor.com>",
         to: [email],
         subject: `Welcome to Dubai Wealth Hub, ${name}! Here is how to get started`,
         html,
