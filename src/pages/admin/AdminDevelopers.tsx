@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, BadgeCheck, Globe, Building } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Edit, Trash2, BadgeCheck, Globe, Building, FolderOpen } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { ImageUploader } from '@/components/admin/ImageUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +29,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -41,7 +50,11 @@ interface Developer {
   name: string;
   slug: string;
   logo_url: string | null;
+  cover_image_url: string | null;
   description: string | null;
+  tagline: string | null;
+  specialty: string | null;
+  tier: string | null;
   website: string | null;
   established_year: number | null;
   headquarters: string | null;
@@ -54,11 +67,16 @@ export default function AdminDevelopers() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDeveloper, setEditingDeveloper] = useState<Developer | null>(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     logo_url: '',
+    cover_image_url: '',
+    tagline: '',
+    specialty: '',
+    tier: 'established',
     description: '',
     website: '',
     established_year: new Date().getFullYear(),
@@ -123,6 +141,10 @@ export default function AdminDevelopers() {
       name: '',
       slug: '',
       logo_url: '',
+      cover_image_url: '',
+      tagline: '',
+      specialty: '',
+      tier: 'established',
       description: '',
       website: '',
       established_year: new Date().getFullYear(),
@@ -140,6 +162,10 @@ export default function AdminDevelopers() {
       name: developer.name,
       slug: developer.slug,
       logo_url: developer.logo_url || '',
+      cover_image_url: developer.cover_image_url || '',
+      tagline: developer.tagline || '',
+      specialty: developer.specialty || '',
+      tier: developer.tier || 'established',
       description: developer.description || '',
       website: developer.website || '',
       established_year: developer.established_year || new Date().getFullYear(),
@@ -176,6 +202,29 @@ export default function AdminDevelopers() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                {/* Image Uploads */}
+                <div className="space-y-2">
+                  <Label>Logo (1:1)</Label>
+                  <ImageUploader
+                    currentImageUrl={formData.logo_url || null}
+                    onUpload={(url) => setFormData({ ...formData, logo_url: url })}
+                    folder={`developers/${editingDeveloper?.id || 'new'}/logo`}
+                    aspectRatio={1}
+                    label="Logo"
+                    previewClassName="w-24 h-24"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cover Image (16:9)</Label>
+                  <ImageUploader
+                    currentImageUrl={formData.cover_image_url || null}
+                    onUpload={(url) => setFormData({ ...formData, cover_image_url: url })}
+                    folder={`developers/${editingDeveloper?.id || 'new'}/cover`}
+                    aspectRatio={16/9}
+                    label="Cover"
+                    previewClassName="w-full h-24"
+                  />
+                </div>
                 <div className="col-span-2 space-y-2">
                   <Label>Company Name *</Label>
                   <Input
@@ -194,6 +243,36 @@ export default function AdminDevelopers() {
                     value={formData.slug}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tier</Label>
+                  <Select value={formData.tier} onValueChange={(v) => setFormData({ ...formData, tier: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="master">Master Developer</SelectItem>
+                      <SelectItem value="premium">Premium</SelectItem>
+                      <SelectItem value="established">Established</SelectItem>
+                      <SelectItem value="emerging">Emerging</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2 space-y-2">
+                  <Label>Tagline</Label>
+                  <Input
+                    value={formData.tagline}
+                    onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
+                    placeholder="Shaping skylines since..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Specialty</Label>
+                  <Input
+                    value={formData.specialty}
+                    onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
+                    placeholder="Luxury Residential, Mixed-Use..."
                   />
                 </div>
                 <div className="space-y-2">
@@ -219,15 +298,6 @@ export default function AdminDevelopers() {
                     type="url"
                     value={formData.website}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                    placeholder="https://..."
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <Label>Logo URL</Label>
-                  <Input
-                    type="url"
-                    value={formData.logo_url}
-                    onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
                     placeholder="https://..."
                   />
                 </div>
@@ -323,6 +393,14 @@ export default function AdminDevelopers() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => navigate(`/admin/developers/${developer.id}/projects`)}
+                        title="Manage Projects"
+                      >
+                        <FolderOpen className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(developer)}>
                         <Edit className="h-4 w-4" />
                       </Button>
