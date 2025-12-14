@@ -108,6 +108,44 @@ export function AIDisclaimer({ className, variant = 'default' }: DisclaimerProps
   );
 }
 
+export function MarketEstimateDisclaimer({ className, variant = 'default' }: DisclaimerProps) {
+  if (variant === 'inline') {
+    return (
+      <p className={cn("text-[10px] text-muted-foreground flex items-center gap-1", className)}>
+        <Info className="w-3 h-3 flex-shrink-0" />
+        Estimates only — verify with licensed agents.
+      </p>
+    );
+  }
+
+  if (variant === 'compact') {
+    return (
+      <div className={cn("flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/10", className)}>
+        <Info className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+        <p className="text-xs text-muted-foreground">
+          Market estimates are for educational purposes only. Always verify pricing with RERA-licensed agents.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("p-4 rounded-xl bg-amber-500/5 border border-amber-500/10", className)}>
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-lg bg-amber-500/10">
+          <Info className="w-4 h-4 text-amber-500" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-foreground">Market Estimates — Not Current Pricing</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Price per square foot, rental yield, and other market figures are estimates based on historical data and market research for educational purposes only. These may not reflect current market conditions. Always verify with RERA-licensed real estate agents before making investment decisions.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GoldenVisaDisclaimer({ className }: { className?: string }) {
   return (
     <div className={cn("p-4 rounded-xl bg-amber-500/5 border border-amber-500/10", className)}>

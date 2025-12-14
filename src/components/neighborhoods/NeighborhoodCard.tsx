@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, TrendingUp, Home, Train, Waves, Shield, ArrowRight } from 'lucide-react';
+import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
 import type { Neighborhood } from '@/hooks/useNeighborhoods';
 
 interface NeighborhoodCardProps {
@@ -156,6 +157,11 @@ export function NeighborhoodCard({ neighborhood }: NeighborhoodCardProps) {
               </div>
             )}
           </div>
+          
+          {/* Market Estimate Disclaimer */}
+          {(neighborhood.avg_price_sqft || neighborhood.avg_rental_yield) && (
+            <MarketEstimateDisclaimer variant="inline" className="mt-2 justify-center" />
+          )}
 
           {/* Best For Tags - Better visibility */}
           {neighborhood.best_for && neighborhood.best_for.length > 0 && (
