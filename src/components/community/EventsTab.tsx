@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { isSameDay, isFuture, isPast } from 'date-fns';
-import { Calendar as CalendarIcon, Clock, List } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, List, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EventCard } from './EventCard';
 import { EventCalendar } from './EventCalendar';
-import { useCommunityEvents, CommunityEvent } from '@/hooks/useCommunityEvents';
+import { useCommunityEvents } from '@/hooks/useCommunityEvents';
 
 export function EventsTab() {
   const { events, eventsLoading, register, unregister } = useCommunityEvents();
@@ -15,6 +15,7 @@ export function EventsTab() {
 
   const upcomingEvents = events.filter((e) => isFuture(new Date(e.event_date)));
   const pastEvents = events.filter((e) => isPast(new Date(e.event_date)));
+  const replayEvents = pastEvents.filter((e) => e.recording_url && e.recording_visible);
 
   const filteredEvents = selectedDate
     ? events.filter((e) => isSameDay(new Date(e.event_date), selectedDate))
@@ -136,6 +137,10 @@ export function EventsTab() {
               <Clock className="h-4 w-4" />
               Upcoming ({upcomingEvents.length})
             </TabsTrigger>
+            <TabsTrigger value="replays" className="gap-1.5">
+              <Play className="h-4 w-4" />
+              Replays ({replayEvents.length})
+            </TabsTrigger>
             <TabsTrigger value="past" className="gap-1.5">
               Past ({pastEvents.length})
             </TabsTrigger>
@@ -157,6 +162,34 @@ export function EventsTab() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {upcomingEvents.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onRegister={() => register.mutate(event.id)}
+                    onUnregister={() => unregister.mutate(event.id)}
+                    isRegistering={register.isPending || unregister.isPending}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="replays">
+            {replayEvents.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-16 bg-card/50 border border-border/50 rounded-xl"
+              >
+                <Play className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Replays Available</h3>
+                <p className="text-muted-foreground">
+                  Event recordings will appear here after events end
+                </p>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {replayEvents.map((event) => (
                   <EventCard
                     key={event.id}
                     event={event}
