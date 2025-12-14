@@ -92,34 +92,39 @@ export function useCommunity() {
         .order('created_at', { ascending: false });
       
       if (postsError) throw postsError;
+      if (!postsData || postsData.length === 0) return [];
 
-      // Fetch author info and like status for each post
-      const postsWithAuthors = await Promise.all(
-        (postsData || []).map(async (post) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url, membership_tier, level, points')
-            .eq('id', post.user_id)
-            .maybeSingle();
+      // Batch fetch: collect unique user IDs
+      const userIds = [...new Set(postsData.map(p => p.user_id))];
+      
+      // Single query for all author profiles
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, membership_tier, level, points')
+        .in('id', userIds);
+      
+      // Create lookup map for O(1) access
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-          let hasLiked = false;
-          if (user) {
-            const { data: like } = await supabase
-              .from('post_likes')
-              .select('id')
-              .eq('post_id', post.id)
-              .eq('user_id', user.id)
-              .maybeSingle();
-            hasLiked = !!like;
-          }
+      // Single query for all user's likes in this batch
+      let likedPostIds = new Set<string>();
+      if (user) {
+        const postIds = postsData.map(p => p.id);
+        const { data: userLikes } = await supabase
+          .from('post_likes')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', postIds);
+        
+        likedPostIds = new Set(userLikes?.map(l => l.post_id) || []);
+      }
 
-          return {
-            ...post,
-            author: profile,
-            has_liked: hasLiked,
-          };
-        })
-      );
+      // Map profiles and likes back to posts efficiently
+      const postsWithAuthors = postsData.map(post => ({
+        ...post,
+        author: profileMap.get(post.user_id) || null,
+        has_liked: likedPostIds.has(post.id),
+      }));
 
       return postsWithAuthors as Post[];
     },
@@ -225,21 +230,25 @@ export function useCommunity() {
       .order('created_at');
     
     if (error) throw error;
+    if (!commentsData || commentsData.length === 0) return [];
 
-    const commentsWithAuthors = await Promise.all(
-      (commentsData || []).map(async (comment) => {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url, membership_tier')
-          .eq('id', comment.user_id)
-          .maybeSingle();
+    // Batch fetch: collect unique user IDs from comments
+    const userIds = [...new Set(commentsData.map(c => c.user_id))];
+    
+    // Single query for all commenter profiles
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url, membership_tier')
+      .in('id', userIds);
+    
+    // Create lookup map for O(1) access
+    const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
 
-        return {
-          ...comment,
-          author: profile,
-        };
-      })
-    );
+    // Map profiles back to comments efficiently
+    const commentsWithAuthors = commentsData.map(comment => ({
+      ...comment,
+      author: profileMap.get(comment.user_id) || null,
+    }));
 
     return commentsWithAuthors as Comment[];
   };
