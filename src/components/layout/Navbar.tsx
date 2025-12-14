@@ -351,7 +351,7 @@ export function Navbar() {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-40 bg-secondary pt-24 lg:hidden"
           >
-            <div className="container-luxury flex flex-col gap-8 py-8">
+            <div className="container-luxury flex flex-col gap-6 py-8">
               {navLinks.map((link, index) => {
                 const isActive = link.isRoute && isActiveLink(link.href);
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
@@ -390,7 +390,7 @@ export function Navbar() {
                             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                             className="overflow-hidden"
                           >
-                            <div className="ml-2 space-y-1 border-l-2 border-gold/30 bg-secondary/50 rounded-r-lg py-2">
+                            <div className="ml-2 space-y-2 border-l-2 border-gold/30 bg-secondary/50 rounded-r-lg py-2">
                               {propertiesDropdownItems.map((item, subIndex) => {
                                 const isSubItemActive = location.pathname === item.href || 
                                   (item.href.includes('?') && location.pathname + location.search === item.href);
@@ -409,7 +409,7 @@ export function Navbar() {
                                         setIsMobilePropertiesOpen(false);
                                       }}
                                       className={cn(
-                                        "flex items-center gap-3 py-3 px-4 min-h-[52px] rounded-r-lg transition-all duration-200",
+                                        "flex items-center gap-3 py-2.5 px-4 min-h-[52px] rounded-r-lg transition-all duration-200",
                                         "active:scale-[0.98] active:bg-gold/15",
                                         isSubItemActive 
                                           ? "text-primary bg-gold/10 border-l-2 border-gold -ml-0.5" 
@@ -481,7 +481,7 @@ export function Navbar() {
                   </motion.div>
                 );
               })}
-              <div className="flex flex-col gap-4 pt-8 border-t border-primary/20">
+              <div className="flex flex-col gap-4 pt-6 border-t border-primary/20">
                 {user ? (
                   <>
                     <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
