@@ -9,11 +9,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
 import { PropertyCard } from '@/components/properties/PropertyCard';
-import { PropertyFilters, priceRanges } from '@/components/properties/PropertyFilters';
+import { PropertyFilters, priceRanges, scoreRanges, yieldRanges } from '@/components/properties/PropertyFilters';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
 import { PropertyMap } from '@/components/properties/PropertyMap';
 import { PropertyDisclaimer } from '@/components/ui/disclaimers';
+import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } from '@/lib/investmentScore';
 
 interface Property {
   id: string;
@@ -55,6 +56,12 @@ export default function Properties() {
   const showOffPlanOnly = searchParams.get('offplan') === 'true';
   const sortBy = searchParams.get('sort') || 'featured';
   const viewMode = (searchParams.get('view') as 'grid' | 'map') || 'grid';
+  
+  // Smart investment filters
+  const selectedScore = searchParams.get('score') || 'all';
+  const selectedYield = searchParams.get('yield') || 'all';
+  const showGoldenVisaOnly = searchParams.get('visa') === 'true';
+  const showBelowMarketOnly = searchParams.get('belowmarket') === 'true';
 
   useEffect(() => {
     fetchProperties();
@@ -96,6 +103,7 @@ export default function Properties() {
 
   const filteredAndSortedProperties = useMemo(() => {
     let result = properties.filter((property) => {
+      // Basic filters
       const matchesSearch = 
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         property.location_area.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -108,11 +116,56 @@ export default function Properties() {
       const matchesPrice = priceRange ? property.price_aed >= priceRange.min && property.price_aed < priceRange.max : true;
       const matchesOffPlan = !showOffPlanOnly || property.is_off_plan;
 
-      return matchesSearch && matchesArea && matchesType && matchesBedrooms && matchesPrice && matchesOffPlan;
+      // Smart investment filters
+      const scoreRange = scoreRanges.find(s => s.value === selectedScore);
+      const propertyScore = calculateInvestmentScore({
+        priceAed: property.price_aed,
+        sizeSqft: property.size_sqft,
+        rentalYield: property.rental_yield_estimate,
+        area: property.location_area,
+        developerName: property.developer_name,
+        isOffPlan: property.is_off_plan,
+      }).score;
+      const matchesScore = !scoreRange || scoreRange.value === 'all' || propertyScore >= scoreRange.min;
+
+      const yieldRange = yieldRanges.find(y => y.value === selectedYield);
+      const matchesYield = !yieldRange || yieldRange.value === 'all' || property.rental_yield_estimate >= yieldRange.min;
+
+      const matchesGoldenVisa = !showGoldenVisaOnly || isGoldenVisaEligible(property.price_aed);
+      
+      const matchesBelowMarket = !showBelowMarketOnly || isBelowMarketValue(
+        property.price_aed, 
+        property.size_sqft, 
+        property.location_area
+      );
+
+      return matchesSearch && matchesArea && matchesType && matchesBedrooms && matchesPrice && matchesOffPlan 
+        && matchesScore && matchesYield && matchesGoldenVisa && matchesBelowMarket;
     });
 
     // Sort
     switch (sortBy) {
+      case 'score-desc': 
+        result.sort((a, b) => {
+          const scoreA = calculateInvestmentScore({
+            priceAed: a.price_aed,
+            sizeSqft: a.size_sqft,
+            rentalYield: a.rental_yield_estimate,
+            area: a.location_area,
+            developerName: a.developer_name,
+            isOffPlan: a.is_off_plan,
+          }).score;
+          const scoreB = calculateInvestmentScore({
+            priceAed: b.price_aed,
+            sizeSqft: b.size_sqft,
+            rentalYield: b.rental_yield_estimate,
+            area: b.location_area,
+            developerName: b.developer_name,
+            isOffPlan: b.is_off_plan,
+          }).score;
+          return scoreB - scoreA;
+        }); 
+        break;
       case 'price-asc': result.sort((a, b) => a.price_aed - b.price_aed); break;
       case 'price-desc': result.sort((a, b) => b.price_aed - a.price_aed); break;
       case 'yield-desc': result.sort((a, b) => b.rental_yield_estimate - a.rental_yield_estimate); break;
@@ -122,7 +175,7 @@ export default function Properties() {
     }
 
     return result;
-  }, [properties, searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy]);
+  }, [properties, searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedScore, selectedYield, showGoldenVisaOnly, showBelowMarketOnly]);
 
   const toggleCompare = (id: string) => {
     setCompareIds(prev => 
@@ -179,6 +232,15 @@ export default function Properties() {
             resultCount={filteredAndSortedProperties.length}
             viewMode={viewMode}
             onViewModeChange={(mode) => updateFilter('view', mode)}
+            // Smart investment filters
+            selectedScore={selectedScore}
+            onScoreChange={(v) => updateFilter('score', v)}
+            selectedYield={selectedYield}
+            onYieldChange={(v) => updateFilter('yield', v)}
+            showGoldenVisaOnly={showGoldenVisaOnly}
+            onGoldenVisaChange={(v) => updateFilter('visa', v ? 'true' : 'false')}
+            showBelowMarketOnly={showBelowMarketOnly}
+            onBelowMarketChange={(v) => updateFilter('belowmarket', v ? 'true' : 'false')}
           />
         </div>
       </section>
