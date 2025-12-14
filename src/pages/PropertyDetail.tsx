@@ -28,6 +28,7 @@ import { InvestmentScoreBadge } from '@/components/properties/InvestmentScoreBad
 import { GoldenVisaBadge } from '@/components/properties/GoldenVisaBadge';
 import { TrueCostCard } from '@/components/properties/TrueCostCard';
 import { NeighborhoodWidget } from '@/components/properties/NeighborhoodWidget';
+import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -635,6 +636,9 @@ export default function PropertyDetail() {
                 propertyYield={property.rental_yield_estimate}
                 propertyType={property.property_type}
               />
+
+              {/* Property Notes (Elite Only) */}
+              <PropertyNotesCard propertyId={property.id} />
 
               {/* Investment Metrics */}
               <div className="p-6 rounded-xl bg-card border border-border">
