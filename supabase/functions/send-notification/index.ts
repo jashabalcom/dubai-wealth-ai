@@ -205,7 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
       const emailSubject = getEmailSubject(type, title);
 
       const { error: emailError } = await resend.emails.send({
-        from: "Dubai Wealth Hub <onboarding@resend.dev>",
+        from: "Dubai Wealth Hub <hello@dubairealestateinvestor.com>",
         to: [profile.email],
         subject: emailSubject,
         html: emailHtml,

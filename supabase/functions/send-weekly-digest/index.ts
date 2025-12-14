@@ -430,7 +430,7 @@ const handler = async (req: Request): Promise<Response> => {
 
           // Send email
           const { error: emailError } = await resend.emails.send({
-            from: "Dubai Wealth Hub <onboarding@resend.dev>",
+            from: "Dubai Wealth Hub <digest@dubairealestateinvestor.com>",
             to: [member.email],
             subject: "📊 Your Weekly Dubai Investment Digest",
             html: emailHtml,
