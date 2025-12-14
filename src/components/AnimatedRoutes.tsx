@@ -47,6 +47,8 @@ import Disclaimer from "@/pages/Disclaimer";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Contact from "@/pages/Contact";
+import Developers from "@/pages/Developers";
+import DeveloperDetail from "@/pages/DeveloperDetail";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -89,6 +91,10 @@ export function AnimatedRoutes() {
         <Route path="/properties" element={<AnimatedPage><Properties /></AnimatedPage>} />
         <Route path="/properties/:slug" element={<AnimatedPage><PropertyDetail /></AnimatedPage>} />
         <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><SavedProperties /></AnimatedPage></ProtectedRoute>} />
+        
+        {/* Developers - Free to browse listing, detail pages require Investor tier */}
+        <Route path="/developers" element={<AnimatedPage><Developers /></AnimatedPage>} />
+        <Route path="/developers/:slug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><DeveloperDetail /></AnimatedPage></ProtectedRoute>} />
         
         {/* Tools - Auth required, usage-based gating in-page */}
         <Route path="/tools" element={<ProtectedRoute><AnimatedPage><Tools /></AnimatedPage></ProtectedRoute>} />
