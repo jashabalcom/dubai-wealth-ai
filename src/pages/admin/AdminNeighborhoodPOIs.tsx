@@ -122,13 +122,13 @@ export default function AdminNeighborhoodPOIs() {
 
   const saveMutation = useMutation({
     mutationFn: async (data: Partial<POI>) => {
-      const payload = { ...data, neighborhood_id: neighborhoodId };
+      const payload = { ...data, neighborhood_id: neighborhoodId, name: data.name || '', poi_type: data.poi_type || 'school' };
       
       if (data.id) {
         const { error } = await supabase.from('neighborhood_pois').update(payload).eq('id', data.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('neighborhood_pois').insert(payload);
+        const { error } = await supabase.from('neighborhood_pois').insert([payload] as any);
         if (error) throw error;
       }
     },
@@ -500,13 +500,13 @@ export default function AdminNeighborhoodPOIs() {
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <Label>Image</Label>
                   <ImageUploader
                     currentImageUrl={editingPOI.image_url || null}
-                    onUploadComplete={(url) => updateField('image_url', url)}
-                    bucketName="property-media"
-                    folderPath={`pois/${editingPOI.id || 'new'}`}
+                    onUpload={(url) => updateField('image_url', url)}
+                    bucket="property-media"
+                    folder={`pois/${editingPOI.id || 'new'}`}
                     aspectRatio={4/3}
                   />
                 </div>

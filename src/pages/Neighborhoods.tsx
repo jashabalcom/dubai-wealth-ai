@@ -44,7 +44,7 @@ export default function Neighborhoods() {
   // Update URL params when filters change
   const updateFilters = (key: string, value: string | boolean) => {
     const params = new URLSearchParams(searchParams);
-    if (value && value !== 'all' && value !== false) {
+    if (typeof value === 'boolean' ? value : (value && value !== 'all')) {
       params.set(key, String(value));
     } else {
       params.delete(key);
@@ -78,7 +78,7 @@ export default function Neighborhoods() {
       <SEOHead 
         title="Dubai Neighborhood Guide | Investment Areas & Communities"
         description="Explore 100+ Dubai neighborhoods with detailed investment analysis, schools, restaurants, and lifestyle guides. Find your perfect area to invest or live."
-        keywords="Dubai neighborhoods, Dubai areas, Dubai communities, Dubai investment areas, where to live in Dubai, Dubai real estate guide"
+        keywords={["Dubai neighborhoods", "Dubai areas", "Dubai communities", "Dubai investment areas", "where to live in Dubai", "Dubai real estate guide"]}
       />
       <Navbar />
       
