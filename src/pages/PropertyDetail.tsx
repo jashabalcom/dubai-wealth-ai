@@ -364,7 +364,19 @@ export default function PropertyDetail() {
                   <MapPin className="w-4 h-4" /> 
                   {property.community?.name || property.location_area}
                   {(property.developer?.name || property.developer_name) && (
-                    <span>• {property.developer?.name || property.developer_name}</span>
+                    <>
+                      <span>•</span>
+                      {property.developer?.slug ? (
+                        <Link 
+                          to={`/developers/${property.developer.slug}`}
+                          className="text-primary hover:underline transition-colors"
+                        >
+                          {property.developer.name}
+                        </Link>
+                      ) : (
+                        <span>{property.developer_name}</span>
+                      )}
+                    </>
                   )}
                 </div>
                 

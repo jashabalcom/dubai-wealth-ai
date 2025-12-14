@@ -31,7 +31,6 @@ type NavLink = {
 const baseNavLinks: NavLink[] = [
   { label: "Academy", href: "/academy", isRoute: true },
   { label: "Properties", href: "/properties", isRoute: true },
-  { label: "Developers", href: "/developers", isRoute: true },
   { label: "Tools", href: "/tools", isRoute: true },
   { label: "Community", href: "/community", isRoute: true, hasBadge: true },
 ];
