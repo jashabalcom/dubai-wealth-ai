@@ -353,6 +353,40 @@ export function Navbar() {
             <div className="container-luxury flex flex-col gap-8 py-8">
               {navLinks.map((link, index) => {
                 const isActive = link.isRoute && isActiveLink(link.href);
+                const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
+                
+                // Render Properties with sub-items on mobile
+                if (link.hasDropdown && link.label === 'Properties') {
+                  return (
+                    <motion.div
+                      key={link.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="space-y-3"
+                    >
+                      <span className={cn(
+                        "text-2xl font-serif block",
+                        isActive ? "text-primary" : "text-secondary-foreground"
+                      )}>
+                        {link.label}
+                      </span>
+                      <div className="pl-4 space-y-2 border-l-2 border-primary/20">
+                        {propertiesDropdownItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            to={item.href}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="flex items-center gap-3 py-2 min-h-[48px] text-secondary-foreground/80 hover:text-primary transition-colors"
+                          >
+                            <item.icon className="w-5 h-5 text-gold" />
+                            <span className="text-lg">{item.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  );
+                }
                 
                 return (
                   <motion.div
@@ -365,7 +399,7 @@ export function Navbar() {
                       to={link.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
-                        "text-2xl font-serif transition-colors block",
+                        "text-2xl font-serif transition-colors block min-h-[48px] flex items-center",
                         link.isUpgrade
                           ? "text-gold hover:text-gold/80"
                           : isActive 
@@ -376,6 +410,14 @@ export function Navbar() {
                       {link.label}
                       {isActive && !link.isUpgrade && (
                         <span className="ml-2 inline-block w-2 h-2 rounded-full bg-primary" />
+                      )}
+                      {totalBadge > 0 && (
+                        <Badge 
+                          variant="default" 
+                          className="ml-2 h-5 min-w-[20px] px-1.5 text-xs bg-gold text-primary-foreground"
+                        >
+                          {totalBadge > 9 ? '9+' : totalBadge}
+                        </Badge>
                       )}
                     </Link>
                   </motion.div>
