@@ -11,7 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, LogOut, LayoutDashboard, Settings } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart } from "lucide-react";
+import { useSavedProperties } from "@/hooks/useSavedProperties";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { useConnections } from "@/hooks/useConnections";
@@ -44,7 +45,9 @@ export function Navbar() {
   const { user, signOut } = useAuth();
   const { unreadCount } = useDirectMessages();
   const { pendingCount } = useConnections();
+  const { savedPropertyIds } = useSavedProperties();
   const location = useLocation();
+  const savedCount = savedPropertyIds?.length || 0;
 
   // Determine if current page has a dark hero (homepage only)
   const isDarkHeroPage = location.pathname === '/';
@@ -184,6 +187,24 @@ export function Navbar() {
             <div className="hidden lg:flex items-center gap-4">
               {user ? (
                 <>
+                  <Link 
+                    to="/properties/saved" 
+                    className={cn(
+                      "relative p-2 rounded-full hover:bg-muted/50 transition-colors",
+                      useDarkText ? "text-foreground" : "text-secondary-foreground",
+                      "hover:text-primary"
+                    )}
+                  >
+                    <Heart className="h-5 w-5" />
+                    {savedCount > 0 && (
+                      <Badge 
+                        variant="default" 
+                        className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
+                      >
+                        {savedCount > 9 ? '9+' : savedCount}
+                      </Badge>
+                    )}
+                  </Link>
                   <NotificationCenter className={useDarkText ? "text-foreground" : "text-secondary-foreground"} />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -304,6 +325,17 @@ export function Navbar() {
                       <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
                         <User className="h-5 w-5 mr-2" />
                         My Profile
+                      </Button>
+                    </Link>
+                    <Link to="/properties/saved" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
+                        <Heart className="h-5 w-5 mr-2" />
+                        Saved Properties
+                        {savedCount > 0 && (
+                          <Badge variant="default" className="ml-2 bg-gold text-primary-foreground text-xs">
+                            {savedCount}
+                          </Badge>
+                        )}
                       </Button>
                     </Link>
                     <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>
