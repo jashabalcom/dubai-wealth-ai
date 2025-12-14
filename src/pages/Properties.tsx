@@ -35,6 +35,8 @@ interface Property {
   is_featured: boolean;
   latitude?: number;
   longitude?: number;
+  views_count?: number | null;
+  inquiries_count?: number | null;
 }
 
 export default function Properties() {

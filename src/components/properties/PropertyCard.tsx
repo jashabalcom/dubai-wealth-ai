@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { InvestmentScoreBadge } from './InvestmentScoreBadge';
 import { GoldenVisaBadge } from './GoldenVisaBadge';
+import { PopularityIndicator } from './PopularityIndicator';
 
 interface Property {
   id: string;
@@ -25,6 +26,8 @@ interface Property {
   images: string[];
   completion_date: string | null;
   is_featured: boolean;
+  views_count?: number | null;
+  inquiries_count?: number | null;
 }
 
 interface PropertyCardProps {
@@ -118,6 +121,11 @@ export function PropertyCard({
                   Featured
                 </motion.span>
               )}
+              <PopularityIndicator 
+                viewsCount={property.views_count} 
+                inquiriesCount={property.inquiries_count}
+                variant="badge"
+              />
               <GoldenVisaBadge priceAed={property.price_aed} variant="badge" />
             </div>
 
@@ -278,6 +286,17 @@ export function PropertyCard({
                   <Calendar className="w-3 h-3" />
                   Completion: {new Date(property.completion_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </span>
+              </div>
+            )}
+
+            {/* Popularity Indicator */}
+            {(property.views_count || property.inquiries_count) && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <PopularityIndicator 
+                  viewsCount={property.views_count} 
+                  inquiriesCount={property.inquiries_count}
+                  variant="inline"
+                />
               </div>
             )}
           </div>
