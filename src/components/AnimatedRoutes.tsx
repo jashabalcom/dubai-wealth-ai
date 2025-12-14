@@ -50,6 +50,10 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import Contact from "@/pages/Contact";
 import Developers from "@/pages/Developers";
 import DeveloperDetail from "@/pages/DeveloperDetail";
+import Neighborhoods from "@/pages/Neighborhoods";
+import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
+import AdminNeighborhoods from "@/pages/admin/AdminNeighborhoods";
+import AdminNeighborhoodPOIs from "@/pages/admin/AdminNeighborhoodPOIs";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -96,6 +100,10 @@ export function AnimatedRoutes() {
         {/* Developers - Free to browse listing, detail pages require Investor tier */}
         <Route path="/developers" element={<AnimatedPage><Developers /></AnimatedPage>} />
         <Route path="/developers/:slug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><DeveloperDetail /></AnimatedPage></ProtectedRoute>} />
+        
+        {/* Neighborhoods - Public browse */}
+        <Route path="/neighborhoods" element={<AnimatedPage><Neighborhoods /></AnimatedPage>} />
+        <Route path="/neighborhoods/:slug" element={<AnimatedPage><NeighborhoodDetail /></AnimatedPage>} />
         
         {/* Tools - Auth required, usage-based gating in-page */}
         <Route path="/tools" element={<ProtectedRoute><AnimatedPage><Tools /></AnimatedPage></ProtectedRoute>} />
@@ -145,6 +153,8 @@ export function AnimatedRoutes() {
         <Route path="/admin/brokerages" element={<AnimatedPage><AdminBrokerages /></AnimatedPage>} />
         <Route path="/admin/developers" element={<AnimatedPage><AdminDevelopers /></AnimatedPage>} />
         <Route path="/admin/developers/:developerId/projects" element={<AnimatedPage><AdminDeveloperProjects /></AnimatedPage>} />
+        <Route path="/admin/neighborhoods" element={<AnimatedPage><AdminNeighborhoods /></AnimatedPage>} />
+        <Route path="/admin/neighborhoods/:neighborhoodId/pois" element={<AnimatedPage><AdminNeighborhoodPOIs /></AnimatedPage>} />
         <Route path="/admin/events" element={<AnimatedPage><AdminEvents /></AnimatedPage>} />
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />

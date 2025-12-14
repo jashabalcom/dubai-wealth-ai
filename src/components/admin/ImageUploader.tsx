@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react';
+
+// Named export for compatibility
 import Cropper, { Area } from 'react-easy-crop';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
