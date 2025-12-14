@@ -27,6 +27,7 @@ import { AirbnbYieldCard } from '@/components/properties/AirbnbYieldCard';
 import { InvestmentScoreBadge } from '@/components/properties/InvestmentScoreBadge';
 import { GoldenVisaBadge } from '@/components/properties/GoldenVisaBadge';
 import { TrueCostCard } from '@/components/properties/TrueCostCard';
+import { NeighborhoodWidget } from '@/components/properties/NeighborhoodWidget';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -625,6 +626,14 @@ export default function PropertyDetail() {
                 sizeSqft={property.size_sqft}
                 area={property.location_area}
                 isOffPlan={property.is_off_plan}
+              />
+
+              {/* Neighborhood Deep-Dive */}
+              <NeighborhoodWidget
+                areaName={property.location_area}
+                propertyPricePerSqft={pricePerSqft}
+                propertyYield={property.rental_yield_estimate}
+                propertyType={property.property_type}
               />
 
               {/* Investment Metrics */}
