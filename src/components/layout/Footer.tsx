@@ -20,7 +20,7 @@ const footerLinks = {
       { label: "Market Reports", href: "#" },
       { label: "Off-Plan Guide", href: "#" },
       { label: "Golden Visa Wizard", href: "/golden-visa" },
-      { label: "Developer Directory", href: "#" },
+      { label: "Developer Directory", href: "/developers" },
       { label: "Blog", href: "#" },
     ],
   },
