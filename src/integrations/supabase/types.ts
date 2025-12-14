@@ -2869,6 +2869,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_group_member: { Args: { group_uuid: string }; Returns: boolean }
     }
     Enums: {
       agent_tier: "basic" | "preferred" | "premium"
