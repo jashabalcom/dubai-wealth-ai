@@ -153,17 +153,17 @@ export default function Dashboard() {
 
       {/* Header */}
       <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gold flex items-center justify-center">
               <span className="text-primary-dark font-heading font-bold text-lg">DW</span>
             </div>
-            <span className="font-heading text-xl text-foreground">Dubai Wealth Hub</span>
+            <span className="font-heading text-xl text-foreground hidden sm:inline">Dubai Wealth Hub</span>
           </a>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Membership Badge */}
-            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+            <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${
               isElite 
                 ? 'bg-gold/20 text-gold border border-gold/30' 
                 : isInvestor 
@@ -171,12 +171,12 @@ export default function Dashboard() {
                   : 'bg-muted text-muted-foreground'
             }`}>
               {isElite && <Crown className="w-3 h-3 inline mr-1" />}
-              {membershipTier.charAt(0).toUpperCase() + membershipTier.slice(1)} Member
+              <span className="hidden xs:inline">{membershipTier.charAt(0).toUpperCase() + membershipTier.slice(1)} </span>Member
             </div>
 
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="min-h-[44px] px-2 sm:px-4">
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           </div>
         </div>
@@ -240,20 +240,20 @@ export default function Dashboard() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <h2 className="font-heading text-xl text-foreground mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {quickActions.map((action) => (
               <a
                 key={action.title}
                 href={action.href}
-                className="group p-6 rounded-xl bg-card border border-border hover:border-gold/30 transition-all duration-300"
+                className="group p-4 sm:p-6 rounded-xl bg-card border border-border hover:border-gold/30 transition-all duration-300"
               >
-                <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-4`}>
-                  <action.icon className="w-6 h-6" />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${action.color} flex items-center justify-center mb-3 sm:mb-4`}>
+                  <action.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <h3 className="font-heading text-lg text-foreground mb-1 group-hover:text-gold transition-colors">
+                <h3 className="font-heading text-base sm:text-lg text-foreground mb-1 group-hover:text-gold transition-colors">
                   {action.title}
                 </h3>
-                <p className="text-sm text-muted-foreground">{action.description}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{action.description}</p>
               </a>
             ))}
           </div>

@@ -161,13 +161,14 @@ export default function Academy() {
                 className="pl-10"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
               {categories.map((category) => (
                 <Button
                   key={category}
                   variant={selectedCategory === category ? 'gold' : 'outline'}
                   size="sm"
                   onClick={() => setSelectedCategory(category)}
+                  className="whitespace-nowrap min-h-[40px] shrink-0"
                 >
                   {category}
                 </Button>

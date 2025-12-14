@@ -62,8 +62,8 @@ export function CommunityMobileNav() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border/50 safe-area-bottom">
-      <div className="flex justify-around items-center h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border/50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="flex justify-around items-center h-16 px-1">
         {navItems.map((item) => {
           const active = isActive(item.path, item.exact);
           const badgeCount = getBadgeCount(item.badgeKey);
@@ -78,7 +78,7 @@ export function CommunityMobileNav() {
                 whileTap={{ scale: 0.9 }}
                 transition={{ duration: 0.1 }}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors",
+                  "flex flex-col items-center justify-center gap-0.5 min-w-[56px] min-h-[48px] px-2 py-1.5 rounded-lg transition-colors",
                   active ? "text-gold" : "text-muted-foreground"
                 )}
               >

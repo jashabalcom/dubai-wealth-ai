@@ -224,7 +224,7 @@ export default function ROICalculator() {
                     formatValue={(v) => formatAED(v)}
                   />
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <SliderInput
                       label="Property Size"
                       value={inputs.propertySizeSqft}
@@ -278,7 +278,7 @@ export default function ROICalculator() {
                     formatValue={(v) => formatAED(v)}
                   />
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <SliderInput
                       label="Vacancy Rate"
                       value={inputs.vacancyRate}

@@ -102,10 +102,10 @@ export function PropertyCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             
             {/* Top Left Badges */}
-            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+            <div className="absolute top-2 left-2 flex flex-wrap gap-1.5 max-w-[70%]">
               {property.is_off_plan && (
                 <motion.span 
-                  className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full"
+                  className="px-2 py-0.5 bg-blue-500 text-white text-[10px] sm:text-xs font-medium rounded-full"
                   initial={{ scale: 1 }}
                   whileHover={{ scale: 1.05 }}
                 >
@@ -114,7 +114,7 @@ export function PropertyCard({
               )}
               {property.is_featured && (
                 <motion.span 
-                  className="px-2 py-1 bg-gold text-primary-dark text-xs font-medium rounded-full badge-pulse"
+                  className="px-2 py-0.5 bg-gold text-primary-dark text-[10px] sm:text-xs font-medium rounded-full badge-pulse"
                   initial={{ scale: 1 }}
                   whileHover={{ scale: 1.05 }}
                 >
@@ -243,39 +243,41 @@ export function PropertyCard({
           </div>
 
           {/* Content */}
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             {/* Location */}
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2 transition-colors group-hover:text-muted-foreground/80">
-              <MapPin className="w-4 h-4" />
-              {property.location_area}
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-2 transition-colors group-hover:text-muted-foreground/80">
+              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">{property.location_area}</span>
               {property.developer_name && (
-                <span className="text-xs">• {property.developer_name}</span>
+                <span className="text-[10px] sm:text-xs hidden sm:inline">• {property.developer_name}</span>
               )}
             </div>
 
             {/* Title */}
-            <h3 className="font-heading text-lg text-foreground mb-3 group-hover:text-gold transition-colors duration-300 line-clamp-2">
+            <h3 className="font-heading text-base sm:text-lg text-foreground mb-2 sm:mb-3 group-hover:text-gold transition-colors duration-300 line-clamp-2">
               {property.title}
             </h3>
 
             {/* Price */}
-            <p className="font-heading text-xl text-gold mb-3 transition-all group-hover:scale-[1.02] origin-left">
+            <p className="font-heading text-lg sm:text-xl text-gold mb-2 sm:mb-3 transition-all group-hover:scale-[1.02] origin-left">
               {formatPrice(property.price_aed)}
             </p>
 
             {/* Features */}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
-                <Bed className="w-4 h-4" />
-                {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} BR`}
+                <Bed className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden xs:inline">{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} BR`}</span>
+                <span className="xs:hidden">{property.bedrooms === 0 ? 'S' : property.bedrooms}</span>
               </span>
               <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
-                <Bath className="w-4 h-4" />
+                <Bath className="w-3 h-3 sm:w-4 sm:h-4" />
                 {property.bathrooms}
               </span>
               <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
-                <Maximize className="w-4 h-4" />
-                {property.size_sqft.toLocaleString()} sqft
+                <Maximize className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">{property.size_sqft.toLocaleString()} sqft</span>
+                <span className="sm:hidden">{(property.size_sqft / 1000).toFixed(1)}k</span>
               </span>
             </div>
 

@@ -391,13 +391,13 @@ export function DubaiPresets({ onSelectPreset, activePreset, showDetails = false
 
       {/* Category Tabs */}
       {!searchQuery && (
-        <div className="flex gap-1 p-1 rounded-lg bg-muted/30">
+        <div className="flex gap-1 p-1 rounded-lg bg-muted/30 overflow-x-auto scrollbar-hide">
           {AREA_CATEGORIES.map((category) => (
             <button
               key={category.name}
               onClick={() => setActiveTab(category.name)}
               className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                "flex-1 min-w-[80px] px-3 py-2 text-xs font-medium rounded-md transition-all whitespace-nowrap min-h-[40px]",
                 activeTab === category.name
                   ? "bg-gold/20 text-gold border border-gold/30"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

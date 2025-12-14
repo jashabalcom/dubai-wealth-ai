@@ -31,14 +31,14 @@ export function CategoryFilterPills({
   const overflowChannels = channels.slice(5);
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
       {/* All Posts Pill */}
       <motion.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => channels[0] && onSelectChannel(channels[0].id)}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200",
+          "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0 min-h-[44px]",
           !selectedChannelId
             ? "bg-gold text-background shadow-lg shadow-gold/25"
             : "bg-muted/50 text-muted-foreground hover:bg-muted"
@@ -55,7 +55,7 @@ export function CategoryFilterPills({
           whileTap={{ scale: 0.98 }}
           onClick={() => onSelectChannel(channel.id)}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200",
+            "flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0 min-h-[44px]",
             selectedChannelId === channel.id
               ? "bg-gold text-background shadow-lg shadow-gold/25"
               : "bg-muted/50 text-muted-foreground hover:bg-muted",
@@ -74,7 +74,7 @@ export function CategoryFilterPills({
             <Button
               variant="ghost"
               size="sm"
-              className="px-4 py-2 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted"
+              className="px-4 py-2.5 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted min-h-[44px] shrink-0"
             >
               More
               <ChevronDown className="h-3.5 w-3.5 ml-1" />
@@ -102,7 +102,7 @@ export function CategoryFilterPills({
       <Button
         variant="ghost"
         size="icon"
-        className="h-9 w-9 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted shrink-0"
+        className="h-11 w-11 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted shrink-0"
       >
         <Filter className="h-4 w-4" />
       </Button>
