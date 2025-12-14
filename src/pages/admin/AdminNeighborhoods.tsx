@@ -125,6 +125,7 @@ export default function AdminNeighborhoods() {
       const payload = {
         ...data,
         slug: data.slug || data.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        name: data.name || '',
       };
 
       if (data.id) {
@@ -136,7 +137,7 @@ export default function AdminNeighborhoods() {
       } else {
         const { error } = await supabase
           .from('neighborhoods')
-          .insert(payload);
+          .insert([payload] as any);
         if (error) throw error;
       }
     },
@@ -431,9 +432,9 @@ export default function AdminNeighborhoods() {
                     <Label>Thumbnail Image</Label>
                     <ImageUploader
                       currentImageUrl={editingNeighborhood.image_url || null}
-                      onUploadComplete={(url) => updateField('image_url', url)}
-                      bucketName="property-media"
-                      folderPath={`neighborhoods/${editingNeighborhood.id || 'new'}`}
+                      onUpload={(url) => updateField('image_url', url)}
+                      bucket="property-media"
+                      folder={`neighborhoods/${editingNeighborhood.id || 'new'}`}
                       aspectRatio={4/3}
                     />
                   </div>
@@ -441,9 +442,9 @@ export default function AdminNeighborhoods() {
                     <Label>Cover Image</Label>
                     <ImageUploader
                       currentImageUrl={editingNeighborhood.cover_image_url || null}
-                      onUploadComplete={(url) => updateField('cover_image_url', url)}
-                      bucketName="property-media"
-                      folderPath={`neighborhoods/${editingNeighborhood.id || 'new'}`}
+                      onUpload={(url) => updateField('cover_image_url', url)}
+                      bucket="property-media"
+                      folder={`neighborhoods/${editingNeighborhood.id || 'new'}`}
                       aspectRatio={16/9}
                     />
                   </div>

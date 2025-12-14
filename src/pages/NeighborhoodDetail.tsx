@@ -66,7 +66,7 @@ export default function NeighborhoodDetail() {
       <SEOHead 
         title={`${neighborhood.name} Dubai | Investment Guide, Schools & Restaurants`}
         description={neighborhood.description || `Explore ${neighborhood.name} in Dubai. Investment analysis, top schools, restaurants, and everything you need to know about living in ${neighborhood.name}.`}
-        keywords={`${neighborhood.name} Dubai, ${neighborhood.name} property, ${neighborhood.name} real estate, invest in ${neighborhood.name}, ${neighborhood.name} schools`}
+        keywords={[`${neighborhood.name} Dubai`, `${neighborhood.name} property`, `${neighborhood.name} real estate`, `invest in ${neighborhood.name}`, `${neighborhood.name} schools`]}
       />
       <Navbar />
       
