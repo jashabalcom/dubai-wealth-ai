@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
   Plus, Edit, Trash2, Eye, EyeOff, MapPin, Search, 
-  GraduationCap, Utensils, Building2, ChevronRight, Sparkles, Loader2
+  GraduationCap, Utensils, Building2, ChevronRight, Sparkles, Loader2,
+  Zap, Square, CheckCircle2, XCircle
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -97,6 +99,11 @@ export default function AdminNeighborhoods() {
   const [consInput, setConsInput] = useState('');
   const [bestForInput, setBestForInput] = useState('');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  
+  // Bulk generation state
+  const [isBulkGenerating, setIsBulkGenerating] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, failed: 0 });
+  const bulkAbortRef = useRef(false);
 
   const { data: neighborhoods, isLoading } = useQuery({
     queryKey: ['admin-neighborhoods', search],
@@ -249,6 +256,87 @@ export default function AdminNeighborhoods() {
     }
   };
 
+  // Bulk generate AI content for all neighborhoods without content
+  const startBulkGeneration = async () => {
+    if (!neighborhoods) return;
+    
+    const needsContent = neighborhoods.filter(n => !n.overview || n.overview.trim() === '');
+    if (needsContent.length === 0) {
+      toast.info('All neighborhoods already have content');
+      return;
+    }
+
+    setIsBulkGenerating(true);
+    bulkAbortRef.current = false;
+    setBulkProgress({ current: 0, total: needsContent.length, failed: 0 });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < needsContent.length; i++) {
+      if (bulkAbortRef.current) {
+        toast.info(`Bulk generation stopped at ${i}/${needsContent.length}`);
+        break;
+      }
+
+      const neighborhood = needsContent[i];
+      setBulkProgress(prev => ({ ...prev, current: i + 1 }));
+
+      try {
+        // Call AI edge function
+        const { data, error } = await supabase.functions.invoke('ai-neighborhood-content', {
+          body: {
+            neighborhoodName: neighborhood.name,
+            lifestyleType: neighborhood.lifestyle_type,
+            isFreehold: neighborhood.is_freehold,
+            hasMetro: neighborhood.has_metro_access,
+            hasBeach: neighborhood.has_beach_access,
+          },
+        });
+
+        if (error) throw error;
+
+        if (data) {
+          // Update database directly
+          const { error: updateError } = await supabase
+            .from('neighborhoods')
+            .update({
+              overview: data.overview,
+              pros: data.pros || [],
+              cons: data.cons || [],
+              best_for: data.best_for || [],
+            })
+            .eq('id', neighborhood.id);
+
+          if (updateError) throw updateError;
+          successCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to generate content for ${neighborhood.name}:`, error);
+        failCount++;
+        setBulkProgress(prev => ({ ...prev, failed: prev.failed + 1 }));
+      }
+
+      // Rate limiting: wait 600ms between requests
+      if (i < needsContent.length - 1 && !bulkAbortRef.current) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      }
+    }
+
+    setIsBulkGenerating(false);
+    queryClient.invalidateQueries({ queryKey: ['admin-neighborhoods'] });
+    
+    if (!bulkAbortRef.current) {
+      toast.success(`Bulk generation complete! ${successCount} succeeded, ${failCount} failed.`);
+    }
+  };
+
+  const stopBulkGeneration = () => {
+    bulkAbortRef.current = true;
+  };
+
+  const neighborhoodsWithoutContent = neighborhoods?.filter(n => !n.overview || n.overview.trim() === '').length || 0;
+
   return (
     <AdminLayout title="Neighborhoods">
       <div className="space-y-6">
@@ -263,11 +351,65 @@ export default function AdminNeighborhoods() {
               className="pl-9"
             />
           </div>
-          <Button onClick={handleNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Neighborhood
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Neighborhood
+            </Button>
+          </div>
         </div>
+
+        {/* Bulk Generation Card */}
+        {neighborhoodsWithoutContent > 0 && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/20">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-foreground">Bulk AI Content Generation</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {neighborhoodsWithoutContent} neighborhoods need content
+                    </p>
+                  </div>
+                </div>
+                
+                {isBulkGenerating ? (
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        {bulkProgress.current}/{bulkProgress.total}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {bulkProgress.failed > 0 && `${bulkProgress.failed} failed`}
+                      </p>
+                    </div>
+                    <div className="w-32">
+                      <Progress value={(bulkProgress.current / bulkProgress.total) * 100} className="h-2" />
+                    </div>
+                    <Button variant="destructive" size="sm" onClick={stopBulkGeneration}>
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={startBulkGeneration} className="gap-2">
+                    <Zap className="h-4 w-4" />
+                    Generate All Content
+                  </Button>
+                )}
+              </div>
+              
+              {isBulkGenerating && (
+                <div className="mt-3 text-xs text-muted-foreground">
+                  Generating content for: {neighborhoods?.find(n => !n.overview)?.name || '...'}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
