@@ -1,7 +1,6 @@
-import { motion } from "framer-motion";
-
 import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const footerLinks = {
   platform: {
@@ -54,14 +53,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <a href="#" className="flex flex-col items-start mb-6">
-              <span className="font-serif text-2xl font-semibold text-secondary-foreground tracking-wide">
-                Dubai Wealth Hub
-              </span>
-              <span className="text-xs uppercase tracking-[0.2em] text-primary font-sans">
-                by Balcom Privé
-              </span>
-            </a>
+            <Link to="/" className="inline-block mb-6 group">
+              <BrandLogo variant="dark" size="lg" />
+            </Link>
             <p className="text-secondary-foreground/60 text-sm leading-relaxed mb-6 max-w-sm">
               An AI-powered Dubai real estate wealth platform for global investors. 
               Education, tools, community, and exclusive deal flow — all in one place.
