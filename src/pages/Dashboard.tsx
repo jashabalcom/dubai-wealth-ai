@@ -9,7 +9,8 @@ import {
   Brain, 
   Crown,
   ArrowRight,
-  LogOut
+  LogOut,
+  Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -111,6 +112,13 @@ export default function Dashboard() {
       description: 'Get personalized advice',
       href: '/ai',
       color: 'bg-pink-500/10 text-pink-500',
+    },
+    {
+      icon: Heart,
+      title: 'Saved Properties',
+      description: 'View your saved investments',
+      href: '/properties/saved',
+      color: 'bg-rose-500/10 text-rose-500',
     },
   ];
 
