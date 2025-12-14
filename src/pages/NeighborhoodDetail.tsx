@@ -41,6 +41,13 @@ export default function NeighborhoodDetail() {
 
   const { ref: statsRef, hasBeenInView: statsInView } = useInView();
 
+  // All hooks must be called before any conditional returns
+  const priceCount = useCountUp({ end: neighborhood?.avg_price_sqft || 0, duration: 2000, enabled: statsInView && !!neighborhood });
+  const yieldCount = useCountUp({ end: (neighborhood?.avg_rental_yield || 0) * 10, duration: 2000, decimals: 0, enabled: statsInView && !!neighborhood });
+  const yoyCount = useCountUp({ end: Math.abs(neighborhood?.yoy_appreciation || 0) * 10, duration: 2000, decimals: 0, enabled: statsInView && !!neighborhood });
+
+  const lifestyleLabel = neighborhood?.lifestyle_type?.charAt(0).toUpperCase() + (neighborhood?.lifestyle_type?.slice(1) || '') || '';
+
   if (isLoading) {
     return (
       <>
@@ -80,13 +87,6 @@ export default function NeighborhoodDetail() {
       </>
     );
   }
-
-  const lifestyleLabel = neighborhood.lifestyle_type?.charAt(0).toUpperCase() + (neighborhood.lifestyle_type?.slice(1) || '');
-
-  // Animated stat values
-  const priceCount = useCountUp({ end: neighborhood.avg_price_sqft || 0, duration: 2000, enabled: statsInView });
-  const yieldCount = useCountUp({ end: (neighborhood.avg_rental_yield || 0) * 10, duration: 2000, decimals: 0, enabled: statsInView });
-  const yoyCount = useCountUp({ end: Math.abs(neighborhood.yoy_appreciation || 0) * 10, duration: 2000, decimals: 0, enabled: statsInView });
 
   return (
     <>
