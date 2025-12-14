@@ -2172,6 +2172,7 @@ export type Database = {
           id: string
           investment_goal: string | null
           is_visible_in_directory: boolean | null
+          last_digest_sent_at: string | null
           level: number | null
           linkedin_url: string | null
           looking_for: string | null
@@ -2180,6 +2181,7 @@ export type Database = {
           membership_tier: Database["public"]["Enums"]["membership_tier"]
           notify_email_comments: boolean | null
           notify_email_connections: boolean | null
+          notify_email_digest: boolean | null
           notify_email_events: boolean | null
           notify_email_messages: boolean | null
           notify_inapp_comments: boolean | null
@@ -2204,6 +2206,7 @@ export type Database = {
           id: string
           investment_goal?: string | null
           is_visible_in_directory?: boolean | null
+          last_digest_sent_at?: string | null
           level?: number | null
           linkedin_url?: string | null
           looking_for?: string | null
@@ -2212,6 +2215,7 @@ export type Database = {
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           notify_email_comments?: boolean | null
           notify_email_connections?: boolean | null
+          notify_email_digest?: boolean | null
           notify_email_events?: boolean | null
           notify_email_messages?: boolean | null
           notify_inapp_comments?: boolean | null
@@ -2236,6 +2240,7 @@ export type Database = {
           id?: string
           investment_goal?: string | null
           is_visible_in_directory?: boolean | null
+          last_digest_sent_at?: string | null
           level?: number | null
           linkedin_url?: string | null
           looking_for?: string | null
@@ -2244,6 +2249,7 @@ export type Database = {
           membership_tier?: Database["public"]["Enums"]["membership_tier"]
           notify_email_comments?: boolean | null
           notify_email_connections?: boolean | null
+          notify_email_digest?: boolean | null
           notify_email_events?: boolean | null
           notify_email_messages?: boolean | null
           notify_inapp_comments?: boolean | null
