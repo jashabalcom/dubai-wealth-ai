@@ -994,8 +994,71 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_projects: {
+        Row: {
+          completion_year: number | null
+          created_at: string | null
+          description: string | null
+          developer_id: string
+          highlights: Json | null
+          id: string
+          image_url: string | null
+          is_flagship: boolean | null
+          location_area: string | null
+          name: string
+          project_type: string | null
+          slug: string
+          status: string | null
+          total_units: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          completion_year?: number | null
+          created_at?: string | null
+          description?: string | null
+          developer_id: string
+          highlights?: Json | null
+          id?: string
+          image_url?: string | null
+          is_flagship?: boolean | null
+          location_area?: string | null
+          name: string
+          project_type?: string | null
+          slug: string
+          status?: string | null
+          total_units?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          completion_year?: number | null
+          created_at?: string | null
+          description?: string | null
+          developer_id?: string
+          highlights?: Json | null
+          id?: string
+          image_url?: string | null
+          is_flagship?: boolean | null
+          location_area?: string | null
+          name?: string
+          project_type?: string | null
+          slug?: string
+          status?: string | null
+          total_units?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_projects_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       developers: {
         Row: {
+          awards: Json | null
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -1004,14 +1067,21 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_verified: boolean | null
+          key_partnerships: Json | null
           logo_url: string | null
           name: string
           slug: string
+          social_links: Json | null
+          specialty: string | null
+          tagline: string | null
+          tier: string | null
           total_projects: number | null
+          total_units_delivered: number | null
           updated_at: string
           website: string | null
         }
         Insert: {
+          awards?: Json | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -1020,14 +1090,21 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
+          key_partnerships?: Json | null
           logo_url?: string | null
           name: string
           slug: string
+          social_links?: Json | null
+          specialty?: string | null
+          tagline?: string | null
+          tier?: string | null
           total_projects?: number | null
+          total_units_delivered?: number | null
           updated_at?: string
           website?: string | null
         }
         Update: {
+          awards?: Json | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -1036,10 +1113,16 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_verified?: boolean | null
+          key_partnerships?: Json | null
           logo_url?: string | null
           name?: string
           slug?: string
+          social_links?: Json | null
+          specialty?: string | null
+          tagline?: string | null
+          tier?: string | null
           total_projects?: number | null
+          total_units_delivered?: number | null
           updated_at?: string
           website?: string | null
         }
