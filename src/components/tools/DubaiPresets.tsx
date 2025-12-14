@@ -1,5 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { MapPin } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { MapPin, Search, TrendingUp, Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { AREA_SERVICE_CHARGES, AREA_CHILLER_FEES } from '@/lib/dubaiRealEstateFees';
 
 export interface AreaPreset {
@@ -341,77 +343,157 @@ interface DubaiPresetsProps {
   showDetails?: boolean;
 }
 
+const formatPrice = (value: number) => {
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  }
+  return `${(value / 1000).toFixed(0)}K`;
+};
+
 export function DubaiPresets({ onSelectPreset, activePreset, showDetails = false }: DubaiPresetsProps) {
+  const [activeTab, setActiveTab] = useState<string>('Premium');
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const activeData = DUBAI_AREA_PRESETS.find(p => p.name === activePreset);
   
+  const filteredAreas = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return AREA_CATEGORIES.find(c => c.name === activeTab)?.areas || [];
+    }
+    const query = searchQuery.toLowerCase();
+    return DUBAI_AREA_PRESETS.filter(p => p.name.toLowerCase().includes(query));
+  }, [activeTab, searchQuery]);
+
+  const getYield = (preset: AreaPreset) => {
+    if (!preset.annualRent || !preset.propertyPrice) return null;
+    return ((preset.annualRent / preset.propertyPrice) * 100).toFixed(1);
+  };
+
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center gap-2">
         <MapPin className="w-4 h-4 text-gold" />
         <span className="text-sm font-medium text-foreground">Dubai Area Presets</span>
-        <span className="text-xs text-muted-foreground">({DUBAI_AREA_PRESETS.length} areas)</span>
       </div>
-      
-      {AREA_CATEGORIES.map((category) => (
-        <div key={category.name} className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search areas..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 h-9 bg-background/50 border-border/50 focus:border-gold/50 focus:ring-gold/20"
+        />
+      </div>
+
+      {/* Category Tabs */}
+      {!searchQuery && (
+        <div className="flex gap-1 p-1 rounded-lg bg-muted/30">
+          {AREA_CATEGORIES.map((category) => (
+            <button
+              key={category.name}
+              onClick={() => setActiveTab(category.name)}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                activeTab === category.name
+                  ? "bg-gold/20 text-gold border border-gold/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
               {category.name}
-            </span>
-            <div className="flex-1 h-px bg-border" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {category.areas.map((preset) => {
-              const yieldPercent = preset.annualRent && preset.propertyPrice 
-                ? ((preset.annualRent / preset.propertyPrice) * 100).toFixed(1)
-                : null;
-              return (
-                <Button
-                  key={preset.name}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onSelectPreset(preset)}
-                  className={`text-xs transition-all ${
-                    activePreset === preset.name 
-                      ? 'bg-gold/20 border-gold/50 text-gold' 
-                      : 'hover:bg-gold/10 hover:border-gold/30'
-                  }`}
-                >
-                  {preset.name}
-                  {yieldPercent && (
-                    <span className={`ml-1.5 text-[10px] px-1 py-0.5 rounded ${
-                      parseFloat(yieldPercent) >= 7 
-                        ? 'bg-emerald-500/20 text-emerald-400' 
-                        : parseFloat(yieldPercent) >= 5.5 
-                          ? 'bg-amber-500/20 text-amber-400'
-                          : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {yieldPercent}%
-                    </span>
-                  )}
-                </Button>
-              );
-            })}
-          </div>
+            </button>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* Area Grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {filteredAreas.map((preset) => {
+          const yieldPercent = getYield(preset);
+          const isActive = activePreset === preset.name;
+          
+          return (
+            <button
+              key={preset.name}
+              onClick={() => onSelectPreset(preset)}
+              className={cn(
+                "group relative p-3 rounded-xl border text-left transition-all duration-200",
+                "hover:border-gold/40 hover:bg-gold/5",
+                isActive
+                  ? "bg-gold/10 border-gold/50 ring-1 ring-gold/20"
+                  : "bg-card/50 border-border/50"
+              )}
+            >
+              {/* Area Name */}
+              <div className="flex items-start justify-between gap-1 mb-2">
+                <span className={cn(
+                  "text-sm font-medium leading-tight",
+                  isActive ? "text-gold" : "text-foreground group-hover:text-gold"
+                )}>
+                  {preset.name}
+                </span>
+                {preset.hasDistrictCooling && (
+                  <Building2 className="w-3 h-3 text-blue-400 shrink-0" />
+                )}
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground">
+                  AED {formatPrice(preset.propertyPrice)}
+                </span>
+                {yieldPercent && (
+                  <span className={cn(
+                    "flex items-center gap-0.5 px-1.5 py-0.5 rounded font-medium",
+                    parseFloat(yieldPercent) >= 7 
+                      ? 'bg-emerald-500/15 text-emerald-400' 
+                      : parseFloat(yieldPercent) >= 5.5 
+                        ? 'bg-amber-500/15 text-amber-400'
+                        : 'bg-muted text-muted-foreground'
+                  )}>
+                    <TrendingUp className="w-2.5 h-2.5" />
+                    {yieldPercent}%
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* No Results */}
+      {filteredAreas.length === 0 && searchQuery && (
+        <div className="text-center py-6 text-sm text-muted-foreground">
+          No areas found for "{searchQuery}"
+        </div>
+      )}
       
+      {/* Details Panel */}
       {showDetails && activeData && (
-        <div className="mt-3 pt-3 border-t border-border grid grid-cols-2 gap-2 text-xs">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Service Charge:</span>
-            <span className="font-medium">AED {activeData.serviceChargePerSqft}/sqft</span>
+        <div className="p-3 rounded-xl bg-gold/5 border border-gold/20 space-y-2">
+          <div className="flex items-center gap-2 text-xs font-medium text-gold mb-2">
+            <MapPin className="w-3 h-3" />
+            {activeData.name} Details
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Avg Size:</span>
-            <span className="font-medium">{activeData.sizeSqft} sqft</span>
-          </div>
-          {activeData.hasDistrictCooling && (
-            <div className="flex justify-between col-span-2">
-              <span className="text-muted-foreground">District Cooling:</span>
-              <span className="font-medium text-amber-400">~AED {activeData.chillerMonthly}/mo</span>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Service Charge:</span>
+              <span className="font-medium">AED {activeData.serviceChargePerSqft}/sqft</span>
             </div>
-          )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Avg Size:</span>
+              <span className="font-medium">{activeData.sizeSqft?.toLocaleString()} sqft</span>
+            </div>
+            {activeData.hasDistrictCooling && (
+              <div className="flex justify-between col-span-2">
+                <span className="text-muted-foreground">District Cooling:</span>
+                <span className="font-medium text-blue-400">~AED {activeData.chillerMonthly}/mo</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
