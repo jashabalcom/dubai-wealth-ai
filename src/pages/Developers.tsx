@@ -7,6 +7,8 @@ import { DeveloperCard } from '@/components/developers/DeveloperCard';
 import { useDevelopers } from '@/hooks/useDevelopers';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEOHead } from '@/components/SEOHead';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
 
 const tierFilters = [
   { value: 'all', label: 'All Developers' },
@@ -32,6 +34,8 @@ export default function Developers() {
         description="Explore top Dubai real estate developers - Emaar, Nakheel, DAMAC, Sobha, and more. View project portfolios, track records, and find your ideal investment partner."
         keywords={['dubai developers', 'emaar properties', 'nakheel', 'damac', 'dubai real estate developers']}
       />
+
+      <Navbar />
 
       <div className="min-h-screen bg-background">
         {/* Hero Section */}
@@ -135,6 +139,8 @@ export default function Developers() {
           </div>
         </section>
       </div>
+
+      <Footer />
     </>
   );
 }
