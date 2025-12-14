@@ -187,24 +187,26 @@ export function PropertyFilters({
             className="pl-10"
           />
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full md:w-auto justify-end">
           <Button
             variant={showOffPlanOnly ? 'gold' : 'outline'}
             size="sm"
             onClick={() => onOffPlanChange(!showOffPlanOnly)}
+            className="min-h-[44px] px-3"
           >
-            <Calendar className="w-4 h-4 mr-2" />
-            Off-Plan
+            <Calendar className="w-4 h-4 mr-1.5 sm:mr-2" />
+            <span className="hidden xs:inline">Off-Plan</span>
+            <span className="xs:hidden">Off</span>
           </Button>
           
           {/* Mobile Filter Sheet */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="lg:hidden">
-                <Filter className="w-4 h-4 mr-2" />
-                Filters
+              <Button variant="outline" size="sm" className="lg:hidden min-h-[44px] px-3">
+                <Filter className="w-4 h-4 mr-1.5" />
+                <span className="hidden xs:inline">Filters</span>
                 {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center">
+                  <Badge variant="secondary" className="ml-1.5 h-5 min-w-[20px] px-1 flex items-center justify-center text-xs">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -452,16 +454,16 @@ function MobileFilterContent({
   onBelowMarketChange?: (value: boolean) => void;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 px-1">
       <div>
         <label className="text-sm font-medium mb-2 block">Sort By</label>
         <Select value={sortBy} onValueChange={onSortChange}>
-          <SelectTrigger>
+          <SelectTrigger className="min-h-[48px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {sortOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+              <SelectItem key={option.value} value={option.value} className="min-h-[44px]">{option.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -470,12 +472,12 @@ function MobileFilterContent({
       <div>
         <label className="text-sm font-medium mb-2 block">Area</label>
         <Select value={selectedArea} onValueChange={onAreaChange}>
-          <SelectTrigger>
+          <SelectTrigger className="min-h-[48px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {areas.map((area) => (
-              <SelectItem key={area} value={area}>{area}</SelectItem>
+              <SelectItem key={area} value={area} className="min-h-[44px]">{area}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -562,13 +564,12 @@ function MobileFilterContent({
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-3">
           {onGoldenVisaChange && (
             <Button
               variant={showGoldenVisaOnly ? 'gold' : 'outline'}
-              size="sm"
               onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
-              className="border-gold/30"
+              className="border-gold/30 min-h-[48px] justify-start"
             >
               <Award className="w-4 h-4 mr-2" />
               Golden Visa Only
@@ -578,9 +579,8 @@ function MobileFilterContent({
           {onBelowMarketChange && (
             <Button
               variant={showBelowMarketOnly ? 'gold' : 'outline'}
-              size="sm"
               onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
-              className="border-gold/30"
+              className="border-gold/30 min-h-[48px] justify-start"
             >
               Below Market Value
             </Button>

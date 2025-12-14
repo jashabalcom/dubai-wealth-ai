@@ -331,24 +331,24 @@ export default function PropertyDetail() {
 
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <Link to="/properties" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-4 h-4" /> Back to Properties
             </Link>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {user && (
-                <Button variant="outline" size="sm" onClick={() => toggleSave(property.id)}>
+                <Button variant="outline" size="sm" onClick={() => toggleSave(property.id)} className="min-h-[44px]">
                   <Heart className={cn("w-4 h-4 mr-2", propertyIsSaved && "fill-red-500 text-red-500")} />
                   {propertyIsSaved ? 'Saved' : 'Save'}
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={handleShare}>
+              <Button variant="outline" size="sm" onClick={handleShare} className="min-h-[44px]">
                 <Share2 className="w-4 h-4 mr-2" /> Share
               </Button>
               {user && profile?.membership_tier === 'elite' && (
                 <Link to="/portfolio">
-                  <Button variant="gold" size="sm">
-                    <Plus className="w-4 h-4 mr-2" /> Add to Portfolio
+                  <Button variant="gold" size="sm" className="min-h-[44px]">
+                    <Plus className="w-4 h-4 mr-2" /> <span className="hidden sm:inline">Add to </span>Portfolio
                   </Button>
                 </Link>
               )}
@@ -386,26 +386,26 @@ export default function PropertyDetail() {
                 </h1>
                 
                 {/* Key Stats */}
-                <div className="flex flex-wrap items-center gap-4 md:gap-6 text-muted-foreground mb-4">
-                  <span className="flex items-center gap-2">
-                    <Bed className="w-5 h-5" /> 
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-sm sm:text-base text-muted-foreground mb-4">
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <Bed className="w-4 h-4 sm:w-5 sm:h-5" /> 
                     {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`}
                   </span>
-                  <span className="flex items-center gap-2">
-                    <Bath className="w-5 h-5" /> 
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <Bath className="w-4 h-4 sm:w-5 sm:h-5" /> 
                     {property.bathrooms} Bath
                   </span>
-                  <span className="flex items-center gap-2">
-                    <Maximize className="w-5 h-5" /> 
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <Maximize className="w-4 h-4 sm:w-5 sm:h-5" /> 
                     {property.size_sqft.toLocaleString()} sqft
                   </span>
-                  <span className="flex items-center gap-2">
-                    <Home className="w-5 h-5" /> 
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <Home className="w-4 h-4 sm:w-5 sm:h-5" /> 
                     {property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)}
                   </span>
                   {property.parking_spaces > 0 && (
-                    <span className="flex items-center gap-2">
-                      <Car className="w-5 h-5" /> 
+                    <span className="flex items-center gap-1 sm:gap-2">
+                      <Car className="w-4 h-4 sm:w-5 sm:h-5" /> 
                       {property.parking_spaces} Parking
                     </span>
                   )}
@@ -430,9 +430,9 @@ export default function PropertyDetail() {
               </motion.div>
 
               {/* Property Details Grid */}
-              <div className="p-6 rounded-xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-4">Property Details</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="p-4 sm:p-6 rounded-xl bg-card border border-border">
+                <h2 className="font-heading text-lg sm:text-xl text-foreground mb-4">Property Details</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-muted">
                       <Sofa className="w-4 h-4 text-muted-foreground" />

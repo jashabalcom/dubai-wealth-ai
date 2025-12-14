@@ -292,4 +292,32 @@
     0% { box-shadow: 0 0 0 0 hsl(var(--gold) / 0.4); }
     100% { box-shadow: 0 0 0 8px hsl(var(--gold) / 0); }
   }
+
+  /* Mobile safe area utilities */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch-friendly sizing */
+  .touch-target {
+    @apply min-h-[48px] min-w-[48px];
+  }
+
+  /* Mobile-first responsive padding */
+  .responsive-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
 }
