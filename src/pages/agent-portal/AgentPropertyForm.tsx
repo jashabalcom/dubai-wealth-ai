@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Loader2, ArrowLeft, Save, Upload } from 'lucide-react';
+import { Loader2, ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAgentAuth } from '@/hooks/useAgentAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Json } from '@/integrations/supabase/types';
 
 const PROPERTY_TYPES = ['Apartment', 'Villa', 'Townhouse', 'Penthouse', 'Studio', 'Duplex'];
 const LISTING_TYPES = ['sale', 'rent'];
@@ -26,7 +27,7 @@ export default function AgentPropertyForm() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    asking_price: '',
+    price_aed: '',
     property_type: 'Apartment',
     listing_type: 'sale',
     bedrooms: '1',
@@ -34,9 +35,7 @@ export default function AgentPropertyForm() {
     size_sqft: '',
     location_area: '',
     community_id: '',
-    building_name: '',
     rera_permit_number: '',
-    images: [] as string[],
   });
 
   const isEdit = !!id;
@@ -74,7 +73,7 @@ export default function AgentPropertyForm() {
     setFormData({
       title: data.title || '',
       description: data.description || '',
-      asking_price: data.asking_price?.toString() || '',
+      price_aed: data.price_aed?.toString() || '',
       property_type: data.property_type || 'Apartment',
       listing_type: data.listing_type || 'sale',
       bedrooms: data.bedrooms?.toString() || '1',
@@ -82,11 +81,16 @@ export default function AgentPropertyForm() {
       size_sqft: data.size_sqft?.toString() || '',
       location_area: data.location_area || '',
       community_id: data.community_id || '',
-      building_name: data.building_name || '',
       rera_permit_number: data.rera_permit_number || '',
-      images: data.images || [],
     });
     setLoading(false);
+  };
+
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '') + '-' + Date.now();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,8 +101,9 @@ export default function AgentPropertyForm() {
     try {
       const propertyData = {
         title: formData.title,
+        slug: generateSlug(formData.title),
         description: formData.description,
-        asking_price: parseFloat(formData.asking_price) || 0,
+        price_aed: parseFloat(formData.price_aed) || 0,
         property_type: formData.property_type,
         listing_type: formData.listing_type,
         bedrooms: parseInt(formData.bedrooms) || 1,
@@ -106,17 +111,17 @@ export default function AgentPropertyForm() {
         size_sqft: parseFloat(formData.size_sqft) || 0,
         location_area: formData.location_area,
         community_id: formData.community_id || null,
-        building_name: formData.building_name,
         rera_permit_number: formData.rera_permit_number,
-        images: formData.images,
         agent_id: agent.id,
-        is_published: false, // Always start unpublished for review
+        is_published: false,
+        status: 'available',
       };
 
       if (isEdit) {
+        const { slug, ...updateData } = propertyData;
         const { error } = await supabase
           .from('properties')
-          .update(propertyData)
+          .update(updateData)
           .eq('id', id);
         if (error) throw error;
         toast({ title: "Property Updated", description: "Your changes have been saved." });
@@ -202,14 +207,14 @@ export default function AgentPropertyForm() {
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="price">Price (AED) *</Label>
-                <Input id="price" type="number" placeholder="1500000" value={formData.asking_price} onChange={(e) => setFormData({ ...formData, asking_price: e.target.value })} required />
+                <Input id="price" type="number" placeholder="1500000" value={formData.price_aed} onChange={(e) => setFormData({ ...formData, price_aed: e.target.value })} required />
               </div>
               <div className="space-y-2">
                 <Label>Bedrooms</Label>
                 <Select value={formData.bedrooms} onValueChange={(v) => setFormData({ ...formData, bedrooms: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {['Studio', '1', '2', '3', '4', '5', '6+'].map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                    {['0', '1', '2', '3', '4', '5', '6'].map(b => <SelectItem key={b} value={b}>{b === '0' ? 'Studio' : b}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -218,7 +223,7 @@ export default function AgentPropertyForm() {
                 <Select value={formData.bathrooms} onValueChange={(v) => setFormData({ ...formData, bathrooms: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {['1', '2', '3', '4', '5', '6+'].map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                    {['1', '2', '3', '4', '5', '6'].map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -252,13 +257,9 @@ export default function AgentPropertyForm() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="building">Building Name</Label>
-                <Input id="building" placeholder="e.g., Marina Gate Tower 1" value={formData.building_name} onChange={(e) => setFormData({ ...formData, building_name: e.target.value })} />
+                <Label htmlFor="area">Location Area *</Label>
+                <Input id="area" placeholder="e.g., Dubai Marina" value={formData.location_area} onChange={(e) => setFormData({ ...formData, location_area: e.target.value })} required />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="area">Location Area *</Label>
-              <Input id="area" placeholder="e.g., Dubai Marina" value={formData.location_area} onChange={(e) => setFormData({ ...formData, location_area: e.target.value })} required />
             </div>
           </CardContent>
         </Card>
