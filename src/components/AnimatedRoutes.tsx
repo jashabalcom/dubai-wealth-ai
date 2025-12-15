@@ -64,6 +64,16 @@ import ConnectionsPage from "@/pages/community/ConnectionsPage";
 import MessagesPage from "@/pages/community/MessagesPage";
 import LeaderboardPage from "@/pages/community/LeaderboardPage";
 
+// Agent Portal Pages
+import AgentPortalLanding from "@/pages/agent-portal/AgentPortalLanding";
+import AgentLogin from "@/pages/agent-portal/AgentLogin";
+import AgentRegister from "@/pages/agent-portal/AgentRegister";
+import AgentDashboard from "@/pages/agent-portal/AgentDashboard";
+import AgentListings from "@/pages/agent-portal/AgentListings";
+import AgentPropertyForm from "@/pages/agent-portal/AgentPropertyForm";
+import { AgentPortalLayout } from "@/components/agent-portal/AgentPortalLayout";
+import { AgentProtectedRoute } from "@/components/agent-portal/AgentProtectedRoute";
+
 // Wrapper component for page transitions
 function AnimatedPage({ children }: { children: React.ReactNode }) {
   return <PageTransition>{children}</PageTransition>;

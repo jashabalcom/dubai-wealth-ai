@@ -2297,6 +2297,7 @@ export type Database = {
           inquiries_count: number | null
           is_featured: boolean
           is_off_plan: boolean
+          is_published: boolean | null
           latitude: number | null
           listing_type: string | null
           location_area: string
@@ -2345,6 +2346,7 @@ export type Database = {
           inquiries_count?: number | null
           is_featured?: boolean
           is_off_plan?: boolean
+          is_published?: boolean | null
           latitude?: number | null
           listing_type?: string | null
           location_area: string
@@ -2393,6 +2395,7 @@ export type Database = {
           inquiries_count?: number | null
           is_featured?: boolean
           is_off_plan?: boolean
+          is_published?: boolean | null
           latitude?: number | null
           listing_type?: string | null
           location_area?: string
@@ -2836,6 +2839,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      get_agent_id_for_user: { Args: never; Returns: string }
       get_community_stats: {
         Args: never
         Returns: {

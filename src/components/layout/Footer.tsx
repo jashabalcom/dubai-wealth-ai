@@ -29,8 +29,8 @@ const footerLinks = {
     links: [
       { label: "About", href: "#" },
       { label: "Contact", href: "/contact" },
+      { label: "For Agents", href: "/agent-portal" },
       { label: "Careers", href: "#" },
-      { label: "Press", href: "#" },
       { label: "Partners", href: "#" },
     ],
   },
