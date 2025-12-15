@@ -173,6 +173,16 @@ export function AnimatedRoutes() {
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
         <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
         <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
+        
+        {/* Agent Portal Routes */}
+        <Route path="/agent-portal" element={<AnimatedPage><AgentPortalLanding /></AnimatedPage>} />
+        <Route path="/agent-portal/login" element={<AnimatedPage><AgentLogin /></AnimatedPage>} />
+        <Route path="/agent-portal/register" element={<AnimatedPage><AgentRegister /></AnimatedPage>} />
+        <Route path="/agent-portal/dashboard" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentDashboard /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/listings" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentListings /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/listings/new" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentPropertyForm /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/listings/:id/edit" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentPropertyForm /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
+        
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
     </AnimatePresence>

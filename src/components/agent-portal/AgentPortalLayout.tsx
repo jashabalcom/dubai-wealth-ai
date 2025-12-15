@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building2, 
@@ -22,7 +22,11 @@ const navItems = [
   { icon: User, label: 'My Profile', href: '/agent-portal/profile' },
 ];
 
-export function AgentPortalLayout() {
+interface AgentPortalLayoutProps {
+  children: React.ReactNode;
+}
+
+export function AgentPortalLayout({ children }: AgentPortalLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { agent } = useAgentAuth();
@@ -118,7 +122,7 @@ export function AgentPortalLayout() {
       {/* Main Content */}
       <main className="lg:ml-64 pt-16 lg:pt-0 min-h-screen">
         <div className="p-6 lg:p-8">
-          <Outlet />
+          {children}
         </div>
       </main>
     </div>
