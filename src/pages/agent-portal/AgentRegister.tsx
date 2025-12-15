@@ -151,7 +151,7 @@ export default function AgentRegister() {
           phone: formData.phone,
           whatsapp: formData.whatsapp || formData.phone,
           rera_brn: formData.reraBrn,
-          brokerage_id: formData.brokerageId || null,
+          brokerage_id: formData.brokerageId && formData.brokerageId !== 'independent' ? formData.brokerageId : null,
           years_experience: parseInt(formData.yearsExperience) || 0,
           specializations: formData.specializations,
           languages: formData.languages,
@@ -344,10 +344,10 @@ export default function AgentRegister() {
                         <SelectValue placeholder="Select your brokerage" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="independent">Other / Independent</SelectItem>
                         {brokerages.map((b) => (
                           <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                         ))}
-                        <SelectItem value="">Other / Independent</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
