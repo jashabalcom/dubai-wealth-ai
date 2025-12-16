@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, Heart, Users, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
@@ -280,12 +281,12 @@ export default function Properties() {
           {loading ? (
             <PropertyGridSkeleton />
           ) : filteredAndSortedProperties.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-heading text-xl text-foreground mb-2">No properties found</h3>
-              <p className="text-muted-foreground mb-4">Try adjusting your filters.</p>
-              <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
-            </div>
+            <EmptyState
+              icon={Building2}
+              title="No properties found"
+              description="Try adjusting your filters or search criteria to find properties that match what you're looking for."
+              action={{ label: 'Clear Filters', onClick: clearFilters }}
+            />
           ) : viewMode === 'map' ? (
             <PropertyMap properties={filteredAndSortedProperties} />
           ) : (

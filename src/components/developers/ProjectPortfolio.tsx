@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Folder } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EmptyState } from '@/components/ui/empty-state';
 import { ProjectCard } from './ProjectCard';
 import { useDeveloperProjects } from '@/hooks/useDevelopers';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,17 +68,13 @@ export function ProjectPortfolio({ developerId }: ProjectPortfolioProps) {
             ))}
           </motion.div>
         ) : (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <Folder className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              No projects found with the selected filter.
-            </p>
-          </motion.div>
+          <EmptyState
+            icon={Folder}
+            title="No projects found"
+            description="No projects match the selected filter. Try a different category."
+            action={statusFilter !== 'all' ? { label: 'View All', onClick: () => setStatusFilter('all') } : undefined}
+            className="py-12"
+          />
         )}
       </AnimatePresence>
     </div>

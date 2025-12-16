@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, BookOpen, BarChart3, Star, Search, Filter } from 'lucide-react';
+import { Clock, BookOpen, BarChart3, Star, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
@@ -186,9 +187,12 @@ export default function Academy() {
               <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
             </div>
           ) : filteredCourses.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No courses found matching your criteria.</p>
-            </div>
+            <EmptyState
+              icon={BookOpen}
+              title="No courses found"
+              description="We couldn't find any courses matching your search. Try a different keyword or browse all categories."
+              action={selectedCategory !== 'All' ? { label: 'View All', onClick: () => setSelectedCategory('All') } : undefined}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCourses.map((course, index) => {

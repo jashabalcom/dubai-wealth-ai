@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Building2, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EmptyState } from '@/components/ui/empty-state';
 import { DeveloperCard } from '@/components/developers/DeveloperCard';
 import { useDevelopers } from '@/hooks/useDevelopers';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -122,19 +123,12 @@ export default function Developers() {
                 ))}
               </div>
             ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-20"
-              >
-                <Building2 className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                  No Developers Found
-                </h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or filter criteria.
-                </p>
-              </motion.div>
+              <EmptyState
+                icon={Building2}
+                title="No developers found"
+                description="Try adjusting your search or filter criteria to find developers."
+                action={tierFilter !== 'all' ? { label: 'View All', onClick: () => setTierFilter('all') } : undefined}
+              />
             )}
           </div>
         </section>
