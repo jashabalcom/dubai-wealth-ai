@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Bayut API configuration
-const BAYUT_API_HOST = 'bayut.p.rapidapi.com';
+const BAYUT_API_HOST = 'bayut-com1.p.rapidapi.com';
 const BAYUT_API_BASE = `https://${BAYUT_API_HOST}`;
 
 // Dubai areas mapping
