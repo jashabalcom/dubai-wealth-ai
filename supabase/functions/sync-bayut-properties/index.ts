@@ -504,6 +504,41 @@ serve(async (req) => {
 
             const externalId = String(prop.id);
             
+            // VALIDATION: Skip properties with missing essential data
+            if (!prop.id) {
+              console.log(`[Bayut API] Skipping property - no ID`);
+              errors.push('Property skipped: no ID');
+              continue;
+            }
+            
+            if (!prop.price || prop.price <= 0) {
+              console.log(`[Bayut API] Skipping ${externalId} - no valid price`);
+              errors.push(`Property ${externalId}: no valid price`);
+              continue;
+            }
+            
+            // Skip LAND PLOTS (they don't have size_sqft)
+            const propTitle = (prop.title || '').toLowerCase();
+            const propCategory = (prop.category || '').toLowerCase();
+            if (propTitle.includes('plot') || propTitle.includes('land') || 
+                propCategory.includes('plot') || propCategory.includes('land')) {
+              console.log(`[Bayut API] Skipping ${externalId} - land/plot listing`);
+              continue;
+            }
+            
+            // Skip non-Dubai properties (check if location array exists and filter)
+            let locationName = '';
+            if (Array.isArray(prop.location)) {
+              locationName = prop.location.find((l: any) => l.level === 0)?.name?.toLowerCase() || '';
+            } else if (prop.geography?.city) {
+              locationName = prop.geography.city.toLowerCase();
+            }
+            // Only skip if we have location info and it's clearly not Dubai
+            if (locationName && !locationName.includes('dubai') && !locationName.includes('uae') && locationName.length > 0) {
+              console.log(`[Bayut API] Skipping ${externalId} - not in Dubai: ${locationName}`);
+              continue;
+            }
+            
             // Check if recently synced (within 24 hours)
             const { data: existing } = await supabase
               .from('properties')
@@ -576,6 +611,12 @@ serve(async (req) => {
 
             // Transform property with all new fields
             const transformedProperty = transformProperty(prop);
+            
+            // CRITICAL: Ensure size_sqft is never null/undefined
+            if (!transformedProperty.size_sqft || transformedProperty.size_sqft < 1) {
+              transformedProperty.size_sqft = 1;
+            }
+            
             transformedProperty.images = imageResult.rehostedImages;
             transformedProperty.gallery_urls = imageResult.cdnGalleryUrls;
             transformedProperty.floor_plan_urls = imageResult.floorPlanUrls;
@@ -1017,10 +1058,10 @@ function transformProperty(prop: any): any {
     external_url: prop.url || `https://www.bayut.com/property/details-${externalId}.html`,
     title,
     description: prop.description || null,
-    price_aed: prop.price || 0,
-    size_sqft: Math.round(prop.area || 0),
-    bedrooms,
-    bathrooms: prop.baths || 0,
+    price_aed: Math.max(0, prop.price || 0),
+    size_sqft: Math.max(1, Math.round(prop.area || prop.sqft || prop.builtupArea || 0)),
+    bedrooms: bedrooms || 0,
+    bathrooms: Math.max(0, prop.baths || 0),
     property_type: propertyType,
     listing_type: prop.purpose === 'for-rent' ? 'rent' : 'sale',
     location_area: locationArea,
