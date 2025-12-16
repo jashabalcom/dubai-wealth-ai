@@ -72,33 +72,35 @@ export function DSCRCharts({
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
       {/* Sensitivity Analysis Chart */}
       <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Interest Rate Sensitivity</CardTitle>
-          <p className="text-sm text-muted-foreground">DSCR impact at different rates</p>
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg font-semibold">Interest Rate Sensitivity</CardTitle>
+          <p className="text-xs sm:text-sm text-muted-foreground">DSCR impact at different rates</p>
         </CardHeader>
-        <CardContent>
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={sensitivityData} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="h-[240px] sm:h-[280px] overflow-x-auto scrollbar-hide">
+            <ResponsiveContainer width="100%" height="100%" minWidth={320}>
+              <BarChart data={sensitivityData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="rate" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                <XAxis dataKey="rate" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
                 <YAxis 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   domain={[0, 'auto']}
+                  width={35}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
+                    fontSize: '12px',
                   }}
                   formatter={(value: number) => [value.toFixed(2), 'DSCR']}
                 />
-                <ReferenceLine y={1.25} stroke="hsl(142, 76%, 36%)" strokeDasharray="5 5" label={{ value: 'Min 1.25x', fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
-                <ReferenceLine y={1.0} stroke="hsl(0, 84%, 60%)" strokeDasharray="5 5" label={{ value: 'Break-even', fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                <ReferenceLine y={1.25} stroke="hsl(142, 76%, 36%)" strokeDasharray="5 5" label={{ value: 'Min 1.25x', fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} />
+                <ReferenceLine y={1.0} stroke="hsl(0, 84%, 60%)" strokeDasharray="5 5" label={{ value: 'Break-even', fill: 'hsl(var(--muted-foreground))', fontSize: 9 }} />
                 <Bar dataKey="dscr" radius={[4, 4, 0, 0]}>
                   {sensitivityData.map((entry, index) => (
                     <Cell 
@@ -117,30 +119,31 @@ export function DSCRCharts({
 
       {/* Cash Flow Breakdown */}
       <Card className="bg-card border-border">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Annual Cash Flow</CardTitle>
-          <p className="text-sm text-muted-foreground">Income vs. debt obligations</p>
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg font-semibold">Annual Cash Flow</CardTitle>
+          <p className="text-xs sm:text-sm text-muted-foreground">Income vs. debt obligations</p>
         </CardHeader>
-        <CardContent>
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={cashFlowData} layout="vertical" margin={{ top: 20, right: 20, left: 80, bottom: 20 }}>
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="h-[240px] sm:h-[280px] overflow-x-auto scrollbar-hide">
+            <ResponsiveContainer width="100%" height="100%" minWidth={320}>
+              <BarChart data={cashFlowData} layout="vertical" margin={{ top: 20, right: 10, left: 70, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   type="number" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
                 />
                 <YAxis 
                   type="category" 
                   dataKey="name" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
+                    fontSize: '12px',
                   }}
                   formatter={(value: number) => [formatAED(value), 'Amount']}
                 />
@@ -157,25 +160,25 @@ export function DSCRCharts({
 
       {/* UAE Lender Comparison Table */}
       <Card className="bg-card border-border lg:col-span-2">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">UAE Commercial Lender Requirements</CardTitle>
-          <p className="text-sm text-muted-foreground">
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg font-semibold">UAE Commercial Lender Requirements</CardTitle>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Your DSCR: <span className={`font-bold ${dscr >= 1.25 ? 'text-green-500' : dscr >= 1.0 ? 'text-yellow-500' : 'text-red-500'}`}>
               {dscr.toFixed(2)}x
             </span>
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full text-xs sm:text-sm min-w-[500px]">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Lender</th>
-                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Type</th>
-                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Min DSCR</th>
-                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Max LTV</th>
-                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Rate From</th>
-                  <th className="text-center py-3 px-4 font-medium text-muted-foreground">Eligibility</th>
+                  <th className="text-left py-2 sm:py-3 px-3 sm:px-4 font-medium text-muted-foreground">Lender</th>
+                  <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground">Type</th>
+                  <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground">Min DSCR</th>
+                  <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground">Max LTV</th>
+                  <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground">Rate</th>
+                  <th className="text-center py-2 sm:py-3 px-2 sm:px-4 font-medium text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -183,20 +186,20 @@ export function DSCRCharts({
                   const isEligible = dscr >= lender.minDSCR;
                   return (
                     <tr key={lender.name} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 font-medium">{lender.name}</td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs ${lender.type === 'Islamic' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                      <td className="py-2 sm:py-3 px-3 sm:px-4 font-medium">{lender.name}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">
+                        <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs ${lender.type === 'Islamic' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}`}>
                           {lender.type}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-center font-mono">{lender.minDSCR.toFixed(2)}x</td>
-                      <td className="py-3 px-4 text-center">{lender.maxLTV}%</td>
-                      <td className="py-3 px-4 text-center">{lender.rate}</td>
-                      <td className="py-3 px-4 text-center">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-center font-mono">{lender.minDSCR.toFixed(2)}x</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">{lender.maxLTV}%</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">{lender.rate}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">
                         {isEligible ? (
-                          <span className="text-green-500 font-medium">✓ Eligible</span>
+                          <span className="text-green-500 font-medium">✓</span>
                         ) : (
-                          <span className="text-red-400 font-medium">✗ Below min</span>
+                          <span className="text-red-400 font-medium">✗</span>
                         )}
                       </td>
                     </tr>
@@ -205,8 +208,8 @@ export function DSCRCharts({
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            * Rates and requirements are indicative and subject to change. Contact lenders directly for current terms.
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-3 sm:mt-4">
+            * Rates and requirements are indicative and subject to change.
           </p>
         </CardContent>
       </Card>

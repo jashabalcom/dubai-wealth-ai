@@ -89,29 +89,30 @@ export function TotalCostCharts({ yearlyData, costBreakdown, formatValue, curren
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
       {/* Stacked Bar Chart - Cost Composition by Year */}
       <Card className="col-span-1 lg:col-span-2">
-        <CardHeader>
-          <CardTitle className="text-lg font-heading">Cost Composition by Year</CardTitle>
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg font-heading">Cost Composition by Year</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="h-[260px] sm:h-[300px] overflow-x-auto scrollbar-hide">
+            <ResponsiveContainer width="100%" height="100%" minWidth={400}>
               <BarChart data={yearlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="year" 
                   stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   tickFormatter={(value) => `${currencySymbol}${(value / 1000).toFixed(0)}k`}
+                  width={55}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Bar dataKey="acquisitionCost" name="Acquisition" stackId="a" fill={COLORS.acquisition} />
                 <Bar dataKey="ongoingCost" name="Ongoing" stackId="a" fill={COLORS.ongoing} />
                 <Bar dataKey="financingCost" name="Financing" stackId="a" fill={COLORS.financing} />
@@ -124,26 +125,27 @@ export function TotalCostCharts({ yearlyData, costBreakdown, formatValue, curren
 
       {/* Area Chart - Cumulative Costs vs Property Value */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-heading">Value vs Cost Over Time</CardTitle>
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg font-heading">Value vs Cost Over Time</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="h-[240px] sm:h-[280px] overflow-x-auto scrollbar-hide">
+            <ResponsiveContainer width="100%" height="100%" minWidth={350}>
               <ComposedChart data={yearlyData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="year" 
                   stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   tickFormatter={(value) => `${currencySymbol}${(value / 1000000).toFixed(1)}M`}
+                  width={50}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }} />
                 <Area 
                   type="monotone" 
                   dataKey="cumulativeCost" 
@@ -157,7 +159,7 @@ export function TotalCostCharts({ yearlyData, costBreakdown, formatValue, curren
                   dataKey="propertyValue" 
                   name="Property Value" 
                   stroke={COLORS.propertyValue}
-                  strokeWidth={3}
+                  strokeWidth={2}
                   dot={false}
                 />
                 <Line 
@@ -177,19 +179,19 @@ export function TotalCostCharts({ yearlyData, costBreakdown, formatValue, curren
 
       {/* Pie Chart - Total Cost Breakdown */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-heading">Total Cost Breakdown</CardTitle>
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg font-heading">Total Cost Breakdown</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[280px]">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="h-[220px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={45}
+                  outerRadius={75}
                   paddingAngle={2}
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -203,11 +205,11 @@ export function TotalCostCharts({ yearlyData, costBreakdown, formatValue, curren
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-4 flex flex-wrap justify-center gap-4">
+          <div className="mt-3 sm:mt-4 flex flex-wrap justify-center gap-3 sm:gap-4">
             {pieData.map((item) => (
               <div key={item.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                <span className="text-xs text-muted-foreground">{item.name}</span>
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="text-[10px] sm:text-xs text-muted-foreground">{item.name}</span>
               </div>
             ))}
           </div>

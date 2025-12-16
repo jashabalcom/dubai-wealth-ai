@@ -78,39 +78,40 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
   }));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Cost Comparison Bar Chart */}
       <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-lg text-foreground">Total First Year Cost Comparison</CardTitle>
+        <CardHeader className="p-4 sm:p-6 pb-2">
+          <CardTitle className="text-base sm:text-lg text-foreground">Total First Year Cost Comparison</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+        <CardContent className="p-4 sm:p-6 pt-0">
+          <div className="h-[260px] sm:h-[300px] overflow-x-auto scrollbar-hide">
+            <ResponsiveContainer width="100%" height="100%" minWidth={400}>
               <BarChart data={costComparisonData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   type="number" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
                 />
                 <YAxis 
                   type="category" 
                   dataKey="name" 
-                  width={80}
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  width={70}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     borderColor: 'hsl(var(--border))',
                     borderRadius: '8px',
+                    fontSize: '12px',
                   }}
                   labelStyle={{ color: 'hsl(var(--foreground))' }}
                   formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
                   labelFormatter={(label) => costComparisonData.find(d => d.name === label)?.fullName || label}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
                 <Bar dataKey="License Fee" stackId="a" fill="hsl(var(--gold))" />
                 <Bar dataKey="Visa Costs" stackId="a" fill="hsl(var(--chart-2))" />
                 <Bar dataKey="Office Cost" stackId="a" fill="hsl(var(--chart-3))" />
@@ -121,25 +122,25 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Radar Comparison Chart */}
         <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">Multi-Factor Comparison</CardTitle>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className="text-base sm:text-lg text-foreground">Multi-Factor Comparison</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="h-[260px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
                   <PolarAngleAxis 
                     dataKey="metric" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
                   />
                   <PolarRadiusAxis 
                     angle={90} 
                     domain={[0, 100]} 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
                   />
                   {zones.map((zone, index) => (
                     <Radar
@@ -151,12 +152,13 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
                       fillOpacity={0.2}
                     />
                   ))}
-                  <Legend />
+                  <Legend wrapperStyle={{ fontSize: '10px' }} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       borderColor: 'hsl(var(--border))',
                       borderRadius: '8px',
+                      fontSize: '12px',
                     }}
                   />
                 </RadarChart>
@@ -167,27 +169,29 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
 
         {/* Setup Time Comparison */}
         <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">Setup Time (Weeks)</CardTitle>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className="text-base sm:text-lg text-foreground">Setup Time (Weeks)</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="h-[260px] sm:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={setupTimeData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis 
                     dataKey="name" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   />
                   <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                     domain={[0, 5]}
+                    width={30}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'hsl(var(--card))',
                       borderColor: 'hsl(var(--border))',
                       borderRadius: '8px',
+                      fontSize: '12px',
                     }}
                     formatter={(value: number) => [`${value} week${value > 1 ? 's' : ''}`, 'Setup Time']}
                   />
@@ -206,11 +210,11 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
       {/* Cost Breakdown Pie Charts */}
       {zones.length > 0 && (
         <Card className="bg-card border-border">
-          <CardHeader>
-            <CardTitle className="text-lg text-foreground">Cost Breakdown by Zone</CardTitle>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className="text-base sm:text-lg text-foreground">Cost Breakdown by Zone</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`grid grid-cols-1 ${zones.length > 1 ? 'md:grid-cols-2' : ''} ${zones.length > 2 ? 'lg:grid-cols-4' : ''} gap-6`}>
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className={`grid grid-cols-1 ${zones.length > 1 ? 'sm:grid-cols-2' : ''} ${zones.length > 2 ? 'lg:grid-cols-4' : ''} gap-4 sm:gap-6`}>
               {zones.map((zone, zoneIndex) => {
                 const costs = calculateFirstYearCost(zone, { numVisas, officeType });
                 const pieData = [
@@ -222,9 +226,9 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
 
                 return (
                   <div key={zone.slug} className="text-center">
-                    <h4 className="font-medium text-foreground mb-2 text-sm">{zone.name}</h4>
-                    <p className="text-lg font-bold text-gold mb-2">AED {costs.total.toLocaleString()}</p>
-                    <div className="h-[180px]">
+                    <h4 className="font-medium text-foreground mb-1 text-xs sm:text-sm">{zone.name}</h4>
+                    <p className="text-base sm:text-lg font-bold text-gold mb-2">AED {costs.total.toLocaleString()}</p>
+                    <div className="h-[150px] sm:h-[180px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
@@ -233,8 +237,8 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
                             nameKey="name"
                             cx="50%"
                             cy="50%"
-                            innerRadius={40}
-                            outerRadius={70}
+                            innerRadius={30}
+                            outerRadius={55}
                             paddingAngle={2}
                           >
                             {pieData.map((entry, index) => (
@@ -246,6 +250,7 @@ export function FreeZoneCharts({ zones, numVisas, officeType }: FreeZoneChartsPr
                               backgroundColor: 'hsl(var(--card))',
                               borderColor: 'hsl(var(--border))',
                               borderRadius: '8px',
+                              fontSize: '11px',
                             }}
                             formatter={(value: number) => [`AED ${value.toLocaleString()}`, '']}
                           />
