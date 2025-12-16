@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useConnections } from '@/hooks/useConnections';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
@@ -126,6 +127,56 @@ export function CommunitySidebar({ collapsed, onToggleCollapse }: CommunitySideb
               const active = isActive(item.path, item.exact);
               const badgeCount = getBadgeCount(item.badgeKey);
 
+              const linkContent = (
+                <Link
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
+                    active
+                      ? "bg-gold/20 text-gold"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "h-5 w-5 shrink-0 transition-colors",
+                    active ? "text-gold" : "group-hover:text-foreground"
+                  )} />
+                  
+                  {!collapsed && (
+                    <span className="text-sm font-medium truncate">{item.label}</span>
+                  )}
+
+                  {item.badgeKey === 'live' && badgeCount > 0 ? (
+                    <motion.div
+                      initial={{ scale: 1 }}
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className={collapsed ? "absolute -top-1 -right-1" : ""}
+                    >
+                      <Badge 
+                        className="h-5 min-w-[20px] px-1.5 text-xs bg-red-500 text-white gap-1"
+                      >
+                        <Radio className="h-2.5 w-2.5" />
+                        {!collapsed && 'LIVE'}
+                      </Badge>
+                    </motion.div>
+                  ) : badgeCount > 0 && (
+                    <Badge 
+                      variant="secondary" 
+                      className={cn(
+                        "h-5 min-w-[20px] px-1.5 text-xs",
+                        item.badgeKey === 'pending' 
+                          ? "bg-destructive/20 text-destructive" 
+                          : "bg-gold/20 text-gold",
+                        collapsed && "absolute -top-1 -right-1"
+                      )}
+                    >
+                      {badgeCount > 9 ? '9+' : badgeCount}
+                    </Badge>
+                  )}
+                </Link>
+              );
+
               return (
                 <motion.div
                   key={item.path}
@@ -133,53 +184,21 @@ export function CommunitySidebar({ collapsed, onToggleCollapse }: CommunitySideb
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <Link
-                    to={item.path}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative",
-                      active
-                        ? "bg-gold/20 text-gold"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className={cn(
-                      "h-5 w-5 shrink-0 transition-colors",
-                      active ? "text-gold" : "group-hover:text-foreground"
-                    )} />
-                    
-                    {!collapsed && (
-                      <span className="text-sm font-medium truncate">{item.label}</span>
-                    )}
-
-                    {item.badgeKey === 'live' && badgeCount > 0 ? (
-                      <motion.div
-                        initial={{ scale: 1 }}
-                        animate={{ scale: [1, 1.1, 1] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                        className={collapsed ? "absolute -top-1 -right-1" : ""}
-                      >
-                        <Badge 
-                          className="h-5 min-w-[20px] px-1.5 text-xs bg-red-500 text-white gap-1"
-                        >
-                          <Radio className="h-2.5 w-2.5" />
-                          {!collapsed && 'LIVE'}
-                        </Badge>
-                      </motion.div>
-                    ) : badgeCount > 0 && (
-                      <Badge 
-                        variant="secondary" 
-                        className={cn(
-                          "h-5 min-w-[20px] px-1.5 text-xs",
-                          item.badgeKey === 'pending' 
-                            ? "bg-destructive/20 text-destructive" 
-                            : "bg-gold/20 text-gold",
-                          collapsed && "absolute -top-1 -right-1"
+                  {collapsed ? (
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        {linkContent}
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="font-medium">
+                        {item.label}
+                        {badgeCount > 0 && item.badgeKey !== 'live' && (
+                          <span className="ml-1.5 text-gold">({badgeCount})</span>
                         )}
-                      >
-                        {badgeCount > 9 ? '9+' : badgeCount}
-                      </Badge>
-                    )}
-                  </Link>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    linkContent
+                  )}
                 </motion.div>
               );
             })}
