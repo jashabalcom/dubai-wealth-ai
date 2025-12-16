@@ -111,7 +111,6 @@ const commercialTools = [
     icon: Scale,
     color: 'slate',
     href: '/tools/dscr',
-    comingSoon: true,
   },
   {
     id: 'lease-analyzer',
