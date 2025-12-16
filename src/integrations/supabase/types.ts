@@ -451,6 +451,159 @@ export type Database = {
         }
         Relationships: []
       }
+      bayut_agencies: {
+        Row: {
+          active_listings: number | null
+          average_agent_score: number | null
+          created_at: string
+          external_id: string
+          id: string
+          is_verified: boolean | null
+          license_number: string | null
+          logo_url: string | null
+          name: string
+          name_l1: string | null
+          phone: string | null
+          phone_numbers: Json | null
+          product_score: number | null
+          raw_data: Json | null
+          review_score: number | null
+          service_areas: Json | null
+          slug: string | null
+          specializations: Json | null
+          total_agents: number | null
+          total_reviews: number | null
+          updated_at: string
+        }
+        Insert: {
+          active_listings?: number | null
+          average_agent_score?: number | null
+          created_at?: string
+          external_id: string
+          id?: string
+          is_verified?: boolean | null
+          license_number?: string | null
+          logo_url?: string | null
+          name: string
+          name_l1?: string | null
+          phone?: string | null
+          phone_numbers?: Json | null
+          product_score?: number | null
+          raw_data?: Json | null
+          review_score?: number | null
+          service_areas?: Json | null
+          slug?: string | null
+          specializations?: Json | null
+          total_agents?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active_listings?: number | null
+          average_agent_score?: number | null
+          created_at?: string
+          external_id?: string
+          id?: string
+          is_verified?: boolean | null
+          license_number?: string | null
+          logo_url?: string | null
+          name?: string
+          name_l1?: string | null
+          phone?: string | null
+          phone_numbers?: Json | null
+          product_score?: number | null
+          raw_data?: Json | null
+          review_score?: number | null
+          service_areas?: Json | null
+          slug?: string | null
+          specializations?: Json | null
+          total_agents?: number | null
+          total_reviews?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bayut_agents: {
+        Row: {
+          agency_external_id: string | null
+          agent_rating: number | null
+          created_at: string
+          email: string | null
+          experience_since: number | null
+          external_id: string
+          id: string
+          is_active: boolean | null
+          is_trakheesi_verified: boolean | null
+          is_verified: boolean | null
+          languages: Json | null
+          name: string
+          name_l1: string | null
+          phone: string | null
+          phone_numbers: Json | null
+          photo_url: string | null
+          product_score: number | null
+          raw_data: Json | null
+          review_count: number | null
+          roles: Json | null
+          service_areas: Json | null
+          specializations: Json | null
+          updated_at: string
+          user_image_url: string | null
+        }
+        Insert: {
+          agency_external_id?: string | null
+          agent_rating?: number | null
+          created_at?: string
+          email?: string | null
+          experience_since?: number | null
+          external_id: string
+          id?: string
+          is_active?: boolean | null
+          is_trakheesi_verified?: boolean | null
+          is_verified?: boolean | null
+          languages?: Json | null
+          name: string
+          name_l1?: string | null
+          phone?: string | null
+          phone_numbers?: Json | null
+          photo_url?: string | null
+          product_score?: number | null
+          raw_data?: Json | null
+          review_count?: number | null
+          roles?: Json | null
+          service_areas?: Json | null
+          specializations?: Json | null
+          updated_at?: string
+          user_image_url?: string | null
+        }
+        Update: {
+          agency_external_id?: string | null
+          agent_rating?: number | null
+          created_at?: string
+          email?: string | null
+          experience_since?: number | null
+          external_id?: string
+          id?: string
+          is_active?: boolean | null
+          is_trakheesi_verified?: boolean | null
+          is_verified?: boolean | null
+          languages?: Json | null
+          name?: string
+          name_l1?: string | null
+          phone?: string | null
+          phone_numbers?: Json | null
+          photo_url?: string | null
+          product_score?: number | null
+          raw_data?: Json | null
+          review_count?: number | null
+          roles?: Json | null
+          service_areas?: Json | null
+          specializations?: Json | null
+          updated_at?: string
+          user_image_url?: string | null
+        }
+        Relationships: []
+      }
       bayut_sync_logs: {
         Row: {
           api_calls_used: number | null
@@ -2324,11 +2477,15 @@ export type Database = {
           agent_id: string | null
           amenities: Json | null
           bathrooms: number
+          bayut_agency_data: Json | null
+          bayut_agent_data: Json | null
+          bayut_building_info: Json | null
           bedrooms: number
           brokerage_id: string | null
           building_id: string | null
           community_id: string | null
           completion_date: string | null
+          completion_percent: number | null
           created_at: string
           description: string | null
           developer_id: string | null
@@ -2338,7 +2495,9 @@ export type Database = {
           external_source: string | null
           external_url: string | null
           floor_number: number | null
+          floor_plan_urls: string[] | null
           furnishing: string | null
+          gallery_urls: string[] | null
           highlights: Json | null
           id: string
           images: Json | null
@@ -2377,11 +2536,15 @@ export type Database = {
           agent_id?: string | null
           amenities?: Json | null
           bathrooms?: number
+          bayut_agency_data?: Json | null
+          bayut_agent_data?: Json | null
+          bayut_building_info?: Json | null
           bedrooms?: number
           brokerage_id?: string | null
           building_id?: string | null
           community_id?: string | null
           completion_date?: string | null
+          completion_percent?: number | null
           created_at?: string
           description?: string | null
           developer_id?: string | null
@@ -2391,7 +2554,9 @@ export type Database = {
           external_source?: string | null
           external_url?: string | null
           floor_number?: number | null
+          floor_plan_urls?: string[] | null
           furnishing?: string | null
+          gallery_urls?: string[] | null
           highlights?: Json | null
           id?: string
           images?: Json | null
@@ -2430,11 +2595,15 @@ export type Database = {
           agent_id?: string | null
           amenities?: Json | null
           bathrooms?: number
+          bayut_agency_data?: Json | null
+          bayut_agent_data?: Json | null
+          bayut_building_info?: Json | null
           bedrooms?: number
           brokerage_id?: string | null
           building_id?: string | null
           community_id?: string | null
           completion_date?: string | null
+          completion_percent?: number | null
           created_at?: string
           description?: string | null
           developer_id?: string | null
@@ -2444,7 +2613,9 @@ export type Database = {
           external_source?: string | null
           external_url?: string | null
           floor_number?: number | null
+          floor_plan_urls?: string[] | null
           furnishing?: string | null
+          gallery_urls?: string[] | null
           highlights?: Json | null
           id?: string
           images?: Json | null
