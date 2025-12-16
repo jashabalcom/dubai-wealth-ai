@@ -88,14 +88,14 @@ export default function AdminBayutSync() {
 
   // Property filters
   const [purpose, setPurpose] = useState<'for-sale' | 'for-rent'>('for-sale');
-  const [category, setCategory] = useState<string>('');
+  const [category, setCategory] = useState<string>('all');
   const [selectedRooms, setSelectedRooms] = useState<number[]>([]);
   const [priceMin, setPriceMin] = useState<string>('');
   const [priceMax, setPriceMax] = useState<string>('');
   const [areaMin, setAreaMin] = useState<string>('');
   const [areaMax, setAreaMax] = useState<string>('');
-  const [completionStatus, setCompletionStatus] = useState<string>('');
-  const [saleType, setSaleType] = useState<string>('');
+  const [completionStatus, setCompletionStatus] = useState<string>('all');
+  const [saleType, setSaleType] = useState<string>('all');
   const [hasVideo, setHasVideo] = useState(false);
   const [hasPanorama, setHasPanorama] = useState(false);
   const [hasFloorplan, setHasFloorplan] = useState(false);
@@ -221,14 +221,14 @@ export default function AdminBayutSync() {
           action: 'sync_properties',
           locations_ids: selectedLocations.map(l => l.id),
           purpose,
-          category: category || undefined,
+          category: category !== 'all' ? category : undefined,
           rooms: selectedRooms.length > 0 ? selectedRooms : undefined,
           price_min: priceMin ? parseInt(priceMin) : undefined,
           price_max: priceMax ? parseInt(priceMax) : undefined,
           area_min: areaMin ? parseInt(areaMin) : undefined,
           area_max: areaMax ? parseInt(areaMax) : undefined,
-          completion_status: completionStatus || undefined,
-          sale_type: saleType || undefined,
+          completion_status: completionStatus !== 'all' ? completionStatus : undefined,
+          sale_type: saleType !== 'all' ? saleType : undefined,
           has_video: hasVideo || undefined,
           has_panorama: hasPanorama || undefined,
           has_floorplan: hasFloorplan || undefined,
@@ -511,7 +511,7 @@ export default function AdminBayutSync() {
                         <SelectValue placeholder="All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                         <SelectItem value="apartments">Apartments</SelectItem>
                         <SelectItem value="villas">Villas</SelectItem>
                         <SelectItem value="townhouses">Townhouses</SelectItem>
@@ -527,7 +527,7 @@ export default function AdminBayutSync() {
                         <SelectValue placeholder="All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All</SelectItem>
+                      <SelectItem value="all">All</SelectItem>
                         <SelectItem value="ready">Ready</SelectItem>
                         <SelectItem value="off_plan">Off-Plan</SelectItem>
                       </SelectContent>
@@ -541,7 +541,7 @@ export default function AdminBayutSync() {
                         <SelectValue placeholder="All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="resale">Resale</SelectItem>
                       </SelectContent>
