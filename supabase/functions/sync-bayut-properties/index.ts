@@ -162,8 +162,8 @@ serve(async (req) => {
       const errors: string[] = [];
 
       try {
-        // Fetch property listings
-        const listUrl = `${BAYUT_API_BASE}/properties/list?locationExternalIDs=${locationId}&purpose=${purpose}&hitsPerPage=${limit}&page=0&lang=en&sort=date-desc&rentFrequency=yearly`;
+        // Fetch property listings - use minimal required parameters
+        const listUrl = `${BAYUT_API_BASE}/properties/list?locationExternalIDs=${locationId}&purpose=${purpose}&hitsPerPage=${limit}&page=0`;
         
         console.log(`[Bayut Sync] Fetching list: ${listUrl}`);
         
