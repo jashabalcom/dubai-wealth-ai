@@ -44,6 +44,92 @@ const DUBAI_KEYWORDS = [
   'developer', 'launch', 'project', 'investment', 'buyer', 'investor'
 ];
 
+// Scrape article content using Firecrawl
+async function scrapeArticle(url: string, firecrawlKey: string): Promise<{ content: string; imageUrl: string | null } | null> {
+  try {
+    console.log(`[Firecrawl] Scraping: ${url}`);
+    
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${firecrawlKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['markdown'],
+        onlyMainContent: true,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[Firecrawl] Failed: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const markdown = data.data?.markdown || data.markdown || '';
+    const ogImage = data.data?.metadata?.ogImage || data.metadata?.ogImage || null;
+    
+    console.log(`[Firecrawl] Got ${markdown.length} chars, image: ${ogImage ? 'yes' : 'no'}`);
+    
+    return { content: markdown, imageUrl: ogImage };
+  } catch (error) {
+    console.error(`[Firecrawl] Error:`, error);
+    return null;
+  }
+}
+
+// Generate AI summary using Lovable AI
+async function generateSummary(title: string, content: string, lovableKey: string): Promise<string | null> {
+  try {
+    console.log(`[AI] Generating summary for: ${title.slice(0, 50)}...`);
+    
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a Dubai real estate investment analyst. Write a concise, investor-focused summary (150-200 words) of this news article. 
+
+Focus on:
+- Key takeaway for investors (1 sentence)
+- What this means for the Dubai property market
+- Any investment opportunities or risks mentioned
+- Relevant numbers/data if present
+
+Write in a professional, analytical tone. Do NOT use markdown headers. Just write flowing paragraphs.`
+          },
+          {
+            role: 'user',
+            content: `Title: ${title}\n\nArticle Content:\n${content.slice(0, 4000)}`
+          }
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[AI] Failed: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const summary = data.choices?.[0]?.message?.content || '';
+    
+    console.log(`[AI] Generated ${summary.length} chars summary`);
+    return summary;
+  } catch (error) {
+    console.error(`[AI] Error:`, error);
+    return null;
+  }
+}
+
 // Parse RSS XML to extract articles
 async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: string[]): Promise<any[]> {
   try {
@@ -171,6 +257,9 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: s
   }
 }
 
+// Delay helper
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -179,12 +268,17 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('Starting RSS sync...');
+    console.log('Starting RSS sync with Firecrawl + AI...');
+    console.log(`Firecrawl key: ${firecrawlKey ? 'configured' : 'missing'}`);
+    console.log(`Lovable AI key: ${lovableKey ? 'configured' : 'missing'}`);
     
     let totalSynced = 0;
     let totalSkipped = 0;
+    let totalEnriched = 0;
     const errors: string[] = [];
 
     for (const feed of RSS_FEEDS) {
@@ -201,12 +295,42 @@ serve(async (req) => {
           .single();
 
         if (!existing) {
+          let enrichedContent = null;
+          let enrichedImage = article.image_url;
+
+          // Try to scrape and generate summary if keys are available
+          if (firecrawlKey && lovableKey) {
+            // Rate limit: 600ms between scrapes
+            await delay(600);
+            
+            const scraped = await scrapeArticle(article.source_url, firecrawlKey);
+            
+            if (scraped) {
+              // Use OG image from scrape if we don't have one
+              if (!enrichedImage && scraped.imageUrl) {
+                enrichedImage = scraped.imageUrl;
+              }
+              
+              // Generate AI summary
+              if (scraped.content && scraped.content.length > 100) {
+                await delay(300); // Small delay between AI calls
+                enrichedContent = await generateSummary(article.title, scraped.content, lovableKey);
+                if (enrichedContent) {
+                  totalEnriched++;
+                }
+              }
+            }
+          }
+
           const { error } = await supabase
             .from('news_articles')
             .insert({
               ...article,
+              image_url: enrichedImage,
+              content: enrichedContent, // AI-generated summary
               article_type: 'headline',
-              status: 'published', // Headlines auto-publish
+              status: 'published',
+              reading_time_minutes: enrichedContent ? Math.ceil(enrichedContent.split(' ').length / 200) : 2,
             });
 
           if (error) {
@@ -221,12 +345,13 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Sync complete: ${totalSynced} new, ${totalSkipped} skipped`);
+    console.log(`Sync complete: ${totalSynced} new, ${totalEnriched} enriched, ${totalSkipped} skipped`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         synced: totalSynced, 
+        enriched: totalEnriched,
         skipped: totalSkipped,
         errors: errors.length > 0 ? errors : undefined
       }),

@@ -52,8 +52,9 @@ const PLACEHOLDER_IMAGE = 'data:image/svg+xml,' + encodeURIComponent(`
 </svg>
 `);
 
-function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect?: (article: NewsArticle) => void }) {
+function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect: (article: NewsArticle) => void }) {
   const isFeatured = article.article_type === 'featured';
+  const hasContent = !!(article.content && article.content.length > 50);
   const imageUrl = article.image_url || PLACEHOLDER_IMAGE;
 
   if (isFeatured) {
@@ -63,7 +64,7 @@ function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect?: (
         animate={{ opacity: 1, y: 0 }}
         className="col-span-full"
       >
-        <Card className="overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 hover:border-gold/30 transition-all duration-300 group">
+        <Card className="overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 hover:border-gold/30 transition-all duration-300 group cursor-pointer" onClick={() => onSelect(article)}>
           <div className="grid md:grid-cols-2 gap-0">
             <div className="aspect-[16/10] md:aspect-auto overflow-hidden">
               <img 
@@ -100,7 +101,6 @@ function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect?: (
                 <Button 
                   variant="ghost" 
                   className="text-gold hover:text-gold hover:bg-gold/10"
-                  onClick={() => onSelect?.(article)}
                 >
                   Read Analysis <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
@@ -112,7 +112,7 @@ function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect?: (
     );
   }
 
-  // Headline card
+  // Headline card - now opens in-app
   return (
     <motion.article
       initial={{ opacity: 0, y: 20 }}
@@ -120,51 +120,55 @@ function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect?: (
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <a 
-        href={article.source_url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="block h-full"
+      <Card 
+        className="h-full overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5 transition-all duration-300 group cursor-pointer"
+        onClick={() => onSelect(article)}
       >
-        <Card className="h-full overflow-hidden bg-card/80 backdrop-blur-sm border-border/50 hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5 transition-all duration-300 group">
-          <div className="aspect-[16/10] overflow-hidden">
-            <img 
-              src={imageUrl} 
-              alt={article.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE; }}
-            />
-          </div>
-          <CardContent className="p-5">
+        <div className="aspect-[16/10] overflow-hidden">
+          <img 
+            src={imageUrl} 
+            alt={article.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => { e.currentTarget.src = PLACEHOLDER_IMAGE; }}
+          />
+        </div>
+        <CardContent className="p-5">
+          <div className="flex items-center gap-2 mb-3">
             <Badge 
               variant="secondary" 
-              className={`${CATEGORY_COLORS[article.category]} border text-xs mb-3`}
+              className={`${CATEGORY_COLORS[article.category]} border text-xs`}
             >
               {CATEGORY_LABELS[article.category] || article.category}
             </Badge>
-            <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-gold transition-colors mb-2 line-clamp-2">
-              {article.title}
-            </h3>
-            <div className="w-10 h-0.5 bg-gold/40 mb-3" />
-            {article.excerpt && (
-              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{article.excerpt}</p>
+            {hasContent && (
+              <Badge variant="outline" className="text-xs border-gold/30 text-gold">
+                Summary
+              </Badge>
             )}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{article.source_name}</span>
-              <span className="flex items-center gap-1">
-                {article.published_at && formatDistanceToNow(new Date(article.published_at), { addSuffix: true })}
-                <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </a>
+          </div>
+          <h3 className="font-serif text-lg font-semibold text-foreground group-hover:text-gold transition-colors mb-2 line-clamp-2">
+            {article.title}
+          </h3>
+          <div className="w-10 h-0.5 bg-gold/40 mb-3" />
+          {article.excerpt && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{article.excerpt}</p>
+          )}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{article.source_name}</span>
+            <span className="flex items-center gap-1">
+              {article.published_at && formatDistanceToNow(new Date(article.published_at), { addSuffix: true })}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
     </motion.article>
   );
 }
 
 function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: () => void }) {
   const imageUrl = article.image_url || PLACEHOLDER_IMAGE;
+  const hasContent = !!(article.content && article.content.length > 50);
+  const isFeatured = article.article_type === 'featured';
 
   // ESC key handler
   useEffect(() => {
@@ -216,7 +220,9 @@ function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: ()
           <Badge variant="secondary" className={`${CATEGORY_COLORS[article.category]} border`}>
             {CATEGORY_LABELS[article.category] || article.category}
           </Badge>
-          <Badge variant="outline">Featured Analysis</Badge>
+          <Badge variant="outline">
+            {isFeatured ? 'Featured Analysis' : hasContent ? 'Investment Summary' : 'News Headline'}
+          </Badge>
         </div>
 
         <h1 className="font-serif text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -226,26 +232,48 @@ function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: ()
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8 pb-8 border-b border-border">
           <span className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            {article.reading_time_minutes || 5} min read
+            {article.reading_time_minutes || 2} min read
           </span>
           <span>
             {article.published_at && format(new Date(article.published_at), 'MMMM d, yyyy')}
           </span>
+          <span className="text-muted-foreground/60">
+            via {article.source_name}
+          </span>
+        </div>
+
+        {/* Article Content */}
+        {hasContent ? (
+          <article className="prose-luxury mb-8">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {(article.content || '').replace(/^#\s+.+\n+/, '')}
+            </ReactMarkdown>
+          </article>
+        ) : (
+          <div className="mb-8">
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              {article.excerpt}
+            </p>
+          </div>
+        )}
+
+        {/* Read Original Article Button */}
+        <div className="pt-6 border-t border-border">
           <a 
             href={article.source_url} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-gold hover:underline flex items-center gap-1"
+            className="inline-flex"
           >
-            Source: {article.source_name} <ExternalLink className="h-3 w-3" />
+            <Button variant="outline" className="gap-2 hover:border-gold hover:text-gold">
+              Read Original Article
+              <ExternalLink className="h-4 w-4" />
+            </Button>
           </a>
+          <p className="text-xs text-muted-foreground mt-2">
+            Opens in a new tab at {article.source_name}
+          </p>
         </div>
-
-        <article className="prose-luxury">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {(article.content || article.excerpt || '').replace(/^#\s+.+\n+/, '')}
-          </ReactMarkdown>
-        </article>
       </div>
     </motion.div>
   );
