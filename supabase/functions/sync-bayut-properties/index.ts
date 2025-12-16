@@ -556,8 +556,37 @@ serve(async (req) => {
               }
             }
 
-            // HYBRID IMAGE STORAGE
-            const imageResult = await processPropertyImages(supabase, prop, externalId);
+            // FETCH FULL PROPERTY DETAILS (search results don't include photos)
+            let fullProp = prop;
+            try {
+              console.log(`[Bayut API] Fetching details for ${externalId}`);
+              const detailResponse = await fetch(
+                `${API_BASE}/property/${externalId}`,
+                {
+                  headers: {
+                    'X-RapidAPI-Key': rapidApiKey,
+                    'X-RapidAPI-Host': API_HOST,
+                  },
+                }
+              );
+              apiCallsUsed++;
+              
+              if (detailResponse.ok) {
+                const detailData = await detailResponse.json();
+                fullProp = detailData;
+                console.log(`[Bayut API] Got details for ${externalId}, photos: ${fullProp.photos?.length || 0}`);
+              } else {
+                console.log(`[Bayut API] Detail fetch failed for ${externalId}, using search data`);
+              }
+              
+              // Rate limit between detail fetches
+              await new Promise(r => setTimeout(r, 300));
+            } catch (detailError) {
+              console.error(`[Bayut API] Detail fetch error for ${externalId}:`, detailError);
+            }
+
+            // HYBRID IMAGE STORAGE (use fullProp which has photos)
+            const imageResult = await processPropertyImages(supabase, fullProp, externalId);
             photosRehosted += imageResult.rehostedCount;
             photosCdnReferenced += imageResult.cdnCount;
             floorPlansRehosted += imageResult.floorPlansCount;
@@ -609,8 +638,8 @@ serve(async (req) => {
               }
             }
 
-            // Transform property with all new fields
-            const transformedProperty = transformProperty(prop);
+            // Transform property with all new fields (use fullProp which has complete data)
+            const transformedProperty = transformProperty(fullProp);
             
             // CRITICAL: Ensure size_sqft is never null/undefined
             if (!transformedProperty.size_sqft || transformedProperty.size_sqft < 1) {
@@ -1060,8 +1089,18 @@ function transformProperty(prop: any): any {
     description: prop.description || null,
     price_aed: Math.max(0, prop.price || 0),
     // Robust size_sqft parsing with NaN protection
+    // Handles: area.built_up (nested), area (number), sqft, builtupArea
     size_sqft: (() => {
-      const rawArea = prop.area ?? prop.sqft ?? prop.builtupArea ?? 0;
+      let rawArea = 0;
+      if (prop.area?.built_up) {
+        rawArea = prop.area.built_up;
+      } else if (typeof prop.area === 'number') {
+        rawArea = prop.area;
+      } else if (prop.sqft) {
+        rawArea = prop.sqft;
+      } else if (prop.builtupArea) {
+        rawArea = prop.builtupArea;
+      }
       const parsed = typeof rawArea === 'number' ? rawArea : parseFloat(rawArea);
       return Math.max(1, Math.round(isNaN(parsed) ? 1 : parsed));
     })(),
