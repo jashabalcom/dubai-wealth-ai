@@ -1866,6 +1866,216 @@ export type Database = {
           },
         ]
       }
+      mortgage_leads: {
+        Row: {
+          admin_notes: string | null
+          assigned_partner_id: string | null
+          consent_bank_contact: boolean
+          consent_marketing: boolean | null
+          converted_at: string | null
+          created_at: string
+          down_payment_amount: number
+          down_payment_percent: number
+          email: string
+          employment_status: string
+          existing_mortgage: boolean | null
+          first_time_buyer: boolean | null
+          full_name: string
+          id: string
+          interest_rate: number
+          is_off_plan: boolean | null
+          lead_score: number | null
+          loan_amount: number
+          loan_term_years: number
+          monthly_income_range: string
+          monthly_payment: number
+          partner_notified_at: string | null
+          phone: string
+          preferred_contact_method: string | null
+          property_area: string | null
+          property_id: string | null
+          property_price: number
+          property_type: string | null
+          purchase_timeline: string
+          referrer_url: string | null
+          revenue_earned: number | null
+          status: string
+          uae_resident: boolean | null
+          updated_at: string
+          user_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_partner_id?: string | null
+          consent_bank_contact?: boolean
+          consent_marketing?: boolean | null
+          converted_at?: string | null
+          created_at?: string
+          down_payment_amount: number
+          down_payment_percent: number
+          email: string
+          employment_status: string
+          existing_mortgage?: boolean | null
+          first_time_buyer?: boolean | null
+          full_name: string
+          id?: string
+          interest_rate: number
+          is_off_plan?: boolean | null
+          lead_score?: number | null
+          loan_amount: number
+          loan_term_years: number
+          monthly_income_range: string
+          monthly_payment: number
+          partner_notified_at?: string | null
+          phone: string
+          preferred_contact_method?: string | null
+          property_area?: string | null
+          property_id?: string | null
+          property_price: number
+          property_type?: string | null
+          purchase_timeline: string
+          referrer_url?: string | null
+          revenue_earned?: number | null
+          status?: string
+          uae_resident?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_partner_id?: string | null
+          consent_bank_contact?: boolean
+          consent_marketing?: boolean | null
+          converted_at?: string | null
+          created_at?: string
+          down_payment_amount?: number
+          down_payment_percent?: number
+          email?: string
+          employment_status?: string
+          existing_mortgage?: boolean | null
+          first_time_buyer?: boolean | null
+          full_name?: string
+          id?: string
+          interest_rate?: number
+          is_off_plan?: boolean | null
+          lead_score?: number | null
+          loan_amount?: number
+          loan_term_years?: number
+          monthly_income_range?: string
+          monthly_payment?: number
+          partner_notified_at?: string | null
+          phone?: string
+          preferred_contact_method?: string | null
+          property_area?: string | null
+          property_id?: string | null
+          property_price?: number
+          property_type?: string | null
+          purchase_timeline?: string
+          referrer_url?: string | null
+          revenue_earned?: number | null
+          status?: string
+          uae_resident?: boolean | null
+          updated_at?: string
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mortgage_leads_assigned_partner_id_fkey"
+            columns: ["assigned_partner_id"]
+            isOneToOne: false
+            referencedRelation: "mortgage_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mortgage_leads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mortgage_partners: {
+        Row: {
+          base_rate: number | null
+          contact_email: string | null
+          contact_phone: string | null
+          cpa_amount: number | null
+          cpl_amount: number | null
+          created_at: string
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          logo_url: string | null
+          max_loan_amount: number | null
+          max_ltv: number | null
+          min_loan_amount: number | null
+          name: string
+          partnership_type: string
+          processing_fee_percent: number | null
+          sponsorship_monthly: number | null
+          updated_at: string
+          website_url: string | null
+        }
+        Insert: {
+          base_rate?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          cpa_amount?: number | null
+          cpl_amount?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          max_loan_amount?: number | null
+          max_ltv?: number | null
+          min_loan_amount?: number | null
+          name: string
+          partnership_type?: string
+          processing_fee_percent?: number | null
+          sponsorship_monthly?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Update: {
+          base_rate?: number | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          cpa_amount?: number | null
+          cpl_amount?: number | null
+          created_at?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          max_loan_amount?: number | null
+          max_ltv?: number | null
+          min_loan_amount?: number | null
+          name?: string
+          partnership_type?: string
+          processing_fee_percent?: number | null
+          sponsorship_monthly?: number | null
+          updated_at?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       neighborhood_pois: {
         Row: {
           address: string | null
