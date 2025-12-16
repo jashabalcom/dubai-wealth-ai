@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Info, Database, Loader2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Info, Database, TrendingUp, TrendingDown, Minus, RotateCcw } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -15,6 +15,7 @@ import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { useAirbnbMarketData, useHasAirbnbMarketData } from '@/hooks/useAirbnbMarketData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
@@ -24,9 +25,57 @@ function formatAED(amount: number): string {
   return `AED ${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
+// Market benchmark comparison badge
+function MarketBenchmark({ 
+  value, 
+  marketValue, 
+  label,
+  isPercentage = false 
+}: { 
+  value: number; 
+  marketValue: number | null; 
+  label: string;
+  isPercentage?: boolean;
+}) {
+  if (!marketValue) return null;
+  
+  const diff = ((value - marketValue) / marketValue) * 100;
+  const isAbove = diff > 5;
+  const isBelow = diff < -5;
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${
+            isAbove ? 'bg-emerald-500/10 text-emerald-400' : 
+            isBelow ? 'bg-orange-500/10 text-orange-400' : 
+            'bg-muted text-muted-foreground'
+          }`}>
+            {isAbove ? <TrendingUp className="w-3 h-3" /> : 
+             isBelow ? <TrendingDown className="w-3 h-3" /> : 
+             <Minus className="w-3 h-3" />}
+            <span>{isAbove ? '+' : ''}{diff.toFixed(0)}%</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">
+            {label}: {isPercentage ? `${marketValue.toFixed(0)}%` : formatAED(marketValue)}
+            <br />
+            Your estimate is {Math.abs(diff).toFixed(0)}% {isAbove ? 'above' : isBelow ? 'below' : 'at'} market
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export default function AirbnbCalculator() {
   const { formatPrice } = useCurrency();
   const [activePreset, setActivePreset] = useState<string>();
+  const [isUsingMarketData, setIsUsingMarketData] = useState(false);
+  const prevAreaRef = useRef<string>();
+  const prevBedroomsRef = useRef<number>();
   
   // Market data integration
   const { data: hasMarketData } = useHasAirbnbMarketData();
@@ -63,6 +112,10 @@ export default function AirbnbCalculator() {
   const handleChange = (field: string, value: number | string) => {
     setInputs(prev => ({ ...prev, [field]: value }));
     if (field !== 'selectedArea') setActivePreset(undefined);
+    // Clear market data flag when user manually changes rates/occupancy
+    if (['nightlyRatePeak', 'nightlyRateMid', 'nightlyRateLow', 'occupancyPeak', 'occupancyMid', 'occupancyLow'].includes(field)) {
+      setIsUsingMarketData(false);
+    }
   };
 
   const handlePresetSelect = (preset: AreaPreset) => {
@@ -76,6 +129,7 @@ export default function AirbnbCalculator() {
       selectedArea: preset.name,
     }));
     setActivePreset(preset.name);
+    setIsUsingMarketData(false);
   };
 
   // Fetch market data for selected area and bedrooms
@@ -84,22 +138,44 @@ export default function AirbnbCalculator() {
     bedrooms: inputs.bedrooms,
   });
 
-  const handleUseMarketData = () => {
-    if (!marketData) {
-      toast.info('No market data available yet. Connect AirDNA API to enable this feature.');
-      return;
+  // Auto-populate when area or bedrooms change and market data is available
+  useEffect(() => {
+    if (!marketData) return;
+    
+    const areaChanged = prevAreaRef.current !== inputs.selectedArea;
+    const bedroomsChanged = prevBedroomsRef.current !== inputs.bedrooms;
+    
+    if ((areaChanged || bedroomsChanged) && prevAreaRef.current !== undefined) {
+      // Auto-apply market data when area/bedrooms change
+      setInputs(prev => ({
+        ...prev,
+        nightlyRatePeak: marketData.peak_daily_rate || prev.nightlyRatePeak,
+        nightlyRateMid: marketData.avg_daily_rate || prev.nightlyRateMid,
+        nightlyRateLow: marketData.low_daily_rate || prev.nightlyRateLow,
+        occupancyPeak: marketData.peak_occupancy || prev.occupancyPeak,
+        occupancyMid: marketData.avg_occupancy || prev.occupancyMid,
+        occupancyLow: marketData.low_occupancy || prev.occupancyLow,
+      }));
+      setIsUsingMarketData(true);
+      toast.success(`Updated with ${inputs.selectedArea} market data`, { duration: 2000 });
     }
+    
+    prevAreaRef.current = inputs.selectedArea;
+    prevBedroomsRef.current = inputs.bedrooms;
+  }, [marketData, inputs.selectedArea, inputs.bedrooms]);
 
+  const handleResetToDefaults = () => {
     setInputs(prev => ({
       ...prev,
-      nightlyRatePeak: marketData.peak_daily_rate || prev.nightlyRatePeak,
-      nightlyRateMid: marketData.avg_daily_rate || prev.nightlyRateMid,
-      nightlyRateLow: marketData.low_daily_rate || prev.nightlyRateLow,
-      occupancyPeak: marketData.peak_occupancy || prev.occupancyPeak,
-      occupancyMid: marketData.avg_occupancy || prev.occupancyMid,
-      occupancyLow: marketData.low_occupancy || prev.occupancyLow,
+      nightlyRatePeak: 1200,
+      nightlyRateMid: 800,
+      nightlyRateLow: 500,
+      occupancyPeak: 85,
+      occupancyMid: 70,
+      occupancyLow: 50,
     }));
-    toast.success('Rates updated with real market data!');
+    setIsUsingMarketData(false);
+    toast.info('Reset to default rates');
   };
 
   // Season definitions
@@ -212,49 +288,51 @@ export default function AirbnbCalculator() {
                   <div className="flex items-center gap-3">
                     <Database className="w-5 h-5 text-blue-400" />
                     <div>
-                      <p className="text-sm font-medium text-foreground">AirDNA Market Data</p>
+                      <p className="text-sm font-medium text-foreground">Market Data</p>
                       <p className="text-xs text-muted-foreground">
-                        {hasMarketData 
-                          ? 'Real market data available' 
-                          : 'Connect API for real rates & occupancy'}
+                        {isUsingMarketData 
+                          ? `Using ${inputs.selectedArea} ${inputs.bedrooms}BR data` 
+                          : hasMarketData 
+                            ? 'Auto-syncs when you change area' 
+                            : 'Coming soon'}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {marketData && (
+                    {isUsingMarketData && (
                       <Badge variant="secondary" className="text-xs bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                        Data Available
+                        Market Data Active
                       </Badge>
                     )}
-                    <Button
-                      size="sm"
-                      variant={marketData ? "default" : "outline"}
-                      onClick={handleUseMarketData}
-                      disabled={isLoadingMarketData || !hasMarketData}
-                      className="text-xs"
-                    >
-                      {isLoadingMarketData ? (
-                        <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Loading...</>
-                      ) : hasMarketData ? (
-                        'Use Market Data'
-                      ) : (
-                        'Coming Soon'
-                      )}
-                    </Button>
+                    {isUsingMarketData && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleResetToDefaults}
+                        className="text-xs h-7 px-2"
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" />
+                        Reset
+                      </Button>
+                    )}
                   </div>
                 </div>
                 {marketData && (
-                  <div className="mt-3 pt-3 border-t border-blue-500/10 grid grid-cols-3 gap-4 text-xs">
+                  <div className="mt-3 pt-3 border-t border-blue-500/10 grid grid-cols-4 gap-3 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Avg Daily Rate</span>
+                      <span className="text-muted-foreground">Avg Rate</span>
                       <p className="font-medium text-foreground">{formatAED(marketData.avg_daily_rate || 0)}</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Avg Occupancy</span>
+                      <span className="text-muted-foreground">Occupancy</span>
                       <p className="font-medium text-foreground">{marketData.avg_occupancy?.toFixed(0) || '--'}%</p>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Active Listings</span>
+                      <span className="text-muted-foreground">Avg Revenue</span>
+                      <p className="font-medium text-foreground">{marketData.avg_annual_revenue ? formatAED(marketData.avg_annual_revenue) : '--'}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Listings</span>
                       <p className="font-medium text-foreground">{marketData.active_listings_count?.toLocaleString() || '--'}</p>
                     </div>
                   </div>
@@ -282,17 +360,53 @@ export default function AirbnbCalculator() {
                     <span>Weekday rates shown</span>
                   </div>
                 </div>
-                <SliderInput label="Peak Season (Nov-Feb)" value={inputs.nightlyRatePeak} onChange={(v) => handleChange('nightlyRatePeak', v)} min={300} max={5000} step={50} formatValue={formatAED} />
-                <SliderInput label="Mid Season (Mar-Apr, Sep-Oct)" value={inputs.nightlyRateMid} onChange={(v) => handleChange('nightlyRateMid', v)} min={200} max={3000} step={50} formatValue={formatAED} />
-                <SliderInput label="Low Season (May-Aug)" value={inputs.nightlyRateLow} onChange={(v) => handleChange('nightlyRateLow', v)} min={100} max={2000} step={50} formatValue={formatAED} />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Peak Season (Nov-Feb)</span>
+                    <MarketBenchmark value={inputs.nightlyRatePeak} marketValue={marketData?.peak_daily_rate || null} label="Market peak rate" />
+                  </div>
+                  <SliderInput label="" value={inputs.nightlyRatePeak} onChange={(v) => handleChange('nightlyRatePeak', v)} min={300} max={5000} step={50} formatValue={formatAED} />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Mid Season (Mar-Apr, Sep-Oct)</span>
+                    <MarketBenchmark value={inputs.nightlyRateMid} marketValue={marketData?.avg_daily_rate || null} label="Market avg rate" />
+                  </div>
+                  <SliderInput label="" value={inputs.nightlyRateMid} onChange={(v) => handleChange('nightlyRateMid', v)} min={200} max={3000} step={50} formatValue={formatAED} />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Low Season (May-Aug)</span>
+                    <MarketBenchmark value={inputs.nightlyRateLow} marketValue={marketData?.low_daily_rate || null} label="Market low rate" />
+                  </div>
+                  <SliderInput label="" value={inputs.nightlyRateLow} onChange={(v) => handleChange('nightlyRateLow', v)} min={100} max={2000} step={50} formatValue={formatAED} />
+                </div>
                 <SliderInput label="Weekend Premium" value={inputs.weekendPremium} onChange={(v) => handleChange('weekendPremium', v)} min={0} max={50} suffix="%" />
               </div>
 
               <div className="p-6 rounded-2xl bg-card border border-border space-y-6">
                 <h2 className="font-heading text-xl text-foreground">Occupancy Rates</h2>
-                <SliderInput label="Peak Season" value={inputs.occupancyPeak} onChange={(v) => handleChange('occupancyPeak', v)} min={30} max={100} suffix="%" />
-                <SliderInput label="Mid Season" value={inputs.occupancyMid} onChange={(v) => handleChange('occupancyMid', v)} min={20} max={100} suffix="%" />
-                <SliderInput label="Low Season" value={inputs.occupancyLow} onChange={(v) => handleChange('occupancyLow', v)} min={10} max={100} suffix="%" />
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Peak Season</span>
+                    <MarketBenchmark value={inputs.occupancyPeak} marketValue={marketData?.peak_occupancy || null} label="Market peak occupancy" isPercentage />
+                  </div>
+                  <SliderInput label="" value={inputs.occupancyPeak} onChange={(v) => handleChange('occupancyPeak', v)} min={30} max={100} suffix="%" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Mid Season</span>
+                    <MarketBenchmark value={inputs.occupancyMid} marketValue={marketData?.avg_occupancy || null} label="Market avg occupancy" isPercentage />
+                  </div>
+                  <SliderInput label="" value={inputs.occupancyMid} onChange={(v) => handleChange('occupancyMid', v)} min={20} max={100} suffix="%" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Low Season</span>
+                    <MarketBenchmark value={inputs.occupancyLow} marketValue={marketData?.low_occupancy || null} label="Market low occupancy" isPercentage />
+                  </div>
+                  <SliderInput label="" value={inputs.occupancyLow} onChange={(v) => handleChange('occupancyLow', v)} min={10} max={100} suffix="%" />
+                </div>
               </div>
 
               {/* Fee Breakdowns */}
@@ -404,6 +518,26 @@ export default function AirbnbCalculator() {
                     <span className="font-medium text-foreground">Gross Revenue</span>
                     <span className="font-heading text-xl text-emerald-400">{formatAED(grossRevenue)}</span>
                   </div>
+                  {/* Market Revenue Comparison */}
+                  {marketData?.avg_annual_revenue && (
+                    <div className="mt-4 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Market Avg Revenue</span>
+                        <span className="font-medium">{formatAED(marketData.avg_annual_revenue)}</span>
+                      </div>
+                      {marketData.revenue_percentile_25 && marketData.revenue_percentile_75 && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          <span>Market range: {formatAED(marketData.revenue_percentile_25)} - {formatAED(marketData.revenue_percentile_75)}</span>
+                          {grossRevenue >= marketData.revenue_percentile_75 && (
+                            <Badge className="ml-2 text-xs bg-emerald-500/10 text-emerald-400 border-0">Top 25%</Badge>
+                          )}
+                          {grossRevenue <= marketData.revenue_percentile_25 && (
+                            <Badge className="ml-2 text-xs bg-orange-500/10 text-orange-400 border-0">Below avg</Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
