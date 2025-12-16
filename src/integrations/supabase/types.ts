@@ -3287,6 +3287,21 @@ export type Database = {
           timeline: string
         }[]
       }
+      get_directory_members_safe: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          bio: string
+          budget_range: string
+          country: string
+          full_name: string
+          id: string
+          investment_goal: string
+          looking_for: string
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          timeline: string
+        }[]
+      }
       get_property_clusters: {
         Args: {
           bounds_ne_lat: number
@@ -3305,6 +3320,23 @@ export type Database = {
           min_price: number
           property_count: number
           sample_ids: string[]
+        }[]
+      }
+      get_public_agent_profile: {
+        Args: { agent_id: string }
+        Returns: {
+          areas_covered: string[]
+          avatar_url: string
+          bio: string
+          brokerage_id: string
+          full_name: string
+          id: string
+          is_verified: boolean
+          languages: string[]
+          specializations: string[]
+          subscription_tier: Database["public"]["Enums"]["agent_tier"]
+          total_listings: number
+          years_experience: number
         }[]
       }
       get_public_profile: {
