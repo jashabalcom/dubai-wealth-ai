@@ -46,7 +46,7 @@ export function NotificationCenter({ className }: NotificationCenterProps) {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="absolute -top-0.5 -right-0.5"
+                className="absolute -top-1 -right-1"
               >
                 <Badge 
                   variant="default" 
