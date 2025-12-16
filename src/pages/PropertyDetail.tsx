@@ -58,7 +58,7 @@ interface Property {
     post_handover_years: number; 
   } | null;
   description: string;
-  amenities: string[];
+  amenities: Array<string | { type: string; items: string[] }>;
   highlights: string[];
   is_featured: boolean;
   // New fields
@@ -173,7 +173,7 @@ export default function PropertyDetail() {
       images: Array.isArray(data.images) ? (data.images as string[]) : [],
       gallery_urls: Array.isArray((data as any).gallery_urls) ? ((data as any).gallery_urls as string[]) : [],
       floor_plan_urls: Array.isArray((data as any).floor_plan_urls) ? ((data as any).floor_plan_urls as string[]) : [],
-      amenities: Array.isArray(data.amenities) ? (data.amenities as string[]) : [],
+      amenities: Array.isArray(data.amenities) ? (data.amenities as Property['amenities']) : [],
       highlights: Array.isArray(data.highlights) ? (data.highlights as string[]) : [],
       payment_plan_json: data.payment_plan_json as Property['payment_plan_json'],
       price_aed: Number(data.price_aed),
@@ -548,12 +548,26 @@ export default function PropertyDetail() {
                 <div className="p-6 rounded-xl bg-card border border-border">
                   <h2 className="font-heading text-xl text-foreground mb-4">Amenities</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {property.amenities.map((a, i) => (
-                      <div key={i} className="flex items-center gap-2 text-muted-foreground">
-                        <CheckCircle2 className="w-4 h-4 text-gold" />
-                        {a}
-                      </div>
-                    ))}
+                    {property.amenities.flatMap((amenity, groupIndex) => {
+                      if (!amenity) return [];
+                      // Handle object format {type, items}
+                      if (typeof amenity === 'object' && 'items' in amenity) {
+                        const items = (amenity as { type: string; items: string[] }).items;
+                        return items.map((item, itemIndex) => (
+                          <div key={`${groupIndex}-${itemIndex}`} className="flex items-center gap-2 text-muted-foreground">
+                            <CheckCircle2 className="w-4 h-4 text-gold" />
+                            {item}
+                          </div>
+                        ));
+                      }
+                      // Simple string format
+                      return (
+                        <div key={groupIndex} className="flex items-center gap-2 text-muted-foreground">
+                          <CheckCircle2 className="w-4 h-4 text-gold" />
+                          {String(amenity)}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
