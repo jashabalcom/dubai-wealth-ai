@@ -2921,6 +2921,26 @@ export type Database = {
           timeline: string
         }[]
       }
+      get_property_clusters: {
+        Args: {
+          bounds_ne_lat: number
+          bounds_ne_lng: number
+          bounds_sw_lat: number
+          bounds_sw_lng: number
+          listing_type_filter?: string
+          zoom_level: number
+        }
+        Returns: {
+          avg_price: number
+          avg_price_sqft: number
+          cluster_lat: number
+          cluster_lng: number
+          max_price: number
+          min_price: number
+          property_count: number
+          sample_ids: string[]
+        }[]
+      }
       get_public_profile: {
         Args: { profile_id: string }
         Returns: {

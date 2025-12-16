@@ -6,12 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// New UAE Real Estate API configuration
+// UAE Real Estate API configuration
 const API_HOST = 'uae-real-estate2.p.rapidapi.com';
 const API_BASE = `https://${API_HOST}`;
 
+// Hybrid storage configuration
+const REHOST_LIMIT = 4; // Cover photo + first 3 gallery images
+const BATCH_SIZE = 20;
+const BATCH_COOLDOWN_MS = 5000; // 5 seconds between batches
+
 interface SyncRequest {
-  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers';
+  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details';
   // Location search
   query?: string;
   // Property search filters
@@ -24,18 +29,26 @@ interface SyncRequest {
   price_max?: number;
   area_min?: number;
   area_max?: number;
-  furnished?: boolean;
-  completion_status?: 'ready' | 'off_plan';
+  is_furnished?: boolean;
+  is_completed?: boolean;
   sale_type?: 'new' | 'resale';
   has_video?: boolean;
-  has_panorama?: boolean;
+  has_360_tour?: boolean;
   has_floorplan?: boolean;
-  index?: 'latest' | 'verified' | 'price-asc' | 'price-desc' | 'area-asc' | 'area-desc';
+  index?: 'popular' | 'verified' | 'latest' | 'lowest_price' | 'highest_price' | 'projects';
   page?: number;
   limit?: number;
   // Transaction filters
   start_date?: string;
   end_date?: string;
+  // Property details
+  property_id?: string;
+}
+
+// Organic throttling: random delay between 800-2000ms
+async function organicDelay(): Promise<void> {
+  const delay = Math.floor(Math.random() * 1200) + 800;
+  await new Promise(resolve => setTimeout(resolve, delay));
 }
 
 serve(async (req) => {
@@ -150,7 +163,186 @@ serve(async (req) => {
     }
 
     // ===========================================
-    // SYNC PROPERTIES (POST with filters)
+    // GET PROPERTY DETAILS (Full property by ID)
+    // ===========================================
+    if (action === 'get_property_details') {
+      const { property_id } = body;
+      if (!property_id) {
+        return new Response(
+          JSON.stringify({ error: 'property_id is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const response = await fetch(
+        `${API_BASE}/property/${property_id}`,
+        {
+          headers: {
+            'X-RapidAPI-Key': rapidApiKey,
+            'X-RapidAPI-Host': API_HOST,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Property details failed: ${response.status} - ${errorText}`);
+      }
+
+      const property = await response.json();
+      console.log(`[Bayut API] Got details for property ${property_id}`);
+
+      return new Response(
+        JSON.stringify({ success: true, property }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // SEARCH AGENTS
+    // ===========================================
+    if (action === 'search_agents') {
+      const { query, locations_ids, page = 0, limit = 20 } = body;
+
+      let agentUrl = `${API_BASE}/agents_by_name?page=${page}&hitsPerPage=${limit}`;
+      if (query) {
+        agentUrl += `&query=${encodeURIComponent(query)}`;
+      }
+
+      console.log(`[Bayut API] GET ${agentUrl}`);
+
+      const response = await fetch(agentUrl, {
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': API_HOST,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Agent search failed: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const agents = data.results || [];
+
+      // Upsert discovered agents to bayut_agents table
+      for (const agent of agents) {
+        try {
+          await supabase.from('bayut_agents').upsert({
+            bayut_id: String(agent.id),
+            name: agent.name || 'Unknown',
+            brn: agent.brn || null,
+            phone: agent.phone || null,
+            whatsapp: agent.whatsapp || null,
+            email: agent.email || null,
+            photo_url: agent.photo || null,
+            agency_bayut_id: agent.agency?.id ? String(agent.agency.id) : null,
+            agency_name: agent.agency?.name || null,
+            is_trubroker: agent.isTruBroker || false,
+            languages: agent.languages || [],
+            last_synced_at: new Date().toISOString(),
+          }, { onConflict: 'bayut_id' });
+        } catch (e) {
+          console.error('[Bayut API] Failed to upsert agent:', e);
+        }
+      }
+
+      console.log(`[Bayut API] Found ${agents.length} agents`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          agents: agents.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            brn: a.brn,
+            phone: a.phone,
+            whatsapp: a.whatsapp,
+            photo: a.photo,
+            agency_id: a.agency?.id,
+            agency_name: a.agency?.name,
+            is_trubroker: a.isTruBroker,
+          })),
+          total: data.nbHits || agents.length,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // SEARCH AGENCIES
+    // ===========================================
+    if (action === 'search_agencies') {
+      const { query, page = 0, limit = 20 } = body;
+
+      let agencyUrl = `${API_BASE}/agencies_by_name?page=${page}&hitsPerPage=${limit}`;
+      if (query) {
+        agencyUrl += `&query=${encodeURIComponent(query)}`;
+      }
+
+      console.log(`[Bayut API] GET ${agencyUrl}`);
+
+      const response = await fetch(agencyUrl, {
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': API_HOST,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Agency search failed: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const agencies = data.results || [];
+
+      // Upsert discovered agencies to bayut_agencies table
+      for (const agency of agencies) {
+        try {
+          await supabase.from('bayut_agencies').upsert({
+            bayut_id: String(agency.id),
+            name: agency.name || 'Unknown',
+            logo_url: agency.logo || null,
+            orn: agency.orn || null,
+            phone: agency.phone || null,
+            email: agency.email || null,
+            website: agency.website || null,
+            agent_count: agency.agents_count || 0,
+            property_count: agency.properties_count || 0,
+            product_tier: agency.product_tier || null,
+            description: agency.description || null,
+            last_synced_at: new Date().toISOString(),
+          }, { onConflict: 'bayut_id' });
+        } catch (e) {
+          console.error('[Bayut API] Failed to upsert agency:', e);
+        }
+      }
+
+      console.log(`[Bayut API] Found ${agencies.length} agencies`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          agencies: agencies.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            logo: a.logo,
+            orn: a.orn,
+            phone: a.phone,
+            agents_count: a.agents_count,
+            properties_count: a.properties_count,
+            product_tier: a.product_tier,
+          })),
+          total: data.nbHits || agencies.length,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // SYNC PROPERTIES (with HYBRID image storage)
     // ===========================================
     if (action === 'sync_properties') {
       const {
@@ -163,11 +355,11 @@ serve(async (req) => {
         price_max,
         area_min,
         area_max,
-        furnished,
-        completion_status,
+        is_furnished,
+        is_completed,
         sale_type,
         has_video,
-        has_panorama,
+        has_360_tour,
         has_floorplan,
         index = 'latest',
         page = 0,
@@ -181,7 +373,7 @@ serve(async (req) => {
         );
       }
 
-      // Build request body for POST
+      // Build request body with CORRECT API parameters
       const searchBody: any = {
         purpose,
         locations_ids,
@@ -195,15 +387,15 @@ serve(async (req) => {
       if (price_max) searchBody.price_max = price_max;
       if (area_min) searchBody.area_min = area_min;
       if (area_max) searchBody.area_max = area_max;
-      if (furnished !== undefined) searchBody.furnished = furnished;
-      if (completion_status) searchBody.completion_status = completion_status;
+      if (is_furnished !== undefined) searchBody.is_furnished = is_furnished;
+      if (is_completed !== undefined) searchBody.is_completed = is_completed;
       if (sale_type) searchBody.sale_type = sale_type;
       if (has_video) searchBody.has_video = true;
-      if (has_panorama) searchBody.has_panorama = true;
+      if (has_360_tour) searchBody.has_360_tour = true;
       if (has_floorplan) searchBody.has_floorplan = true;
 
       // Create sync log
-      const { data: syncLog, error: logError } = await supabase
+      const { data: syncLog } = await supabase
         .from('bayut_sync_logs')
         .insert({
           sync_type: 'properties',
@@ -217,8 +409,14 @@ serve(async (req) => {
       let apiCallsUsed = 0;
       let propertiesFound = 0;
       let propertiesSynced = 0;
-      let photosSynced = 0;
+      let photosRehosted = 0;
+      let photosCdnReferenced = 0;
+      let floorPlansRehosted = 0;
+      let agentsDiscovered = 0;
+      let agenciesDiscovered = 0;
       const errors: string[] = [];
+      const discoveredAgentIds = new Set<string>();
+      const discoveredAgencyIds = new Set<string>();
 
       try {
         // Fetch properties using POST
@@ -249,12 +447,21 @@ serve(async (req) => {
 
         console.log(`[Bayut API] Found ${propertiesFound} properties (${totalAvailable} total available)`);
 
-        // Process each property
+        // Process each property with ORGANIC THROTTLING
+        let processedCount = 0;
         for (const prop of properties) {
           try {
+            processedCount++;
+            
+            // Batch cooldown
+            if (processedCount > 1 && processedCount % BATCH_SIZE === 0) {
+              console.log(`[Bayut API] Batch cooldown at ${processedCount} properties...`);
+              await new Promise(r => setTimeout(r, BATCH_COOLDOWN_MS));
+            }
+
             const externalId = String(prop.id);
             
-            // Check if recently synced
+            // Check if recently synced (within 24 hours)
             const { data: existing } = await supabase
               .from('properties')
               .select('id, last_synced_at')
@@ -271,26 +478,63 @@ serve(async (req) => {
               }
             }
 
-            // Transform property
-            const transformedProperty = transformProperty(prop);
-            
-            // Re-host photos
-            const photoUrls = extractPhotoUrls(prop);
-            const rehostedImages: string[] = [];
-            
-            for (const photoUrl of photoUrls.slice(0, 5)) {
+            // HYBRID IMAGE STORAGE
+            const imageResult = await processPropertyImages(supabase, prop, externalId);
+            photosRehosted += imageResult.rehostedCount;
+            photosCdnReferenced += imageResult.cdnCount;
+            floorPlansRehosted += imageResult.floorPlansCount;
+
+            // Extract agent/agency intelligence
+            const agentData = extractAgentData(prop);
+            const agencyData = extractAgencyData(prop);
+
+            // Track discovered agents/agencies
+            if (agentData?.agent_id && !discoveredAgentIds.has(String(agentData.agent_id))) {
+              discoveredAgentIds.add(String(agentData.agent_id));
+              agentsDiscovered++;
+              
+              // Upsert to bayut_agents
               try {
-                const rehostedUrl = await rehostPhoto(supabase, photoUrl, externalId);
-                if (rehostedUrl) {
-                  rehostedImages.push(rehostedUrl);
-                  photosSynced++;
-                }
-              } catch (photoError) {
-                console.error(`[Bayut API] Photo rehost failed:`, photoError);
-              }
+                await supabase.from('bayut_agents').upsert({
+                  bayut_id: String(agentData.agent_id),
+                  name: agentData.agent_name || 'Unknown',
+                  brn: agentData.agent_brn || null,
+                  phone: agentData.agent_phone || null,
+                  whatsapp: agentData.agent_whatsapp || null,
+                  photo_url: agentData.agent_photo || null,
+                  agency_bayut_id: agentData.agency_id ? String(agentData.agency_id) : null,
+                  agency_name: agentData.agency_name || null,
+                  is_trubroker: agentData.is_trubroker || false,
+                  last_synced_at: new Date().toISOString(),
+                }, { onConflict: 'bayut_id' });
+              } catch (e) { /* ignore */ }
             }
-            
-            transformedProperty.images = rehostedImages;
+
+            if (agencyData?.agency_id && !discoveredAgencyIds.has(String(agencyData.agency_id))) {
+              discoveredAgencyIds.add(String(agencyData.agency_id));
+              agenciesDiscovered++;
+
+              // Upsert to bayut_agencies
+              try {
+                await supabase.from('bayut_agencies').upsert({
+                  bayut_id: String(agencyData.agency_id),
+                  name: agencyData.agency_name || 'Unknown',
+                  logo_url: agencyData.agency_logo || null,
+                  orn: agencyData.agency_orn || null,
+                  phone: agencyData.agency_phone || null,
+                  last_synced_at: new Date().toISOString(),
+                }, { onConflict: 'bayut_id' });
+              } catch (e) { /* ignore */ }
+            }
+
+            // Transform property with all new fields
+            const transformedProperty = transformProperty(prop);
+            transformedProperty.images = imageResult.rehostedImages;
+            transformedProperty.gallery_urls = imageResult.cdnGalleryUrls;
+            transformedProperty.floor_plan_urls = imageResult.floorPlanUrls;
+            transformedProperty.bayut_agent_data = agentData;
+            transformedProperty.bayut_agency_data = agencyData;
+            transformedProperty.bayut_building_info = extractBuildingInfo(prop);
 
             // Upsert property
             const { error: upsertError } = await supabase
@@ -308,15 +552,22 @@ serve(async (req) => {
               errors.push(`Property ${externalId}: ${upsertError.message}`);
             } else {
               propertiesSynced++;
-              console.log(`[Bayut API] Synced: ${externalId}`);
+              console.log(`[Bayut API] Synced: ${externalId} (${imageResult.rehostedCount} rehosted, ${imageResult.cdnCount} CDN)`);
             }
+
+            // Organic delay between properties
+            await organicDelay();
+
           } catch (propError) {
             const errorMsg = propError instanceof Error ? propError.message : String(propError);
             errors.push(errorMsg);
           }
         }
 
-        // Update sync log
+        // Calculate estimated storage saved (avg 500KB per CDN image)
+        const estimatedStorageSavedMb = Math.round((photosCdnReferenced * 500) / 1024);
+
+        // Update sync log with comprehensive metrics
         if (syncLogId) {
           await supabase
             .from('bayut_sync_logs')
@@ -324,9 +575,17 @@ serve(async (req) => {
               completed_at: new Date().toISOString(),
               properties_found: propertiesFound,
               properties_synced: propertiesSynced,
-              photos_synced: photosSynced,
+              photos_synced: photosRehosted + floorPlansRehosted,
               api_calls_used: apiCallsUsed,
-              errors: errors.length > 0 ? errors : [],
+              errors: errors.length > 0 ? { 
+                messages: errors,
+                photos_rehosted: photosRehosted,
+                photos_cdn_referenced: photosCdnReferenced,
+                floor_plans_rehosted: floorPlansRehosted,
+                agents_discovered: agentsDiscovered,
+                agencies_discovered: agenciesDiscovered,
+                estimated_storage_saved_mb: estimatedStorageSavedMb,
+              } : null,
               status: errors.length > 0 ? 'completed_with_errors' : 'completed',
             })
             .eq('id', syncLogId);
@@ -338,7 +597,16 @@ serve(async (req) => {
             message: `Synced ${propertiesSynced} of ${propertiesFound} properties`,
             propertiesFound,
             propertiesSynced,
-            photosSynced,
+            storage: {
+              photosRehosted,
+              photosCdnReferenced,
+              floorPlansRehosted,
+              estimatedStorageSavedMb,
+            },
+            intelligence: {
+              agentsDiscovered,
+              agenciesDiscovered,
+            },
             apiCallsUsed,
             totalAvailable,
             errors: errors.length > 0 ? errors : undefined,
@@ -354,9 +622,9 @@ serve(async (req) => {
               completed_at: new Date().toISOString(),
               properties_found: propertiesFound,
               properties_synced: propertiesSynced,
-              photos_synced: photosSynced,
+              photos_synced: photosRehosted + floorPlansRehosted,
               api_calls_used: apiCallsUsed,
-              errors: [...errors, syncError instanceof Error ? syncError.message : String(syncError)],
+              errors: { messages: [...errors, syncError instanceof Error ? syncError.message : String(syncError)] },
               status: 'failed',
             })
             .eq('id', syncLogId);
@@ -495,7 +763,146 @@ serve(async (req) => {
   }
 });
 
-// Transform API property to our schema
+// ===========================================
+// HYBRID IMAGE STORAGE
+// ===========================================
+interface ImageProcessResult {
+  rehostedImages: string[];     // Stored in Supabase (cover + first 3)
+  cdnGalleryUrls: string[];     // Bayut CDN references (remaining)
+  floorPlanUrls: string[];      // Stored in Supabase (all floor plans)
+  rehostedCount: number;
+  cdnCount: number;
+  floorPlansCount: number;
+}
+
+async function processPropertyImages(
+  supabase: any, 
+  prop: any, 
+  externalId: string
+): Promise<ImageProcessResult> {
+  const result: ImageProcessResult = {
+    rehostedImages: [],
+    cdnGalleryUrls: [],
+    floorPlanUrls: [],
+    rehostedCount: 0,
+    cdnCount: 0,
+    floorPlansCount: 0,
+  };
+
+  // Extract all photo URLs
+  const photoUrls = extractPhotoUrls(prop);
+  
+  // Re-host cover photo + first 3 gallery images to Supabase
+  const photosToRehost = photoUrls.slice(0, REHOST_LIMIT);
+  for (const url of photosToRehost) {
+    try {
+      const rehostedUrl = await rehostPhoto(supabase, url, externalId, 'gallery');
+      if (rehostedUrl) {
+        result.rehostedImages.push(rehostedUrl);
+        result.rehostedCount++;
+      }
+    } catch (e) {
+      console.error(`[Bayut API] Failed to rehost photo:`, e);
+      // Fall back to CDN reference if rehost fails
+      result.cdnGalleryUrls.push(url);
+      result.cdnCount++;
+    }
+  }
+  
+  // Store remaining gallery as CDN references (no storage cost)
+  if (photoUrls.length > REHOST_LIMIT) {
+    const remainingPhotos = photoUrls.slice(REHOST_LIMIT);
+    result.cdnGalleryUrls.push(...remainingPhotos);
+    result.cdnCount += remainingPhotos.length;
+  }
+  
+  // Re-host ALL floor plans to Supabase (critical documents)
+  const floorPlanUrls = extractFloorPlanUrls(prop);
+  for (const fpUrl of floorPlanUrls) {
+    try {
+      const rehostedFp = await rehostPhoto(supabase, fpUrl, externalId, 'floorplan');
+      if (rehostedFp) {
+        result.floorPlanUrls.push(rehostedFp);
+        result.floorPlansCount++;
+      }
+    } catch (e) {
+      console.error(`[Bayut API] Failed to rehost floor plan:`, e);
+    }
+  }
+
+  return result;
+}
+
+// Extract floor plan URLs
+function extractFloorPlanUrls(prop: any): string[] {
+  const urls: string[] = [];
+  
+  if (prop.floorplan_images && Array.isArray(prop.floorplan_images)) {
+    for (const fp of prop.floorplan_images) {
+      const url = typeof fp === 'string' ? fp : fp.url;
+      if (url && !urls.includes(url)) {
+        urls.push(url);
+      }
+    }
+  }
+  
+  if (prop.floorplan && typeof prop.floorplan === 'string') {
+    if (!urls.includes(prop.floorplan)) {
+      urls.push(prop.floorplan);
+    }
+  }
+  
+  return urls;
+}
+
+// ===========================================
+// AGENT/AGENCY INTELLIGENCE EXTRACTION
+// ===========================================
+function extractAgentData(prop: any): any | null {
+  if (!prop.agency) return null;
+  
+  return {
+    agent_id: prop.agency.id,
+    agent_name: prop.agency.name,
+    agent_phone: prop.agency.phone,
+    agent_whatsapp: prop.agency.whatsapp,
+    agent_brn: prop.agency.brn,
+    agent_photo: prop.agency.photo,
+    agency_id: prop.agency.agency?.id,
+    agency_name: prop.agency.agency?.name,
+    is_trubroker: prop.agency.isTruBroker || false,
+  };
+}
+
+function extractAgencyData(prop: any): any | null {
+  const agency = prop.agency?.agency;
+  if (!agency) return null;
+  
+  return {
+    agency_id: agency.id,
+    agency_name: agency.name,
+    agency_logo: agency.logo,
+    agency_orn: agency.orn,
+    agency_phone: agency.phone,
+    product_tier: agency.product_tier,
+  };
+}
+
+function extractBuildingInfo(prop: any): any | null {
+  if (!prop.building) return null;
+  
+  return {
+    name: prop.building.name,
+    total_floors: prop.building.floors,
+    year_completed: prop.building.yearCompleted,
+    developer: prop.building.developer?.name,
+    developer_id: prop.building.developer?.id,
+  };
+}
+
+// ===========================================
+// TRANSFORM PROPERTY
+// ===========================================
 function transformProperty(prop: any): any {
   const externalId = String(prop.id);
   const title = prop.title || prop.name || 'Property';
@@ -526,6 +933,10 @@ function transformProperty(prop: any): any {
       'penthouse': 'penthouse',
       'duplex': 'duplex',
       'studio': 'studio',
+      'land': 'land',
+      'office': 'office',
+      'retail': 'retail',
+      'warehouse': 'warehouse',
     };
     propertyType = typeMap[cat] || 'apartment';
   }
@@ -568,15 +979,18 @@ function transformProperty(prop: any): any {
     location_area: locationArea,
     latitude: prop.geo?.lat || prop.latitude || null,
     longitude: prop.geo?.lng || prop.longitude || null,
-    is_off_plan: prop.completion_status === 'off_plan',
-    furnishing: prop.furnished ? 'furnished' : (prop.furnishing || null),
+    is_off_plan: prop.is_completed === false || prop.completion_status === 'off_plan',
+    completion_percent: prop.completion_percent || null,
+    furnishing: prop.is_furnished ? 'furnished' : (prop.furnishing || null),
     rera_permit_number: prop.rera_permit || prop.permit_number || null,
     amenities: prop.amenities || [],
     images: [],
+    gallery_urls: [],
+    floor_plan_urls: [],
     last_synced_at: new Date().toISOString(),
     is_published: false,
     slug,
-    // New fields from enhanced API
+    // Enhanced fields
     year_built: prop.year_built || null,
     service_charge_per_sqft: prop.service_charge || null,
     view_type: prop.view || null,
@@ -589,10 +1003,12 @@ function transformProperty(prop: any): any {
 function extractPhotoUrls(prop: any): string[] {
   const urls: string[] = [];
   
+  // Cover photo first
   if (prop.cover_photo) {
     urls.push(prop.cover_photo);
   }
   
+  // Then gallery photos
   if (prop.photos && Array.isArray(prop.photos)) {
     for (const photo of prop.photos) {
       const url = typeof photo === 'string' ? photo : photo.url;
@@ -602,11 +1018,16 @@ function extractPhotoUrls(prop: any): string[] {
     }
   }
   
-  return urls.slice(0, 10);
+  return urls.slice(0, 20); // Cap at 20 photos
 }
 
 // Re-host photo to Supabase storage
-async function rehostPhoto(supabase: any, sourceUrl: string, propertyId: string): Promise<string | null> {
+async function rehostPhoto(
+  supabase: any, 
+  sourceUrl: string, 
+  propertyId: string,
+  type: 'gallery' | 'floorplan' = 'gallery'
+): Promise<string | null> {
   try {
     const response = await fetch(sourceUrl);
     if (!response.ok) {
@@ -619,7 +1040,8 @@ async function rehostPhoto(supabase: any, sourceUrl: string, propertyId: string)
     
     const urlHash = sourceUrl.split('/').pop()?.split('?')[0] || Date.now().toString();
     const extension = sourceUrl.includes('.png') ? 'png' : 'jpg';
-    const filename = `bayut/${propertyId}/${urlHash}.${extension}`;
+    const folder = type === 'floorplan' ? 'floorplans' : 'gallery';
+    const filename = `bayut/${propertyId}/${folder}/${urlHash}.${extension}`;
 
     const { error } = await supabase.storage
       .from('property-media')

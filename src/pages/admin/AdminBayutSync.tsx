@@ -69,6 +69,33 @@ interface Developer {
   properties_count?: number;
 }
 
+interface BayutAgent {
+  id: string;
+  bayut_id: string;
+  name: string;
+  brn: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  photo_url: string | null;
+  agency_name: string | null;
+  is_trubroker: boolean;
+  property_count: number;
+  last_synced_at: string;
+}
+
+interface BayutAgency {
+  id: string;
+  bayut_id: string;
+  name: string;
+  logo_url: string | null;
+  orn: string | null;
+  phone: string | null;
+  agent_count: number;
+  property_count: number;
+  product_tier: string | null;
+  last_synced_at: string;
+}
+
 export default function AdminBayutSync() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isTesting, setIsTesting] = useState(false);
@@ -113,9 +140,21 @@ export default function AdminBayutSync() {
   const [isLoadingDevelopers, setIsLoadingDevelopers] = useState(false);
   const [developerQuery, setDeveloperQuery] = useState('');
 
+  // Agents (Admin Intelligence)
+  const [agents, setAgents] = useState<BayutAgent[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState(false);
+  const [agentQuery, setAgentQuery] = useState('');
+
+  // Agencies (Admin Intelligence)
+  const [agencies, setAgencies] = useState<BayutAgency[]>([]);
+  const [isLoadingAgencies, setIsLoadingAgencies] = useState(false);
+  const [agencyQuery, setAgencyQuery] = useState('');
+
   useEffect(() => {
     fetchSyncLogs();
     fetchTotalStats();
+    fetchAgents();
+    fetchAgencies();
   }, []);
 
   const fetchSyncLogs = async () => {
@@ -309,6 +348,108 @@ export default function AdminBayutSync() {
     }
   };
 
+  // Fetch agents from bayut_agents table
+  const fetchAgents = async (query?: string) => {
+    setIsLoadingAgents(true);
+    try {
+      let q = (supabase as any)
+        .from('bayut_agents')
+        .select('*')
+        .order('last_synced_at', { ascending: false })
+        .limit(50);
+      
+      if (query) {
+        q = q.ilike('name', `%${query}%`);
+      }
+      
+      const { data, error } = await q;
+      if (error) throw error;
+      setAgents((data || []) as BayutAgent[]);
+    } catch (error) {
+      console.error('Failed to fetch agents:', error);
+    } finally {
+      setIsLoadingAgents(false);
+    }
+  };
+
+  // Fetch agencies from bayut_agencies table
+  const fetchAgencies = async (query?: string) => {
+    setIsLoadingAgencies(true);
+    try {
+      let q = supabase
+        .from('bayut_agencies')
+        .select('*')
+        .order('last_synced_at', { ascending: false })
+        .limit(50);
+      
+      if (query) {
+        q = q.ilike('name', `%${query}%`);
+      }
+      
+      const { data, error } = await q;
+      if (error) throw error;
+      setAgencies(data as BayutAgency[]);
+    } catch (error) {
+      console.error('Failed to fetch agencies:', error);
+    } finally {
+      setIsLoadingAgencies(false);
+    }
+  };
+
+  // Search agents via API
+  const searchAgentsAPI = async () => {
+    if (!agentQuery.trim()) {
+      fetchAgents();
+      return;
+    }
+    
+    setIsLoadingAgents(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: { action: 'search_agents', query: agentQuery },
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`Found ${data.agents?.length || 0} agents from API`);
+        fetchAgents(agentQuery); // Refresh from DB
+      }
+    } catch (error) {
+      toast.error('Failed to search agents');
+      console.error(error);
+    } finally {
+      setIsLoadingAgents(false);
+    }
+  };
+
+  // Search agencies via API
+  const searchAgenciesAPI = async () => {
+    if (!agencyQuery.trim()) {
+      fetchAgencies();
+      return;
+    }
+    
+    setIsLoadingAgencies(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: { action: 'search_agencies', query: agencyQuery },
+      });
+
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success(`Found ${data.agencies?.length || 0} agencies from API`);
+        fetchAgencies(agencyQuery); // Refresh from DB
+      }
+    } catch (error) {
+      toast.error('Failed to search agencies');
+      console.error(error);
+    } finally {
+      setIsLoadingAgencies(false);
+    }
+  };
+
   const toggleRoom = (room: number) => {
     if (selectedRooms.includes(room)) {
       setSelectedRooms(selectedRooms.filter(r => r !== room));
@@ -421,6 +562,8 @@ export default function AdminBayutSync() {
         <Tabs defaultValue="properties" className="space-y-4">
           <TabsList>
             <TabsTrigger value="properties">Properties Sync</TabsTrigger>
+            <TabsTrigger value="agents">Agents ({agents.length})</TabsTrigger>
+            <TabsTrigger value="agencies">Agencies ({agencies.length})</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="developers">Developers</TabsTrigger>
             <TabsTrigger value="history">Sync History</TabsTrigger>

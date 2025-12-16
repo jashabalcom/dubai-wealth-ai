@@ -47,6 +47,8 @@ interface Property {
   size_sqft: number;
   rental_yield_estimate: number;
   images: string[];
+  gallery_urls: string[];       // CDN references from Bayut
+  floor_plan_urls: string[];    // Re-hosted floor plans
   completion_date: string | null;
   payment_plan_json: { 
     down_payment: number; 
@@ -169,6 +171,8 @@ export default function PropertyDetail() {
     setProperty({
       ...data,
       images: Array.isArray(data.images) ? (data.images as string[]) : [],
+      gallery_urls: Array.isArray((data as any).gallery_urls) ? ((data as any).gallery_urls as string[]) : [],
+      floor_plan_urls: Array.isArray((data as any).floor_plan_urls) ? ((data as any).floor_plan_urls as string[]) : [],
       amenities: Array.isArray(data.amenities) ? (data.amenities as string[]) : [],
       highlights: Array.isArray(data.highlights) ? (data.highlights as string[]) : [],
       payment_plan_json: data.payment_plan_json as Property['payment_plan_json'],
@@ -309,7 +313,11 @@ export default function PropertyDetail() {
       <Navbar />
 
       <section className="pt-20">
-        <PropertyGallery images={galleryImages} title={property.title} />
+        <PropertyGallery 
+          images={galleryImages} 
+          galleryUrls={property.gallery_urls}
+          title={property.title} 
+        />
         <div className="absolute top-24 left-4 flex flex-wrap gap-2 z-10">
           {property.is_off_plan && (
             <span className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full">
