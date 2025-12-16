@@ -292,7 +292,7 @@ export function PropertyCard({
             )}
 
             {/* Popularity Indicator */}
-            {(property.views_count || property.inquiries_count) && (
+            {(property.views_count != null && property.views_count > 0) || (property.inquiries_count != null && property.inquiries_count > 0) ? (
               <div className="mt-3 pt-3 border-t border-border">
                 <PopularityIndicator 
                   viewsCount={property.views_count} 
@@ -300,7 +300,7 @@ export function PropertyCard({
                   variant="inline"
                 />
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </Link>
