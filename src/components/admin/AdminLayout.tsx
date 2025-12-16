@@ -16,7 +16,8 @@ import {
   Briefcase,
   HardHat,
   MapPin,
-  RefreshCw
+  RefreshCw,
+  Newspaper
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -31,6 +32,7 @@ const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { label: 'Revenue', href: '/admin/revenue', icon: DollarSign },
   { label: 'Marketing', href: '/admin/marketing', icon: Target },
+  { label: 'News', href: '/admin/news', icon: Newspaper },
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Courses', href: '/admin/courses', icon: GraduationCap },
   { label: 'Properties', href: '/admin/properties', icon: Building2 },

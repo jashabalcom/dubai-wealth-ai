@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
+import { NewsWidget } from '@/components/dashboard/NewsWidget';
 import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
 import { ProfileWizard } from '@/components/onboarding/ProfileWizard';
 import { FirstActionPrompts } from '@/components/onboarding/FirstActionPrompts';
@@ -264,9 +265,10 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-8"
+          className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
           <AIInsightsCard />
+          <NewsWidget />
         </motion.div>
       </main>
     </div>
