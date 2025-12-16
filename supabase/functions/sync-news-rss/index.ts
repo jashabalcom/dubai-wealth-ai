@@ -9,19 +9,24 @@ const corsHeaders = {
 // RSS Feed sources focused on Dubai real estate
 const RSS_FEEDS = [
   {
-    name: 'The National UAE',
-    url: 'https://www.thenationalnews.com/rss/uae/',
-    keywords: ['property', 'real estate', 'dubai', 'housing', 'rent', 'villa', 'apartment', 'developer', 'emaar', 'damac', 'nakheel'],
+    name: 'The National Business',
+    url: 'https://www.thenationalnews.com/rss/business/',
+    keywords: ['property', 'real estate', 'dubai', 'housing', 'rent', 'villa', 'apartment', 'developer', 'emaar', 'damac', 'nakheel', 'investment'],
   },
   {
-    name: 'Gulf News Property',
-    url: 'https://gulfnews.com/rss/property-16.xml',
-    keywords: ['dubai', 'property', 'real estate', 'investment'],
+    name: 'Gulf News Business',
+    url: 'https://gulfnews.com/rss/business',
+    keywords: ['dubai', 'property', 'real estate', 'investment', 'developer', 'market'],
   },
   {
-    name: 'Khaleej Times Property',
-    url: 'https://www.khaleejtimes.com/rss/uae',
-    keywords: ['property', 'real estate', 'dubai', 'apartment', 'villa', 'rent', 'golden visa'],
+    name: 'Arabian Business Property',
+    url: 'https://www.arabianbusiness.com/rss/real-estate',
+    keywords: ['dubai', 'property', 'real estate', 'investment', 'developer', 'villa', 'apartment'],
+  },
+  {
+    name: 'Construction Week',
+    url: 'https://www.constructionweekonline.com/rss',
+    keywords: ['dubai', 'emaar', 'damac', 'nakheel', 'developer', 'project', 'real estate'],
   },
 ];
 
