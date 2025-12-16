@@ -436,4 +436,22 @@
   .metric-card-compact p {
     @apply text-lg sm:text-2xl font-bold;
   }
+
+  /* Custom prose styling for articles */
+  .prose-luxury {
+    @apply prose prose-lg max-w-none;
+    @apply prose-headings:font-serif prose-headings:text-foreground prose-headings:font-semibold;
+    @apply prose-p:text-muted-foreground prose-p:leading-relaxed;
+    @apply prose-a:text-gold prose-a:no-underline hover:prose-a:underline;
+    @apply prose-strong:text-foreground prose-strong:font-semibold;
+    @apply prose-ul:text-muted-foreground prose-ol:text-muted-foreground;
+    @apply prose-li:marker:text-gold;
+    @apply prose-blockquote:border-l-gold prose-blockquote:text-muted-foreground prose-blockquote:italic;
+    @apply prose-code:text-gold prose-code:bg-muted/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded;
+    @apply prose-hr:border-border;
+  }
+
+  .dark .prose-luxury {
+    @apply prose-invert;
+  }
 }
