@@ -493,38 +493,42 @@ serve(async (req) => {
               discoveredAgentIds.add(String(agentData.agent_id));
               agentsDiscovered++;
               
-              // Upsert to bayut_agents
+              // Upsert to bayut_agents (using correct column names from schema)
               try {
                 await supabase.from('bayut_agents').upsert({
                   bayut_id: String(agentData.agent_id),
+                  external_id: String(agentData.agent_id),
                   name: agentData.agent_name || 'Unknown',
-                  brn: agentData.agent_brn || null,
                   phone: agentData.agent_phone || null,
-                  whatsapp: agentData.agent_whatsapp || null,
+                  phone_numbers: agentData.agent_whatsapp ? [{ mobile: agentData.agent_whatsapp }] : [],
                   photo_url: agentData.agent_photo || null,
-                  agency_bayut_id: agentData.agency_id ? String(agentData.agency_id) : null,
-                  agency_name: agentData.agency_name || null,
-                  is_trubroker: agentData.is_trubroker || false,
+                  agency_external_id: agentData.agency_id ? String(agentData.agency_id) : null,
+                  is_verified: agentData.is_trubroker || false,
                   last_synced_at: new Date().toISOString(),
                 }, { onConflict: 'bayut_id' });
-              } catch (e) { /* ignore */ }
+              } catch (e) { 
+                console.error('[Bayut API] Agent upsert error:', e);
+              }
             }
 
             if (agencyData?.agency_id && !discoveredAgencyIds.has(String(agencyData.agency_id))) {
               discoveredAgencyIds.add(String(agencyData.agency_id));
               agenciesDiscovered++;
 
-              // Upsert to bayut_agencies
+              // Upsert to bayut_agencies (using correct column names from schema)
               try {
                 await supabase.from('bayut_agencies').upsert({
                   bayut_id: String(agencyData.agency_id),
+                  external_id: String(agencyData.agency_id),
                   name: agencyData.agency_name || 'Unknown',
                   logo_url: agencyData.agency_logo || null,
-                  orn: agencyData.agency_orn || null,
+                  license_number: agencyData.agency_orn || null,
                   phone: agencyData.agency_phone || null,
                   last_synced_at: new Date().toISOString(),
                 }, { onConflict: 'bayut_id' });
-              } catch (e) { /* ignore */ }
+              } catch (e) { 
+                console.error('[Bayut API] Agency upsert error:', e);
+              }
             }
 
             // Transform property with all new fields
