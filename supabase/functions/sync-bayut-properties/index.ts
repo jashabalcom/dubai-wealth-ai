@@ -1035,7 +1035,7 @@ function transformProperty(prop: any): any {
     gallery_urls: [],
     floor_plan_urls: [],
     last_synced_at: new Date().toISOString(),
-    is_published: false,
+    is_published: true,
     slug,
     // Enhanced fields
     year_built: prop.year_built || null,
