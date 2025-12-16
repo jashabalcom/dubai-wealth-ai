@@ -5,13 +5,13 @@ import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { CurrencySelector } from '@/components/tools/CurrencySelector';
+import { CurrencyPill } from '@/components/CurrencyPill';
 import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
 import { ROICharts } from '@/components/tools/ROICharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
-import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
@@ -20,9 +20,14 @@ import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 
+// Helper to format AED amounts
+function formatAED(amount: number): string {
+  return `AED ${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 export default function ROICalculator() {
   const [searchParams] = useSearchParams();
-  const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const { formatPrice } = useCurrency();
   const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, isLoading: usageLoading } = useToolUsage('roi');
   const [activePreset, setActivePreset] = useState<string>();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -189,11 +194,7 @@ export default function ROICalculator() {
               <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
 
-            <CurrencySelector
-              selectedCurrency={selectedCurrency}
-              onCurrencyChange={setSelectedCurrency}
-              supportedCurrencies={supportedCurrencies}
-            />
+            <CurrencyPill />
           </div>
         </div>
       </section>
@@ -422,7 +423,7 @@ export default function ROICalculator() {
                     <span className="font-medium text-foreground">Total Cash Required</span>
                     <div className="text-right">
                       <p className="font-heading text-xl text-gold">{formatAED(totalInitialInvestment)}</p>
-                      <p className="text-sm text-gold/80">{formatCurrency(totalInitialInvestment)}</p>
+                      <p className="text-sm text-gold/80">{formatPrice(totalInitialInvestment)}</p>
                     </div>
                   </div>
                 </div>
@@ -461,7 +462,7 @@ export default function ROICalculator() {
                     <span className="font-medium text-foreground">Total Return</span>
                     <div className="text-right">
                       <p className="font-heading text-xl text-emerald-400">{formatAED(totalReturn)}</p>
-                      <p className="text-sm text-emerald-400/80">{formatCurrency(totalReturn)}</p>
+                      <p className="text-sm text-emerald-400/80">{formatPrice(totalReturn)}</p>
                     </div>
                   </div>
                 </div>

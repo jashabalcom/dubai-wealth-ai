@@ -4,17 +4,22 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Building2, Home, Info } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { CurrencySelector } from '@/components/tools/CurrencySelector';
+import { CurrencyPill } from '@/components/CurrencyPill';
 import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, AreaPreset } from '@/components/tools/DubaiPresets';
 import { RentVsBuyCharts } from '@/components/tools/RentVsBuyCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
-import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { calculateAcquisitionCosts, AREA_SERVICE_CHARGES, DEFAULT_RENTAL_COSTS } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 
+// Helper to format AED amounts
+function formatAED(amount: number): string {
+  return `AED ${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 export default function RentVsBuyCalculator() {
-  const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const { formatPrice } = useCurrency();
   const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
@@ -152,7 +157,7 @@ export default function RentVsBuyCalculator() {
               <p className="text-muted-foreground">Compare with all Dubai fees included.</p>
               <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
-            <CurrencySelector selectedCurrency={selectedCurrency} onCurrencyChange={setSelectedCurrency} supportedCurrencies={supportedCurrencies} />
+            <CurrencyPill />
           </div>
         </div>
       </section>

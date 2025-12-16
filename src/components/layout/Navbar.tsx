@@ -28,6 +28,7 @@ import { useConnections } from "@/hooks/useConnections";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { CurrencyPill } from "@/components/CurrencyPill";
 
 type NavLink = {
   label: string;
@@ -245,6 +246,7 @@ export function Navbar() {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
+              <CurrencyPill className={useDarkText ? "border-border" : "border-secondary-foreground/20"} />
               {user ? (
                 <>
                   <Link 

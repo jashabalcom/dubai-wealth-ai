@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { OnlinePresenceProvider } from "@/contexts/OnlinePresenceContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { AnimatedRoutes } from "@/components/AnimatedRoutes";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { SmoothScrollHandler } from "@/components/SmoothScrollHandler";
@@ -18,21 +19,23 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <OnlinePresenceProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-  <BrowserRouter>
-    <GoogleAnalytics />
-    <NavigationProgress />
-    <ScrollToTop />
-    <SmoothScrollHandler />
-    <TrialBannerWrapper />
-    <AnimatedRoutes />
-    <CookieConsent />
-  </BrowserRouter>
-        </TooltipProvider>
-      </OnlinePresenceProvider>
+      <CurrencyProvider>
+        <OnlinePresenceProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <GoogleAnalytics />
+              <NavigationProgress />
+              <ScrollToTop />
+              <SmoothScrollHandler />
+              <TrialBannerWrapper />
+              <AnimatedRoutes />
+              <CookieConsent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </OnlinePresenceProvider>
+      </CurrencyProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

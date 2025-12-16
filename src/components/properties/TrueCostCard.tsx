@@ -16,6 +16,8 @@ import {
   AREA_SERVICE_CHARGES,
   FEE_DESCRIPTIONS 
 } from '@/lib/dubaiRealEstateFees';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { InlinePrice } from '@/components/DualPrice';
 
 interface TrueCostCardProps {
   priceAed: number;
@@ -171,18 +173,18 @@ export function TrueCostCard({
 
       {/* Summary */}
       <div className="space-y-2 mb-4">
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Property Price</span>
-          <span className="font-medium">{formatAed(priceAed)}</span>
+          <InlinePrice amountAED={priceAed} />
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Acquisition Costs</span>
           <span className="font-medium text-amber-400">+{formatAed(costs.grandTotal)}</span>
         </div>
         <div className="h-px bg-border my-2" />
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <span className="font-semibold">True Cost to Own</span>
-          <span className="font-bold text-gold text-lg">{formatAed(trueCost)}</span>
+          <InlinePrice amountAED={trueCost} className="text-lg" />
         </div>
         <p className="text-xs text-muted-foreground">
           {costs.percentageOfProperty.toFixed(1)}% above listing price
