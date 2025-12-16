@@ -54,6 +54,7 @@ import Neighborhoods from "@/pages/Neighborhoods";
 import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
 import AdminNeighborhoods from "@/pages/admin/AdminNeighborhoods";
 import AdminNeighborhoodPOIs from "@/pages/admin/AdminNeighborhoodPOIs";
+import AdminBayutSync from "@/pages/admin/AdminBayutSync";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -169,6 +170,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
         <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
+        <Route path="/admin/bayut-sync" element={<AnimatedPage><AdminBayutSync /></AnimatedPage>} />
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
         <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />

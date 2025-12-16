@@ -451,6 +451,51 @@ export type Database = {
         }
         Relationships: []
       }
+      bayut_sync_logs: {
+        Row: {
+          api_calls_used: number | null
+          area_name: string | null
+          completed_at: string | null
+          created_at: string | null
+          errors: Json | null
+          id: string
+          photos_synced: number | null
+          properties_found: number | null
+          properties_synced: number | null
+          started_at: string | null
+          status: string | null
+          sync_type: string
+        }
+        Insert: {
+          api_calls_used?: number | null
+          area_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          id?: string
+          photos_synced?: number | null
+          properties_found?: number | null
+          properties_synced?: number | null
+          started_at?: string | null
+          status?: string | null
+          sync_type: string
+        }
+        Update: {
+          api_calls_used?: number | null
+          area_name?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          id?: string
+          photos_synced?: number | null
+          properties_found?: number | null
+          properties_synced?: number | null
+          started_at?: string | null
+          status?: string | null
+          sync_type?: string
+        }
+        Relationships: []
+      }
       brokerages: {
         Row: {
           address: string | null
@@ -2289,6 +2334,9 @@ export type Database = {
           developer_id: string | null
           developer_name: string | null
           expires_at: string | null
+          external_id: string | null
+          external_source: string | null
+          external_url: string | null
           floor_number: number | null
           furnishing: string | null
           highlights: Json | null
@@ -2298,6 +2346,7 @@ export type Database = {
           is_featured: boolean
           is_off_plan: boolean
           is_published: boolean | null
+          last_synced_at: string | null
           latitude: number | null
           listing_type: string | null
           location_area: string
@@ -2338,6 +2387,9 @@ export type Database = {
           developer_id?: string | null
           developer_name?: string | null
           expires_at?: string | null
+          external_id?: string | null
+          external_source?: string | null
+          external_url?: string | null
           floor_number?: number | null
           furnishing?: string | null
           highlights?: Json | null
@@ -2347,6 +2399,7 @@ export type Database = {
           is_featured?: boolean
           is_off_plan?: boolean
           is_published?: boolean | null
+          last_synced_at?: string | null
           latitude?: number | null
           listing_type?: string | null
           location_area: string
@@ -2387,6 +2440,9 @@ export type Database = {
           developer_id?: string | null
           developer_name?: string | null
           expires_at?: string | null
+          external_id?: string | null
+          external_source?: string | null
+          external_url?: string | null
           floor_number?: number | null
           furnishing?: string | null
           highlights?: Json | null
@@ -2396,6 +2452,7 @@ export type Database = {
           is_featured?: boolean
           is_off_plan?: boolean
           is_published?: boolean | null
+          last_synced_at?: string | null
           latitude?: number | null
           listing_type?: string | null
           location_area?: string

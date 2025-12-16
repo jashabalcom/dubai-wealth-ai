@@ -15,7 +15,8 @@ import {
   UserCheck,
   Briefcase,
   HardHat,
-  MapPin
+  MapPin,
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -33,6 +34,7 @@ const navItems = [
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Courses', href: '/admin/courses', icon: GraduationCap },
   { label: 'Properties', href: '/admin/properties', icon: Building2 },
+  { label: 'Bayut Sync', href: '/admin/bayut-sync', icon: RefreshCw },
   { label: 'Neighborhoods', href: '/admin/neighborhoods', icon: MapPin },
   { label: 'Agents', href: '/admin/agents', icon: UserCheck },
   { label: 'Brokerages', href: '/admin/brokerages', icon: Briefcase },
