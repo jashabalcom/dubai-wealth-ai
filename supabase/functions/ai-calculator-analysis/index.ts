@@ -29,7 +29,7 @@ const MARKET_BENCHMARKS = {
 };
 
 interface CalculatorData {
-  calculatorType: 'roi' | 'mortgage' | 'total-cost';
+  calculatorType: 'roi' | 'mortgage' | 'total-cost' | 'cap-rate' | 'dscr' | 'free-zone';
   inputs: Record<string, any>;
   results: Record<string, any>;
   area?: string;
@@ -238,6 +238,90 @@ serve(async (req) => {
 3. Key cost factors that could be optimized
 4. Risks specific to this investment strategy and holding period
 5. Whether the appreciation assumptions are realistic for this area and timeframe`;
+
+    } else if (calculatorType === 'cap-rate') {
+      analysisContext = `
+## Cap Rate & NOI Calculator Results
+- Property Price: AED ${inputs.propertyPrice?.toLocaleString()}
+- Property Size: ${inputs.propertySizeSqft?.toLocaleString()} sqft
+- Gross Annual Income: AED ${inputs.grossIncome?.toLocaleString()}
+- Total Operating Expenses: AED ${results.totalExpenses?.toLocaleString()}
+  - Property Management: AED ${inputs.managementFee?.toLocaleString()}
+  - Insurance: AED ${inputs.insurance?.toLocaleString()}
+  - Maintenance: AED ${inputs.maintenance?.toLocaleString()}
+  - Service Charges: AED ${inputs.serviceCharges?.toLocaleString()}
+  - Vacancy Allowance: AED ${inputs.vacancyAllowance?.toLocaleString()}
+  - Other Expenses: AED ${inputs.otherExpenses?.toLocaleString()}
+
+### Calculated Metrics
+- Net Operating Income (NOI): AED ${results.noi?.toLocaleString()}
+- Cap Rate: ${results.capRate?.toFixed(2)}%
+- Expense Ratio: ${results.expenseRatio?.toFixed(1)}%
+- Price per Sqft: AED ${results.pricePerSqft?.toLocaleString()}
+- GRM (Gross Rent Multiplier): ${results.grm?.toFixed(1)}x
+`;
+      specificPrompt = `Analyze this commercial property cap rate calculation and provide insights on:
+1. How the cap rate compares to Dubai commercial property benchmarks (office 6-8%, retail 7-9%, industrial 8-10%)
+2. Whether the expense ratio is reasonable (typical range 25-40%)
+3. How the NOI could be improved through expense optimization
+4. Risk assessment based on vacancy allowance and market conditions
+5. One specific recommendation for improving investment returns`;
+
+    } else if (calculatorType === 'dscr') {
+      analysisContext = `
+## DSCR Calculator Results
+- Property Price: AED ${inputs.propertyPrice?.toLocaleString()}
+- Net Operating Income: AED ${inputs.noi?.toLocaleString()}
+- Loan Amount: AED ${inputs.loanAmount?.toLocaleString()}
+- Interest Rate: ${inputs.interestRate}%
+- Loan Term: ${inputs.loanTerm} years
+- Amortization: ${inputs.amortization} years
+
+### Calculated Metrics
+- Monthly Debt Service: AED ${results.monthlyDebtService?.toLocaleString()}
+- Annual Debt Service: AED ${results.annualDebtService?.toLocaleString()}
+- DSCR: ${results.dscr?.toFixed(2)}
+- LTV Ratio: ${results.ltvRatio?.toFixed(1)}%
+- Debt Yield: ${results.debtYield?.toFixed(2)}%
+- Breakeven Occupancy: ${results.breakevenOccupancy?.toFixed(1)}%
+`;
+      specificPrompt = `Analyze this DSCR calculation and provide insights on:
+1. How the DSCR compares to UAE bank requirements (typically 1.25x-1.40x minimum)
+2. Whether the LTV ratio is within acceptable ranges (usually 60-75% for commercial)
+3. Risk assessment based on breakeven occupancy level
+4. How the debt yield compares to market expectations (typically 8-10%+)
+5. One recommendation for improving the financing structure or debt coverage`;
+
+    } else if (calculatorType === 'free-zone') {
+      const selectedZones = inputs.selectedZones || [];
+      const zonesInfo = selectedZones.map((z: any) => `
+- ${z.name}: License AED ${z.licenseCostFrom?.toLocaleString()}-${z.licenseCostTo?.toLocaleString()}, Visas: ${z.visaAllocationMin}-${z.visaAllocationMax}, Setup: ${z.setupTimeWeeks} weeks, Sectors: ${z.sectors?.join(', ')}`).join('\n');
+      
+      analysisContext = `
+## Free Zone Comparison Analysis
+### Business Requirements
+- Business Description: ${inputs.businessDescription || 'Not specified'}
+- Team Size: ${inputs.teamSize || 'Not specified'} employees
+- Budget: AED ${inputs.budget?.toLocaleString() || 'Not specified'}
+- Sector Focus: ${inputs.sectorFocus || 'General'}
+- Visa Requirements: ${inputs.visaRequirements || 'Not specified'}
+- Office Space Need: ${inputs.officeSpaceNeed || 'Not specified'}
+
+### Selected Free Zones for Comparison
+${zonesInfo || 'No zones selected'}
+
+### Cost Comparison Summary
+${results.costComparison ? JSON.stringify(results.costComparison, null, 2) : 'No cost breakdown available'}
+`;
+      specificPrompt = `Provide personalized free zone recommendations for this business:
+1. **Best Fit Zone**: Which of the selected zones is the best match and why
+2. **Cost Efficiency**: Rank zones by total first-year cost considering all requirements
+3. **Sector Alignment**: How well each zone's sector focus matches the business needs
+4. **Scaling Potential**: Which zone offers best growth flexibility (visa expansion, office upgrade)
+5. **Hidden Considerations**: Any important factors not immediately obvious (renewal costs, restrictions)
+6. **Final Recommendation**: One clear recommendation with specific reasoning
+
+Be specific about why certain zones are better fits based on the stated requirements.`;
     }
 
     const systemPrompt = `You are a Dubai real estate investment analyst. Provide clear, specific analysis in plain English.
