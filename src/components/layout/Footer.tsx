@@ -1,51 +1,55 @@
 import { Link } from "react-router-dom";
 import { Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/BrandLogo";
 
-const footerLinks = {
+const getFooterLinks = (t: (key: string) => string) => ({
   platform: {
-    title: "Platform",
+    title: t('footer.platform'),
     links: [
-      { label: "Academy", href: "/academy" },
-      { label: "AI Assistant", href: "/ai-assistant" },
-      { label: "Investment Tools", href: "/tools" },
-      { label: "Property Search", href: "/properties" },
-      { label: "Neighborhoods", href: "/neighborhoods" },
-      { label: "Community", href: "/community" },
+      { label: t('footer.academy'), href: "/academy" },
+      { label: t('footer.aiAssistant'), href: "/ai-assistant" },
+      { label: t('footer.investmentTools'), href: "/tools" },
+      { label: t('footer.propertySearch'), href: "/properties" },
+      { label: t('footer.neighborhoods'), href: "/neighborhoods" },
+      { label: t('footer.community'), href: "/community" },
     ],
   },
   resources: {
-    title: "Resources",
+    title: t('footer.resources'),
     links: [
-      { label: "Market Reports", href: "#" },
-      { label: "Off-Plan Guide", href: "#" },
-      { label: "Golden Visa Wizard", href: "/golden-visa" },
-      { label: "Developer Directory", href: "/developers" },
-      { label: "Blog", href: "#" },
+      { label: t('footer.marketReports'), href: "#" },
+      { label: t('footer.offPlanGuide'), href: "#" },
+      { label: t('footer.goldenVisaWizard'), href: "/golden-visa" },
+      { label: t('footer.developerDirectory'), href: "/developers" },
+      { label: t('footer.blog'), href: "#" },
     ],
   },
   company: {
-    title: "Company",
+    title: t('footer.company'),
     links: [
-      { label: "About", href: "#" },
-      { label: "Contact", href: "/contact" },
-      { label: "For Agents", href: "/agent-portal" },
-      { label: "Careers", href: "#" },
-      { label: "Partners", href: "#" },
+      { label: t('footer.about'), href: "#" },
+      { label: t('footer.contact'), href: "/contact" },
+      { label: t('footer.forAgents'), href: "/agent-portal" },
+      { label: t('footer.careers'), href: "#" },
+      { label: t('footer.partners'), href: "#" },
     ],
   },
   legal: {
-    title: "Legal",
+    title: t('footer.legal'),
     links: [
-      { label: "Privacy Policy", href: "/privacy" },
-      { label: "Terms of Service", href: "/terms" },
-      { label: "Cookie Policy", href: "#" },
-      { label: "Disclaimer", href: "/disclaimer" },
+      { label: t('footer.privacyPolicy'), href: "/privacy" },
+      { label: t('footer.termsOfService'), href: "/terms" },
+      { label: t('footer.cookiePolicy'), href: "#" },
+      { label: t('footer.disclaimer'), href: "/disclaimer" },
     ],
   },
-};
+});
 
 export function Footer() {
+  const { t } = useTranslation();
+  const footerLinks = getFooterLinks(t);
+  
   return (
     <footer className="bg-secondary text-secondary-foreground">
       {/* Main Footer */}
@@ -57,8 +61,7 @@ export function Footer() {
               <BrandLogo variant="dark" size="lg" />
             </Link>
             <p className="text-secondary-foreground/60 text-sm leading-relaxed mb-6 max-w-sm">
-              An AI-powered Dubai real estate wealth platform for global investors. 
-              Education, tools, community, and exclusive deal flow — all in one place.
+              {t('footer.description')}
             </p>
             <div className="flex gap-4">
               {["LinkedIn", "Twitter", "Instagram"].map((social) => (
@@ -109,18 +112,15 @@ export function Footer() {
       <div className="border-t border-secondary-foreground/10">
         <div className="container-luxury py-8">
           <div className="flex items-start gap-3 p-4 rounded-xl bg-secondary-foreground/5 border border-secondary-foreground/10">
-            <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5 rtl:ml-3 rtl:mr-0" />
             <div className="space-y-2">
               <p className="text-sm text-secondary-foreground/80 font-medium">
-                Education & Referral Platform
+                {t('footer.disclaimerTitle')}
               </p>
               <p className="text-xs text-secondary-foreground/60 leading-relaxed">
-                Dubai Wealth Hub is an educational platform and referral network. We are not a licensed real estate brokerage. 
-                Properties are presented by licensed RERA-registered agents and developers. All investment analysis, 
-                projections, and AI-generated content are for educational purposes only and do not constitute financial, 
-                legal, or investment advice. Past performance does not guarantee future results.{' '}
+                {t('footer.disclaimerText')}{' '}
                 <Link to="/disclaimer" className="text-primary hover:underline">
-                  Read full disclaimer
+                  {t('footer.readFullDisclaimer')}
                 </Link>
               </p>
             </div>
@@ -132,10 +132,10 @@ export function Footer() {
       <div className="border-t border-secondary-foreground/10">
         <div className="container-luxury py-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-secondary-foreground/40 text-sm">
-            © {new Date().getFullYear()} Dubai Wealth Hub by Balcom Privé. All rights reserved.
+            © {new Date().getFullYear()} {t('footer.copyright')}
           </p>
           <p className="text-secondary-foreground/40 text-sm">
-            Dubai, United Arab Emirates
+            {t('footer.location')}
           </p>
         </div>
       </div>
