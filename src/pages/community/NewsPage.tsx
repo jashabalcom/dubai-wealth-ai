@@ -37,7 +37,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   lifestyle: 'Lifestyle',
 };
 
-function ArticleCard({ article }: { article: NewsArticle }) {
+function ArticleCard({ article, onSelect }: { article: NewsArticle; onSelect?: (article: NewsArticle) => void }) {
   const isFeatured = article.article_type === 'featured';
 
   if (isFeatured) {
@@ -82,7 +82,11 @@ function ArticleCard({ article }: { article: NewsArticle }) {
                     {article.published_at && format(new Date(article.published_at), 'MMM d, yyyy')}
                   </span>
                 </div>
-                <Button variant="ghost" className="text-gold hover:text-gold hover:bg-gold/10">
+                <Button 
+                  variant="ghost" 
+                  className="text-gold hover:text-gold hover:bg-gold/10"
+                  onClick={() => onSelect?.(article)}
+                >
                   Read Analysis <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
@@ -290,6 +294,7 @@ export default function NewsPage() {
             <ArticleCard 
               key={article.id} 
               article={article}
+              onSelect={setSelectedArticle}
             />
           ))}
         </motion.div>
