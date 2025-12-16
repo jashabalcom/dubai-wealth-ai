@@ -1,6 +1,6 @@
-import { MapPin, Calendar, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { MapPin, Calendar, Trash2, TrendingUp, TrendingDown, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { PortfolioProperty } from '@/hooks/usePortfolio';
 
 interface PropertyListProps {
@@ -20,10 +20,12 @@ export function PropertyList({ properties, onDelete }: PropertyListProps) {
 
   if (properties.length === 0) {
     return (
-      <div className="text-center py-12 bg-card border border-border rounded-xl">
-        <div className="text-4xl mb-4">🏠</div>
-        <h3 className="text-lg font-medium mb-2">No properties yet</h3>
-        <p className="text-muted-foreground">Add your first property to start tracking your portfolio.</p>
+      <div className="bg-card border border-border rounded-xl">
+        <EmptyState
+          icon={Briefcase}
+          title="Your portfolio is empty"
+          description="Add your first property to start tracking your Dubai real estate investments and see performance metrics."
+        />
       </div>
     );
   }

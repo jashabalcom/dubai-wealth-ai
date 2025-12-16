@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, Building2, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Heart, ArrowLeft } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { PropertyCard } from '@/components/properties/PropertyCard';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -122,16 +122,12 @@ export default function SavedProperties() {
           {loading || savedLoading ? (
             <PropertyGridSkeleton count={6} />
           ) : properties.length === 0 ? (
-            <div className="text-center py-16">
-              <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-heading text-xl text-foreground mb-2">No saved properties</h3>
-              <p className="text-muted-foreground mb-6">
-                Start exploring and save properties you're interested in.
-              </p>
-              <Link to="/properties">
-                <Button variant="gold">Browse Properties</Button>
-              </Link>
-            </div>
+            <EmptyState
+              icon={Heart}
+              title="No saved properties yet"
+              description="Save properties you're interested in to easily compare them later and track their details."
+              action={{ label: 'Browse Properties', href: '/properties' }}
+            />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties.map((property, index) => (
