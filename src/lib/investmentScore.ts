@@ -1,21 +1,74 @@
 // Shared investment scoring utilities
+// Comprehensive Dubai area benchmarks based on 2024 market data
 
 export const AREA_BENCHMARKS: Record<string, { avgPriceSqft: number; avgYield: number }> = {
-  'Dubai Marina': { avgPriceSqft: 1800, avgYield: 6.0 },
-  'Downtown Dubai': { avgPriceSqft: 2500, avgYield: 5.5 },
+  // Ultra Premium Areas
   'Palm Jumeirah': { avgPriceSqft: 3200, avgYield: 5.0 },
-  'Business Bay': { avgPriceSqft: 1600, avgYield: 6.5 },
-  'JVC': { avgPriceSqft: 900, avgYield: 8.0 },
-  'Dubai Hills': { avgPriceSqft: 1400, avgYield: 5.5 },
-  'MBR City': { avgPriceSqft: 1200, avgYield: 6.0 },
+  'Emirates Hills': { avgPriceSqft: 3500, avgYield: 3.5 },
+  'Bluewaters Island': { avgPriceSqft: 2800, avgYield: 5.2 },
+  
+  // Premium Areas
+  'Downtown Dubai': { avgPriceSqft: 2500, avgYield: 5.5 },
+  'DIFC': { avgPriceSqft: 2600, avgYield: 5.3 },
+  'Dubai Marina': { avgPriceSqft: 1800, avgYield: 6.0 },
+  'JBR': { avgPriceSqft: 2000, avgYield: 5.8 },
+  'City Walk': { avgPriceSqft: 2400, avgYield: 5.4 },
   'Emaar Beachfront': { avgPriceSqft: 2200, avgYield: 5.5 },
   'Dubai Creek Harbour': { avgPriceSqft: 1900, avgYield: 5.8 },
+  
+  // Mid-Premium Areas
+  'Business Bay': { avgPriceSqft: 1600, avgYield: 6.5 },
+  'Dubai Hills': { avgPriceSqft: 1400, avgYield: 5.5 },
+  'Dubai Hills Estate': { avgPriceSqft: 1400, avgYield: 5.5 },
+  'MBR City': { avgPriceSqft: 1200, avgYield: 6.0 },
+  'Mohammed Bin Rashid City': { avgPriceSqft: 1200, avgYield: 6.0 },
+  'Sobha Hartland': { avgPriceSqft: 1500, avgYield: 5.8 },
+  'Meydan': { avgPriceSqft: 1300, avgYield: 6.2 },
+  'JLT': { avgPriceSqft: 1100, avgYield: 7.0 },
+  'Jumeirah Lake Towers': { avgPriceSqft: 1100, avgYield: 7.0 },
+  'The Greens': { avgPriceSqft: 1150, avgYield: 6.8 },
+  'The Views': { avgPriceSqft: 1200, avgYield: 6.5 },
+  'Jumeirah': { avgPriceSqft: 1600, avgYield: 5.5 },
+  'Umm Suqeim': { avgPriceSqft: 1500, avgYield: 5.8 },
+  'Al Barsha': { avgPriceSqft: 1000, avgYield: 7.0 },
+  
+  // Mid-Range High Yield Areas
+  'JVC': { avgPriceSqft: 900, avgYield: 8.0 },
+  'Jumeirah Village Circle': { avgPriceSqft: 900, avgYield: 8.0 },
+  'Damac Hills': { avgPriceSqft: 950, avgYield: 7.5 },
+  'Damac Hills 2': { avgPriceSqft: 700, avgYield: 8.5 },
   'Damac Lagoons': { avgPriceSqft: 1000, avgYield: 6.5 },
-  'The Valley': { avgPriceSqft: 850, avgYield: 7.0 },
+  'Al Furjan': { avgPriceSqft: 850, avgYield: 7.8 },
+  'Arabian Ranches': { avgPriceSqft: 1100, avgYield: 5.5 },
+  'Arabian Ranches 2': { avgPriceSqft: 950, avgYield: 6.0 },
+  'Arabian Ranches 3': { avgPriceSqft: 900, avgYield: 6.2 },
   'Tilal Al Ghaf': { avgPriceSqft: 1100, avgYield: 6.0 },
+  'The Valley': { avgPriceSqft: 850, avgYield: 7.0 },
+  
+  // Affordable High Yield Areas
+  'Sports City': { avgPriceSqft: 750, avgYield: 8.5 },
+  'Dubai Sports City': { avgPriceSqft: 750, avgYield: 8.5 },
+  'Motor City': { avgPriceSqft: 800, avgYield: 8.0 },
+  'Silicon Oasis': { avgPriceSqft: 700, avgYield: 9.0 },
+  'Dubai Silicon Oasis': { avgPriceSqft: 700, avgYield: 9.0 },
+  'Town Square': { avgPriceSqft: 750, avgYield: 8.2 },
+  'Dubai South': { avgPriceSqft: 650, avgYield: 8.5 },
+  'Discovery Gardens': { avgPriceSqft: 550, avgYield: 9.5 },
+  'International City': { avgPriceSqft: 450, avgYield: 10.0 },
+  'Production City': { avgPriceSqft: 600, avgYield: 9.0 },
+  'Impz': { avgPriceSqft: 600, avgYield: 9.0 },
+  'Dubailand': { avgPriceSqft: 700, avgYield: 8.0 },
+  'Remraam': { avgPriceSqft: 650, avgYield: 8.5 },
+  'Liwan': { avgPriceSqft: 600, avgYield: 9.0 },
+  'Arjan': { avgPriceSqft: 800, avgYield: 8.0 },
+  'Al Barari': { avgPriceSqft: 1400, avgYield: 4.5 },
+  
+  // Off-Plan / Emerging Areas
+  'Dubai Islands': { avgPriceSqft: 1800, avgYield: 5.5 },
+  'Ras Al Khaimah': { avgPriceSqft: 900, avgYield: 7.5 },
 };
 
-export const DEFAULT_BENCHMARK = { avgPriceSqft: 1500, avgYield: 6.0 };
+export const DEFAULT_BENCHMARK = { avgPriceSqft: 1200, avgYield: 6.5 };
 
 export const TOP_DEVELOPERS = [
   'Emaar', 'DAMAC', 'Nakheel', 'Meraas', 'Dubai Properties', 

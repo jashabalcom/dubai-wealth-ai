@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
 import { Label } from '@/components/ui/label';
@@ -21,11 +21,18 @@ import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 
 export default function ROICalculator() {
+  const [searchParams] = useSearchParams();
   const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
   const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, isLoading: usageLoading } = useToolUsage('roi');
   const [activePreset, setActivePreset] = useState<string>();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [hasTrackedUsage, setHasTrackedUsage] = useState(false);
+
+  // Parse URL params for pre-fill from property pages
+  const urlPrice = searchParams.get('price');
+  const urlRent = searchParams.get('rent');
+  const urlSize = searchParams.get('size');
+  const urlArea = searchParams.get('area');
 
   // Track usage when user first interacts with calculator
   useEffect(() => {
@@ -40,11 +47,11 @@ export default function ROICalculator() {
   }, [hasTrackedUsage, usageLoading, isUnlimited, trackUsage]);
 
   const [inputs, setInputs] = useState({
-    purchasePrice: 2000000,
+    purchasePrice: urlPrice ? parseInt(urlPrice) : 2000000,
     downPayment: 25,
-    propertySizeSqft: 1200,
-    selectedArea: 'Dubai Marina',
-    annualRent: 120000,
+    propertySizeSqft: urlSize ? parseInt(urlSize) : 1200,
+    selectedArea: urlArea ? decodeURIComponent(urlArea) : 'Dubai Marina',
+    annualRent: urlRent ? parseInt(urlRent) : 120000,
     annualAppreciation: 5,
     holdingPeriod: 5,
     vacancyRate: 5,
