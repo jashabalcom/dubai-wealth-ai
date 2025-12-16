@@ -192,7 +192,7 @@ function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: ()
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm overflow-y-auto"
     >
-      <div className="container max-w-4xl mx-auto px-4 py-8">
+      <div className="container max-w-4xl mx-auto px-4 pt-20 md:pt-24 pb-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
           <Button variant="ghost" size="sm" onClick={onClose} className="gap-1 p-0 h-auto hover:bg-transparent hover:text-gold">
