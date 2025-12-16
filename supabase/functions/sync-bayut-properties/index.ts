@@ -1059,7 +1059,12 @@ function transformProperty(prop: any): any {
     title,
     description: prop.description || null,
     price_aed: Math.max(0, prop.price || 0),
-    size_sqft: Math.max(1, Math.round(prop.area || prop.sqft || prop.builtupArea || 0)),
+    // Robust size_sqft parsing with NaN protection
+    size_sqft: (() => {
+      const rawArea = prop.area ?? prop.sqft ?? prop.builtupArea ?? 0;
+      const parsed = typeof rawArea === 'number' ? rawArea : parseFloat(rawArea);
+      return Math.max(1, Math.round(isNaN(parsed) ? 1 : parsed));
+    })(),
     bedrooms: bedrooms || 0,
     bathrooms: Math.max(0, prop.baths || 0),
     property_type: propertyType,
@@ -1087,24 +1092,47 @@ function transformProperty(prop: any): any {
   };
 }
 
-// Extract photo URLs
+// Extract photo URLs - handles Bayut API camelCase structure
 function extractPhotoUrls(prop: any): string[] {
   const urls: string[] = [];
   
-  // Cover photo first
-  if (prop.cover_photo) {
-    urls.push(prop.cover_photo);
+  // Debug logging for photo fields
+  console.log(`[Bayut API] Photo fields for ${prop.id}:`, {
+    hasCoverPhoto: !!prop.coverPhoto,
+    coverPhotoUrl: prop.coverPhoto?.url?.substring(0, 50),
+    photosCount: prop.photos?.length || 0,
+    hasPhotoUrls: !!prop.photoUrls,
+    area: prop.area,
+  });
+  
+  // Cover photo (camelCase, nested object with url property)
+  if (prop.coverPhoto?.url) {
+    urls.push(prop.coverPhoto.url);
+  } else if (prop.cover_photo) {
+    // Fallback to snake_case if present
+    urls.push(typeof prop.cover_photo === 'string' ? prop.cover_photo : prop.cover_photo.url);
   }
   
-  // Then gallery photos
+  // Gallery photos (array of objects with url property)
   if (prop.photos && Array.isArray(prop.photos)) {
     for (const photo of prop.photos) {
-      const url = typeof photo === 'string' ? photo : photo.url;
+      const url = photo?.url || (typeof photo === 'string' ? photo : null);
       if (url && !urls.includes(url)) {
         urls.push(url);
       }
     }
   }
+  
+  // Also check photoUrls array (alternate field name)
+  if (prop.photoUrls && Array.isArray(prop.photoUrls)) {
+    for (const url of prop.photoUrls) {
+      if (url && typeof url === 'string' && !urls.includes(url)) {
+        urls.push(url);
+      }
+    }
+  }
+  
+  console.log(`[Bayut API] Extracted ${urls.length} photos for property ${prop.id}`);
   
   return urls.slice(0, 20); // Cap at 20 photos
 }
