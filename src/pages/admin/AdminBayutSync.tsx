@@ -96,10 +96,41 @@ interface BayutAgency {
   last_synced_at: string;
 }
 
+// Top 25 Dubai investment areas with their Bayut location IDs
+const TOP_DUBAI_AREAS = [
+  { id: 5002, name: 'Dubai Marina', level: 'community' },
+  { id: 5001, name: 'Downtown Dubai', level: 'community' },
+  { id: 6901, name: 'Palm Jumeirah', level: 'community' },
+  { id: 6804, name: 'Jumeirah Beach Residence (JBR)', level: 'community' },
+  { id: 5548, name: 'Business Bay', level: 'community' },
+  { id: 8116, name: 'Jumeirah Village Circle (JVC)', level: 'community' },
+  { id: 6772, name: 'Dubai Hills Estate', level: 'community' },
+  { id: 6056, name: 'Arabian Ranches', level: 'community' },
+  { id: 9102, name: 'Mohammed Bin Rashid City', level: 'community' },
+  { id: 5549, name: 'DIFC', level: 'community' },
+  { id: 5003, name: 'Jumeirah Lake Towers (JLT)', level: 'community' },
+  { id: 5557, name: 'Dubai Sports City', level: 'community' },
+  { id: 6052, name: 'Dubai Silicon Oasis', level: 'community' },
+  { id: 8210, name: 'Damac Hills', level: 'community' },
+  { id: 8318, name: 'Sobha Hartland', level: 'community' },
+  { id: 5553, name: 'Emirates Hills', level: 'community' },
+  { id: 8127, name: 'Town Square', level: 'community' },
+  { id: 5556, name: 'Al Barsha', level: 'community' },
+  { id: 6057, name: 'Motor City', level: 'community' },
+  { id: 5554, name: 'Jumeirah', level: 'community' },
+  { id: 8115, name: 'Meydan City', level: 'community' },
+  { id: 5558, name: 'International City', level: 'community' },
+  { id: 6053, name: 'Dubai Investment Park', level: 'community' },
+  { id: 8211, name: 'Dubai Creek Harbour', level: 'community' },
+  { id: 9201, name: 'Bluewaters Island', level: 'community' },
+];
+
 export default function AdminBayutSync() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isQuickSyncing, setIsQuickSyncing] = useState(false);
+  const [quickSyncProgress, setQuickSyncProgress] = useState({ current: 0, total: 0, currentArea: '' });
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [totalStats, setTotalStats] = useState({
     totalSynced: 0,
@@ -290,6 +321,60 @@ export default function AdminBayutSync() {
       console.error(error);
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const quickSyncAllAreas = async () => {
+    setIsQuickSyncing(true);
+    setQuickSyncProgress({ current: 0, total: TOP_DUBAI_AREAS.length, currentArea: '' });
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    toast.info(`Starting quick sync of ${TOP_DUBAI_AREAS.length} Dubai areas...`);
+    
+    for (let i = 0; i < TOP_DUBAI_AREAS.length; i++) {
+      const area = TOP_DUBAI_AREAS[i];
+      setQuickSyncProgress({ current: i + 1, total: TOP_DUBAI_AREAS.length, currentArea: area.name });
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+          body: {
+            action: 'sync_properties',
+            locations_ids: [area.id],
+            purpose: 'for-sale',
+            index: 'latest',
+            limit: 50, // 50 per area = ~1,250 total properties
+          },
+        });
+
+        if (error) throw error;
+        
+        if (data?.success) {
+          successCount++;
+        } else {
+          failCount++;
+          console.warn(`Failed to sync ${area.name}:`, data?.error);
+        }
+      } catch (error) {
+        failCount++;
+        console.error(`Error syncing ${area.name}:`, error);
+      }
+      
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    
+    setIsQuickSyncing(false);
+    setQuickSyncProgress({ current: 0, total: 0, currentArea: '' });
+    
+    fetchSyncLogs();
+    fetchTotalStats();
+    
+    if (failCount === 0) {
+      toast.success(`Quick sync complete! Synced all ${successCount} areas successfully.`);
+    } else {
+      toast.warning(`Quick sync complete. ${successCount} areas succeeded, ${failCount} failed.`);
     }
   };
 
@@ -571,6 +656,63 @@ export default function AdminBayutSync() {
 
           {/* Properties Tab */}
           <TabsContent value="properties" className="space-y-4">
+            {/* Quick Sync Card */}
+            <Card className="border-gold/30 bg-gold/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-gold" />
+                  Quick Sync All Areas
+                </CardTitle>
+                <CardDescription>
+                  One-click sync of top {TOP_DUBAI_AREAS.length} Dubai investment areas (50 properties each)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap items-center gap-4">
+                  <Button 
+                    onClick={quickSyncAllAreas} 
+                    disabled={isQuickSyncing || isSyncing}
+                    className="bg-gold hover:bg-gold/90 text-primary-foreground"
+                    size="lg"
+                  >
+                    {isQuickSyncing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Syncing {quickSyncProgress.current}/{quickSyncProgress.total}...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Quick Sync All Areas
+                      </>
+                    )}
+                  </Button>
+                  
+                  {isQuickSyncing && quickSyncProgress.currentArea && (
+                    <div className="text-sm text-muted-foreground">
+                      Currently syncing: <span className="font-medium text-foreground">{quickSyncProgress.currentArea}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {TOP_DUBAI_AREAS.map((area) => (
+                    <Badge 
+                      key={area.id} 
+                      variant="outline" 
+                      className={`text-xs ${
+                        isQuickSyncing && quickSyncProgress.currentArea === area.name 
+                          ? 'bg-gold/20 border-gold text-gold' 
+                          : ''
+                      }`}
+                    >
+                      {area.name}
+                    </Badge>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
