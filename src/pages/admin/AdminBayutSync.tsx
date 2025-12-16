@@ -5,6 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -17,7 +20,12 @@ import {
   Building2,
   Image,
   Clock,
-  Zap
+  Zap,
+  Search,
+  MapPin,
+  X,
+  TrendingUp,
+  Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -35,45 +43,80 @@ interface SyncLog {
   status: string;
 }
 
-interface DubaiArea {
-  slug: string;
-  id: string;
+interface Location {
+  id: number;
   name: string;
+  level: string;
+  path?: string;
+}
+
+interface Transaction {
+  id: string;
+  date: string;
+  price: number;
+  area: number;
+  rooms: number;
+  location: string;
+  property_type: string;
+  floor?: number;
+}
+
+interface Developer {
+  id: number;
+  name: string;
+  logo?: string;
+  projects_count?: number;
+  properties_count?: number;
 }
 
 export default function AdminBayutSync() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [selectedArea, setSelectedArea] = useState<string>('dubai-marina');
-  const [selectedPurpose, setSelectedPurpose] = useState<'for-sale' | 'for-rent'>('for-sale');
-  const [propertyLimit, setPropertyLimit] = useState<number>(10);
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
-  const [areas, setAreas] = useState<DubaiArea[]>([]);
   const [totalStats, setTotalStats] = useState({
     totalSynced: 0,
     totalPhotos: 0,
     totalApiCalls: 0,
   });
 
+  // Location search
+  const [locationQuery, setLocationQuery] = useState('');
+  const [locationResults, setLocationResults] = useState<Location[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<Location[]>([]);
+  const [isSearchingLocations, setIsSearchingLocations] = useState(false);
+
+  // Property filters
+  const [purpose, setPurpose] = useState<'for-sale' | 'for-rent'>('for-sale');
+  const [category, setCategory] = useState<string>('');
+  const [selectedRooms, setSelectedRooms] = useState<number[]>([]);
+  const [priceMin, setPriceMin] = useState<string>('');
+  const [priceMax, setPriceMax] = useState<string>('');
+  const [areaMin, setAreaMin] = useState<string>('');
+  const [areaMax, setAreaMax] = useState<string>('');
+  const [completionStatus, setCompletionStatus] = useState<string>('');
+  const [saleType, setSaleType] = useState<string>('');
+  const [hasVideo, setHasVideo] = useState(false);
+  const [hasPanorama, setHasPanorama] = useState(false);
+  const [hasFloorplan, setHasFloorplan] = useState(false);
+  const [sortIndex, setSortIndex] = useState<string>('latest');
+  const [propertyLimit, setPropertyLimit] = useState<number>(20);
+
+  // Transactions
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
+  const [txStartDate, setTxStartDate] = useState<string>('');
+  const [txEndDate, setTxEndDate] = useState<string>('');
+
+  // Developers
+  const [developers, setDevelopers] = useState<Developer[]>([]);
+  const [isLoadingDevelopers, setIsLoadingDevelopers] = useState(false);
+  const [developerQuery, setDeveloperQuery] = useState('');
+
   useEffect(() => {
     fetchSyncLogs();
-    fetchAreas();
     fetchTotalStats();
   }, []);
-
-  const fetchAreas = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
-        body: { action: 'get_areas' },
-      });
-      if (data?.areas) {
-        setAreas(data.areas);
-      }
-    } catch (error) {
-      console.error('Failed to fetch areas:', error);
-    }
-  };
 
   const fetchSyncLogs = async () => {
     const { data, error } = await supabase
@@ -117,7 +160,7 @@ export default function AdminBayutSync() {
 
       if (data?.success) {
         setIsConnected(true);
-        toast.success('API connection successful!');
+        toast.success(`API connected! (${data.apiVersion})`);
       } else {
         setIsConnected(false);
         toast.error(data?.error || 'Connection failed');
@@ -131,14 +174,65 @@ export default function AdminBayutSync() {
     }
   };
 
-  const syncArea = async () => {
+  const searchLocations = async () => {
+    if (!locationQuery.trim()) return;
+    
+    setIsSearchingLocations(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: { action: 'search_locations', query: locationQuery },
+      });
+
+      if (error) throw error;
+
+      if (data?.locations) {
+        setLocationResults(data.locations);
+      }
+    } catch (error) {
+      toast.error('Failed to search locations');
+      console.error(error);
+    } finally {
+      setIsSearchingLocations(false);
+    }
+  };
+
+  const addLocation = (location: Location) => {
+    if (!selectedLocations.find(l => l.id === location.id)) {
+      setSelectedLocations([...selectedLocations, location]);
+    }
+    setLocationResults([]);
+    setLocationQuery('');
+  };
+
+  const removeLocation = (locationId: number) => {
+    setSelectedLocations(selectedLocations.filter(l => l.id !== locationId));
+  };
+
+  const syncProperties = async () => {
+    if (selectedLocations.length === 0) {
+      toast.error('Please select at least one location');
+      return;
+    }
+
     setIsSyncing(true);
     try {
       const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
         body: {
-          action: 'sync_area',
-          area: selectedArea,
-          purpose: selectedPurpose,
+          action: 'sync_properties',
+          locations_ids: selectedLocations.map(l => l.id),
+          purpose,
+          category: category || undefined,
+          rooms: selectedRooms.length > 0 ? selectedRooms : undefined,
+          price_min: priceMin ? parseInt(priceMin) : undefined,
+          price_max: priceMax ? parseInt(priceMax) : undefined,
+          area_min: areaMin ? parseInt(areaMin) : undefined,
+          area_max: areaMax ? parseInt(areaMax) : undefined,
+          completion_status: completionStatus || undefined,
+          sale_type: saleType || undefined,
+          has_video: hasVideo || undefined,
+          has_panorama: hasPanorama || undefined,
+          has_floorplan: hasFloorplan || undefined,
+          index: sortIndex,
           limit: propertyLimit,
         },
       });
@@ -160,6 +254,69 @@ export default function AdminBayutSync() {
     }
   };
 
+  const fetchTransactions = async () => {
+    setIsLoadingTransactions(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: {
+          action: 'sync_transactions',
+          locations_ids: selectedLocations.map(l => l.id),
+          purpose,
+          category: category || undefined,
+          rooms: selectedRooms.length > 0 ? selectedRooms : undefined,
+          start_date: txStartDate || undefined,
+          end_date: txEndDate || undefined,
+          limit: 50,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.transactions) {
+        setTransactions(data.transactions);
+        toast.success(`Found ${data.transactions.length} transactions`);
+      }
+    } catch (error) {
+      toast.error('Failed to fetch transactions');
+      console.error(error);
+    } finally {
+      setIsLoadingTransactions(false);
+    }
+  };
+
+  const searchDevelopers = async () => {
+    setIsLoadingDevelopers(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: {
+          action: 'search_developers',
+          query: developerQuery || undefined,
+          limit: 20,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.developers) {
+        setDevelopers(data.developers);
+        toast.success(`Found ${data.developers.length} developers`);
+      }
+    } catch (error) {
+      toast.error('Failed to search developers');
+      console.error(error);
+    } finally {
+      setIsLoadingDevelopers(false);
+    }
+  };
+
+  const toggleRoom = (room: number) => {
+    if (selectedRooms.includes(room)) {
+      setSelectedRooms(selectedRooms.filter(r => r !== room));
+    } else {
+      setSelectedRooms([...selectedRooms, room]);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -176,7 +333,7 @@ export default function AdminBayutSync() {
   };
 
   return (
-    <AdminLayout title="Bayut API Sync">
+    <AdminLayout title="Bayut API Sync (v2)">
       <div className="space-y-6">
         {/* Connection Status & Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -193,7 +350,7 @@ export default function AdminBayutSync() {
                 <div>
                   <p className="text-sm text-muted-foreground">API Status</p>
                   <p className="font-semibold">
-                    {isConnected === null ? 'Not Tested' : isConnected ? 'Connected' : 'Disconnected'}
+                    {isConnected === null ? 'Not Tested' : isConnected ? 'Connected (v2)' : 'Disconnected'}
                   </p>
                 </div>
               </div>
@@ -230,174 +387,478 @@ export default function AdminBayutSync() {
                 <Zap className="h-8 w-8 text-amber-500" />
                 <div>
                   <p className="text-sm text-muted-foreground">API Calls Used</p>
-                  <p className="font-semibold">{totalStats.totalApiCalls} / 500</p>
+                  <p className="font-semibold">{totalStats.totalApiCalls}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Sync Controls */}
+        {/* Test Connection */}
         <Card>
-          <CardHeader>
-            <CardTitle>Sync Controls</CardTitle>
-            <CardDescription>
-              Test your API connection and sync properties from Bayut. Free tier allows 500 API calls/month.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-4">
-              <Button 
-                onClick={testConnection} 
-                disabled={isTesting}
-                variant="outline"
-              >
-                {isTesting ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Testing...
-                  </>
-                ) : (
-                  <>
-                    <Wifi className="h-4 w-4 mr-2" />
-                    Test Connection
-                  </>
+          <CardContent className="pt-6">
+            <Button 
+              onClick={testConnection} 
+              disabled={isTesting}
+              variant="outline"
+            >
+              {isTesting ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <Wifi className="h-4 w-4 mr-2" />
+                  Test API Connection
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Main Tabs */}
+        <Tabs defaultValue="properties" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="properties">Properties Sync</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="developers">Developers</TabsTrigger>
+            <TabsTrigger value="history">Sync History</TabsTrigger>
+          </TabsList>
+
+          {/* Properties Tab */}
+          <TabsContent value="properties" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Location Search
+                </CardTitle>
+                <CardDescription>
+                  Search for locations by name to get their IDs
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Search location (e.g., Dubai Marina, Downtown...)"
+                    value={locationQuery}
+                    onChange={(e) => setLocationQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchLocations()}
+                  />
+                  <Button onClick={searchLocations} disabled={isSearchingLocations}>
+                    {isSearchingLocations ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {locationResults.length > 0 && (
+                  <div className="border rounded-md p-2 space-y-1 max-h-48 overflow-y-auto">
+                    {locationResults.map((loc) => (
+                      <button
+                        key={loc.id}
+                        onClick={() => addLocation(loc)}
+                        className="w-full text-left px-3 py-2 rounded hover:bg-muted flex justify-between items-center"
+                      >
+                        <span>{loc.name}</span>
+                        <Badge variant="outline" className="text-xs">{loc.level}</Badge>
+                      </button>
+                    ))}
+                  </div>
                 )}
-              </Button>
-            </div>
 
-            <div className="border-t pt-4">
-              <h4 className="font-medium mb-3">Sync Properties by Area</h4>
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Area</label>
-                  <Select value={selectedArea} onValueChange={setSelectedArea}>
-                    <SelectTrigger className="w-[200px]">
-                      <SelectValue placeholder="Select area" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areas.map((area) => (
-                        <SelectItem key={area.slug} value={area.slug}>
-                          {area.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {selectedLocations.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedLocations.map((loc) => (
+                      <Badge key={loc.id} variant="secondary" className="flex items-center gap-1">
+                        {loc.name}
+                        <button onClick={() => removeLocation(loc.id)} className="hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Property Filters</CardTitle>
+                <CardDescription>
+                  Configure search filters for property sync
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Basic Filters */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Purpose</label>
+                    <Select value={purpose} onValueChange={(v) => setPurpose(v as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for-sale">For Sale</SelectItem>
+                        <SelectItem value="for-rent">For Rent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Category</label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="apartments">Apartments</SelectItem>
+                        <SelectItem value="villas">Villas</SelectItem>
+                        <SelectItem value="townhouses">Townhouses</SelectItem>
+                        <SelectItem value="penthouses">Penthouses</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Completion</label>
+                    <Select value={completionStatus} onValueChange={setCompletionStatus}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="ready">Ready</SelectItem>
+                        <SelectItem value="off_plan">Off-Plan</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sale Type</label>
+                    <Select value={saleType} onValueChange={setSaleType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="resale">Resale</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
+                {/* Bedrooms */}
                 <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Purpose</label>
-                  <Select value={selectedPurpose} onValueChange={(v) => setSelectedPurpose(v as 'for-sale' | 'for-rent')}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="for-sale">For Sale</SelectItem>
-                      <SelectItem value="for-rent">For Rent</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium">Bedrooms</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((room) => (
+                      <button
+                        key={room}
+                        onClick={() => toggleRoom(room)}
+                        className={`px-3 py-1 rounded border text-sm ${
+                          selectedRooms.includes(room)
+                            ? 'bg-gold text-primary-foreground border-gold'
+                            : 'border-border hover:border-gold/50'
+                        }`}
+                      >
+                        {room === 0 ? 'Studio' : `${room} BR`}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground">Limit</label>
-                  <Select value={String(propertyLimit)} onValueChange={(v) => setPropertyLimit(Number(v))}>
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Price & Area */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Min Price (AED)</label>
+                    <Input
+                      type="number"
+                      placeholder="500000"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Max Price (AED)</label>
+                    <Input
+                      type="number"
+                      placeholder="5000000"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Min Area (sqft)</label>
+                    <Input
+                      type="number"
+                      placeholder="500"
+                      value={areaMin}
+                      onChange={(e) => setAreaMin(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Max Area (sqft)</label>
+                    <Input
+                      type="number"
+                      placeholder="5000"
+                      value={areaMax}
+                      onChange={(e) => setAreaMax(e.target.value)}
+                    />
+                  </div>
                 </div>
 
-                <Button 
-                  onClick={syncArea} 
-                  disabled={isSyncing || !selectedArea}
-                  className="bg-gold hover:bg-gold/90 text-primary-foreground"
-                >
-                  {isSyncing ? (
-                    <>
+                {/* Media Requirements */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Media Requirements</label>
+                  <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={hasVideo} onCheckedChange={(c) => setHasVideo(!!c)} />
+                      <span className="text-sm">Has Video</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={hasPanorama} onCheckedChange={(c) => setHasPanorama(!!c)} />
+                      <span className="text-sm">Has 360° Tour</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox checked={hasFloorplan} onCheckedChange={(c) => setHasFloorplan(!!c)} />
+                      <span className="text-sm">Has Floor Plans</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Sort & Limit */}
+                <div className="flex flex-wrap gap-4 items-end border-t pt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sort By</label>
+                    <Select value={sortIndex} onValueChange={setSortIndex}>
+                      <SelectTrigger className="w-[150px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="latest">Latest</SelectItem>
+                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                        <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                        <SelectItem value="area-asc">Area: Small to Large</SelectItem>
+                        <SelectItem value="area-desc">Area: Large to Small</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Limit</label>
+                    <Select value={String(propertyLimit)} onValueChange={(v) => setPropertyLimit(Number(v))}>
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="10">10</SelectItem>
+                        <SelectItem value="20">20</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button 
+                    onClick={syncProperties} 
+                    disabled={isSyncing || selectedLocations.length === 0}
+                    className="bg-gold hover:bg-gold/90 text-primary-foreground"
+                  >
+                    {isSyncing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Sync Properties
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Transactions Tab */}
+          <TabsContent value="transactions" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Market Transactions
+                </CardTitle>
+                <CardDescription>
+                  View real transaction data for market analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-4 items-end">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Start Date</label>
+                    <Input
+                      type="date"
+                      value={txStartDate}
+                      onChange={(e) => setTxStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">End Date</label>
+                    <Input
+                      type="date"
+                      value={txEndDate}
+                      onChange={(e) => setTxEndDate(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={fetchTransactions} disabled={isLoadingTransactions}>
+                    {isLoadingTransactions ? (
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Syncing...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Sync Area
-                    </>
-                  )}
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Estimated API calls: 1 (list) + up to {propertyLimit} (details) = ~{propertyLimit + 1} calls
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+                    ) : (
+                      <Search className="h-4 w-4 mr-2" />
+                    )}
+                    Fetch Transactions
+                  </Button>
+                </div>
 
-        {/* Sync History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Sync History</CardTitle>
-            <CardDescription>Recent sync operations and their results</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {syncLogs.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">No sync operations yet</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Area</TableHead>
-                    <TableHead>Started</TableHead>
-                    <TableHead>Properties</TableHead>
-                    <TableHead>Photos</TableHead>
-                    <TableHead>API Calls</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {syncLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="capitalize">{log.sync_type}</TableCell>
-                      <TableCell>{log.area_name || '-'}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-muted-foreground" />
-                          {format(new Date(log.started_at), 'MMM d, HH:mm')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {log.properties_synced}/{log.properties_found}
-                      </TableCell>
-                      <TableCell>{log.photos_synced}</TableCell>
-                      <TableCell>{log.api_calls_used}</TableCell>
-                      <TableCell>{getStatusBadge(log.status)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                {transactions.length > 0 && (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Rooms</TableHead>
+                        <TableHead>Area (sqft)</TableHead>
+                        <TableHead className="text-right">Price (AED)</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map((tx) => (
+                        <TableRow key={tx.id}>
+                          <TableCell>{tx.date}</TableCell>
+                          <TableCell>{tx.location}</TableCell>
+                          <TableCell className="capitalize">{tx.property_type}</TableCell>
+                          <TableCell>{tx.rooms === 0 ? 'Studio' : `${tx.rooms} BR`}</TableCell>
+                          <TableCell>{tx.area?.toLocaleString()}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {tx.price?.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Help Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>API Usage Tips</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
-            <p>• <strong>Free tier:</strong> 500 API calls/month. Each property sync uses ~2 calls (1 list + 1 detail).</p>
-            <p>• <strong>Photo re-hosting:</strong> Photos are downloaded from Bayut and stored in your own storage bucket.</p>
-            <p>• <strong>Duplicate handling:</strong> Properties are matched by external_id - existing properties are updated, not duplicated.</p>
-            <p>• <strong>Publishing:</strong> Synced properties start as unpublished for admin review. Enable them in the Properties admin.</p>
-            <p>• <strong>Rate limiting:</strong> The sync respects API limits and processes properties sequentially.</p>
-          </CardContent>
-        </Card>
+          {/* Developers Tab */}
+          <TabsContent value="developers" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Developer Search
+                </CardTitle>
+                <CardDescription>
+                  Search for developers and their project portfolios
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Search developer (e.g., Emaar, DAMAC...)"
+                    value={developerQuery}
+                    onChange={(e) => setDeveloperQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchDevelopers()}
+                  />
+                  <Button onClick={searchDevelopers} disabled={isLoadingDevelopers}>
+                    {isLoadingDevelopers ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                {developers.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {developers.map((dev) => (
+                      <Card key={dev.id}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center gap-3">
+                            {dev.logo ? (
+                              <img src={dev.logo} alt={dev.name} className="h-12 w-12 object-contain rounded" />
+                            ) : (
+                              <div className="h-12 w-12 bg-muted rounded flex items-center justify-center">
+                                <Building2 className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-semibold">{dev.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {dev.projects_count || 0} projects • {dev.properties_count || 0} listings
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* History Tab */}
+          <TabsContent value="history">
+            <Card>
+              <CardHeader>
+                <CardTitle>Sync History</CardTitle>
+                <CardDescription>Recent sync operations and their results</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {syncLogs.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No sync operations yet</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Started</TableHead>
+                        <TableHead>Properties</TableHead>
+                        <TableHead>Photos</TableHead>
+                        <TableHead>API Calls</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {syncLogs.map((log) => (
+                        <TableRow key={log.id}>
+                          <TableCell className="capitalize">{log.sync_type}</TableCell>
+                          <TableCell className="max-w-[200px] truncate">{log.area_name || '-'}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              {format(new Date(log.started_at), 'MMM d, HH:mm')}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {log.properties_synced}/{log.properties_found}
+                          </TableCell>
+                          <TableCell>{log.photos_synced}</TableCell>
+                          <TableCell>{log.api_calls_used}</TableCell>
+                          <TableCell>{getStatusBadge(log.status)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );
