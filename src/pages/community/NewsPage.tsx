@@ -243,7 +243,7 @@ function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: ()
 
         <article className="prose-luxury">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {article.content || article.excerpt || ''}
+            {(article.content || article.excerpt || '').replace(/^#\s+.+\n+/, '')}
           </ReactMarkdown>
         </article>
       </div>
