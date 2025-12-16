@@ -5,7 +5,8 @@ import {
   Calendar, 
   Users, 
   UserCheck, 
-  MessagesSquare 
+  MessagesSquare,
+  HelpCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -20,14 +21,14 @@ const navItems = [
     exact: true,
   },
   {
+    label: 'Q&A',
+    icon: HelpCircle,
+    path: '/community/qa',
+  },
+  {
     label: 'Events',
     icon: Calendar,
     path: '/community/events',
-  },
-  {
-    label: 'Members',
-    icon: Users,
-    path: '/community/members',
   },
   {
     label: 'Connect',

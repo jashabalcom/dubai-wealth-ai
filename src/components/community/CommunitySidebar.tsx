@@ -8,7 +8,8 @@ import {
   MessagesSquare,
   ChevronLeft,
   ChevronRight,
-  Trophy
+  Trophy,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,11 @@ const navItems = [
     icon: MessageSquare,
     path: '/community',
     exact: true,
+  },
+  {
+    label: 'Q&A Hub',
+    icon: HelpCircle,
+    path: '/community/qa',
   },
   {
     label: 'Events',
