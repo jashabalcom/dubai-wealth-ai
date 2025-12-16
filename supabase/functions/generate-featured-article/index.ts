@@ -30,20 +30,34 @@ Important guidelines:
 
 Output format: Return ONLY the article content in markdown format, starting with the title as an H1.`;
 
+// Keywords that indicate high-value investment news
+const TRENDING_KEYWORDS = [
+  'emaar', 'damac', 'nakheel', 'sobha', 'meraas', 'developer',
+  'off-plan', 'offplan', 'launch', 'golden visa', 'freehold',
+  'price', 'yield', 'roi', 'investment', 'billion', 'million',
+  'downtown', 'marina', 'palm', 'creek', 'business bay',
+  'record', 'surge', 'growth', 'sales', 'transactions',
+  'mortgage', 'rent', 'regulation', 'rera', 'dld'
+];
+
+function scoreHeadline(title: string): number {
+  const lowerTitle = title.toLowerCase();
+  let score = 0;
+  for (const keyword of TRENDING_KEYWORDS) {
+    if (lowerTitle.includes(keyword)) {
+      score += 1;
+    }
+  }
+  return score;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { source_url, article_id } = await req.json();
-
-    if (!source_url) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'source_url is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    let { source_url, article_id, auto_select } = await req.json().catch(() => ({}));
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -65,6 +79,49 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Auto-select trending headline if no URL provided
+    if (!source_url || auto_select) {
+      console.log('Auto-selecting trending headline...');
+      
+      // Get headlines from the last 48 hours that haven't been converted to featured
+      const cutoffDate = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+      const { data: headlines, error: headlinesError } = await supabase
+        .from('news_articles')
+        .select('id, title, source_url')
+        .eq('article_type', 'headline')
+        .eq('status', 'published')
+        .gte('created_at', cutoffDate)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (headlinesError || !headlines?.length) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'No headlines available for auto-selection' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Score and sort headlines by relevance
+      const scoredHeadlines = headlines.map(h => ({
+        ...h,
+        score: scoreHeadline(h.title)
+      })).sort((a, b) => b.score - a.score);
+
+      // Pick the top-scoring headline
+      const selectedHeadline = scoredHeadlines[0];
+      source_url = selectedHeadline.source_url;
+      article_id = selectedHeadline.id;
+      
+      console.log(`Auto-selected: "${selectedHeadline.title}" (score: ${selectedHeadline.score})`);
+    }
+
+    if (!source_url) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'source_url is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log(`Scraping article: ${source_url}`);
 
