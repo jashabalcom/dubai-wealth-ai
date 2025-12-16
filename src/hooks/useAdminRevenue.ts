@@ -22,7 +22,7 @@ export interface RevenueStats {
   }>;
 }
 
-export function useAdminRevenue() {
+export function useAdminRevenue(enabled: boolean = true) {
   return useQuery<RevenueStats>({
     queryKey: ['admin-revenue-stats'],
     queryFn: async () => {
@@ -35,7 +35,8 @@ export function useAdminRevenue() {
       
       return data;
     },
-    refetchInterval: 60000, // Refresh every minute
-    staleTime: 30000, // Consider data stale after 30 seconds
+    enabled,
+    refetchInterval: enabled ? 60000 : false,
+    staleTime: 30000,
   });
 }
