@@ -176,7 +176,9 @@ serve(async (req) => {
         apiCallsUsed++;
 
         if (!listResponse.ok) {
-          throw new Error(`List API failed: ${listResponse.status}`);
+          const errorBody = await listResponse.text();
+          console.error(`[Bayut Sync] List API error response:`, errorBody);
+          throw new Error(`List API failed: ${listResponse.status} - ${errorBody}`);
         }
 
         const listData = await listResponse.json();
