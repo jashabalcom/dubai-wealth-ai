@@ -202,3 +202,21 @@ export function useUpdateMortgagePartner() {
     },
   });
 }
+
+export function useDeleteMortgagePartner() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('mortgage_partners')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mortgage-partners'] });
+    },
+  });
+}
