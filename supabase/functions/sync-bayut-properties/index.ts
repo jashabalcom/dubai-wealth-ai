@@ -43,15 +43,23 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const rapidApiKey = Deno.env.get('RAPIDAPI_KEY');
+  const rapidApiKeyRaw = Deno.env.get('RAPIDAPI_KEY');
+  const rapidApiKey = rapidApiKeyRaw?.trim();
   if (!rapidApiKey) {
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'RAPIDAPI_KEY not configured',
-        message: 'Please add your RapidAPI key in the secrets configuration'
+        message: 'Please add your RapidAPI key in the secrets configuration',
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+  }
+
+  if (rapidApiKeyRaw !== rapidApiKey) {
+    console.log('[Bayut Sync] RAPIDAPI_KEY contained whitespace; trimming applied', {
+      rawLen: rapidApiKeyRaw?.length ?? 0,
+      trimmedLen: rapidApiKey.length,
+    });
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
