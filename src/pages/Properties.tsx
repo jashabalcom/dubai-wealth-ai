@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, Heart, Users, ArrowRight } from 'lucide-react';
@@ -6,41 +6,19 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useProperties, PropertyFilters } from '@/hooks/useProperties';
 import { PropertyCard } from '@/components/properties/PropertyCard';
-import { PropertyFilters, priceRanges, scoreRanges, yieldRanges } from '@/components/properties/PropertyFilters';
+import { PropertyFilters as PropertyFiltersComponent, priceRanges, yieldRanges } from '@/components/properties/PropertyFilters';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
 import { PropertyMap } from '@/components/properties/PropertyMap';
 import { RecentlyViewedSection } from '@/components/properties/RecentlyViewedSection';
+import { InfiniteScrollTrigger } from '@/components/properties/InfiniteScrollTrigger';
 import { PropertyDisclaimer } from '@/components/ui/disclaimers';
 import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } from '@/lib/investmentScore';
-
-interface Property {
-  id: string;
-  title: string;
-  slug: string;
-  location_area: string;
-  property_type: string;
-  developer_name: string;
-  is_off_plan: boolean;
-  status: string;
-  price_aed: number;
-  bedrooms: number;
-  bathrooms: number;
-  size_sqft: number;
-  rental_yield_estimate: number;
-  images: string[];
-  completion_date: string | null;
-  is_featured: boolean;
-  latitude?: number;
-  longitude?: number;
-  views_count?: number | null;
-  inquiries_count?: number | null;
-}
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,8 +26,6 @@ export default function Properties() {
   const { toggleSave, isSaved } = useSavedProperties();
   const { recentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
   
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
@@ -69,29 +45,89 @@ export default function Properties() {
   const showGoldenVisaOnly = searchParams.get('visa') === 'true';
   const showBelowMarketOnly = searchParams.get('belowmarket') === 'true';
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
+  // Build filters object for the hook
+  const filters: PropertyFilters = useMemo(() => {
+    const priceRange = priceRanges.find(p => p.value === selectedPrice);
+    const yieldRange = yieldRanges.find(y => y.value === selectedYield);
+    
+    return {
+      search: searchQuery || undefined,
+      area: selectedArea !== 'All Areas' ? selectedArea : undefined,
+      type: selectedType !== 'all' ? selectedType : undefined,
+      bedrooms: selectedBedrooms !== '-1' ? parseInt(selectedBedrooms) : undefined,
+      priceMin: priceRange?.min,
+      priceMax: priceRange?.max !== Infinity ? priceRange?.max : undefined,
+      offPlanOnly: showOffPlanOnly || undefined,
+      goldenVisaOnly: showGoldenVisaOnly || undefined,
+      yieldMin: yieldRange?.min,
+      sortBy,
+    };
+  }, [searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedYield, showGoldenVisaOnly]);
 
-  const fetchProperties = async () => {
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('status', 'available');
+  // Use server-side filtering hook
+  const {
+    properties,
+    isLoading,
+    isLoadingMore,
+    hasMore,
+    totalCount,
+    loadMore,
+    propertyCounts,
+    developerCounts,
+  } = useProperties(filters);
 
-    if (!error && data) {
-      setProperties(data.map(p => ({
-        ...p,
-        images: Array.isArray(p.images) ? (p.images as string[]) : [],
-        price_aed: Number(p.price_aed),
-        size_sqft: Number(p.size_sqft),
-        rental_yield_estimate: Number(p.rental_yield_estimate),
-        latitude: p.latitude ? Number(p.latitude) : undefined,
-        longitude: p.longitude ? Number(p.longitude) : undefined,
-      })));
+  // Client-side filters that require complex calculation (score, below market value)
+  const filteredProperties = useMemo(() => {
+    let result = properties;
+
+    // Investment score filter (requires client-side calculation)
+    if (selectedScore !== 'all') {
+      const minScore = selectedScore === '80' ? 80 : selectedScore === '70' ? 70 : 60;
+      result = result.filter(property => {
+        const score = calculateInvestmentScore({
+          priceAed: property.price_aed,
+          sizeSqft: property.size_sqft,
+          rentalYield: property.rental_yield_estimate,
+          area: property.location_area,
+          developerName: property.developer_name,
+          isOffPlan: property.is_off_plan,
+        }).score;
+        return score >= minScore;
+      });
     }
-    setLoading(false);
-  };
+
+    // Below market value filter (requires area benchmarks)
+    if (showBelowMarketOnly) {
+      result = result.filter(property => 
+        isBelowMarketValue(property.price_aed, property.size_sqft, property.location_area)
+      );
+    }
+
+    // Sort by investment score if selected (requires client-side)
+    if (sortBy === 'score-desc') {
+      result = [...result].sort((a, b) => {
+        const scoreA = calculateInvestmentScore({
+          priceAed: a.price_aed,
+          sizeSqft: a.size_sqft,
+          rentalYield: a.rental_yield_estimate,
+          area: a.location_area,
+          developerName: a.developer_name,
+          isOffPlan: a.is_off_plan,
+        }).score;
+        const scoreB = calculateInvestmentScore({
+          priceAed: b.price_aed,
+          sizeSqft: b.size_sqft,
+          rentalYield: b.rental_yield_estimate,
+          area: b.location_area,
+          developerName: b.developer_name,
+          isOffPlan: b.is_off_plan,
+        }).score;
+        return scoreB - scoreA;
+      });
+    }
+
+    return result;
+  }, [properties, selectedScore, showBelowMarketOnly, sortBy]);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -107,82 +143,6 @@ export default function Properties() {
     setSearchParams(new URLSearchParams());
   };
 
-  const filteredAndSortedProperties = useMemo(() => {
-    let result = properties.filter((property) => {
-      // Basic filters
-      const matchesSearch = 
-        property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        property.location_area.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        property.developer_name?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesArea = selectedArea === 'All Areas' || property.location_area === selectedArea;
-      const matchesType = selectedType === 'all' || property.property_type === selectedType;
-      const beds = parseInt(selectedBedrooms);
-      const matchesBedrooms = beds === -1 || (beds === 4 ? property.bedrooms >= 4 : property.bedrooms === beds);
-      const priceRange = priceRanges.find(p => p.value === selectedPrice);
-      const matchesPrice = priceRange ? property.price_aed >= priceRange.min && property.price_aed < priceRange.max : true;
-      const matchesOffPlan = !showOffPlanOnly || property.is_off_plan;
-
-      // Smart investment filters
-      const scoreRange = scoreRanges.find(s => s.value === selectedScore);
-      const propertyScore = calculateInvestmentScore({
-        priceAed: property.price_aed,
-        sizeSqft: property.size_sqft,
-        rentalYield: property.rental_yield_estimate,
-        area: property.location_area,
-        developerName: property.developer_name,
-        isOffPlan: property.is_off_plan,
-      }).score;
-      const matchesScore = !scoreRange || scoreRange.value === 'all' || propertyScore >= scoreRange.min;
-
-      const yieldRange = yieldRanges.find(y => y.value === selectedYield);
-      const matchesYield = !yieldRange || yieldRange.value === 'all' || property.rental_yield_estimate >= yieldRange.min;
-
-      const matchesGoldenVisa = !showGoldenVisaOnly || isGoldenVisaEligible(property.price_aed);
-      
-      const matchesBelowMarket = !showBelowMarketOnly || isBelowMarketValue(
-        property.price_aed, 
-        property.size_sqft, 
-        property.location_area
-      );
-
-      return matchesSearch && matchesArea && matchesType && matchesBedrooms && matchesPrice && matchesOffPlan 
-        && matchesScore && matchesYield && matchesGoldenVisa && matchesBelowMarket;
-    });
-
-    // Sort
-    switch (sortBy) {
-      case 'score-desc': 
-        result.sort((a, b) => {
-          const scoreA = calculateInvestmentScore({
-            priceAed: a.price_aed,
-            sizeSqft: a.size_sqft,
-            rentalYield: a.rental_yield_estimate,
-            area: a.location_area,
-            developerName: a.developer_name,
-            isOffPlan: a.is_off_plan,
-          }).score;
-          const scoreB = calculateInvestmentScore({
-            priceAed: b.price_aed,
-            sizeSqft: b.size_sqft,
-            rentalYield: b.rental_yield_estimate,
-            area: b.location_area,
-            developerName: b.developer_name,
-            isOffPlan: b.is_off_plan,
-          }).score;
-          return scoreB - scoreA;
-        }); 
-        break;
-      case 'price-asc': result.sort((a, b) => a.price_aed - b.price_aed); break;
-      case 'price-desc': result.sort((a, b) => b.price_aed - a.price_aed); break;
-      case 'yield-desc': result.sort((a, b) => b.rental_yield_estimate - a.rental_yield_estimate); break;
-      case 'size-desc': result.sort((a, b) => b.size_sqft - a.size_sqft); break;
-      case 'newest': result.sort((a, b) => b.id.localeCompare(a.id)); break;
-      default: result.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)); break;
-    }
-
-    return result;
-  }, [properties, searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedScore, selectedYield, showGoldenVisaOnly, showBelowMarketOnly]);
-
   const toggleCompare = (id: string) => {
     setCompareIds(prev => 
       prev.includes(id) ? prev.filter(p => p !== id) : prev.length < 4 ? [...prev, id] : prev
@@ -190,25 +150,6 @@ export default function Properties() {
   };
 
   const compareProperties = properties.filter(p => compareIds.includes(p.id));
-
-  // Calculate property counts for autocomplete
-  const propertyCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    properties.forEach(p => {
-      counts[p.location_area] = (counts[p.location_area] || 0) + 1;
-    });
-    return counts;
-  }, [properties]);
-
-  const developerCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    properties.forEach(p => {
-      if (p.developer_name) {
-        counts[p.developer_name] = (counts[p.developer_name] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [properties]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -238,7 +179,7 @@ export default function Properties() {
 
       <section className="py-6 border-b border-border bg-card/50 sticky top-16 z-30">
         <div className="container mx-auto px-4">
-          <PropertyFilters
+          <PropertyFiltersComponent
             searchQuery={searchQuery}
             onSearchChange={(v) => updateFilter('q', v)}
             selectedArea={selectedArea}
@@ -254,7 +195,7 @@ export default function Properties() {
             sortBy={sortBy}
             onSortChange={(v) => updateFilter('sort', v)}
             onClearFilters={clearFilters}
-            resultCount={filteredAndSortedProperties.length}
+            resultCount={totalCount}
             viewMode={viewMode}
             onViewModeChange={(mode) => updateFilter('view', mode)}
             // Smart investment filters
@@ -309,9 +250,9 @@ export default function Properties() {
             </Link>
           </motion.div>
 
-          {loading ? (
+          {isLoading ? (
             <PropertyGridSkeleton />
-          ) : filteredAndSortedProperties.length === 0 ? (
+          ) : filteredProperties.length === 0 ? (
             <EmptyState
               icon={Building2}
               title="No properties found"
@@ -319,23 +260,34 @@ export default function Properties() {
               action={{ label: 'Clear Filters', onClick: clearFilters }}
             />
           ) : viewMode === 'map' ? (
-            <PropertyMap properties={filteredAndSortedProperties} />
+            <PropertyMap properties={filteredProperties} />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAndSortedProperties.map((property, index) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  index={index}
-                  isSaved={isSaved(property.id)}
-                  onToggleSave={() => toggleSave(property.id)}
-                  onCompare={() => toggleCompare(property.id)}
-                  isComparing={compareIds.includes(property.id)}
-                  showCompareButton
-                  isAuthenticated={!!user}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProperties.map((property, index) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    index={index}
+                    isSaved={isSaved(property.id)}
+                    onToggleSave={() => toggleSave(property.id)}
+                    onCompare={() => toggleCompare(property.id)}
+                    isComparing={compareIds.includes(property.id)}
+                    showCompareButton
+                    isAuthenticated={!!user}
+                  />
+                ))}
+              </div>
+              
+              {/* Infinite scroll trigger */}
+              <InfiniteScrollTrigger
+                onLoadMore={loadMore}
+                hasMore={hasMore}
+                isLoading={isLoadingMore}
+                totalCount={totalCount}
+                loadedCount={filteredProperties.length}
+              />
+            </>
           )}
         </div>
       </section>
