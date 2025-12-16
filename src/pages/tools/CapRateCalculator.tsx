@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Building2, TrendingUp, Percent, DollarSign, Info, BadgeCheck, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Building2, TrendingUp, Percent, DollarSign, Info, BadgeCheck, AlertTriangle, Calculator } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -450,6 +450,15 @@ export default function CapRateCalculator() {
                     <p className="text-red-400">⚠ Below typical cap rates for this property type</p>
                   )}
                 </div>
+
+                {/* DSCR Calculator Link */}
+                <Link
+                  to={`/tools/dscr?noi=${Math.round(noi)}&price=${inputs.purchasePrice}`}
+                  className="flex items-center justify-center gap-2 p-3 mt-4 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <Calculator className="w-4 h-4" />
+                  <span className="text-sm font-medium">Calculate Financing with DSCR Calculator →</span>
+                </Link>
               </div>
 
               {/* Income Analysis */}
