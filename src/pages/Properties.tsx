@@ -9,11 +9,13 @@ import { Footer } from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { PropertyCard } from '@/components/properties/PropertyCard';
 import { PropertyFilters, priceRanges, scoreRanges, yieldRanges } from '@/components/properties/PropertyFilters';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
 import { PropertyMap } from '@/components/properties/PropertyMap';
+import { RecentlyViewedSection } from '@/components/properties/RecentlyViewedSection';
 import { PropertyDisclaimer } from '@/components/ui/disclaimers';
 import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } from '@/lib/investmentScore';
 
@@ -44,6 +46,7 @@ export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toggleSave, isSaved } = useSavedProperties();
+  const { recentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
   
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,6 +191,25 @@ export default function Properties() {
 
   const compareProperties = properties.filter(p => compareIds.includes(p.id));
 
+  // Calculate property counts for autocomplete
+  const propertyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    properties.forEach(p => {
+      counts[p.location_area] = (counts[p.location_area] || 0) + 1;
+    });
+    return counts;
+  }, [properties]);
+
+  const developerCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    properties.forEach(p => {
+      if (p.developer_name) {
+        counts[p.developer_name] = (counts[p.developer_name] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [properties]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -244,12 +266,21 @@ export default function Properties() {
             onGoldenVisaChange={(v) => updateFilter('visa', v ? 'true' : 'false')}
             showBelowMarketOnly={showBelowMarketOnly}
             onBelowMarketChange={(v) => updateFilter('belowmarket', v ? 'true' : 'false')}
+            propertyCounts={propertyCounts}
+            developerCounts={developerCounts}
           />
         </div>
       </section>
 
       <section className="py-12">
         <div className="container mx-auto px-4">
+          {/* Recently Viewed Section */}
+          {recentlyViewed.length > 0 && (
+            <RecentlyViewedSection
+              properties={recentlyViewed}
+              onClear={clearRecentlyViewed}
+            />
+          )}
           {/* Explore Developers Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
