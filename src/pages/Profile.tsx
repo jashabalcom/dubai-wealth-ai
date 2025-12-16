@@ -150,7 +150,7 @@ export default function Profile() {
         {/* Background Elements */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 pt-24 md:pt-28 pb-8">
           {/* Profile Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
