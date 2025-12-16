@@ -264,8 +264,11 @@ export default function PropertyDetail() {
   const estimatedAnnualRent = estimatedMonthlyRent * 12;
   const propertyIsSaved = isSaved(property.id);
 
-  const furnishingLabel = property.furnishing === 'semi-furnished' ? 'Semi-Furnished' : 
-    property.furnishing.charAt(0).toUpperCase() + property.furnishing.slice(1);
+  const furnishingLabel = !property.furnishing 
+    ? null 
+    : property.furnishing === 'semi-furnished' 
+      ? 'Semi-Furnished' 
+      : property.furnishing.charAt(0).toUpperCase() + property.furnishing.slice(1);
 
   // Generate SEO data
   const seoTitle = `${property.title} | ${property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`} ${property.property_type} in ${property.location_area}`;
@@ -441,15 +444,17 @@ export default function PropertyDetail() {
               <div className="p-4 sm:p-6 rounded-xl bg-card border border-border">
                 <h2 className="font-heading text-lg sm:text-xl text-foreground mb-4">Property Details</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Sofa className="w-4 h-4 text-muted-foreground" />
+                  {furnishingLabel && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-muted">
+                        <Sofa className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Furnishing</p>
+                        <p className="text-sm font-medium text-foreground">{furnishingLabel}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Furnishing</p>
-                      <p className="text-sm font-medium text-foreground">{furnishingLabel}</p>
-                    </div>
-                  </div>
+                  )}
                   
                   {property.view_type && (
                     <div className="flex items-center gap-3">
