@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAdminRevenue } from '@/hooks/useAdminRevenue';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { useAdmin } from '@/hooks/useAdmin';
+import { useAuth } from '@/hooks/useAuth';
 import { DollarSign, TrendingUp, Users, ArrowUpRight, ArrowDownRight, RefreshCcw, Camera, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -30,9 +32,14 @@ interface MetricSnapshot {
 
 export default function AdminRevenue() {
   const queryClient = useQueryClient();
-  const { data: stats, isLoading, refetch, isRefetching } = useAdminRevenue();
+  const { user } = useAuth();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
+  
+  // Only fetch revenue stats when user is confirmed as admin
+  const isReady = !!user && isAdmin && !adminLoading;
+  const { data: stats, isLoading, refetch, isRefetching } = useAdminRevenue(isReady);
 
-  // Fetch historical snapshots
+  // Fetch historical snapshots - also gated by admin status
   const { data: snapshots, isLoading: snapshotsLoading } = useQuery({
     queryKey: ['admin-metrics-snapshots'],
     queryFn: async () => {
@@ -40,11 +47,12 @@ export default function AdminRevenue() {
         .from('admin_metrics_snapshots')
         .select('*')
         .order('snapshot_date', { ascending: true })
-        .limit(90); // Last 90 days
+        .limit(90);
       
       if (error) throw error;
       return data as MetricSnapshot[];
     },
+    enabled: isReady,
   });
 
   // Take snapshot mutation
