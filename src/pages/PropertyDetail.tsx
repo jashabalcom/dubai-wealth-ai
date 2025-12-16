@@ -645,8 +645,9 @@ export default function PropertyDetail() {
 
               <InlineROICalculator 
                 purchasePrice={property.price_aed} 
-                estimatedYield={property.rental_yield_estimate} 
-                sizeSquft={property.size_sqft} 
+                estimatedYield={property.rental_yield_estimate || 6} 
+                sizeSquft={property.size_sqft}
+                area={property.location_area || 'Dubai Marina'}
               />
             </div>
 
