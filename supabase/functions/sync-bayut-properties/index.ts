@@ -43,6 +43,8 @@ interface SyncRequest {
   end_date?: string;
   // Property details
   property_id?: string;
+  // Dry run mode - counts only, no upserts
+  dry_run?: boolean;
 }
 
 // Organic throttling: random delay between 800-2000ms
@@ -364,7 +366,48 @@ serve(async (req) => {
         index = 'latest',
         page = 0,
         limit = 20,
+        dry_run = false,
       } = body;
+
+      // DRY RUN MODE - just count properties without processing
+      if (dry_run) {
+        console.log(`[Bayut API] DRY RUN - counting properties only`);
+        
+        const searchBody: any = { purpose, locations_ids, index };
+        if (category) searchBody.category = category;
+        if (rooms && rooms.length > 0) searchBody.rooms = rooms;
+        
+        const searchUrl = `${API_BASE}/properties_search?page=0&hitsPerPage=1`;
+        const searchResponse = await fetch(searchUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RapidAPI-Key': rapidApiKey,
+            'X-RapidAPI-Host': API_HOST,
+          },
+          body: JSON.stringify(searchBody),
+        });
+
+        if (!searchResponse.ok) {
+          const errorText = await searchResponse.text();
+          throw new Error(`Dry run failed: ${searchResponse.status} - ${errorText}`);
+        }
+
+        const searchData = await searchResponse.json();
+        const totalAvailable = searchData.nbHits || 0;
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            dry_run: true,
+            totalAvailable,
+            wouldSync: Math.min(limit, totalAvailable),
+            estimatedApiCalls: 1, // Only 1 call used for dry run
+            message: `Would sync up to ${Math.min(limit, totalAvailable)} of ${totalAvailable} available properties`,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
       if (locations_ids.length === 0) {
         return new Response(

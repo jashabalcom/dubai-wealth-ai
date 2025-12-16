@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -25,7 +36,11 @@ import {
   MapPin,
   X,
   TrendingUp,
-  Users
+  Users,
+  StopCircle,
+  PlayCircle,
+  TestTube2,
+  HardDrive
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -130,13 +145,31 @@ export default function AdminBayutSync() {
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isQuickSyncing, setIsQuickSyncing] = useState(false);
-  const [quickSyncProgress, setQuickSyncProgress] = useState({ current: 0, total: 0, currentArea: '' });
+  const [isDryRunning, setIsDryRunning] = useState(false);
+  const [quickSyncProgress, setQuickSyncProgress] = useState({ 
+    current: 0, 
+    total: 0, 
+    currentArea: '',
+    propertiesSynced: 0,
+    photosRehosted: 0,
+    photosCdn: 0,
+    agentsDiscovered: 0,
+    agenciesDiscovered: 0,
+  });
   const [syncLogs, setSyncLogs] = useState<SyncLog[]>([]);
   const [totalStats, setTotalStats] = useState({
     totalSynced: 0,
     totalPhotos: 0,
     totalApiCalls: 0,
   });
+  
+  // Confirmation dialog state
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [dryRunResults, setDryRunResults] = useState<{ area: string; count: number }[]>([]);
+  const [estimatedTotalProperties, setEstimatedTotalProperties] = useState(0);
+  
+  // Abort ref
+  const abortRef = useRef(false);
 
   // Location search
   const [locationQuery, setLocationQuery] = useState('');
@@ -324,18 +357,93 @@ export default function AdminBayutSync() {
     }
   };
 
+  // Dry run to estimate API calls before sync
+  const runDryRun = async () => {
+    setIsDryRunning(true);
+    setDryRunResults([]);
+    setEstimatedTotalProperties(0);
+    
+    const results: { area: string; count: number }[] = [];
+    let totalProps = 0;
+    
+    toast.info(`Running dry run for ${TOP_DUBAI_AREAS.length} areas...`);
+    
+    for (let i = 0; i < Math.min(TOP_DUBAI_AREAS.length, 5); i++) { // Sample first 5 areas
+      const area = TOP_DUBAI_AREAS[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+          body: {
+            action: 'sync_properties',
+            locations_ids: [area.id],
+            purpose: 'for-sale',
+            limit: 50,
+            dry_run: true,
+          },
+        });
+
+        if (!error && data?.wouldSync) {
+          results.push({ area: area.name, count: data.wouldSync });
+          totalProps += data.wouldSync;
+        }
+      } catch (e) {
+        console.error(`Dry run failed for ${area.name}:`, e);
+      }
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    
+    // Estimate total based on sample
+    const avgPerArea = totalProps / Math.min(5, results.length);
+    const estimatedTotal = Math.round(avgPerArea * TOP_DUBAI_AREAS.length);
+    
+    setDryRunResults(results);
+    setEstimatedTotalProperties(estimatedTotal);
+    setIsDryRunning(false);
+    setShowConfirmDialog(true);
+  };
+
+  const abortSync = () => {
+    abortRef.current = true;
+    toast.warning('Aborting sync after current area completes...');
+  };
+
   const quickSyncAllAreas = async () => {
+    setShowConfirmDialog(false);
     setIsQuickSyncing(true);
-    setQuickSyncProgress({ current: 0, total: TOP_DUBAI_AREAS.length, currentArea: '' });
+    abortRef.current = false;
+    setQuickSyncProgress({ 
+      current: 0, 
+      total: TOP_DUBAI_AREAS.length, 
+      currentArea: '',
+      propertiesSynced: 0,
+      photosRehosted: 0,
+      photosCdn: 0,
+      agentsDiscovered: 0,
+      agenciesDiscovered: 0,
+    });
     
     let successCount = 0;
     let failCount = 0;
+    let totalPropertiesSynced = 0;
+    let totalPhotosRehosted = 0;
+    let totalPhotosCdn = 0;
+    let totalAgents = 0;
+    let totalAgencies = 0;
     
     toast.info(`Starting quick sync of ${TOP_DUBAI_AREAS.length} Dubai areas...`);
     
     for (let i = 0; i < TOP_DUBAI_AREAS.length; i++) {
+      // Check for abort
+      if (abortRef.current) {
+        toast.warning(`Sync aborted after ${i} areas. ${successCount} succeeded, ${failCount} failed.`);
+        break;
+      }
+      
       const area = TOP_DUBAI_AREAS[i];
-      setQuickSyncProgress({ current: i + 1, total: TOP_DUBAI_AREAS.length, currentArea: area.name });
+      setQuickSyncProgress(prev => ({ 
+        ...prev,
+        current: i + 1, 
+        currentArea: area.name 
+      }));
       
       try {
         const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
@@ -344,7 +452,7 @@ export default function AdminBayutSync() {
             locations_ids: [area.id],
             purpose: 'for-sale',
             index: 'latest',
-            limit: 50, // 50 per area = ~1,250 total properties
+            limit: 50,
           },
         });
 
@@ -352,6 +460,21 @@ export default function AdminBayutSync() {
         
         if (data?.success) {
           successCount++;
+          totalPropertiesSynced += data.propertiesSynced || 0;
+          totalPhotosRehosted += data.storage?.photosRehosted || 0;
+          totalPhotosCdn += data.storage?.photosCdnReferenced || 0;
+          totalAgents += data.intelligence?.agentsDiscovered || 0;
+          totalAgencies += data.intelligence?.agenciesDiscovered || 0;
+          
+          // Update live progress
+          setQuickSyncProgress(prev => ({
+            ...prev,
+            propertiesSynced: totalPropertiesSynced,
+            photosRehosted: totalPhotosRehosted,
+            photosCdn: totalPhotosCdn,
+            agentsDiscovered: totalAgents,
+            agenciesDiscovered: totalAgencies,
+          }));
         } else {
           failCount++;
           console.warn(`Failed to sync ${area.name}:`, data?.error);
@@ -366,15 +489,24 @@ export default function AdminBayutSync() {
     }
     
     setIsQuickSyncing(false);
-    setQuickSyncProgress({ current: 0, total: 0, currentArea: '' });
+    setQuickSyncProgress({ 
+      current: 0, 
+      total: 0, 
+      currentArea: '',
+      propertiesSynced: 0,
+      photosRehosted: 0,
+      photosCdn: 0,
+      agentsDiscovered: 0,
+      agenciesDiscovered: 0,
+    });
     
     fetchSyncLogs();
     fetchTotalStats();
     
-    if (failCount === 0) {
-      toast.success(`Quick sync complete! Synced all ${successCount} areas successfully.`);
-    } else {
-      toast.warning(`Quick sync complete. ${successCount} areas succeeded, ${failCount} failed.`);
+    if (failCount === 0 && !abortRef.current) {
+      toast.success(`Quick sync complete! Synced ${totalPropertiesSynced} properties from ${successCount} areas.`);
+    } else if (!abortRef.current) {
+      toast.warning(`Quick sync complete. ${successCount} areas succeeded, ${failCount} failed. ${totalPropertiesSynced} properties synced.`);
     }
   };
 
@@ -664,14 +796,34 @@ export default function AdminBayutSync() {
                   Quick Sync All Areas
                 </CardTitle>
                 <CardDescription>
-                  One-click sync of top {TOP_DUBAI_AREAS.length} Dubai investment areas (50 properties each)
+                  One-click sync of top {TOP_DUBAI_AREAS.length} Dubai investment areas (50 properties each). ~{TOP_DUBAI_AREAS.length} API calls.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap items-center gap-4">
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Dry Run Button */}
                   <Button 
-                    onClick={quickSyncAllAreas} 
-                    disabled={isQuickSyncing || isSyncing}
+                    onClick={runDryRun} 
+                    disabled={isQuickSyncing || isSyncing || isDryRunning}
+                    variant="outline"
+                  >
+                    {isDryRunning ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Estimating...
+                      </>
+                    ) : (
+                      <>
+                        <TestTube2 className="h-4 w-4 mr-2" />
+                        Test Sync (Dry Run)
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Quick Sync Button */}
+                  <Button 
+                    onClick={() => setShowConfirmDialog(true)} 
+                    disabled={isQuickSyncing || isSyncing || isDryRunning}
                     className="bg-gold hover:bg-gold/90 text-primary-foreground"
                     size="lg"
                   >
@@ -682,30 +834,80 @@ export default function AdminBayutSync() {
                       </>
                     ) : (
                       <>
-                        <Zap className="h-4 w-4 mr-2" />
+                        <PlayCircle className="h-4 w-4 mr-2" />
                         Quick Sync All Areas
                       </>
                     )}
                   </Button>
                   
-                  {isQuickSyncing && quickSyncProgress.currentArea && (
-                    <div className="text-sm text-muted-foreground">
-                      Currently syncing: <span className="font-medium text-foreground">{quickSyncProgress.currentArea}</span>
-                    </div>
+                  {/* Abort Button */}
+                  {isQuickSyncing && (
+                    <Button 
+                      onClick={abortSync}
+                      variant="destructive"
+                      size="lg"
+                    >
+                      <StopCircle className="h-4 w-4 mr-2" />
+                      Abort Sync
+                    </Button>
                   )}
                 </div>
+
+                {/* Live Progress */}
+                {isQuickSyncing && (
+                  <div className="space-y-4 p-4 rounded-lg border bg-background/50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        Syncing: <span className="text-gold">{quickSyncProgress.currentArea}</span>
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {quickSyncProgress.current}/{quickSyncProgress.total} areas
+                      </span>
+                    </div>
+                    <Progress value={(quickSyncProgress.current / quickSyncProgress.total) * 100} className="h-2" />
+                    
+                    {/* Live Stats Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-2">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-gold">{quickSyncProgress.propertiesSynced}</p>
+                        <p className="text-xs text-muted-foreground">Properties Synced</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-blue-500">{quickSyncProgress.photosRehosted}</p>
+                        <p className="text-xs text-muted-foreground">Photos Re-hosted</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-emerald-500">{quickSyncProgress.photosCdn}</p>
+                        <p className="text-xs text-muted-foreground">Photos CDN</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-purple-500">{quickSyncProgress.agentsDiscovered}</p>
+                        <p className="text-xs text-muted-foreground">Agents Found</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-amber-500">{quickSyncProgress.agenciesDiscovered}</p>
+                        <p className="text-xs text-muted-foreground">Agencies Found</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {TOP_DUBAI_AREAS.map((area) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {TOP_DUBAI_AREAS.map((area, idx) => (
                     <Badge 
                       key={area.id} 
                       variant="outline" 
                       className={`text-xs ${
                         isQuickSyncing && quickSyncProgress.currentArea === area.name 
-                          ? 'bg-gold/20 border-gold text-gold' 
+                          ? 'bg-gold/20 border-gold text-gold animate-pulse' 
+                          : isQuickSyncing && idx < quickSyncProgress.current - 1
+                          ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
                           : ''
                       }`}
                     >
+                      {isQuickSyncing && idx < quickSyncProgress.current - 1 && (
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                      )}
                       {area.name}
                     </Badge>
                   ))}
@@ -1144,6 +1346,72 @@ export default function AdminBayutSync() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Confirmation Dialog */}
+        <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <AlertDialogContent className="max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-gold" />
+                Confirm Quick Sync
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-4">
+                  <p>
+                    You're about to sync properties from {TOP_DUBAI_AREAS.length} Dubai areas.
+                  </p>
+                  
+                  <div className="rounded-lg border p-4 space-y-3 bg-muted/50">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Areas to sync:</span>
+                      <span className="font-semibold">{TOP_DUBAI_AREAS.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Properties per area:</span>
+                      <span className="font-semibold">50</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Estimated API calls:</span>
+                      <span className="font-semibold text-amber-500">{TOP_DUBAI_AREAS.length}</span>
+                    </div>
+                    {estimatedTotalProperties > 0 && (
+                      <div className="flex justify-between items-center border-t pt-2">
+                        <span className="text-sm">Est. total properties:</span>
+                        <span className="font-semibold text-gold">~{estimatedTotalProperties}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {dryRunResults.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      <p className="font-medium mb-1">Sample results from dry run:</p>
+                      {dryRunResults.map(r => (
+                        <div key={r.area} className="flex justify-between">
+                          <span>{r.area}:</span>
+                          <span>{r.count} properties</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-sm text-muted-foreground">
+                    Manual properties will <span className="font-medium text-foreground">not</span> be affected.
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={quickSyncAllAreas}
+                className="bg-gold hover:bg-gold/90 text-primary-foreground"
+              >
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Start Sync
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
