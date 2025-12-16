@@ -29,6 +29,7 @@ import { GoldenVisaBadge } from '@/components/properties/GoldenVisaBadge';
 import { TrueCostCard } from '@/components/properties/TrueCostCard';
 import { NeighborhoodWidget } from '@/components/properties/NeighborhoodWidget';
 import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
+import { DualPrice } from '@/components/DualPrice';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -426,14 +427,14 @@ export default function PropertyDetail() {
                 </div>
 
                 {/* Price */}
-                <p className="font-heading text-3xl text-gold">
-                  {formatPrice(property.price_aed)}
+                <div className="mb-2">
+                  <DualPrice amountAED={property.price_aed} size="xl" />
                   {property.listing_type === 'rent' && (
-                    <span className="text-lg text-muted-foreground">
+                    <span className="text-lg text-muted-foreground ml-2">
                       /{property.rental_frequency || 'year'}
                     </span>
                   )}
-                </p>
+                </div>
 
                 {/* RERA Badge */}
                 {property.rera_permit_number && (

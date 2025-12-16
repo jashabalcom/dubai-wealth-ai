@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, Info, Database, Loader2 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { CurrencySelector } from '@/components/tools/CurrencySelector';
+import { CurrencyPill } from '@/components/CurrencyPill';
 import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, AreaPreset } from '@/components/tools/DubaiPresets';
 import { AirbnbCharts } from '@/components/tools/AirbnbCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
-import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { DEFAULT_SHORT_TERM_COSTS, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { useAirbnbMarketData, useHasAirbnbMarketData } from '@/hooks/useAirbnbMarketData';
@@ -19,8 +19,13 @@ import { toast } from 'sonner';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 
+// Helper to format AED amounts
+function formatAED(amount: number): string {
+  return `AED ${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 export default function AirbnbCalculator() {
-  const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const { formatPrice } = useCurrency();
   const [activePreset, setActivePreset] = useState<string>();
   
   // Market data integration
@@ -192,7 +197,7 @@ export default function AirbnbCalculator() {
               <p className="text-muted-foreground">Calculate short-term rental income with all Dubai licensing & fees.</p>
               <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
-            <CurrencySelector selectedCurrency={selectedCurrency} onCurrencyChange={setSelectedCurrency} supportedCurrencies={supportedCurrencies} />
+            <CurrencyPill />
           </div>
         </div>
       </section>
@@ -347,7 +352,7 @@ export default function AirbnbCalculator() {
                 <h2 className="font-heading text-xl text-foreground mb-6">Monthly Income</h2>
                 <div className="text-center py-4">
                   <p className="font-heading text-4xl text-emerald-400 mb-2">{formatAED(netMonthlyIncome)}</p>
-                  <p className="text-muted-foreground">{formatCurrency(netMonthlyIncome)}</p>
+                  <p className="text-muted-foreground">{formatPrice(netMonthlyIncome)}</p>
                 </div>
               </div>
 
@@ -417,7 +422,7 @@ export default function AirbnbCalculator() {
                     <span className="font-medium text-foreground">Net Annual Income</span>
                     <div className="text-right">
                       <p className="font-heading text-xl text-gold">{formatAED(netAnnualIncome)}</p>
-                      <p className="text-sm text-gold/80">{formatCurrency(netAnnualIncome)}</p>
+                      <p className="text-sm text-gold/80">{formatPrice(netAnnualIncome)}</p>
                     </div>
                   </div>
                 </div>

@@ -25,8 +25,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SliderInput } from '@/components/tools/SliderInput';
-import { CurrencySelector } from '@/components/tools/CurrencySelector';
-import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { CurrencyPill } from '@/components/CurrencyPill';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools/DubaiPresets';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { TotalCostCharts } from '@/components/tools/TotalCostCharts';
@@ -60,7 +60,7 @@ const currencySymbols: Record<string, string> = {
 };
 
 export default function TotalCostCalculator() {
-  const { convert, formatCurrency, selectedCurrency, setSelectedCurrency, supportedCurrencies } = useCurrencyConverter();
+  const { convert, formatPrice, selectedCurrency } = useCurrency();
   const { toast } = useToast();
   const [activePreset, setActivePreset] = useState<string>('');
 
@@ -271,7 +271,7 @@ export default function TotalCostCalculator() {
     ] : []),
   ], [calculations.exit, useMortgage]);
 
-  const formatValue = (value: number) => formatCurrency(value);
+  const formatValue = (value: number) => formatPrice(value);
 
   const handleExportPDF = () => {
     try {
@@ -423,11 +423,10 @@ export default function TotalCostCalculator() {
               {/* Currency Selector */}
               <Card>
                 <CardContent className="pt-6">
-                  <CurrencySelector 
-                    selectedCurrency={selectedCurrency} 
-                    onCurrencyChange={setSelectedCurrency}
-                    supportedCurrencies={supportedCurrencies}
-                  />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Display Currency</span>
+                    <CurrencyPill />
+                  </div>
                 </CardContent>
               </Card>
 

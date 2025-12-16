@@ -4,20 +4,25 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Home, AlertCircle } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { CurrencySelector } from '@/components/tools/CurrencySelector';
+import { CurrencyPill } from '@/components/CurrencyPill';
 import { SliderInput } from '@/components/tools/SliderInput';
 import { DubaiPresets, AreaPreset } from '@/components/tools/DubaiPresets';
 import { MortgageCharts } from '@/components/tools/MortgageCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
-import { useCurrencyConverter } from '@/hooks/useCurrencyConverter';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 
+// Helper to format AED amounts
+function formatAED(amount: number): string {
+  return `AED ${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
 export default function MortgageCalculator() {
-  const { selectedCurrency, setSelectedCurrency, formatCurrency, formatAED, supportedCurrencies } = useCurrencyConverter();
+  const { formatPrice } = useCurrency();
   const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
@@ -162,11 +167,7 @@ export default function MortgageCalculator() {
               <InvestmentDisclaimer variant="inline" className="mt-2" />
             </motion.div>
 
-            <CurrencySelector
-              selectedCurrency={selectedCurrency}
-              onCurrencyChange={setSelectedCurrency}
-              supportedCurrencies={supportedCurrencies}
-            />
+            <CurrencyPill />
           </div>
         </div>
       </section>
@@ -311,7 +312,7 @@ export default function MortgageCalculator() {
                   <p className="font-heading text-4xl md:text-5xl text-blue-400 mb-2">
                     {formatAED(monthlyPayment)}
                   </p>
-                  <p className="text-lg text-muted-foreground mb-4">{formatCurrency(monthlyPayment)}</p>
+                  <p className="text-lg text-muted-foreground mb-4">{formatPrice(monthlyPayment)}</p>
                   
                   <CalculatorAIAnalysis
                     calculatorType="mortgage"
@@ -351,7 +352,7 @@ export default function MortgageCalculator() {
                     <span className="font-medium text-foreground">Total Upfront</span>
                     <div className="text-right">
                       <p className="font-heading text-xl text-gold">{formatAED(downPaymentAmount + acquisitionCosts.totalBaseCosts + totalMortgageFees)}</p>
-                      <p className="text-sm text-gold/80">{formatCurrency(downPaymentAmount + acquisitionCosts.totalBaseCosts + totalMortgageFees)}</p>
+                      <p className="text-sm text-gold/80">{formatPrice(downPaymentAmount + acquisitionCosts.totalBaseCosts + totalMortgageFees)}</p>
                     </div>
                   </div>
                 </div>
@@ -382,7 +383,7 @@ export default function MortgageCalculator() {
                     <span className="font-medium text-foreground">Total Cost</span>
                     <div className="text-right">
                       <p className="font-heading text-xl text-blue-400">{formatAED(totalCostOfOwnership)}</p>
-                      <p className="text-sm text-blue-400/80">{formatCurrency(totalCostOfOwnership)}</p>
+                      <p className="text-sm text-blue-400/80">{formatPrice(totalCostOfOwnership)}</p>
                     </div>
                   </div>
                 </div>

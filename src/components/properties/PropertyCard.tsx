@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { InvestmentScoreBadge } from './InvestmentScoreBadge';
 import { GoldenVisaBadge } from './GoldenVisaBadge';
 import { PopularityIndicator } from './PopularityIndicator';
+import { DualPrice } from '@/components/DualPrice';
 
 interface Property {
   id: string;
@@ -259,9 +260,9 @@ export function PropertyCard({
             </h3>
 
             {/* Price */}
-            <p className="font-heading text-lg sm:text-xl text-gold mb-2 sm:mb-3 transition-all group-hover:scale-[1.02] origin-left">
-              {formatPrice(property.price_aed)}
-            </p>
+            <div className="mb-2 sm:mb-3 transition-all group-hover:scale-[1.02] origin-left">
+              <DualPrice amountAED={property.price_aed} size="lg" abbreviate />
+            </div>
 
             {/* Features */}
             <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
