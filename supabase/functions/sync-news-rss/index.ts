@@ -33,12 +33,18 @@ const RSS_FEEDS = [
 // Parse RSS XML to extract articles
 async function parseRSSFeed(feedUrl: string, sourceName: string, keywords: string[]): Promise<any[]> {
   try {
+    console.log(`[${sourceName}] Fetching from ${feedUrl}`);
+    const startTime = Date.now();
+    
     const response = await fetch(feedUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DubaiWealthHub/1.0)' }
     });
     
+    const responseTime = Date.now() - startTime;
+    console.log(`[${sourceName}] Response: ${response.status} in ${responseTime}ms`);
+    
     if (!response.ok) {
-      console.log(`Failed to fetch ${sourceName}: ${response.status}`);
+      console.error(`[${sourceName}] FAILED: HTTP ${response.status} ${response.statusText}`);
       return [];
     }
 

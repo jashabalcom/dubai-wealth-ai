@@ -5,29 +5,34 @@ import {
   RefreshCw, 
   Sparkles, 
   Check, 
-  X, 
   Trash2, 
   ExternalLink,
   Clock,
   FileText,
   AlertCircle,
-  Loader2
+  Loader2,
+  Eye,
+  Pencil
 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { useNewsAdmin } from '@/hooks/useNews';
+import { useNewsAdmin, NewsArticle } from '@/hooks/useNews';
 import { formatDistanceToNow, format } from 'date-fns';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -40,6 +45,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORY_LABELS: Record<string, string> = {
   market_trends: 'Market Trends',
@@ -49,6 +55,133 @@ const CATEGORY_LABELS: Record<string, string> = {
   regulations: 'Regulations',
   lifestyle: 'Lifestyle',
 };
+
+// Preview Modal Component
+function ArticlePreviewModal({ article, onPublish }: { article: NewsArticle; onPublish: () => void }) {
+  return (
+    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Eye className="h-5 w-5" />
+          Preview Article
+        </DialogTitle>
+      </DialogHeader>
+      
+      <div className="space-y-4 pt-4">
+        {article.image_url && (
+          <div className="aspect-[21/9] rounded-lg overflow-hidden bg-muted">
+            <img 
+              src={article.image_url} 
+              alt={article.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary">
+            {article.article_type === 'featured' ? 'Featured' : 'Headline'}
+          </Badge>
+          <Badge variant="outline">
+            {CATEGORY_LABELS[article.category] || article.category}
+          </Badge>
+        </div>
+
+        <h2 className="font-serif text-2xl font-bold text-foreground">
+          {article.title}
+        </h2>
+
+        <div className="flex items-center gap-4 text-sm text-muted-foreground pb-4 border-b border-border">
+          <span className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            {article.reading_time_minutes || 5} min read
+          </span>
+          <span>{article.source_name}</span>
+        </div>
+
+        <article className="prose-luxury">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {article.content || article.excerpt || ''}
+          </ReactMarkdown>
+        </article>
+      </div>
+
+      <DialogFooter>
+        <Button variant="outline" className="text-green-500 hover:text-green-600" onClick={onPublish}>
+          <Check className="h-4 w-4 mr-2" />
+          Publish Article
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
+// Edit Modal Component
+function ArticleEditModal({ 
+  article, 
+  onSave, 
+  isSaving 
+}: { 
+  article: NewsArticle; 
+  onSave: (updates: Partial<NewsArticle>) => Promise<void>;
+  isSaving: boolean;
+}) {
+  const [title, setTitle] = useState(article.title);
+  const [excerpt, setExcerpt] = useState(article.excerpt || '');
+
+  const handleSave = async () => {
+    await onSave({ title, excerpt });
+  };
+
+  return (
+    <DialogContent className="max-w-2xl">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <Pencil className="h-5 w-5" />
+          Edit Article
+        </DialogTitle>
+      </DialogHeader>
+      
+      <div className="space-y-4 pt-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Title</label>
+          <Input 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Article title"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Excerpt</label>
+          <Textarea 
+            value={excerpt} 
+            onChange={(e) => setExcerpt(e.target.value)}
+            placeholder="Brief description"
+            rows={3}
+          />
+        </div>
+
+        <div className="text-xs text-muted-foreground">
+          Note: Full content editing is available in the database. This quick edit is for title/excerpt refinements.
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save Changes'
+          )}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
 
 export default function AdminNews() {
   const { toast } = useToast();
@@ -63,10 +196,12 @@ export default function AdminNews() {
     publishArticle,
     archiveArticle,
     deleteArticle,
+    refetch,
   } = useNewsAdmin();
 
   const [generateUrl, setGenerateUrl] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSync = async () => {
     try {
@@ -145,6 +280,29 @@ export default function AdminNews() {
         title: 'Delete Failed',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleSaveEdit = async (id: string, updates: Partial<NewsArticle>) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('news_articles')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      toast({ title: 'Article Updated' });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -284,6 +442,33 @@ export default function AdminNews() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
+                          {/* Preview Button */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="ghost">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <ArticlePreviewModal 
+                              article={article} 
+                              onPublish={() => handlePublish(article.id)} 
+                            />
+                          </Dialog>
+
+                          {/* Edit Button */}
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button size="sm" variant="ghost">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <ArticleEditModal 
+                              article={article}
+                              onSave={(updates) => handleSaveEdit(article.id, updates)}
+                              isSaving={isSaving}
+                            />
+                          </Dialog>
+
                           <a
                             href={article.source_url}
                             target="_blank"
