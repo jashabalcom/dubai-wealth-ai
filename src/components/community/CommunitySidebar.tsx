@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Trophy,
   HelpCircle,
-  Radio
+  Radio,
+  Newspaper
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,11 @@ const navItems = [
     icon: MessageSquare,
     path: '/community',
     exact: true,
+  },
+  {
+    label: 'News',
+    icon: Newspaper,
+    path: '/community/news',
   },
   {
     label: 'Q&A Hub',

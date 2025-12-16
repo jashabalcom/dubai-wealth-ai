@@ -3,10 +3,9 @@ import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
   Calendar, 
-  Users, 
   UserCheck, 
   MessagesSquare,
-  HelpCircle
+  Newspaper
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -21,9 +20,9 @@ const navItems = [
     exact: true,
   },
   {
-    label: 'Q&A',
-    icon: HelpCircle,
-    path: '/community/qa',
+    label: 'News',
+    icon: Newspaper,
+    path: '/community/news',
   },
   {
     label: 'Events',

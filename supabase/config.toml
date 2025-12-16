@@ -92,3 +92,9 @@ verify_jwt = false
 
 [functions.send-weekly-digest]
 verify_jwt = false
+
+[functions.sync-news-rss]
+verify_jwt = false
+
+[functions.generate-featured-article]
+verify_jwt = false

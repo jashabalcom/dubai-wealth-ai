@@ -59,6 +59,7 @@ import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
 import AdminNeighborhoods from "@/pages/admin/AdminNeighborhoods";
 import AdminNeighborhoodPOIs from "@/pages/admin/AdminNeighborhoodPOIs";
 import AdminBayutSync from "@/pages/admin/AdminBayutSync";
+import AdminNews from "@/pages/admin/AdminNews";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -70,6 +71,7 @@ import MessagesPage from "@/pages/community/MessagesPage";
 import LeaderboardPage from "@/pages/community/LeaderboardPage";
 import QAPage from "@/pages/community/QAPage";
 import QuestionDetailPage from "@/pages/community/QuestionDetailPage";
+import NewsPage from "@/pages/community/NewsPage";
 
 // Agent Portal Pages
 import AgentPortalLanding from "@/pages/agent-portal/AgentPortalLanding";
@@ -148,6 +150,7 @@ export function AnimatedRoutes() {
         {/* Community Hub Routes - Auth required, read-only gating in-page */}
         <Route path="/community" element={<ProtectedRoute><CommunityLayout /></ProtectedRoute>}>
           <Route index element={<DiscussionsPage />} />
+          <Route path="news" element={<NewsPage />} />
           <Route path="qa" element={<QAPage />} />
           <Route path="qa/:questionId" element={<QuestionDetailPage />} />
           <Route path="events" element={<EventsPage />} />
@@ -182,6 +185,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
         <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
+        <Route path="/admin/news" element={<AnimatedPage><AdminNews /></AnimatedPage>} />
         <Route path="/admin/bayut-sync" element={<AnimatedPage><AdminBayutSync /></AnimatedPage>} />
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
