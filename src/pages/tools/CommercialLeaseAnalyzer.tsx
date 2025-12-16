@@ -906,7 +906,6 @@ const CommercialLeaseAnalyzer = () => {
           isOpen={showUpgradeModal}
           onClose={() => setShowUpgradeModal(false)}
           feature="tools"
-          description="Get personalized lease term recommendations, negotiation strategies, and cost optimization insights."
         />
       </div>
     </div>

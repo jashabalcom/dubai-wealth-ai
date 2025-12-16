@@ -119,7 +119,6 @@ const commercialTools = [
     icon: FileSpreadsheet,
     color: 'slate',
     href: '/tools/lease-analyzer',
-    comingSoon: true,
   },
   {
     id: 'free-zone',

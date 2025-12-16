@@ -21,6 +21,7 @@ import TotalCostCalculator from "@/pages/tools/TotalCostCalculator";
 import CapRateCalculator from "@/pages/tools/CapRateCalculator";
 import DSCRCalculator from "@/pages/tools/DSCRCalculator";
 import FreeZoneComparison from "@/pages/tools/FreeZoneComparison";
+import CommercialLeaseAnalyzer from "@/pages/tools/CommercialLeaseAnalyzer";
 import AIAssistant from "@/pages/AIAssistant";
 import Portfolio from "@/pages/Portfolio";
 import Profile from "@/pages/Profile";
@@ -132,6 +133,7 @@ export function AnimatedRoutes() {
         <Route path="/tools/cap-rate" element={<ProtectedRoute><AnimatedPage><CapRateCalculator /></AnimatedPage></ProtectedRoute>} />
         <Route path="/tools/dscr" element={<ProtectedRoute><AnimatedPage><DSCRCalculator /></AnimatedPage></ProtectedRoute>} />
         <Route path="/tools/free-zone" element={<ProtectedRoute><AnimatedPage><FreeZoneComparison /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/lease-analyzer" element={<ProtectedRoute><AnimatedPage><CommercialLeaseAnalyzer /></AnimatedPage></ProtectedRoute>} />
         
         {/* AI Assistant - Auth required, usage-based gating in-page */}
         <Route path="/ai" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
