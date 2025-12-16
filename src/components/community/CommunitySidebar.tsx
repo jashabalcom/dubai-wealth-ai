@@ -189,7 +189,7 @@ export function CommunitySidebar({ collapsed, onToggleCollapse }: CommunitySideb
                       <TooltipTrigger asChild>
                         {linkContent}
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="font-medium">
+                      <TooltipContent side="right" className="font-medium z-[9999]">
                         {item.label}
                         {badgeCount > 0 && item.badgeKey !== 'live' && (
                           <span className="ml-1.5 text-gold">({badgeCount})</span>
