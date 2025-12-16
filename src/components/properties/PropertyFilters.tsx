@@ -1,6 +1,5 @@
-import { Search, Filter, X, ChevronDown, Calendar, ArrowUpDown, Grid3X3, Map, Sparkles, Award, TrendingUp } from 'lucide-react';
+import { Filter, X, Calendar, ArrowUpDown, Grid3X3, Map, Sparkles, Award, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -17,6 +16,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { SearchAutocomplete } from './SearchAutocomplete';
 
 export const areas = [
   'All Areas',
@@ -111,6 +111,9 @@ interface PropertyFiltersProps {
   onGoldenVisaChange?: (value: boolean) => void;
   showBelowMarketOnly?: boolean;
   onBelowMarketChange?: (value: boolean) => void;
+  // Autocomplete data
+  propertyCounts?: Record<string, number>;
+  developerCounts?: Record<string, number>;
 }
 
 export function PropertyFilters({
@@ -141,6 +144,8 @@ export function PropertyFilters({
   onGoldenVisaChange,
   showBelowMarketOnly = false,
   onBelowMarketChange,
+  propertyCounts = {},
+  developerCounts = {},
 }: PropertyFiltersProps) {
   const hasActiveFilters = 
     searchQuery || 
@@ -178,15 +183,14 @@ export function PropertyFilters({
     <div className="space-y-4">
       {/* Search Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <Input
-            placeholder="Search by location, developer, or property name..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+        <SearchAutocomplete
+          value={searchQuery}
+          onChange={onSearchChange}
+          areas={areas}
+          propertyCounts={propertyCounts}
+          developerCounts={developerCounts}
+          className="flex-1 w-full"
+        />
         <div className="flex items-center gap-2 w-full md:w-auto justify-end">
           <Button
             variant={showOffPlanOnly ? 'gold' : 'outline'}

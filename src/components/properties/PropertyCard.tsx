@@ -9,6 +9,7 @@ import { InvestmentScoreBadge } from './InvestmentScoreBadge';
 import { GoldenVisaBadge } from './GoldenVisaBadge';
 import { PopularityIndicator } from './PopularityIndicator';
 import { DualPrice } from '@/components/DualPrice';
+import { ImageCarousel } from './ImageCarousel';
 
 interface Property {
   id: string;
@@ -92,15 +93,15 @@ export function PropertyCard({
           "hover:-translate-y-2 hover:shadow-2xl hover:shadow-gold/10",
           isComparing ? "border-gold ring-2 ring-gold/20" : "border-border hover:border-gold/30"
         )}>
-          {/* Image */}
+          {/* Image Carousel */}
           <div className="relative aspect-[4/3] overflow-hidden">
-            <img
-              src={property.images[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800'}
+            <ImageCarousel 
+              images={property.images} 
               alt={property.title}
-              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+              className="w-full h-full"
             />
             {/* Image Overlay on Hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             
             {/* Top Left Badges */}
             <div className="absolute top-2 left-2 flex flex-wrap gap-1.5 max-w-[70%]">

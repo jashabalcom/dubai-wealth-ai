@@ -15,6 +15,7 @@ import { generateRealEstateListingSchema, generateBreadcrumbSchema, SITE_CONFIG 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { PropertyGallery } from '@/components/properties/PropertyGallery';
 import { SimilarProperties } from '@/components/properties/SimilarProperties';
 import { PropertyInquiryForm } from '@/components/properties/PropertyInquiryForm';
@@ -140,9 +141,24 @@ export default function PropertyDetail() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toggleSave, isSaved } = useSavedProperties();
+  const { addToRecentlyViewed } = useRecentlyViewed();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+
+  // Track recently viewed
+  useEffect(() => {
+    if (property) {
+      addToRecentlyViewed({
+        id: property.id,
+        slug: property.slug,
+        title: property.title,
+        location_area: property.location_area,
+        price_aed: property.price_aed,
+        images: property.images.length > 0 ? property.images : property.gallery_urls,
+      });
+    }
+  }, [property?.id]);
 
   useEffect(() => {
     if (slug) fetchProperty();
