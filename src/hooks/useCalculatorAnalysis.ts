@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-type CalculatorType = 'roi' | 'mortgage' | 'total-cost';
+type CalculatorType = 'roi' | 'mortgage' | 'total-cost' | 'cap-rate' | 'dscr' | 'free-zone';
 
 interface UseCalculatorAnalysisProps {
   calculatorType: CalculatorType;
