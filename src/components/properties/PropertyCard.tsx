@@ -150,27 +150,20 @@ export function PropertyCard({
               )}
             </div>
 
-            {/* Action Buttons */}
-            <motion.div 
-              className="absolute bottom-3 right-3 flex gap-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 0, y: 10 }}
-              whileHover={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ opacity: 0 }}
-            >
+            {/* Action Buttons - Always visible on mobile, hover on desktop */}
+            <div className="absolute bottom-3 right-3 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 translate-y-0 sm:translate-y-2 sm:group-hover:translate-y-0">
               {isAuthenticated && onToggleSave && (
                 <Button
                   size="icon"
                   variant="secondary"
-                  className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
+                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform active:scale-95 hover:scale-110"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onToggleSave();
                   }}
                 >
-                  <Heart className={cn("w-4 h-4 transition-colors", isSaved && "fill-red-500 text-red-500")} />
+                  <Heart className={cn("w-5 h-5 sm:w-4 sm:h-4 transition-colors", isSaved && "fill-red-500 text-red-500")} />
                 </Button>
               )}
               {showCompareButton && onCompare && (
@@ -178,7 +171,7 @@ export function PropertyCard({
                   size="icon"
                   variant="secondary"
                   className={cn(
-                    "w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110",
+                    "w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform active:scale-95 hover:scale-110",
                     isComparing && "bg-gold text-primary-dark"
                   )}
                   onClick={(e) => {
@@ -187,59 +180,16 @@ export function PropertyCard({
                     onCompare();
                   }}
                 >
-                  <Scale className="w-4 h-4" />
+                  <Scale className="w-5 h-5 sm:w-4 sm:h-4" />
                 </Button>
               )}
               <Button
                 size="icon"
                 variant="secondary"
-                className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
+                className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform active:scale-95 hover:scale-110"
                 onClick={handleShare}
               >
-                <Share2 className="w-4 h-4" />
-              </Button>
-            </motion.div>
-            
-            {/* Persistent Action Buttons that show on group hover */}
-            <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-              {isAuthenticated && onToggleSave && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onToggleSave();
-                  }}
-                >
-                  <Heart className={cn("w-4 h-4 transition-colors", isSaved && "fill-red-500 text-red-500")} />
-                </Button>
-              )}
-              {showCompareButton && onCompare && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className={cn(
-                    "w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110",
-                    isComparing && "bg-gold text-primary-dark"
-                  )}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onCompare();
-                  }}
-                >
-                  <Scale className="w-4 h-4" />
-                </Button>
-              )}
-              <Button
-                size="icon"
-                variant="secondary"
-                className="w-8 h-8 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
-                onClick={handleShare}
-              >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-5 h-5 sm:w-4 sm:h-4" />
               </Button>
             </div>
           </div>
@@ -247,37 +197,36 @@ export function PropertyCard({
           {/* Content */}
           <div className="p-4 sm:p-5">
             {/* Location */}
-            <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground mb-2 transition-colors group-hover:text-muted-foreground/80">
-              <MapPin className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2 transition-colors group-hover:text-muted-foreground/80">
+              <MapPin className="w-4 h-4 shrink-0" />
               <span className="truncate">{property.location_area}</span>
               {property.developer_name && (
-                <span className="text-[10px] sm:text-xs hidden sm:inline">• {property.developer_name}</span>
+                <span className="text-xs hidden sm:inline">• {property.developer_name}</span>
               )}
             </div>
 
             {/* Title */}
-            <h3 className="font-heading text-base sm:text-lg text-foreground mb-2 sm:mb-3 group-hover:text-gold transition-colors duration-300 line-clamp-2">
+            <h3 className="font-heading text-lg sm:text-xl text-foreground mb-3 group-hover:text-gold transition-colors duration-300 line-clamp-2">
               {property.title}
             </h3>
 
             {/* Price */}
-            <div className="mb-2 sm:mb-3 transition-all group-hover:scale-[1.02] origin-left">
+            <div className="mb-3 transition-all group-hover:scale-[1.02] origin-left">
               <DualPrice amountAED={property.price_aed} size="lg" abbreviate />
             </div>
 
             {/* Features */}
-            <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-              <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
-                <Bed className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="hidden xs:inline">{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} BR`}</span>
-                <span className="xs:hidden">{property.bedrooms === 0 ? 'S' : property.bedrooms}</span>
+            <div className="flex items-center gap-3 sm:gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5 transition-colors group-hover:text-foreground">
+                <Bed className="w-4 h-4" />
+                <span>{property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} BR`}</span>
               </span>
-              <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
-                <Bath className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="flex items-center gap-1.5 transition-colors group-hover:text-foreground">
+                <Bath className="w-4 h-4" />
                 {property.bathrooms}
               </span>
-              <span className="flex items-center gap-1 transition-colors group-hover:text-foreground">
-                <Maximize className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="flex items-center gap-1.5 transition-colors group-hover:text-foreground">
+                <Maximize className="w-4 h-4" />
                 <span className="hidden sm:inline">{property.size_sqft.toLocaleString()} sqft</span>
                 <span className="sm:hidden">{(property.size_sqft / 1000).toFixed(1)}k</span>
               </span>
@@ -286,8 +235,8 @@ export function PropertyCard({
             {/* Completion Date for Off-Plan */}
             {property.is_off_plan && property.completion_date && (
               <div className="mt-3 pt-3 border-t border-border">
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
                   Completion: {new Date(property.completion_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
                 </span>
               </div>

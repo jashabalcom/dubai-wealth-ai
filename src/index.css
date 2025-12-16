@@ -25,7 +25,7 @@
     --secondary-foreground: 40 20% 92%;
 
     --muted: 40 15% 88%;
-    --muted-foreground: 220 20% 40%;
+    --muted-foreground: 220 20% 45%; /* Increased from 40% for better contrast */
 
     /* Gold Accent */
     --accent: 35 25% 70%;
@@ -86,7 +86,7 @@
     --secondary-foreground: 40 20% 92%;
 
     --muted: 220 30% 15%;
-    --muted-foreground: 40 15% 65%;
+    --muted-foreground: 40 15% 70%; /* Increased from 65% for better contrast */
 
     --accent: 35 25% 70%;
     --accent-foreground: 220 40% 8%;
@@ -107,6 +107,7 @@
 
   html {
     scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
 
   /* Scroll offset for fixed header on anchor targets */
@@ -117,11 +118,26 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Cormorant Garamond', Georgia, serif;
     @apply font-semibold tracking-tight;
+  }
+
+  /* Responsive typography scale */
+  h1 {
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h2 {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+
+  h3 {
+    @apply text-lg sm:text-xl md:text-2xl;
   }
 }
 
@@ -153,46 +169,60 @@
 
   /* Luxury button styles */
   .btn-gold {
-    @apply inline-flex items-center justify-center px-8 py-4 text-sm font-medium tracking-wider uppercase transition-all duration-300;
+    @apply inline-flex items-center justify-center px-6 py-3.5 sm:px-8 sm:py-4 text-sm font-medium tracking-wider uppercase transition-all duration-300;
     @apply bg-primary text-primary-foreground rounded-sm;
-    @apply hover:shadow-gold hover:scale-[1.02];
+    @apply hover:shadow-gold hover:scale-[1.02] active:scale-[0.98];
     font-family: 'Inter', sans-serif;
     letter-spacing: 0.1em;
   }
 
   .btn-outline-gold {
-    @apply inline-flex items-center justify-center px-8 py-4 text-sm font-medium tracking-wider uppercase transition-all duration-300;
+    @apply inline-flex items-center justify-center px-6 py-3.5 sm:px-8 sm:py-4 text-sm font-medium tracking-wider uppercase transition-all duration-300;
     @apply bg-transparent border border-primary text-primary rounded-sm;
-    @apply hover:bg-primary hover:text-primary-foreground;
+    @apply hover:bg-primary hover:text-primary-foreground active:scale-[0.98];
     font-family: 'Inter', sans-serif;
     letter-spacing: 0.1em;
   }
 
   .btn-dark {
-    @apply inline-flex items-center justify-center px-8 py-4 text-sm font-medium tracking-wider uppercase transition-all duration-300;
+    @apply inline-flex items-center justify-center px-6 py-3.5 sm:px-8 sm:py-4 text-sm font-medium tracking-wider uppercase transition-all duration-300;
     @apply bg-secondary text-secondary-foreground rounded-sm;
-    @apply hover:bg-navy-light;
+    @apply hover:bg-navy-light active:scale-[0.98];
     font-family: 'Inter', sans-serif;
     letter-spacing: 0.1em;
   }
 
   /* Card styles */
   .card-luxury {
-    @apply bg-card rounded-2xl p-8 shadow-card transition-all duration-300;
+    @apply bg-card rounded-2xl p-6 sm:p-8 shadow-card transition-all duration-300;
     @apply hover:shadow-elegant hover:-translate-y-1;
   }
 
   .card-dark {
-    @apply bg-secondary text-secondary-foreground rounded-2xl p-8;
+    @apply bg-secondary text-secondary-foreground rounded-2xl p-6 sm:p-8;
   }
 
-  /* Section spacing */
+  /* Section spacing - mobile optimized */
   .section-padding {
-    @apply py-24 md:py-32 lg:py-40;
+    @apply py-16 sm:py-24 md:py-32 lg:py-40;
   }
 
   .container-luxury {
-    @apply max-w-7xl mx-auto px-6 md:px-8 lg:px-12;
+    @apply max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12;
+  }
+
+  /* Calculator card grid - mobile first */
+  .calculator-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6;
+  }
+
+  /* Mobile-optimized tabs */
+  .mobile-tabs {
+    @apply flex overflow-x-auto scrollbar-hide gap-1 pb-1 -mx-1 px-1;
+  }
+
+  .mobile-tabs > * {
+    @apply flex-shrink-0;
   }
 }
 
@@ -302,6 +332,13 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
+  .safe-area-inset {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
   /* Hide scrollbar but allow scrolling */
   .scrollbar-hide {
     -ms-overflow-style: none;
@@ -311,13 +348,84 @@
     display: none;
   }
 
-  /* Touch-friendly sizing */
+  /* Touch-friendly sizing - Apple HIG 44px minimum */
   .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Larger touch targets for primary actions */
+  .touch-target-lg {
     @apply min-h-[48px] min-w-[48px];
   }
 
   /* Mobile-first responsive padding */
   .responsive-padding {
     @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Chart container with scroll indicator */
+  .chart-scroll-container {
+    @apply overflow-x-auto scrollbar-hide;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chart-scroll-container::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to right, transparent, hsl(var(--background)));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .chart-scroll-container:not(:has(:last-child:in-view))::after {
+    opacity: 1;
+  }
+
+  /* Mobile text sizes for readability */
+  .text-mobile-body {
+    @apply text-base leading-relaxed;
+  }
+
+  .text-mobile-caption {
+    @apply text-sm leading-normal;
+  }
+
+  /* Horizontal scroll snap for cards/tabs */
+  .scroll-snap-x {
+    @apply snap-x snap-mandatory overflow-x-auto scrollbar-hide;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .scroll-snap-x > * {
+    @apply snap-start;
+  }
+
+  /* Input field mobile enhancements */
+  .input-mobile {
+    @apply h-12 text-base;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Card grid responsive */
+  .card-grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6;
+  }
+
+  /* Metric card compact for mobile */
+  .metric-card-compact {
+    @apply p-3 sm:p-4;
+  }
+
+  .metric-card-compact h3 {
+    @apply text-xs sm:text-sm text-muted-foreground mb-0.5;
+  }
+
+  .metric-card-compact p {
+    @apply text-lg sm:text-2xl font-bold;
   }
 }

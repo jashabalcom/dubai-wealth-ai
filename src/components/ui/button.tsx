@@ -31,11 +31,14 @@ const buttonVariants = cva(
           "bg-transparent text-foreground hover:text-primary transition-colors uppercase tracking-[0.1em] text-xs active:scale-100",
       },
       size: {
-        default: "h-12 px-8 py-3",
-        sm: "h-10 px-6 py-2 text-xs",
-        lg: "h-14 px-10 py-4 text-base",
-        xl: "h-16 px-12 py-5 text-base",
+        default: "h-12 px-6 sm:px-8 py-3",
+        sm: "h-10 px-4 sm:px-6 py-2 text-xs",
+        lg: "h-14 px-8 sm:px-10 py-4 text-base",
+        xl: "h-16 px-10 sm:px-12 py-5 text-base",
         icon: "h-10 w-10",
+        "icon-sm": "h-9 w-9",
+        "icon-lg": "h-12 w-12", // 48px - ideal touch target
+        touch: "h-12 min-w-[48px] px-6 sm:px-8", // Touch-friendly size (48px height)
       },
     },
     defaultVariants: {

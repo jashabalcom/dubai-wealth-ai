@@ -328,7 +328,7 @@ const CommercialLeaseAnalyzer = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-xs">CAM Charges</Label>
                     <Input
@@ -543,11 +543,11 @@ const CommercialLeaseAnalyzer = () => {
 
             {/* Tabs for different views */}
             <Tabs defaultValue="projection" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="projection">Rent Projection</TabsTrigger>
-                <TabsTrigger value="comparison">Lease Comparison</TabsTrigger>
-                <TabsTrigger value="breakdown">Cost Breakdown</TabsTrigger>
-                <TabsTrigger value="break-clause">Break Analysis</TabsTrigger>
+              <TabsList className="w-full flex overflow-x-auto scrollbar-hide gap-1 h-auto p-1">
+                <TabsTrigger value="projection" className="flex-1 min-w-[100px] text-xs sm:text-sm">Rent Projection</TabsTrigger>
+                <TabsTrigger value="comparison" className="flex-1 min-w-[100px] text-xs sm:text-sm">Lease Comparison</TabsTrigger>
+                <TabsTrigger value="breakdown" className="flex-1 min-w-[100px] text-xs sm:text-sm">Cost Breakdown</TabsTrigger>
+                <TabsTrigger value="break-clause" className="flex-1 min-w-[100px] text-xs sm:text-sm">Break Analysis</TabsTrigger>
               </TabsList>
 
               <TabsContent value="projection" className="mt-4">

@@ -309,7 +309,7 @@ export default function CapRateCalculator() {
                     suffix="% of EGI"
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <SliderInput
                       label="Insurance (Annual)"
                       value={inputs.insurance}
@@ -330,7 +330,7 @@ export default function CapRateCalculator() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <SliderInput
                       label="Repairs & Maintenance"
                       value={inputs.repairs}

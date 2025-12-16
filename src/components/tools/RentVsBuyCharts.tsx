@@ -52,7 +52,7 @@ export function RentVsBuyCharts({
     const rentingNetPosition = investmentValue - totalRentingCost;
     
     return {
-      year: `Year ${year}`,
+      year: `Y${year}`,
       Buying: Math.round(buyingNetPosition),
       Renting: Math.round(rentingNetPosition),
     };
@@ -73,7 +73,7 @@ export function RentVsBuyCharts({
     }
     
     return {
-      year: `Year ${year}`,
+      year: `Y${year}`,
       'Buying Costs': Math.round(buyingCost),
       'Renting Costs': Math.round(rentingCost),
     };
@@ -82,10 +82,10 @@ export function RentVsBuyCharts({
   return (
     <div className="space-y-6">
       {/* Net Position Over Time */}
-      <div className="p-6 rounded-2xl bg-card border border-border">
-        <h3 className="font-heading text-lg text-foreground mb-4">Net Position Over Time</h3>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border">
+        <h3 className="font-heading text-base sm:text-lg text-foreground mb-4">Net Position Over Time</h3>
+        <div className="h-56 sm:h-64 overflow-x-auto scrollbar-hide">
+          <ResponsiveContainer width="100%" height="100%" minWidth={350}>
             <AreaChart data={comparisonData}>
               <defs>
                 <linearGradient id="colorBuying" x1="0" y1="0" x2="0" y2="1">
@@ -97,21 +97,28 @@ export function RentVsBuyCharts({
                   <stop offset="95%" stopColor="hsl(25, 95%, 53%)" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <XAxis dataKey="year" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+              <XAxis 
+                dataKey="year" 
+                tick={{ fontSize: 10 }} 
+                stroke="hsl(var(--muted-foreground))"
+                interval={Math.floor(comparisonData.length / 6)}
+              />
               <YAxis 
                 tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} 
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 10 }}
                 stroke="hsl(var(--muted-foreground))"
+                width={45}
               />
               <Tooltip 
                 formatter={(value: number) => formatAED(value)}
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
               <Area 
                 type="monotone" 
                 dataKey="Buying" 
@@ -132,26 +139,33 @@ export function RentVsBuyCharts({
       </div>
 
       {/* Cumulative Costs */}
-      <div className="p-6 rounded-2xl bg-card border border-border">
-        <h3 className="font-heading text-lg text-foreground mb-4">Cumulative Costs Comparison</h3>
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border">
+        <h3 className="font-heading text-base sm:text-lg text-foreground mb-4">Cumulative Costs Comparison</h3>
+        <div className="h-40 sm:h-48 overflow-x-auto scrollbar-hide">
+          <ResponsiveContainer width="100%" height="100%" minWidth={350}>
             <AreaChart data={costData}>
-              <XAxis dataKey="year" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+              <XAxis 
+                dataKey="year" 
+                tick={{ fontSize: 10 }} 
+                stroke="hsl(var(--muted-foreground))"
+                interval={Math.floor(costData.length / 6)}
+              />
               <YAxis 
                 tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} 
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 10 }}
                 stroke="hsl(var(--muted-foreground))"
+                width={45}
               />
               <Tooltip 
                 formatter={(value: number) => formatAED(value)}
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
               <Area 
                 type="monotone" 
                 dataKey="Buying Costs" 

@@ -346,7 +346,7 @@ export default function AirbnbCalculator() {
               <div className="p-6 rounded-2xl bg-card border border-border space-y-6">
                 <h2 className="font-heading text-xl text-foreground">Property Details</h2>
                 <SliderInput label="Property Price" value={inputs.propertyPrice} onChange={(v) => handleChange('propertyPrice', v)} min={500000} max={10000000} step={100000} formatValue={formatAED} />
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <SliderInput label="Size" value={inputs.propertySizeSqft} onChange={(v) => handleChange('propertySizeSqft', v)} min={400} max={3000} step={50} suffix=" sqft" />
                   <SliderInput label="Bedrooms" value={inputs.bedrooms} onChange={(v) => handleChange('bedrooms', v)} min={1} max={5} />
                 </div>
