@@ -259,8 +259,9 @@ export default function PropertyDetail() {
     ? propertyImages.map(img => img.url) 
     : property.images;
 
-  const pricePerSqft = Math.round(property.price_aed / property.size_sqft);
-  const estimatedMonthlyRent = Math.round((property.price_aed * (property.rental_yield_estimate / 100)) / 12);
+  const pricePerSqft = property.size_sqft ? Math.round(property.price_aed / property.size_sqft) : 0;
+  const rentalYield = property.rental_yield_estimate ?? 0;
+  const estimatedMonthlyRent = Math.round((property.price_aed * (rentalYield / 100)) / 12);
   const estimatedAnnualRent = estimatedMonthlyRent * 12;
   const propertyIsSaved = isSaved(property.id);
 
@@ -271,8 +272,8 @@ export default function PropertyDetail() {
       : property.furnishing.charAt(0).toUpperCase() + property.furnishing.slice(1);
 
   // Generate SEO data
-  const seoTitle = `${property.title} | ${property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`} ${property.property_type} in ${property.location_area}`;
-  const seoDescription = `${property.listing_type === 'rent' ? 'Rent' : 'Buy'} this ${property.bedrooms === 0 ? 'studio' : `${property.bedrooms}-bedroom`} ${property.property_type} in ${property.location_area}, Dubai for ${formatPrice(property.price_aed)}. ${property.size_sqft.toLocaleString()} sqft${property.rental_yield_estimate ? `, ${property.rental_yield_estimate}% rental yield` : ''}. ${property.is_off_plan ? 'Off-plan with payment plan.' : 'Ready to move.'}`;
+  const seoTitle = `${property.title} | ${(property.bedrooms ?? 0) === 0 ? 'Studio' : `${property.bedrooms} Bed`} ${property.property_type || 'Property'} in ${property.location_area}`;
+  const seoDescription = `${property.listing_type === 'rent' ? 'Rent' : 'Buy'} this ${(property.bedrooms ?? 0) === 0 ? 'studio' : `${property.bedrooms}-bedroom`} ${property.property_type || 'property'} in ${property.location_area}, Dubai for ${formatPrice(property.price_aed)}. ${(property.size_sqft ?? 0).toLocaleString()} sqft${rentalYield ? `, ${rentalYield}% rental yield` : ''}. ${property.is_off_plan ? 'Off-plan with payment plan.' : 'Ready to move.'}`;
   const propertyUrl = `${SITE_CONFIG.url}/properties/${property.slug}`;
   const primaryImage = galleryImages[0] || 'https://lovable.dev/opengraph-image-p98pqg.png';
 
@@ -400,21 +401,23 @@ export default function PropertyDetail() {
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4 md:gap-6 text-sm sm:text-base text-muted-foreground mb-4">
                   <span className="flex items-center gap-1 sm:gap-2">
                     <Bed className="w-4 h-4 sm:w-5 sm:h-5" /> 
-                    {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} Bed`}
+                    {(property.bedrooms ?? 0) === 0 ? 'Studio' : `${property.bedrooms} Bed`}
                   </span>
                   <span className="flex items-center gap-1 sm:gap-2">
                     <Bath className="w-4 h-4 sm:w-5 sm:h-5" /> 
-                    {property.bathrooms} Bath
+                    {property.bathrooms ?? 0} Bath
                   </span>
                   <span className="flex items-center gap-1 sm:gap-2">
                     <Maximize className="w-4 h-4 sm:w-5 sm:h-5" /> 
-                    {property.size_sqft.toLocaleString()} sqft
+                    {(property.size_sqft ?? 0).toLocaleString()} sqft
                   </span>
-                  <span className="flex items-center gap-1 sm:gap-2">
-                    <Home className="w-4 h-4 sm:w-5 sm:h-5" /> 
-                    {property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)}
-                  </span>
-                  {property.parking_spaces > 0 && (
+                  {property.property_type && (
+                    <span className="flex items-center gap-1 sm:gap-2">
+                      <Home className="w-4 h-4 sm:w-5 sm:h-5" /> 
+                      {property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1)}
+                    </span>
+                  )}
+                  {(property.parking_spaces ?? 0) > 0 && (
                     <span className="flex items-center gap-1 sm:gap-2">
                       <Car className="w-4 h-4 sm:w-5 sm:h-5" /> 
                       {property.parking_spaces} Parking
@@ -577,31 +580,37 @@ export default function PropertyDetail() {
                 <div className="p-6 rounded-xl bg-card border border-border">
                   <h2 className="font-heading text-xl text-foreground mb-4">Payment Plan</h2>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-lg bg-muted/50 text-center">
-                      <p className="text-2xl font-heading text-gold">
-                        {property.payment_plan_json.down_payment}%
-                      </p>
-                      <p className="text-sm text-muted-foreground">Down Payment</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-muted/50 text-center">
-                      <p className="text-2xl font-heading text-foreground">
-                        {property.payment_plan_json.during_construction}%
-                      </p>
-                      <p className="text-sm text-muted-foreground">During Construction</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-muted/50 text-center">
-                      <p className="text-2xl font-heading text-foreground">
-                        {property.payment_plan_json.on_handover}%
-                      </p>
-                      <p className="text-sm text-muted-foreground">On Handover</p>
-                    </div>
-                    {property.payment_plan_json.post_handover > 0 && (
+                    {(property.payment_plan_json.down_payment ?? 0) > 0 && (
+                      <div className="p-4 rounded-lg bg-muted/50 text-center">
+                        <p className="text-2xl font-heading text-gold">
+                          {property.payment_plan_json.down_payment}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">Down Payment</p>
+                      </div>
+                    )}
+                    {(property.payment_plan_json.during_construction ?? 0) > 0 && (
+                      <div className="p-4 rounded-lg bg-muted/50 text-center">
+                        <p className="text-2xl font-heading text-foreground">
+                          {property.payment_plan_json.during_construction}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">During Construction</p>
+                      </div>
+                    )}
+                    {(property.payment_plan_json.on_handover ?? 0) > 0 && (
+                      <div className="p-4 rounded-lg bg-muted/50 text-center">
+                        <p className="text-2xl font-heading text-foreground">
+                          {property.payment_plan_json.on_handover}%
+                        </p>
+                        <p className="text-sm text-muted-foreground">On Handover</p>
+                      </div>
+                    )}
+                    {(property.payment_plan_json.post_handover ?? 0) > 0 && (
                       <div className="p-4 rounded-lg bg-muted/50 text-center">
                         <p className="text-2xl font-heading text-foreground">
                           {property.payment_plan_json.post_handover}%
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Post-Handover ({property.payment_plan_json.post_handover_years} yrs)
+                          Post-Handover ({property.payment_plan_json.post_handover_years ?? 0} yrs)
                         </p>
                       </div>
                     )}
@@ -672,8 +681,8 @@ export default function PropertyDetail() {
               <NeighborhoodWidget
                 areaName={property.location_area}
                 propertyPricePerSqft={pricePerSqft}
-                propertyYield={property.rental_yield_estimate}
-                propertyType={property.property_type}
+                propertyYield={rentalYield}
+                propertyType={property.property_type || 'apartment'}
               />
 
               {/* Property Notes (Elite Only) */}
@@ -689,10 +698,10 @@ export default function PropertyDetail() {
                         <TrendingUp className="w-4 h-4" /> Est. Rental Yield
                       </span>
                       <span className="font-heading text-xl text-emerald-400">
-                        {property.rental_yield_estimate}%
+                        {rentalYield}%
                       </span>
                     </div>
-                    {property.community?.avg_rental_yield && (
+                    {property.community?.avg_rental_yield != null && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Area avg: {property.community.avg_rental_yield}%
                       </p>
@@ -753,9 +762,9 @@ export default function PropertyDetail() {
               <AirbnbYieldCard
                 propertyPrice={property.price_aed}
                 areaName={property.location_area}
-                bedrooms={property.bedrooms}
-                propertyType={property.property_type}
-                ltrYield={property.rental_yield_estimate}
+                bedrooms={property.bedrooms ?? 0}
+                propertyType={property.property_type || 'apartment'}
+                ltrYield={rentalYield}
               />
 
               {/* Agent Contact Card */}
