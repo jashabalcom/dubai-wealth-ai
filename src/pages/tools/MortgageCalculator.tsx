@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Home, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Home, AlertCircle, Building2 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -10,7 +10,10 @@ import { DubaiPresets, AreaPreset } from '@/components/tools/DubaiPresets';
 import { MortgageCharts } from '@/components/tools/MortgageCharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
+import { MortgageLeadForm } from '@/components/tools/MortgageLeadForm';
+import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { useAuth } from '@/hooks/useAuth';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
@@ -23,7 +26,9 @@ function formatAED(amount: number): string {
 
 export default function MortgageCalculator() {
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
   const [activePreset, setActivePreset] = useState<string>();
+  const [leadFormOpen, setLeadFormOpen] = useState(false);
 
   const [inputs, setInputs] = useState({
     propertyPrice: 2000000,
@@ -328,6 +333,16 @@ export default function MortgageCalculator() {
                     }}
                     buttonText="Explain My Options"
                   />
+                  
+                  {user && (
+                    <Button 
+                      onClick={() => setLeadFormOpen(true)}
+                      className="w-full mt-4 bg-gold hover:bg-gold/90 text-primary-foreground"
+                    >
+                      <Building2 className="w-4 h-4 mr-2" />
+                      Get Pre-Qualified for a Mortgage
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -479,6 +494,20 @@ export default function MortgageCalculator() {
           </div>
         </div>
       </section>
+
+      <MortgageLeadForm
+        open={leadFormOpen}
+        onOpenChange={setLeadFormOpen}
+        calculatorData={{
+          propertyPrice: inputs.propertyPrice,
+          downPaymentPercent: inputs.downPayment,
+          downPaymentAmount,
+          loanAmount,
+          interestRate: inputs.interestRate,
+          loanTermYears: inputs.loanTerm,
+          monthlyPayment,
+        }}
+      />
 
       <Footer />
     </div>

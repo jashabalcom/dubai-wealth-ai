@@ -60,6 +60,7 @@ import AdminNeighborhoods from "@/pages/admin/AdminNeighborhoods";
 import AdminNeighborhoodPOIs from "@/pages/admin/AdminNeighborhoodPOIs";
 import AdminBayutSync from "@/pages/admin/AdminBayutSync";
 import AdminNews from "@/pages/admin/AdminNews";
+import AdminMortgageLeads from "@/pages/admin/AdminMortgageLeads";
 
 // Community Hub Pages
 import { CommunityLayout } from "@/components/community/CommunityLayout";
@@ -186,6 +187,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
         <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
         <Route path="/admin/news" element={<AnimatedPage><AdminNews /></AnimatedPage>} />
+        <Route path="/admin/mortgage-leads" element={<AnimatedPage><AdminMortgageLeads /></AnimatedPage>} />
         <Route path="/admin/bayut-sync" element={<AnimatedPage><AdminBayutSync /></AnimatedPage>} />
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
