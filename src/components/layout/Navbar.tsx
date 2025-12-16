@@ -258,14 +258,23 @@ export function Navbar() {
                     )}
                   >
                     <Heart className="h-5 w-5" />
-                    {savedCount > 0 && (
-                      <Badge 
-                        variant="default" 
-                        className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
-                      >
-                        {savedCount > 9 ? '9+' : savedCount}
-                      </Badge>
-                    )}
+                    <AnimatePresence>
+                      {savedCount > 0 && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute -top-1 -right-1"
+                        >
+                          <Badge 
+                            variant="default" 
+                            className="h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
+                          >
+                            {savedCount > 9 ? '9+' : savedCount}
+                          </Badge>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </Link>
                   <NotificationCenter className={useDarkText ? "text-foreground" : "text-secondary-foreground"} />
                   <DropdownMenu>
