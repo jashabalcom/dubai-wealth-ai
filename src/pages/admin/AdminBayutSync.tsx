@@ -376,7 +376,7 @@ export default function AdminBayutSync() {
   const fetchAgencies = async (query?: string) => {
     setIsLoadingAgencies(true);
     try {
-      let q = supabase
+      let q = (supabase as any)
         .from('bayut_agencies')
         .select('*')
         .order('last_synced_at', { ascending: false })
@@ -388,7 +388,7 @@ export default function AdminBayutSync() {
       
       const { data, error } = await q;
       if (error) throw error;
-      setAgencies(data as BayutAgency[]);
+      setAgencies((data || []) as BayutAgency[]);
     } catch (error) {
       console.error('Failed to fetch agencies:', error);
     } finally {
