@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCountUp, useInView } from "@/hooks/useCountUp";
+import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-dubai-skyline.jpg";
 
 interface CountUpStatProps {
@@ -36,6 +37,7 @@ function CountUpStat({ end, suffix = "", prefix = "", decimals = 0, label, enabl
 }
 
 export function HeroSection() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [videoOpen, setVideoOpen] = useState(false);
   const { ref: statsRef, hasBeenInView } = useInView();
@@ -102,7 +104,7 @@ export function HeroSection() {
             >
               <span className="h-px w-12 bg-primary" />
               <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans">
-                AI-Powered Wealth Platform
+                {t('hero.badge')}
               </span>
               <span className="h-px w-12 bg-primary" />
             </motion.div>
@@ -114,9 +116,9 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-serif text-secondary-foreground leading-[1.1] mb-8"
             >
-              Build Wealth Through
+              {t('hero.title')}
               <br />
-              <span className="text-gradient-gold">Dubai Real Estate</span>
+              <span className="text-gradient-gold">{t('hero.titleHighlight')}</span>
             </motion.h1>
 
             {/* Subheadline */}
@@ -126,8 +128,7 @@ export function HeroSection() {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="text-lg md:text-xl text-secondary-foreground/70 max-w-2xl mx-auto mb-12 font-sans leading-relaxed"
             >
-              Join global investors mastering Dubai real estate with AI-powered analysis,
-              exclusive education, and priority access to off-plan opportunities.
+              {t('hero.subtitle')}
             </motion.p>
 
             {/* CTA Buttons */}
@@ -143,8 +144,8 @@ export function HeroSection() {
                 className="group"
                 onClick={() => navigate('/join')}
               >
-                Start Your Journey
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                {t('hero.cta')}
+                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform rtl:mr-2 rtl:ml-0 rtl:group-hover:-translate-x-1" />
               </Button>
               <Button 
                 variant="hero-outline" 
@@ -152,8 +153,8 @@ export function HeroSection() {
                 className="group"
                 onClick={() => setVideoOpen(true)}
               >
-                <Play size={18} className="mr-2" />
-                Watch Overview
+                <Play size={18} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                {t('hero.watchOverview')}
               </Button>
             </motion.div>
 
@@ -171,25 +172,25 @@ export function HeroSection() {
                 prefix="$" 
                 suffix="M+" 
                 decimals={0}
-                label="Investment Analyzed"
+                label={t('hero.stats.investment')}
                 enabled={hasBeenInView}
               />
               <div className="hidden md:block w-px h-12 bg-primary/20" />
               <CountUpStat 
                 end={2500} 
                 suffix="+"
-                label="Global Investors"
+                label={t('hero.stats.investors')}
                 enabled={hasBeenInView}
               />
               <div className="hidden md:block w-px h-12 bg-primary/20" />
               <CountUpStat 
                 end={35}
-                label="Countries"
+                label={t('hero.stats.countries')}
                 enabled={hasBeenInView}
               />
             </div>
             <p className="text-xs text-muted-foreground/50 mt-4 text-center">
-              *Platform goals and projections
+              {t('hero.stats.disclaimer')}
             </p>
           </motion.div>
         </motion.div>
@@ -227,11 +228,11 @@ export function HeroSection() {
             <div className="aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
               <div className="text-muted-foreground">
                 <Play className="w-16 h-16 mx-auto mb-2" />
-                <p>Platform overview video coming soon</p>
+                <p>{t('hero.videoComingSoon')}</p>
               </div>
             </div>
             <Button variant="outline" onClick={() => setVideoOpen(false)}>
-              Close
+              {t('common.close')}
             </Button>
           </motion.div>
         </div>
