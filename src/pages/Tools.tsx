@@ -13,7 +13,11 @@ import {
   Wallet,
   ArrowLeftRight,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Landmark,
+  FileSpreadsheet,
+  Scale,
+  MapPin,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -23,7 +27,7 @@ import { PAGE_SEO } from '@/lib/seo-config';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-const tools = [
+const residentialTools = [
   {
     id: 'ai-assistant',
     title: 'AI Investment Assistant',
@@ -91,6 +95,44 @@ const tools = [
   },
 ];
 
+const commercialTools = [
+  {
+    id: 'cap-rate',
+    title: 'Cap Rate & NOI Calculator',
+    description: 'Calculate capitalization rate, net operating income, and analyze commercial property investments with Dubai market benchmarks.',
+    icon: Landmark,
+    color: 'slate',
+    href: '/tools/cap-rate',
+  },
+  {
+    id: 'dscr',
+    title: 'DSCR Calculator',
+    description: 'Calculate Debt Service Coverage Ratio for commercial financing, determine max loan amounts, and assess lender requirements.',
+    icon: Scale,
+    color: 'slate',
+    href: '/tools/dscr',
+    comingSoon: true,
+  },
+  {
+    id: 'lease-analyzer',
+    title: 'Commercial Lease Analyzer',
+    description: 'Analyze lease terms, calculate effective rent with escalations, CAM, and rent-free periods over the lease term.',
+    icon: FileSpreadsheet,
+    color: 'slate',
+    href: '/tools/lease-analyzer',
+    comingSoon: true,
+  },
+  {
+    id: 'free-zone',
+    title: 'Free Zone Comparison',
+    description: 'Compare Dubai free zones side-by-side: DMCC, DIFC, JAFZA, DAFZA and more with setup costs, visa allocation, and sector fit.',
+    icon: MapPin,
+    color: 'slate',
+    href: '/tools/free-zone',
+    comingSoon: true,
+  },
+];
+
 const colorClasses: Record<string, { bg: string; border: string; text: string; glow: string }> = {
   emerald: {
     bg: 'bg-emerald-500/10',
@@ -134,6 +176,12 @@ const colorClasses: Record<string, { bg: string; border: string; text: string; g
     text: 'text-gold',
     glow: 'group-hover:shadow-gold/20',
   },
+  slate: {
+    bg: 'bg-slate-500/10',
+    border: 'border-slate-500/20',
+    text: 'text-slate-400',
+    glow: 'group-hover:shadow-slate-500/20',
+  },
 };
 
 export default function Tools() {
@@ -164,11 +212,15 @@ export default function Tools() {
         </div>
       </section>
 
-      {/* Tools Grid */}
+      {/* Residential Tools Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
+          <div className="mb-8">
+            <h2 className="font-heading text-2xl md:text-3xl text-foreground mb-2">Residential & Investment</h2>
+            <p className="text-muted-foreground">Analyze residential properties and investment opportunities</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {tools.map((tool, index) => {
+            {residentialTools.map((tool, index) => {
               const colors = colorClasses[tool.color];
               const isFeatured = 'featured' in tool && tool.featured;
               return (
@@ -205,9 +257,9 @@ export default function Tools() {
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h2 className={`font-heading text-2xl text-foreground group-hover:${colors.text} transition-colors`}>
+                            <h3 className={`font-heading text-2xl text-foreground group-hover:${colors.text} transition-colors`}>
                               {tool.title}
-                            </h2>
+                            </h3>
                             {isFeatured && (
                               <Badge className="bg-gold/20 text-gold border-gold/30">
                                 <Sparkles className="w-3 h-3 mr-1" />
@@ -228,6 +280,110 @@ export default function Tools() {
                       </div>
                     </div>
                   </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Commercial Tools Grid */}
+      <section className="py-16 border-t border-border">
+        <div className="container mx-auto px-4">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="font-heading text-2xl md:text-3xl text-foreground">Commercial Real Estate</h2>
+              <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
+                New
+              </Badge>
+            </div>
+            <p className="text-muted-foreground">Specialized tools for office, retail, warehouse, and industrial investments</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {commercialTools.map((tool, index) => {
+              const colors = colorClasses[tool.color];
+              const isComingSoon = 'comingSoon' in tool && tool.comingSoon;
+              return (
+                <motion.div
+                  key={tool.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                  whileHover={!isComingSoon ? { 
+                    y: -8,
+                    transition: { duration: 0.2 }
+                  } : undefined}
+                >
+                  {isComingSoon ? (
+                    <div className="group block h-full cursor-not-allowed opacity-60">
+                      <div className={cn(
+                        "h-full p-8 rounded-2xl bg-card border border-border",
+                      )}>
+                        <div className="flex items-start gap-6">
+                          <div 
+                            className={`w-14 h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
+                          >
+                            <tool.icon className={`w-7 h-7 ${colors.text}`} />
+                          </div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-heading text-2xl text-foreground">
+                                {tool.title}
+                              </h3>
+                              <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30">
+                                Coming Soon
+                              </Badge>
+                            </div>
+
+                            <p className="text-muted-foreground mb-4">
+                              {tool.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link
+                      to={tool.href}
+                      className="group block h-full"
+                    >
+                      <div className={cn(
+                        "h-full p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl border-border hover:border-slate-500/30",
+                        colors.glow
+                      )}>
+                        <div className="flex items-start gap-6">
+                          <motion.div 
+                            className={`w-14 h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            transition={{ type: 'spring', stiffness: 400 }}
+                          >
+                            <tool.icon className={`w-7 h-7 ${colors.text}`} />
+                          </motion.div>
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className={`font-heading text-2xl text-foreground group-hover:${colors.text} transition-colors`}>
+                                {tool.title}
+                              </h3>
+                              <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
+                                Commercial
+                              </Badge>
+                            </div>
+
+                            <p className="text-muted-foreground mb-4">
+                              {tool.description}
+                            </p>
+
+                            <div className={`flex items-center gap-2 ${colors.text}`}>
+                              <span className="text-sm font-medium">Open Calculator</span>
+                              <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  )}
                 </motion.div>
               );
             })}

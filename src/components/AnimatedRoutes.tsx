@@ -18,6 +18,7 @@ import RentVsBuyCalculator from "@/pages/tools/RentVsBuyCalculator";
 import AirbnbCalculator from "@/pages/tools/AirbnbCalculator";
 import StrVsLtrCalculator from "@/pages/tools/StrVsLtrCalculator";
 import TotalCostCalculator from "@/pages/tools/TotalCostCalculator";
+import CapRateCalculator from "@/pages/tools/CapRateCalculator";
 import AIAssistant from "@/pages/AIAssistant";
 import Portfolio from "@/pages/Portfolio";
 import Profile from "@/pages/Profile";
@@ -126,6 +127,7 @@ export function AnimatedRoutes() {
         <Route path="/tools/airbnb" element={<ProtectedRoute><AnimatedPage><AirbnbCalculator /></AnimatedPage></ProtectedRoute>} />
         <Route path="/tools/str-vs-ltr" element={<ProtectedRoute><AnimatedPage><StrVsLtrCalculator /></AnimatedPage></ProtectedRoute>} />
         <Route path="/tools/total-cost" element={<ProtectedRoute><AnimatedPage><TotalCostCalculator /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/cap-rate" element={<ProtectedRoute><AnimatedPage><CapRateCalculator /></AnimatedPage></ProtectedRoute>} />
         
         {/* AI Assistant - Auth required, usage-based gating in-page */}
         <Route path="/ai" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />

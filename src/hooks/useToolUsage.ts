@@ -5,7 +5,7 @@ import { useProfile } from '@/hooks/useProfile';
 
 const FREE_TOOL_LIMIT = 3;
 
-export type ToolName = 'roi' | 'mortgage' | 'rent-vs-buy' | 'airbnb' | 'str-vs-ltr' | 'total-cost';
+export type ToolName = 'roi' | 'mortgage' | 'rent-vs-buy' | 'airbnb' | 'str-vs-ltr' | 'total-cost' | 'cap-rate' | 'dscr' | 'lease-analyzer' | 'free-zone';
 
 interface UseToolUsageReturn {
   usageCount: number;
