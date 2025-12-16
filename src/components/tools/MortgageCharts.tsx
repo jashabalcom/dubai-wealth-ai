@@ -34,20 +34,20 @@ export function MortgageCharts({
   return (
     <div className="space-y-6">
       {/* Payment Distribution Pie */}
-      <div className="p-6 rounded-2xl bg-card border border-border">
-        <h3 className="font-heading text-lg text-foreground mb-4">Total Cost Distribution</h3>
-        <div className="h-56">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border">
+        <h3 className="font-heading text-base sm:text-lg text-foreground mb-4">Total Cost Distribution</h3>
+        <div className="h-48 sm:h-56">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={paymentBreakdown}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={90}
+                innerRadius={45}
+                outerRadius={70}
                 paddingAngle={3}
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                 labelLine={false}
               >
                 {paymentBreakdown.map((_, index) => (
@@ -59,8 +59,15 @@ export function MortgageCharts({
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
+              />
+              <Legend 
+                layout="horizontal" 
+                align="center" 
+                verticalAlign="bottom"
+                wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -68,22 +75,33 @@ export function MortgageCharts({
       </div>
 
       {/* Monthly Principal vs Interest */}
-      <div className="p-6 rounded-2xl bg-card border border-border">
-        <h3 className="font-heading text-lg text-foreground mb-4">First Year: Principal vs Interest</h3>
-        <div className="h-48">
-          <ResponsiveContainer width="100%" height="100%">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border">
+        <h3 className="font-heading text-base sm:text-lg text-foreground mb-4">First Year: Principal vs Interest</h3>
+        <div className="h-44 sm:h-48 overflow-x-auto scrollbar-hide">
+          <ResponsiveContainer width="100%" height="100%" minWidth={400}>
             <BarChart data={monthlyBreakdown}>
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+              <XAxis 
+                dataKey="month" 
+                tick={{ fontSize: 10 }} 
+                stroke="hsl(var(--muted-foreground))"
+                interval={0}
+              />
+              <YAxis 
+                tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} 
+                tick={{ fontSize: 10 }} 
+                stroke="hsl(var(--muted-foreground))"
+                width={40}
+              />
               <Tooltip 
                 formatter={(value: number) => formatAED(value)}
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: '12px' }} />
               <Bar dataKey="Principal" stackId="a" fill="hsl(142, 76%, 36%)" radius={[0, 0, 0, 0]} />
               <Bar dataKey="Interest" stackId="a" fill="hsl(25, 95%, 53%)" radius={[4, 4, 0, 0]} />
             </BarChart>

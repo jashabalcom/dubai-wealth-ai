@@ -210,7 +210,7 @@ export default function MortgageCalculator() {
                     suffix="%"
                   />
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <SliderInput
                       label="Interest Rate"
                       value={inputs.interestRate}
@@ -264,7 +264,7 @@ export default function MortgageCalculator() {
                     suffix="%"
                   />
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                     <SliderInput
                       label="Life Insurance"
                       value={inputs.lifeInsuranceRate}

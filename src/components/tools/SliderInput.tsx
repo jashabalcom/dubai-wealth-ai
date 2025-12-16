@@ -37,12 +37,12 @@ export function SliderInput({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1">
         <Label className="text-sm font-medium text-foreground">{label}</Label>
         <span className="text-sm font-semibold text-gold">{displayValue}</span>
       </div>
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
         <div className="flex-1 space-y-1">
           <Slider
             value={[value]}
@@ -53,7 +53,7 @@ export function SliderInput({
             className="flex-1"
           />
           {showRange && (
-            <div className="flex justify-between text-[10px] text-muted-foreground px-0.5">
+            <div className="flex justify-between text-xs text-muted-foreground px-0.5">
               <span>{formatRangeValue(min)}</span>
               <span>{formatRangeValue(max)}</span>
             </div>
@@ -61,13 +61,14 @@ export function SliderInput({
         </div>
         <Input
           type="number"
+          inputMode="decimal"
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
           className={cn(
-            "w-full sm:w-24 text-right tabular-nums min-h-[44px]",
+            "w-full sm:w-28 text-right tabular-nums h-12 sm:h-11",
             "bg-background/50 border-border/50",
             "focus:border-gold/50 focus:ring-1 focus:ring-gold/20",
-            "transition-colors"
+            "transition-colors text-base sm:text-sm"
           )}
           min={min}
           max={max}
