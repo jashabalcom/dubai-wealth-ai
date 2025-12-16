@@ -32,6 +32,7 @@ const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { label: 'Revenue', href: '/admin/revenue', icon: DollarSign },
   { label: 'Mortgage Leads', href: '/admin/mortgage-leads', icon: Building2 },
+  { label: 'Mortgage Partners', href: '/admin/mortgage-partners', icon: Briefcase },
   { label: 'Marketing', href: '/admin/marketing', icon: Target },
   { label: 'News', href: '/admin/news', icon: Newspaper },
   { label: 'Users', href: '/admin/users', icon: Users },
