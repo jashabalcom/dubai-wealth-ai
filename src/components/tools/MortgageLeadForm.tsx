@@ -137,6 +137,28 @@ export function MortgageLeadForm({ open, onOpenChange, calculatorData, propertyC
 
       if (error) throw error;
 
+      // Send email notifications (fire and forget - don't block success)
+      supabase.functions.invoke('send-mortgage-lead-email', {
+        body: {
+          leadData: {
+            full_name: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            property_price: calculatorData.propertyPrice,
+            down_payment_amount: calculatorData.downPaymentAmount,
+            down_payment_percent: calculatorData.downPaymentPercent,
+            loan_amount: calculatorData.loanAmount,
+            interest_rate: calculatorData.interestRate,
+            loan_term_years: calculatorData.loanTermYears,
+            monthly_payment: calculatorData.monthlyPayment,
+            employment_status: formData.employmentStatus,
+            monthly_income_range: formData.monthlyIncomeRange,
+            purchase_timeline: formData.purchaseTimeline,
+            first_time_buyer: formData.firstTimeBuyer,
+          }
+        }
+      }).catch(err => console.error('Email notification error:', err));
+
       setIsSuccess(true);
       toast.success('Application submitted! Our mortgage specialists will contact you shortly.');
     } catch (error: any) {
