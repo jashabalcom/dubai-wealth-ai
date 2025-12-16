@@ -9,13 +9,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Trophy,
-  HelpCircle
+  HelpCircle,
+  Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useConnections } from '@/hooks/useConnections';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
+import { useCommunityEvents } from '@/hooks/useCommunityEvents';
 
 interface CommunitySidebarProps {
   collapsed: boolean;
@@ -38,6 +40,7 @@ const navItems = [
     label: 'Events',
     icon: Calendar,
     path: '/community/events',
+    badgeKey: 'live',
   },
   {
     label: 'Members',
@@ -67,10 +70,14 @@ export function CommunitySidebar({ collapsed, onToggleCollapse }: CommunitySideb
   const location = useLocation();
   const { pendingCount } = useConnections();
   const { unreadCount } = useDirectMessages();
+  const { events } = useCommunityEvents();
+  
+  const liveEventsCount = events.filter(e => e.is_live).length;
 
   const getBadgeCount = (key?: string) => {
     if (key === 'pending') return pendingCount;
     if (key === 'unread') return unreadCount;
+    if (key === 'live') return liveEventsCount;
     return 0;
   };
 
@@ -138,7 +145,21 @@ export function CommunitySidebar({ collapsed, onToggleCollapse }: CommunitySideb
                       <span className="text-sm font-medium truncate">{item.label}</span>
                     )}
 
-                    {badgeCount > 0 && (
+                    {item.badgeKey === 'live' && badgeCount > 0 ? (
+                      <motion.div
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                        className={collapsed ? "absolute -top-1 -right-1" : ""}
+                      >
+                        <Badge 
+                          className="h-5 min-w-[20px] px-1.5 text-xs bg-red-500 text-white gap-1"
+                        >
+                          <Radio className="h-2.5 w-2.5" />
+                          {!collapsed && 'LIVE'}
+                        </Badge>
+                      </motion.div>
+                    ) : badgeCount > 0 && (
                       <Badge 
                         variant="secondary" 
                         className={cn(

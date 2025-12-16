@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar, Clock, Users, Video, ExternalLink, Crown, Play, Lock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Calendar, Clock, Users, Video, ExternalLink, Crown, Play, Lock, Radio } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,6 +25,7 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
   const eventDate = new Date(event.event_date);
   const isPast = eventDate < new Date();
   const isUpcoming = eventDate > new Date() && eventDate < new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const isLive = event.is_live;
   
   const tier = profile?.membership_tier || 'free';
   
@@ -72,9 +73,10 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -4 }}
         transition={{ duration: 0.3 }}
-        className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-gold/10 ${
-          event.visibility === 'elite_only' ? 'border-gold/30 hover:border-gold/50' : 'border-border/50 hover:border-gold/30'
-        } ${isPast && !hasRecording ? 'opacity-60' : ''}`}
+        className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl ${
+          isLive ? 'border-red-500 shadow-lg shadow-red-500/20 hover:shadow-red-500/30' :
+          event.visibility === 'elite_only' ? 'border-gold/30 hover:border-gold/50 hover:shadow-gold/10' : 'border-border/50 hover:border-gold/30 hover:shadow-gold/10'
+        } ${isPast && !hasRecording && !isLive ? 'opacity-60' : ''}`}
       >
         {/* Cover Image */}
         {event.cover_image_url && (
@@ -98,7 +100,20 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
                 </Badge>
               </motion.div>
             )}
-            {hasRecording && (
+            {isLive && (
+              <motion.div 
+                className="absolute top-3 left-3"
+                initial={{ scale: 1 }}
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <Badge className="bg-red-500 text-white gap-1.5 animate-pulse">
+                  <Radio className="h-3 w-3" />
+                  LIVE NOW
+                </Badge>
+              </motion.div>
+            )}
+            {hasRecording && !isLive && (
               <div className="absolute top-3 left-3">
                 <Badge className="bg-green-500/90 text-white gap-1">
                   <Play className="h-3 w-3" />
@@ -117,7 +132,19 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
                 <Badge variant="secondary" className="text-xs transition-colors group-hover:bg-primary/10">
                   {getEventTypeLabel(event.event_type)}
                 </Badge>
-                {isUpcoming && (
+                {isLive && !event.cover_image_url && (
+                  <motion.div
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  >
+                    <Badge className="bg-red-500 text-white gap-1.5">
+                      <Radio className="h-3 w-3" />
+                      LIVE
+                    </Badge>
+                  </motion.div>
+                )}
+                {isUpcoming && !isLive && (
                   <Badge className="bg-green-500/20 text-green-500 text-xs animate-pulse-soft">
                     Starting Soon
                   </Badge>
@@ -128,7 +155,7 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
                     Elite
                   </Badge>
                 )}
-                {!event.cover_image_url && hasRecording && (
+                {!event.cover_image_url && hasRecording && !isLive && (
                   <Badge className="bg-green-500/20 text-green-500 gap-1 text-xs">
                     <Play className="h-3 w-3" />
                     Replay
@@ -176,7 +203,18 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {isPast ? (
+            {isLive ? (
+              // Live event - show prominent Join Live button
+              <Button
+                variant="default"
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white transition-transform hover:scale-[1.02] animate-pulse"
+                onClick={() => window.open(event.meeting_url!, '_blank')}
+                disabled={!event.meeting_url}
+              >
+                <Radio className="h-4 w-4 mr-2" />
+                Join Live Now
+              </Button>
+            ) : isPast ? (
               hasRecording ? (
                 canAccessRecording ? (
                   <Button

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Plus, Edit, Trash2, Calendar, Video, Users, Crown, ExternalLink } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Video, Users, Crown, ExternalLink, Radio } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -159,6 +159,7 @@ export default function AdminEvents() {
       visibility: formData.visibility,
       max_attendees: formData.max_attendees ? parseInt(formData.max_attendees) : null,
       is_published: formData.is_published,
+      is_live: false,
       created_by: user.id,
       recording_url: formData.recording_url || null,
       recording_visible: formData.recording_visible,
@@ -180,6 +181,13 @@ export default function AdminEvents() {
     if (!deleteConfirmEvent) return;
     await deleteEvent.mutateAsync(deleteConfirmEvent.id);
     setDeleteConfirmEvent(null);
+  };
+
+  const handleToggleLive = async (event: CommunityEvent) => {
+    await updateEvent.mutateAsync({ 
+      id: event.id, 
+      is_live: !event.is_live 
+    });
   };
 
   const getPlatformBadge = (platform: string) => {
@@ -282,14 +290,34 @@ export default function AdminEvents() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {event.is_published ? (
-                      <Badge className="bg-green-500/20 text-green-500">Published</Badge>
-                    ) : (
-                      <Badge variant="outline">Draft</Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {event.is_live && (
+                        <Badge className="bg-red-500 text-white gap-1 animate-pulse">
+                          <Radio className="h-3 w-3" />
+                          LIVE
+                        </Badge>
+                      )}
+                      {event.is_published ? (
+                        <Badge className="bg-green-500/20 text-green-500">Published</Badge>
+                      ) : (
+                        <Badge variant="outline">Draft</Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
+                      {/* Go Live Toggle */}
+                      {event.is_published && event.meeting_url && (
+                        <Button
+                          variant={event.is_live ? "destructive" : "default"}
+                          size="sm"
+                          className={event.is_live ? "bg-red-500 hover:bg-red-600" : "bg-green-600 hover:bg-green-700"}
+                          onClick={() => handleToggleLive(event)}
+                        >
+                          <Radio className="h-3 w-3 mr-1" />
+                          {event.is_live ? 'End Live' : 'Go Live'}
+                        </Button>
+                      )}
                       {event.meeting_url && (
                         <Button
                           variant="ghost"

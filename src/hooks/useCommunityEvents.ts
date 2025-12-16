@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
@@ -17,6 +18,7 @@ export interface CommunityEvent {
   visibility: 'all_members' | 'elite_only';
   max_attendees: number | null;
   is_published: boolean;
+  is_live: boolean;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -82,6 +84,29 @@ export function useCommunityEvents() {
     },
     enabled: !!user,
   });
+
+  // Subscribe to realtime updates for live status changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('community-events-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'community_events'
+        },
+        () => {
+          // Invalidate and refetch when any event is updated
+          queryClient.invalidateQueries({ queryKey: ['community-events'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const registerMutation = useMutation({
     mutationFn: async (eventId: string) => {
