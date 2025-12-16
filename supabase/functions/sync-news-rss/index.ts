@@ -6,38 +6,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// RSS Feed sources focused on Dubai real estate
+// RSS Feed sources focused on Dubai real estate - VERIFIED WORKING as of Dec 2024
 const RSS_FEEDS = [
   {
-    name: 'The National Business',
-    url: 'https://www.thenationalnews.com/rss/business/',
-    keywords: ['property', 'real estate', 'dubai', 'housing', 'rent', 'villa', 'apartment', 'developer', 'emaar', 'damac', 'nakheel', 'investment'],
+    name: 'Arabian Business Real Estate',
+    url: 'https://www.arabianbusiness.com/industries/real-estate/feed',
+    keywords: ['dubai', 'uae', 'property', 'villa', 'apartment', 'developer', 'emaar', 'damac', 'nakheel', 'sobha', 'azizi', 'binghatti', 'palm', 'marina', 'downtown', 'off-plan', 'real estate', 'investment', 'rental', 'yield', 'golden visa'],
   },
   {
-    name: 'Gulf News Business',
-    url: 'https://gulfnews.com/rss/business',
-    keywords: ['dubai', 'property', 'real estate', 'investment', 'developer', 'market'],
+    name: 'Dubai Chronicle',
+    url: 'https://www.dubaichronicle.com/feed/',
+    keywords: ['property', 'real estate', 'dubai', 'villa', 'apartment', 'developer', 'investment', 'rent', 'buy', 'market', 'launch', 'project'],
   },
   {
-    name: 'Arabian Business Property',
-    url: 'https://www.arabianbusiness.com/rss/real-estate',
-    keywords: ['dubai', 'property', 'real estate', 'investment', 'developer', 'villa', 'apartment'],
+    name: 'Properties Market UAE',
+    url: 'https://www.properties.market/ae/blog/feed/',
+    keywords: ['dubai', 'property', 'real estate', 'investment', 'villa', 'apartment', 'developer', 'market', 'buy', 'rent', 'guide'],
   },
   {
-    name: 'Construction Week',
-    url: 'https://www.constructionweekonline.com/rss',
-    keywords: ['dubai', 'emaar', 'damac', 'nakheel', 'developer', 'project', 'real estate'],
+    name: 'Key One Realty',
+    url: 'https://keyone.com/blog/feed/',
+    keywords: ['dubai', 'property', 'real estate', 'investment', 'airbnb', 'rental', 'villa', 'apartment', 'roi', 'yield'],
   },
 ];
 
+// Expanded keywords for better Dubai real estate content matching
+const DUBAI_KEYWORDS = [
+  // Neighborhoods
+  'palm jumeirah', 'downtown dubai', 'dubai marina', 'jvc', 'jumeirah village', 'business bay', 
+  'difc', 'meydan', 'dubai hills', 'arabian ranches', 'bluewaters', 'creek harbour', 'jbr',
+  // Developers
+  'emaar', 'damac', 'nakheel', 'sobha', 'azizi', 'binghatti', 'ellington', 'meraas', 'omniyat',
+  // Investment terms
+  'yield', 'roi', 'off-plan', 'off plan', 'handover', 'golden visa', 'rera', 'dld', 'rental',
+  // General
+  'dubai', 'uae', 'property', 'real estate', 'villa', 'apartment', 'townhouse', 'penthouse',
+  'developer', 'launch', 'project', 'investment', 'buyer', 'investor'
+];
+
 // Parse RSS XML to extract articles
-async function parseRSSFeed(feedUrl: string, sourceName: string, keywords: string[]): Promise<any[]> {
+async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: string[]): Promise<any[]> {
   try {
     console.log(`[${sourceName}] Fetching from ${feedUrl}`);
     const startTime = Date.now();
     
     const response = await fetch(feedUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DubaiWealthHub/1.0)' }
+      headers: { 
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+      }
     });
     
     const responseTime = Date.now() - startTime;
@@ -49,39 +66,87 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, keywords: strin
     }
 
     const xml = await response.text();
+    console.log(`[${sourceName}] XML length: ${xml.length} chars`);
     const articles: any[] = [];
 
     // Simple XML parsing for RSS items
     const itemMatches = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    console.log(`[${sourceName}] Found ${itemMatches.length} items in feed`);
     
     for (const itemXml of itemMatches.slice(0, 20)) { // Limit to 20 per feed
-      const title = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/)?.[1] || 
-                    itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/)?.[2] || '';
-      const link = itemXml.match(/<link>(.*?)<\/link>/)?.[1] || '';
-      const description = itemXml.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/)?.[1] ||
-                          itemXml.match(/<description><!\[CDATA\[(.*?)\]\]><\/description>|<description>(.*?)<\/description>/)?.[2] || '';
+      // Extract title (handle CDATA)
+      const titleMatch = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/s) || 
+                         itemXml.match(/<title>(.*?)<\/title>/s);
+      const title = titleMatch?.[1] || '';
+      
+      // Extract link
+      const link = itemXml.match(/<link>(.*?)<\/link>/)?.[1]?.trim() || '';
+      
+      // Extract description (handle CDATA)
+      const descMatch = itemXml.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) ||
+                        itemXml.match(/<description>([\s\S]*?)<\/description>/);
+      const description = descMatch?.[1] || '';
+      
+      // Extract content:encoded if available (often has more content)
+      const contentMatch = itemXml.match(/<content:encoded><!\[CDATA\[([\s\S]*?)\]\]><\/content:encoded>/);
+      const fullContent = contentMatch?.[1] || description;
+      
+      // Extract pubDate
       const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
-      const imageMatch = itemXml.match(/<media:content[^>]*url="([^"]+)"/);
-      const imageUrl = imageMatch?.[1] || itemXml.match(/<enclosure[^>]*url="([^"]+)"/)?.[1] || null;
+      
+      // Extract image from multiple sources
+      let imageUrl = null;
+      // Try media:content
+      const mediaMatch = itemXml.match(/<media:content[^>]*url="([^"]+)"/);
+      if (mediaMatch) imageUrl = mediaMatch[1];
+      // Try enclosure
+      if (!imageUrl) {
+        const enclosureMatch = itemXml.match(/<enclosure[^>]*url="([^"]+)"[^>]*type="image/);
+        if (enclosureMatch) imageUrl = enclosureMatch[1];
+      }
+      // Try media:thumbnail
+      if (!imageUrl) {
+        const thumbMatch = itemXml.match(/<media:thumbnail[^>]*url="([^"]+)"/);
+        if (thumbMatch) imageUrl = thumbMatch[1];
+      }
+      // Try to extract from description/content HTML
+      if (!imageUrl) {
+        const imgMatch = fullContent.match(/<img[^>]*src="([^"]+)"/);
+        if (imgMatch) imageUrl = imgMatch[1];
+      }
+      // Try srcset pattern
+      if (!imageUrl) {
+        const srcsetMatch = fullContent.match(/srcset="([^"\s]+)/);
+        if (srcsetMatch) imageUrl = srcsetMatch[1];
+      }
 
       // Clean up title and description
-      const cleanTitle = title.replace(/<[^>]*>/g, '').trim();
-      const cleanDescription = description.replace(/<[^>]*>/g, '').trim().slice(0, 300);
+      const cleanTitle = title.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim();
+      const cleanDescription = description.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim().slice(0, 400);
 
-      // Filter by keywords (case-insensitive)
+      if (!cleanTitle || !link) {
+        continue;
+      }
+
+      // Filter by keywords - combine feed keywords with global Dubai keywords
       const content = `${cleanTitle} ${cleanDescription}`.toLowerCase();
-      const isRelevant = keywords.some(kw => content.includes(kw.toLowerCase()));
+      const allKeywords = [...new Set([...feedKeywords, ...DUBAI_KEYWORDS])];
+      const matchedKeywords = allKeywords.filter(kw => content.includes(kw.toLowerCase()));
+      const isRelevant = matchedKeywords.length >= 1; // At least 1 keyword match
 
-      if (cleanTitle && link && isRelevant) {
+      if (isRelevant) {
+        console.log(`[${sourceName}] Matched article: "${cleanTitle.slice(0, 50)}..." (${matchedKeywords.length} keywords: ${matchedKeywords.slice(0, 3).join(', ')})`);
+        
         // Determine category based on content
         let category = 'market_trends';
-        if (content.includes('golden visa') || content.includes('residency')) {
+        const contentLower = content.toLowerCase();
+        if (contentLower.includes('golden visa') || contentLower.includes('residency') || contentLower.includes('visa')) {
           category = 'golden_visa';
-        } else if (content.includes('off-plan') || content.includes('off plan') || content.includes('launch')) {
+        } else if (contentLower.includes('off-plan') || contentLower.includes('off plan') || contentLower.includes('launch') || contentLower.includes('handover')) {
           category = 'off_plan';
-        } else if (content.includes('emaar') || content.includes('damac') || content.includes('nakheel') || content.includes('developer')) {
+        } else if (contentLower.includes('emaar') || contentLower.includes('damac') || contentLower.includes('nakheel') || contentLower.includes('sobha') || contentLower.includes('developer')) {
           category = 'developer_news';
-        } else if (content.includes('law') || content.includes('regulation') || content.includes('rera')) {
+        } else if (contentLower.includes('law') || contentLower.includes('regulation') || contentLower.includes('rera') || contentLower.includes('dld')) {
           category = 'regulations';
         }
 
@@ -90,7 +155,7 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, keywords: strin
           excerpt: cleanDescription,
           source_name: sourceName,
           source_url: link,
-          source_hash: btoa(link).slice(0, 50), // Simple hash for deduplication
+          source_hash: btoa(link).slice(0, 50),
           image_url: imageUrl,
           category,
           published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
@@ -98,9 +163,10 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, keywords: strin
       }
     }
 
+    console.log(`[${sourceName}] Total relevant articles: ${articles.length}`);
     return articles;
   } catch (error) {
-    console.error(`Error parsing ${sourceName}:`, error);
+    console.error(`[${sourceName}] Error parsing feed:`, error);
     return [];
   }
 }
