@@ -1,29 +1,58 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, X, ZoomIn, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Maximize2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface PropertyGalleryProps {
-  images: string[];
+  images: string[];           // Re-hosted images (Supabase)
+  galleryUrls?: string[];     // CDN references (Bayut) - optional for hybrid storage
   title: string;
 }
 
-export function PropertyGallery({ images, title }: PropertyGalleryProps) {
+export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
 
-  const validImages = images.length > 0 ? images : [
-    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200'
-  ];
+  // Combine re-hosted images with CDN references
+  const allImages = [...images, ...galleryUrls];
+  
+  // Filter out failed images and provide fallback if all fail
+  const validImages = allImages.length > 0 
+    ? allImages.filter((_, index) => !failedImages.has(index))
+    : ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200'];
+
+  // If all images failed, show fallback
+  const displayImages = validImages.length > 0 
+    ? validImages 
+    : ['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200'];
 
   const nextImage = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % validImages.length);
-  }, [validImages.length]);
+    setCurrentIndex((prev) => (prev + 1) % displayImages.length);
+  }, [displayImages.length]);
 
   const prevImage = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
-  }, [validImages.length]);
+    setCurrentIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
+  }, [displayImages.length]);
+
+  // Handle CDN image failures
+  const handleImageError = (originalIndex: number) => {
+    console.warn(`[PropertyGallery] Image failed to load at index ${originalIndex}`);
+    setFailedImages(prev => new Set(prev).add(originalIndex));
+    
+    // If current image failed, move to next valid image
+    if (originalIndex === currentIndex && displayImages.length > 1) {
+      nextImage();
+    }
+  };
+
+  // Reset current index if it exceeds valid images
+  useEffect(() => {
+    if (currentIndex >= displayImages.length) {
+      setCurrentIndex(0);
+    }
+  }, [currentIndex, displayImages.length]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -50,6 +79,18 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
     };
   }, [isLightboxOpen]);
 
+  // Get the actual index in allImages array for error tracking
+  const getOriginalIndex = (displayIndex: number): number => {
+    let count = 0;
+    for (let i = 0; i < allImages.length; i++) {
+      if (!failedImages.has(i)) {
+        if (count === displayIndex) return i;
+        count++;
+      }
+    }
+    return -1;
+  };
+
   return (
     <>
       {/* Main Gallery */}
@@ -60,9 +101,10 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
           onClick={() => setIsLightboxOpen(true)}
         >
           <img
-            src={validImages[currentIndex]}
+            src={displayImages[currentIndex]}
             alt={`${title} - Image ${currentIndex + 1}`}
             className="w-full h-full object-cover"
+            onError={() => handleImageError(getOriginalIndex(currentIndex))}
           />
           
           {/* Zoom Overlay */}
@@ -74,8 +116,15 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
             </div>
           </div>
 
+          {/* CDN Badge (optional - shows when viewing CDN images) */}
+          {galleryUrls.length > 0 && currentIndex >= images.length && (
+            <div className="absolute top-4 right-4 px-2 py-1 bg-black/50 text-white text-xs rounded">
+              External Image
+            </div>
+          )}
+
           {/* Navigation Arrows */}
-          {validImages.length > 1 && (
+          {displayImages.length > 1 && (
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); prevImage(); }}
@@ -96,15 +145,20 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
           {/* Image Counter */}
           <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/50 text-white text-sm rounded-full">
-            {currentIndex + 1} / {validImages.length}
+            {currentIndex + 1} / {displayImages.length}
+            {failedImages.size > 0 && (
+              <span className="ml-2 text-yellow-400">
+                ({failedImages.size} unavailable)
+              </span>
+            )}
           </div>
         </div>
 
         {/* Thumbnail Strip */}
-        {validImages.length > 1 && (
+        {displayImages.length > 1 && (
           <div className="bg-card border-t border-border p-2 overflow-x-auto">
             <div className="flex gap-2 min-w-max">
-              {validImages.map((image, index) => (
+              {displayImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
@@ -119,6 +173,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                     src={image}
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={() => handleImageError(getOriginalIndex(index))}
                   />
                 </button>
               ))}
@@ -149,7 +204,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
             {/* Image Counter */}
             <div className="absolute top-4 left-4 text-white/80 text-sm">
-              {currentIndex + 1} / {validImages.length}
+              {currentIndex + 1} / {displayImages.length}
             </div>
 
             {/* Main Image */}
@@ -158,14 +213,15 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              src={validImages[currentIndex]}
+              src={displayImages[currentIndex]}
               alt={`${title} - Image ${currentIndex + 1}`}
               className="max-w-[90vw] max-h-[85vh] object-contain"
               onClick={(e) => e.stopPropagation()}
+              onError={() => handleImageError(getOriginalIndex(currentIndex))}
             />
 
             {/* Navigation Arrows */}
-            {validImages.length > 1 && (
+            {displayImages.length > 1 && (
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); prevImage(); }}
@@ -186,7 +242,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
 
             {/* Thumbnail Strip */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 rounded-lg max-w-[90vw] overflow-x-auto">
-              {validImages.map((image, index) => (
+              {displayImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={(e) => {
@@ -204,6 +260,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                     src={image}
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={() => handleImageError(getOriginalIndex(index))}
                   />
                 </button>
               ))}
