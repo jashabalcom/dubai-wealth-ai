@@ -950,22 +950,27 @@ async function processPropertyImages(
   return result;
 }
 
-// Extract floor plan URLs
+// Extract floor plan URLs - handles Bayut API structure (floor_plan.2d_images)
 function extractFloorPlanUrls(prop: any): string[] {
   const urls: string[] = [];
   
-  if (prop.floorplan_images && Array.isArray(prop.floorplan_images)) {
-    for (const fp of prop.floorplan_images) {
-      const url = typeof fp === 'string' ? fp : fp.url;
+  // Check floor_plan.2d_images (correct path per API)
+  if (prop.floor_plan?.['2d_images'] && Array.isArray(prop.floor_plan['2d_images'])) {
+    for (const fp of prop.floor_plan['2d_images']) {
+      const url = typeof fp === 'string' ? fp : fp?.url;
       if (url && !urls.includes(url)) {
         urls.push(url);
       }
     }
   }
   
-  if (prop.floorplan && typeof prop.floorplan === 'string') {
-    if (!urls.includes(prop.floorplan)) {
-      urls.push(prop.floorplan);
+  // Fallback: legacy field names
+  if (prop.floorplan_images && Array.isArray(prop.floorplan_images)) {
+    for (const fp of prop.floorplan_images) {
+      const url = typeof fp === 'string' ? fp : fp.url;
+      if (url && !urls.includes(url)) {
+        urls.push(url);
+      }
     }
   }
   
@@ -1131,42 +1136,40 @@ function transformProperty(prop: any): any {
   };
 }
 
-// Extract photo URLs - handles Bayut API camelCase structure
+// Extract photo URLs - handles Bayut API structure (media.cover_photo, media.photos)
 function extractPhotoUrls(prop: any): string[] {
   const urls: string[] = [];
   
   // Debug logging for photo fields
   console.log(`[Bayut API] Photo fields for ${prop.id}:`, {
-    hasCoverPhoto: !!prop.coverPhoto,
-    coverPhotoUrl: prop.coverPhoto?.url?.substring(0, 50),
-    photosCount: prop.photos?.length || 0,
-    hasPhotoUrls: !!prop.photoUrls,
-    area: prop.area,
+    hasMedia: !!prop.media,
+    coverPhoto: prop.media?.cover_photo?.substring(0, 50),
+    photosCount: prop.media?.photos?.length || 0,
+    photoCount: prop.media?.photo_count || 0,
   });
   
-  // Cover photo (camelCase, nested object with url property)
-  if (prop.coverPhoto?.url) {
-    urls.push(prop.coverPhoto.url);
-  } else if (prop.cover_photo) {
-    // Fallback to snake_case if present
-    urls.push(typeof prop.cover_photo === 'string' ? prop.cover_photo : prop.cover_photo.url);
+  // Cover photo from media.cover_photo
+  if (prop.media?.cover_photo) {
+    urls.push(prop.media.cover_photo);
   }
   
-  // Gallery photos (array of objects with url property)
-  if (prop.photos && Array.isArray(prop.photos)) {
-    for (const photo of prop.photos) {
-      const url = photo?.url || (typeof photo === 'string' ? photo : null);
+  // Gallery photos from media.photos (array of URLs)
+  if (prop.media?.photos && Array.isArray(prop.media.photos)) {
+    for (const photo of prop.media.photos) {
+      const url = typeof photo === 'string' ? photo : photo?.url;
       if (url && !urls.includes(url)) {
         urls.push(url);
       }
     }
   }
   
-  // Also check photoUrls array (alternate field name)
-  if (prop.photoUrls && Array.isArray(prop.photoUrls)) {
-    for (const url of prop.photoUrls) {
-      if (url && typeof url === 'string' && !urls.includes(url)) {
-        urls.push(url);
+  // Fallback: check legacy field names
+  if (urls.length === 0) {
+    if (prop.coverPhoto?.url) urls.push(prop.coverPhoto.url);
+    if (prop.photos && Array.isArray(prop.photos)) {
+      for (const photo of prop.photos) {
+        const url = photo?.url || (typeof photo === 'string' ? photo : null);
+        if (url && !urls.includes(url)) urls.push(url);
       }
     }
   }
