@@ -2583,7 +2583,7 @@ export type Database = {
           longitude?: number | null
           parking_spaces?: number | null
           payment_plan_json?: Json | null
-          price_aed: number
+          price_aed?: number
           property_type?: string
           published_at?: string | null
           rental_frequency?: string | null
@@ -2591,7 +2591,7 @@ export type Database = {
           rera_permit_expiry?: string | null
           rera_permit_number?: string | null
           service_charge_per_sqft?: number | null
-          size_sqft: number
+          size_sqft?: number
           slug: string
           status?: string
           title: string
