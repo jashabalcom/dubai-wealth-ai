@@ -939,6 +939,7 @@ export type Database = {
           event_date: string
           event_type: string
           id: string
+          is_live: boolean
           is_published: boolean
           max_attendees: number | null
           meeting_id: string | null
@@ -960,6 +961,7 @@ export type Database = {
           event_date: string
           event_type?: string
           id?: string
+          is_live?: boolean
           is_published?: boolean
           max_attendees?: number | null
           meeting_id?: string | null
@@ -981,6 +983,7 @@ export type Database = {
           event_date?: string
           event_type?: string
           id?: string
+          is_live?: boolean
           is_published?: boolean
           max_attendees?: number | null
           meeting_id?: string | null
