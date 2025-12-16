@@ -128,7 +128,6 @@ const commercialTools = [
     icon: MapPin,
     color: 'slate',
     href: '/tools/free-zone',
-    comingSoon: true,
   },
 ];
 
