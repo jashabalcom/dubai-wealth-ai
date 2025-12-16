@@ -6,39 +6,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Bayut API configuration
-const BAYUT_API_HOST = 'bayut-com1.p.rapidapi.com';
-const BAYUT_API_BASE = `https://${BAYUT_API_HOST}`;
-
-// Dubai areas mapping
-const DUBAI_AREAS: Record<string, string> = {
-  'dubai-marina': '5002',
-  'downtown-dubai': '6901',
-  'palm-jumeirah': '5548',
-  'business-bay': '6588',
-  'jumeirah-village-circle': '6357',
-  'jumeirah-lake-towers': '5549',
-  'dubai-hills-estate': '9262',
-  'arabian-ranches': '5003',
-  'difc': '6599',
-  'jumeirah-beach-residence': '5550',
-  'dubai-sports-city': '5004',
-  'dubai-silicon-oasis': '6374',
-  'al-barsha': '5318',
-  'meydan-city': '8124',
-  'creek-harbour': '10817',
-};
+// New UAE Real Estate API configuration
+const API_HOST = 'uae-real-estate2.p.rapidapi.com';
+const API_BASE = `https://${API_HOST}`;
 
 interface SyncRequest {
-  action: 'test' | 'sync_area' | 'get_areas';
-  area?: string;
+  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers';
+  // Location search
+  query?: string;
+  // Property search filters
+  locations_ids?: number[];
   purpose?: 'for-sale' | 'for-rent';
-  propertyType?: string;
+  category?: string;
+  rooms?: number[];
+  baths?: number[];
+  price_min?: number;
+  price_max?: number;
+  area_min?: number;
+  area_max?: number;
+  furnished?: boolean;
+  completion_status?: 'ready' | 'off_plan';
+  sale_type?: 'new' | 'resale';
+  has_video?: boolean;
+  has_panorama?: boolean;
+  has_floorplan?: boolean;
+  index?: 'latest' | 'verified' | 'price-asc' | 'price-desc' | 'area-asc' | 'area-desc';
+  page?: number;
   limit?: number;
+  // Transaction filters
+  start_date?: string;
+  end_date?: string;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -55,51 +55,33 @@ serve(async (req) => {
     );
   }
 
-  if (rapidApiKeyRaw !== rapidApiKey) {
-    console.log('[Bayut Sync] RAPIDAPI_KEY contained whitespace; trimming applied', {
-      rawLen: rapidApiKeyRaw?.length ?? 0,
-      trimmedLen: rapidApiKey.length,
-    });
-  }
-
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
     const body: SyncRequest = await req.json();
-    const { action, area, purpose = 'for-sale', propertyType, limit = 10 } = body;
+    const { action } = body;
 
-    console.log(`[Bayut Sync] Action: ${action}, Area: ${area}, Purpose: ${purpose}`);
+    console.log(`[Bayut API] Action: ${action}`);
 
-    if (action === 'get_areas') {
-      return new Response(
-        JSON.stringify({ 
-          areas: Object.entries(DUBAI_AREAS).map(([slug, id]) => ({ 
-            slug, 
-            id,
-            name: slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-          }))
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+    // ===========================================
+    // TEST CONNECTION
+    // ===========================================
     if (action === 'test') {
-      // Test API connection with a simple autocomplete request
       const testResponse = await fetch(
-        `${BAYUT_API_BASE}/auto-complete?query=dubai&hitsPerPage=1`,
+        `${API_BASE}/locations_search?query=dubai`,
         {
           headers: {
             'X-RapidAPI-Key': rapidApiKey,
-            'X-RapidAPI-Host': BAYUT_API_HOST,
+            'X-RapidAPI-Host': API_HOST,
           },
         }
       );
 
       if (!testResponse.ok) {
         const errorText = await testResponse.text();
-        console.error('[Bayut Sync] Test failed:', errorText);
+        console.error('[Bayut API] Test failed:', errorText);
         return new Response(
           JSON.stringify({ 
             success: false, 
@@ -111,48 +93,125 @@ serve(async (req) => {
       }
 
       const testData = await testResponse.json();
-      console.log('[Bayut Sync] Test successful:', testData);
+      console.log('[Bayut API] Test successful, locations found:', testData.results?.length || 0);
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'API connection successful',
-          apiCallsUsed: 1
+          message: 'API connection successful (uae-real-estate2)',
+          locationsFound: testData.results?.length || 0,
+          apiVersion: 'uae-real-estate2'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (action === 'sync_area') {
-      if (!area) {
+    // ===========================================
+    // SEARCH LOCATIONS
+    // ===========================================
+    if (action === 'search_locations') {
+      const { query } = body;
+      if (!query) {
         return new Response(
-          JSON.stringify({ error: 'Area is required for sync_area action' }),
+          JSON.stringify({ error: 'Query is required for location search' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      const locationId = DUBAI_AREAS[area];
-      if (!locationId) {
+      const response = await fetch(
+        `${API_BASE}/locations_search?query=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            'X-RapidAPI-Key': rapidApiKey,
+            'X-RapidAPI-Host': API_HOST,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Location search failed: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const locations = (data.results || []).map((loc: any) => ({
+        id: loc.id,
+        name: loc.name,
+        level: loc.level,
+        path: loc.path,
+      }));
+
+      console.log(`[Bayut API] Found ${locations.length} locations for "${query}"`);
+
+      return new Response(
+        JSON.stringify({ success: true, locations }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // SYNC PROPERTIES (POST with filters)
+    // ===========================================
+    if (action === 'sync_properties') {
+      const {
+        locations_ids = [],
+        purpose = 'for-sale',
+        category,
+        rooms,
+        baths,
+        price_min,
+        price_max,
+        area_min,
+        area_max,
+        furnished,
+        completion_status,
+        sale_type,
+        has_video,
+        has_panorama,
+        has_floorplan,
+        index = 'latest',
+        page = 0,
+        limit = 20,
+      } = body;
+
+      if (locations_ids.length === 0) {
         return new Response(
-          JSON.stringify({ error: `Unknown area: ${area}`, availableAreas: Object.keys(DUBAI_AREAS) }),
+          JSON.stringify({ error: 'At least one location_id is required' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      // Create sync log entry
+      // Build request body for POST
+      const searchBody: any = {
+        purpose,
+        locations_ids,
+        index,
+      };
+
+      if (category) searchBody.category = category;
+      if (rooms && rooms.length > 0) searchBody.rooms = rooms;
+      if (baths && baths.length > 0) searchBody.baths = baths;
+      if (price_min) searchBody.price_min = price_min;
+      if (price_max) searchBody.price_max = price_max;
+      if (area_min) searchBody.area_min = area_min;
+      if (area_max) searchBody.area_max = area_max;
+      if (furnished !== undefined) searchBody.furnished = furnished;
+      if (completion_status) searchBody.completion_status = completion_status;
+      if (sale_type) searchBody.sale_type = sale_type;
+      if (has_video) searchBody.has_video = true;
+      if (has_panorama) searchBody.has_panorama = true;
+      if (has_floorplan) searchBody.has_floorplan = true;
+
+      // Create sync log
       const { data: syncLog, error: logError } = await supabase
         .from('bayut_sync_logs')
         .insert({
-          sync_type: 'area',
-          area_name: area,
+          sync_type: 'properties',
+          area_name: `Location IDs: ${locations_ids.join(', ')}`,
           status: 'running',
         })
         .select()
         .single();
-
-      if (logError) {
-        console.error('[Bayut Sync] Failed to create sync log:', logError);
-      }
 
       const syncLogId = syncLog?.id;
       let apiCallsUsed = 0;
@@ -162,37 +221,40 @@ serve(async (req) => {
       const errors: string[] = [];
 
       try {
-        // Fetch property listings - use minimal required parameters
-        const listUrl = `${BAYUT_API_BASE}/properties/list?locationExternalIDs=${locationId}&purpose=${purpose}&hitsPerPage=${limit}&page=0`;
-        
-        console.log(`[Bayut Sync] Fetching list: ${listUrl}`);
-        
-        const listResponse = await fetch(listUrl, {
+        // Fetch properties using POST
+        const searchUrl = `${API_BASE}/properties_search?page=${page}&hitsPerPage=${limit}`;
+        console.log(`[Bayut API] POST ${searchUrl}`, JSON.stringify(searchBody));
+
+        const searchResponse = await fetch(searchUrl, {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'X-RapidAPI-Key': rapidApiKey,
-            'X-RapidAPI-Host': BAYUT_API_HOST,
+            'X-RapidAPI-Host': API_HOST,
           },
+          body: JSON.stringify(searchBody),
         });
         apiCallsUsed++;
 
-        if (!listResponse.ok) {
-          const errorBody = await listResponse.text();
-          console.error(`[Bayut Sync] List API error response:`, errorBody);
-          throw new Error(`List API failed: ${listResponse.status} - ${errorBody}`);
+        if (!searchResponse.ok) {
+          const errorBody = await searchResponse.text();
+          console.error(`[Bayut API] Search failed:`, errorBody);
+          throw new Error(`Property search failed: ${searchResponse.status} - ${errorBody}`);
         }
 
-        const listData = await listResponse.json();
-        const properties = listData.hits || [];
+        const searchData = await searchResponse.json();
+        const properties = searchData.results || [];
         propertiesFound = properties.length;
+        const totalAvailable = searchData.nbHits || propertiesFound;
 
-        console.log(`[Bayut Sync] Found ${propertiesFound} properties`);
+        console.log(`[Bayut API] Found ${propertiesFound} properties (${totalAvailable} total available)`);
 
         // Process each property
         for (const prop of properties) {
           try {
-            const externalId = prop.externalID || String(prop.id);
+            const externalId = String(prop.id);
             
-            // Check if property already exists
+            // Check if recently synced
             const { data: existing } = await supabase
               .from('properties')
               .select('id, last_synced_at')
@@ -200,24 +262,23 @@ serve(async (req) => {
               .eq('external_source', 'bayut')
               .single();
 
-            // Skip if recently synced (within last 24 hours)
             if (existing?.last_synced_at) {
               const lastSync = new Date(existing.last_synced_at);
               const hoursSinceSync = (Date.now() - lastSync.getTime()) / (1000 * 60 * 60);
               if (hoursSinceSync < 24) {
-                console.log(`[Bayut Sync] Skipping ${externalId} - recently synced`);
+                console.log(`[Bayut API] Skipping ${externalId} - recently synced`);
                 continue;
               }
             }
 
-            // Transform property data
-            const transformedProperty = transformBayutProperty(prop);
+            // Transform property
+            const transformedProperty = transformProperty(prop);
             
-            // Re-host photos to our storage
+            // Re-host photos
             const photoUrls = extractPhotoUrls(prop);
             const rehostedImages: string[] = [];
             
-            for (const photoUrl of photoUrls.slice(0, 5)) { // Limit to 5 photos per property
+            for (const photoUrl of photoUrls.slice(0, 5)) {
               try {
                 const rehostedUrl = await rehostPhoto(supabase, photoUrl, externalId);
                 if (rehostedUrl) {
@@ -225,7 +286,7 @@ serve(async (req) => {
                   photosSynced++;
                 }
               } catch (photoError) {
-                console.error(`[Bayut Sync] Photo rehost failed:`, photoError);
+                console.error(`[Bayut API] Photo rehost failed:`, photoError);
               }
             }
             
@@ -237,24 +298,21 @@ serve(async (req) => {
               .upsert(
                 {
                   ...transformedProperty,
-                  id: existing?.id, // Keep existing ID if updating
+                  id: existing?.id,
                 },
-                {
-                  onConflict: 'external_source,external_id',
-                }
+                { onConflict: 'external_source,external_id' }
               );
 
             if (upsertError) {
-              console.error(`[Bayut Sync] Upsert failed for ${externalId}:`, upsertError);
+              console.error(`[Bayut API] Upsert failed:`, upsertError);
               errors.push(`Property ${externalId}: ${upsertError.message}`);
             } else {
               propertiesSynced++;
-              console.log(`[Bayut Sync] Synced property: ${externalId}`);
+              console.log(`[Bayut API] Synced: ${externalId}`);
             }
           } catch (propError) {
             const errorMsg = propError instanceof Error ? propError.message : String(propError);
             errors.push(errorMsg);
-            console.error(`[Bayut Sync] Property processing error:`, propError);
           }
         }
 
@@ -277,18 +335,18 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: true,
-            message: `Synced ${propertiesSynced} of ${propertiesFound} properties from ${area}`,
+            message: `Synced ${propertiesSynced} of ${propertiesFound} properties`,
             propertiesFound,
             propertiesSynced,
             photosSynced,
             apiCallsUsed,
+            totalAvailable,
             errors: errors.length > 0 ? errors : undefined,
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 
       } catch (syncError) {
-        // Update sync log with failure
         if (syncLogId) {
           await supabase
             .from('bayut_sync_logs')
@@ -303,9 +361,121 @@ serve(async (req) => {
             })
             .eq('id', syncLogId);
         }
-
         throw syncError;
       }
+    }
+
+    // ===========================================
+    // SYNC TRANSACTIONS (market data)
+    // ===========================================
+    if (action === 'sync_transactions') {
+      const {
+        locations_ids = [],
+        purpose = 'for-sale',
+        category,
+        rooms,
+        start_date,
+        end_date,
+        page = 0,
+        limit = 50,
+      } = body;
+
+      const txBody: any = {
+        purpose,
+      };
+
+      if (locations_ids.length > 0) txBody.locations_ids = locations_ids;
+      if (category) txBody.category = category;
+      if (rooms && rooms.length > 0) txBody.rooms = rooms;
+      if (start_date) txBody.start_date = start_date;
+      if (end_date) txBody.end_date = end_date;
+
+      const txUrl = `${API_BASE}/transactions?page=${page}&hitsPerPage=${limit}`;
+      console.log(`[Bayut API] POST ${txUrl}`, JSON.stringify(txBody));
+
+      const txResponse = await fetch(txUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': API_HOST,
+        },
+        body: JSON.stringify(txBody),
+      });
+
+      if (!txResponse.ok) {
+        const errorBody = await txResponse.text();
+        throw new Error(`Transaction fetch failed: ${txResponse.status} - ${errorBody}`);
+      }
+
+      const txData = await txResponse.json();
+      const transactions = txData.results || [];
+
+      console.log(`[Bayut API] Found ${transactions.length} transactions`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          transactions: transactions.map((tx: any) => ({
+            id: tx.id,
+            date: tx.date,
+            price: tx.price,
+            area: tx.area,
+            rooms: tx.rooms,
+            location: tx.location,
+            property_type: tx.property_type,
+            floor: tx.floor,
+          })),
+          total: txData.nbHits || transactions.length,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // SEARCH DEVELOPERS
+    // ===========================================
+    if (action === 'search_developers') {
+      const { query, page = 0, limit = 20 } = body;
+
+      let devUrl = `${API_BASE}/developers?page=${page}&hitsPerPage=${limit}`;
+      if (query) {
+        devUrl += `&query=${encodeURIComponent(query)}`;
+      }
+
+      console.log(`[Bayut API] GET ${devUrl}`);
+
+      const devResponse = await fetch(devUrl, {
+        headers: {
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': API_HOST,
+        },
+      });
+
+      if (!devResponse.ok) {
+        const errorBody = await devResponse.text();
+        throw new Error(`Developer search failed: ${devResponse.status} - ${errorBody}`);
+      }
+
+      const devData = await devResponse.json();
+      const developers = devData.results || [];
+
+      console.log(`[Bayut API] Found ${developers.length} developers`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          developers: developers.map((dev: any) => ({
+            id: dev.id,
+            name: dev.name,
+            logo: dev.logo,
+            projects_count: dev.projects_count,
+            properties_count: dev.properties_count,
+          })),
+          total: devData.nbHits || developers.length,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     return new Response(
@@ -314,10 +484,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[Bayut Sync] Error:', error);
+    console.error('[Bayut API] Error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Sync failed', 
+        error: 'Request failed', 
         details: error instanceof Error ? error.message : String(error)
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -325,41 +495,53 @@ serve(async (req) => {
   }
 });
 
-// Transform Bayut property to our schema
-function transformBayutProperty(prop: any): any {
-  const externalId = prop.externalID || String(prop.id);
-  const title = prop.title || 'Property';
+// Transform API property to our schema
+function transformProperty(prop: any): any {
+  const externalId = String(prop.id);
+  const title = prop.title || prop.name || 'Property';
   
-  // Extract location area
+  // Extract location
   let locationArea = 'Dubai';
-  if (prop.location && prop.location.length > 0) {
-    const community = prop.location.find((loc: any) => loc.level === 1 || loc.level === 2);
-    locationArea = community?.name || prop.location[0]?.name || 'Dubai';
+  if (prop.location) {
+    if (typeof prop.location === 'string') {
+      locationArea = prop.location;
+    } else if (prop.location.name) {
+      locationArea = prop.location.name;
+    } else if (Array.isArray(prop.location) && prop.location.length > 0) {
+      locationArea = prop.location[0]?.name || 'Dubai';
+    }
   }
 
   // Extract property type
   let propertyType = 'apartment';
-  if (prop.category && prop.category.length > 0) {
-    const categorySlug = prop.category[0]?.slug?.toLowerCase() || '';
+  if (prop.category) {
+    const cat = typeof prop.category === 'string' ? prop.category.toLowerCase() : prop.category?.name?.toLowerCase() || '';
     const typeMap: Record<string, string> = {
       'apartment': 'apartment',
+      'apartments': 'apartment',
       'villa': 'villa',
+      'villas': 'villa',
       'townhouse': 'townhouse',
+      'townhouses': 'townhouse',
       'penthouse': 'penthouse',
       'duplex': 'duplex',
       'studio': 'studio',
     };
-    propertyType = typeMap[categorySlug] || 'apartment';
+    propertyType = typeMap[cat] || 'apartment';
   }
 
-  // Parse bedrooms
+  // Parse rooms/bedrooms
   let bedrooms = 0;
-  if (prop.rooms) {
-    if (prop.rooms.toLowerCase() === 'studio') {
-      bedrooms = 0;
-    } else {
-      const num = parseInt(prop.rooms, 10);
-      bedrooms = isNaN(num) ? 0 : num;
+  if (prop.rooms !== undefined) {
+    if (typeof prop.rooms === 'number') {
+      bedrooms = prop.rooms;
+    } else if (typeof prop.rooms === 'string') {
+      if (prop.rooms.toLowerCase() === 'studio') {
+        bedrooms = 0;
+      } else {
+        const num = parseInt(prop.rooms, 10);
+        bedrooms = isNaN(num) ? 0 : num;
+      }
     }
   }
 
@@ -374,7 +556,7 @@ function transformBayutProperty(prop: any): any {
   return {
     external_id: externalId,
     external_source: 'bayut',
-    external_url: `https://www.bayut.com/property/details-${externalId}.html`,
+    external_url: prop.url || `https://www.bayut.com/property/details-${externalId}.html`,
     title,
     description: prop.description || null,
     price_aed: prop.price || 0,
@@ -384,31 +566,38 @@ function transformBayutProperty(prop: any): any {
     property_type: propertyType,
     listing_type: prop.purpose === 'for-rent' ? 'rent' : 'sale',
     location_area: locationArea,
-    latitude: prop.geography?.lat || null,
-    longitude: prop.geography?.lng || null,
-    is_off_plan: prop.completionStatus === 'off_plan',
-    furnishing: prop.furnishingStatus || null,
-    rera_permit_number: prop.permitNumber || null,
+    latitude: prop.geo?.lat || prop.latitude || null,
+    longitude: prop.geo?.lng || prop.longitude || null,
+    is_off_plan: prop.completion_status === 'off_plan',
+    furnishing: prop.furnished ? 'furnished' : (prop.furnishing || null),
+    rera_permit_number: prop.rera_permit || prop.permit_number || null,
     amenities: prop.amenities || [],
     images: [],
     last_synced_at: new Date().toISOString(),
     is_published: false,
     slug,
+    // New fields from enhanced API
+    year_built: prop.year_built || null,
+    service_charge_per_sqft: prop.service_charge || null,
+    view_type: prop.view || null,
+    floor_number: prop.floor || null,
+    parking_spaces: prop.parking || null,
   };
 }
 
-// Extract photo URLs from Bayut property
+// Extract photo URLs
 function extractPhotoUrls(prop: any): string[] {
   const urls: string[] = [];
   
-  if (prop.coverPhoto?.url) {
-    urls.push(prop.coverPhoto.url);
+  if (prop.cover_photo) {
+    urls.push(prop.cover_photo);
   }
   
-  if (prop.photos) {
+  if (prop.photos && Array.isArray(prop.photos)) {
     for (const photo of prop.photos) {
-      if (photo.url && !urls.includes(photo.url)) {
-        urls.push(photo.url);
+      const url = typeof photo === 'string' ? photo : photo.url;
+      if (url && !urls.includes(url)) {
+        urls.push(url);
       }
     }
   }
@@ -419,7 +608,6 @@ function extractPhotoUrls(prop: any): string[] {
 // Re-host photo to Supabase storage
 async function rehostPhoto(supabase: any, sourceUrl: string, propertyId: string): Promise<string | null> {
   try {
-    // Fetch the image
     const response = await fetch(sourceUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.status}`);
@@ -429,31 +617,26 @@ async function rehostPhoto(supabase: any, sourceUrl: string, propertyId: string)
     const arrayBuffer = await blob.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     
-    // Generate filename
     const urlHash = sourceUrl.split('/').pop()?.split('?')[0] || Date.now().toString();
-    const extension = sourceUrl.includes('.jpg') ? 'jpg' : sourceUrl.includes('.png') ? 'png' : 'jpg';
+    const extension = sourceUrl.includes('.png') ? 'png' : 'jpg';
     const filename = `bayut/${propertyId}/${urlHash}.${extension}`;
 
-    // Upload to storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('property-media')
       .upload(filename, uint8Array, {
         contentType: blob.type || 'image/jpeg',
         upsert: true,
       });
 
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
 
-    // Get public URL
     const { data: publicUrlData } = supabase.storage
       .from('property-media')
       .getPublicUrl(filename);
 
     return publicUrlData?.publicUrl || null;
   } catch (error) {
-    console.error('[Bayut Sync] Photo rehost error:', error);
+    console.error('[Bayut API] Photo rehost error:', error);
     return null;
   }
 }
