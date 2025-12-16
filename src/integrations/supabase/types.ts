@@ -2960,6 +2960,132 @@ export type Database = {
           },
         ]
       }
+      qa_answers: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_best_answer: boolean
+          question_id: string
+          updated_at: string
+          upvotes_count: number
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_best_answer?: boolean
+          question_id: string
+          updated_at?: string
+          upvotes_count?: number
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_best_answer?: boolean
+          question_id?: string
+          updated_at?: string
+          upvotes_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "qa_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_questions: {
+        Row: {
+          answers_count: number
+          best_answer_id: string | null
+          category: Database["public"]["Enums"]["qa_category"]
+          content: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          is_solved: boolean
+          title: string
+          updated_at: string
+          user_id: string
+          views_count: number
+        }
+        Insert: {
+          answers_count?: number
+          best_answer_id?: string | null
+          category?: Database["public"]["Enums"]["qa_category"]
+          content: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          is_solved?: boolean
+          title: string
+          updated_at?: string
+          user_id: string
+          views_count?: number
+        }
+        Update: {
+          answers_count?: number
+          best_answer_id?: string | null
+          category?: Database["public"]["Enums"]["qa_category"]
+          content?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          is_solved?: boolean
+          title?: string
+          updated_at?: string
+          user_id?: string
+          views_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_questions_best_answer_fkey"
+            columns: ["best_answer_id"]
+            isOneToOne: false
+            referencedRelation: "qa_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qa_votes: {
+        Row: {
+          answer_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          answer_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          answer_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qa_votes_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: false
+            referencedRelation: "qa_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limits: {
         Row: {
           count: number
@@ -3156,6 +3282,15 @@ export type Database = {
       channel_visibility: "all_members" | "elite_only"
       membership_status: "active" | "canceled" | "trial" | "expired"
       membership_tier: "free" | "investor" | "elite"
+      qa_category:
+        | "mortgages"
+        | "legal"
+        | "golden_visa"
+        | "property_management"
+        | "taxes"
+        | "off_plan"
+        | "snagging"
+        | "general"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3288,6 +3423,16 @@ export const Constants = {
       channel_visibility: ["all_members", "elite_only"],
       membership_status: ["active", "canceled", "trial", "expired"],
       membership_tier: ["free", "investor", "elite"],
+      qa_category: [
+        "mortgages",
+        "legal",
+        "golden_visa",
+        "property_management",
+        "taxes",
+        "off_plan",
+        "snagging",
+        "general",
+      ],
     },
   },
 } as const

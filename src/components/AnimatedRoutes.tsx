@@ -64,6 +64,8 @@ import MembersPage from "@/pages/community/MembersPage";
 import ConnectionsPage from "@/pages/community/ConnectionsPage";
 import MessagesPage from "@/pages/community/MessagesPage";
 import LeaderboardPage from "@/pages/community/LeaderboardPage";
+import QAPage from "@/pages/community/QAPage";
+import QuestionDetailPage from "@/pages/community/QuestionDetailPage";
 
 // Agent Portal Pages
 import AgentPortalLanding from "@/pages/agent-portal/AgentPortalLanding";
@@ -138,6 +140,8 @@ export function AnimatedRoutes() {
         {/* Community Hub Routes - Auth required, read-only gating in-page */}
         <Route path="/community" element={<ProtectedRoute><CommunityLayout /></ProtectedRoute>}>
           <Route index element={<DiscussionsPage />} />
+          <Route path="qa" element={<QAPage />} />
+          <Route path="qa/:questionId" element={<QuestionDetailPage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="connections" element={<ConnectionsPage />} />
