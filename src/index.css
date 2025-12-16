@@ -455,3 +455,75 @@
     @apply prose-invert;
   }
 }
+
+/* RTL Support */
+@layer utilities {
+  /* RTL-aware margin utilities */
+  [dir="rtl"] .ml-auto { margin-left: 0; margin-right: auto; }
+  [dir="rtl"] .mr-auto { margin-right: 0; margin-left: auto; }
+  [dir="rtl"] .ml-2 { margin-left: 0; margin-right: 0.5rem; }
+  [dir="rtl"] .mr-2 { margin-right: 0; margin-left: 0.5rem; }
+  [dir="rtl"] .ml-3 { margin-left: 0; margin-right: 0.75rem; }
+  [dir="rtl"] .mr-3 { margin-right: 0; margin-left: 0.75rem; }
+  [dir="rtl"] .ml-4 { margin-left: 0; margin-right: 1rem; }
+  [dir="rtl"] .mr-4 { margin-right: 0; margin-left: 1rem; }
+  
+  /* RTL-aware padding utilities */
+  [dir="rtl"] .pl-2 { padding-left: 0; padding-right: 0.5rem; }
+  [dir="rtl"] .pr-2 { padding-right: 0; padding-left: 0.5rem; }
+  [dir="rtl"] .pl-4 { padding-left: 0; padding-right: 1rem; }
+  [dir="rtl"] .pr-4 { padding-right: 0; padding-left: 1rem; }
+  
+  /* RTL-aware positioning */
+  [dir="rtl"] .left-0 { left: auto; right: 0; }
+  [dir="rtl"] .right-0 { right: auto; left: 0; }
+  [dir="rtl"] .left-4 { left: auto; right: 1rem; }
+  [dir="rtl"] .right-4 { right: auto; left: 1rem; }
+  
+  /* RTL-aware transforms */
+  [dir="rtl"] .translate-x-full { transform: translateX(-100%); }
+  [dir="rtl"] .-translate-x-full { transform: translateX(100%); }
+  
+  /* RTL-aware border radius */
+  [dir="rtl"] .rounded-l-lg { border-radius: 0 0.5rem 0.5rem 0; }
+  [dir="rtl"] .rounded-r-lg { border-radius: 0.5rem 0 0 0.5rem; }
+  
+  /* RTL-aware text alignment */
+  [dir="rtl"] .text-left { text-align: right; }
+  [dir="rtl"] .text-right { text-align: left; }
+  
+  /* RTL-aware flex direction */
+  [dir="rtl"] .flex-row { flex-direction: row-reverse; }
+  
+  /* Keep certain elements LTR in RTL context */
+  .ltr-always { direction: ltr; }
+  
+  /* RTL-aware gradients */
+  [dir="rtl"] .bg-gradient-to-r { background-image: linear-gradient(to left, var(--tw-gradient-stops)); }
+  [dir="rtl"] .bg-gradient-to-l { background-image: linear-gradient(to right, var(--tw-gradient-stops)); }
+  
+  /* Numbers and prices should stay LTR */
+  .ltr-numbers {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+}
+
+/* RTL-specific global styles */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  text-align: right;
+}
+
+/* Keep phone numbers, emails, and URLs in LTR */
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="number"] {
+  direction: ltr;
+  text-align: left;
+}

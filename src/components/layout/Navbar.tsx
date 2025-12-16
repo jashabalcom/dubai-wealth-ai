@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/BrandLogo";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
@@ -29,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { CurrencyPill } from "@/components/CurrencyPill";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 type NavLink = {
   label: string;
@@ -246,6 +248,7 @@ export function Navbar() {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-4">
+              <LanguageSelector />
               <CurrencyPill className={useDarkText ? "border-border" : "border-secondary-foreground/20"} />
               {user ? (
                 <>
@@ -488,7 +491,13 @@ export function Navbar() {
                   </motion.div>
                 );
               })}
-              <div className="flex flex-col gap-4 pt-6 border-t border-primary/20">
+              {/* Language and Currency */}
+              <div className="flex items-center gap-4 py-4 border-t border-primary/20">
+                <LanguageSelector />
+                <CurrencyPill />
+              </div>
+              
+              <div className="flex flex-col gap-4 pt-4 border-t border-primary/20">
                 {user ? (
                   <>
                     <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
