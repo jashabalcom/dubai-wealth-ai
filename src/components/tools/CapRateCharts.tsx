@@ -87,27 +87,27 @@ export function CapRateCharts({
 
   return (
     <Card className="bg-card border-border">
-      <CardHeader>
-        <CardTitle className="font-heading text-xl">Analysis Charts</CardTitle>
+      <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-2">
+        <CardTitle className="font-heading text-lg sm:text-xl">Analysis Charts</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
         <Tabs defaultValue="breakdown" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="breakdown">Income</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
-            <TabsTrigger value="comparison">Cap Rate</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 mb-4 overflow-x-auto">
+            <TabsTrigger value="breakdown" className="text-xs sm:text-sm">Income</TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
+            <TabsTrigger value="comparison" className="text-xs sm:text-sm">Cap Rate</TabsTrigger>
           </TabsList>
 
           <TabsContent value="breakdown" className="mt-0">
-            <div className="h-64">
+            <div className="h-52 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={noiBreakdownData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={45}
+                    outerRadius={65}
                     paddingAngle={5}
                     dataKey="value"
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
@@ -123,32 +123,33 @@ export function CapRateCharts({
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
+                      fontSize: '12px',
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex justify-center gap-6 mt-2">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-2">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-sm text-muted-foreground">NOI: {formatAED(noi)}</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">NOI: {formatAED(noi)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-sm text-muted-foreground">Expenses: {formatAED(totalExpenses)}</span>
+                <span className="text-xs sm:text-sm text-muted-foreground">Expenses: {formatAED(totalExpenses)}</span>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="expenses" className="mt-0">
-            <div className="h-64">
+            <div className="h-52 sm:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={expenseData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={65}
                     dataKey="value"
                     label={({ name, percent }) => percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''}
                     labelLine={false}
@@ -163,11 +164,13 @@ export function CapRateCharts({
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
+                      fontSize: '12px',
                     }}
                   />
                   <Legend 
                     verticalAlign="bottom" 
                     height={36}
+                    wrapperStyle={{ fontSize: '10px' }}
                     formatter={(value) => <span className="text-xs text-muted-foreground">{value}</span>}
                   />
                 </PieChart>
@@ -176,8 +179,8 @@ export function CapRateCharts({
           </TabsContent>
 
           <TabsContent value="comparison" className="mt-0">
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-52 sm:h-64 overflow-x-auto scrollbar-hide">
+              <ResponsiveContainer width="100%" height="100%" minWidth={350}>
                 <BarChart data={capRateComparisonData} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis 
@@ -185,13 +188,14 @@ export function CapRateCharts({
                     domain={[0, Math.max(benchmark.typicalCapRate.max + 2, capRate + 2)]}
                     tickFormatter={(v) => `${v}%`}
                     stroke="hsl(var(--muted-foreground))"
+                    tick={{ fontSize: 10 }}
                   />
                   <YAxis 
                     type="category" 
                     dataKey="name" 
-                    width={90}
+                    width={75}
                     stroke="hsl(var(--muted-foreground))"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 10 }}
                   />
                   <Tooltip 
                     formatter={(value: number) => [`${value.toFixed(2)}%`, 'Cap Rate']}
@@ -199,6 +203,7 @@ export function CapRateCharts({
                       backgroundColor: 'hsl(var(--card))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px',
+                      fontSize: '12px',
                     }}
                   />
                   <ReferenceLine 

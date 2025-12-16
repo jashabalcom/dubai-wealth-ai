@@ -51,19 +51,31 @@ export function AirbnbCharts({
   return (
     <div className="space-y-6">
       {/* Seasonal Revenue Bar Chart */}
-      <div className="p-6 rounded-2xl bg-card border border-border">
-        <h3 className="font-heading text-lg text-foreground mb-4">Revenue by Season</h3>
-        <div className="h-48">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border">
+        <h3 className="font-heading text-base sm:text-lg text-foreground mb-4">Revenue by Season</h3>
+        <div className="h-44 sm:h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={seasonalData} layout="vertical">
-              <XAxis type="number" tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} stroke="hsl(var(--muted-foreground))" />
-              <YAxis type="category" dataKey="season" width={100} tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+              <XAxis 
+                type="number" 
+                tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} 
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fontSize: 10 }}
+              />
+              <YAxis 
+                type="category" 
+                dataKey="season" 
+                width={90} 
+                tick={{ fontSize: 10 }} 
+                stroke="hsl(var(--muted-foreground))" 
+              />
               <Tooltip 
                 formatter={(value: number) => formatAED(value)}
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
               <Bar dataKey="revenue" radius={[0, 6, 6, 0]}>
@@ -77,17 +89,17 @@ export function AirbnbCharts({
       </div>
 
       {/* Expense Breakdown Pie */}
-      <div className="p-6 rounded-2xl bg-card border border-border">
-        <h3 className="font-heading text-lg text-foreground mb-4">Annual Expenses Breakdown</h3>
-        <div className="h-56">
+      <div className="p-4 sm:p-6 rounded-2xl bg-card border border-border">
+        <h3 className="font-heading text-base sm:text-lg text-foreground mb-4">Annual Expenses Breakdown</h3>
+        <div className="h-52 sm:h-56">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={expenseData}
                 cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={80}
+                cy="45%"
+                innerRadius={40}
+                outerRadius={65}
                 paddingAngle={3}
                 dataKey="value"
               >
@@ -100,10 +112,16 @@ export function AirbnbCharts({
                 contentStyle={{ 
                   backgroundColor: 'hsl(var(--card))', 
                   border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  fontSize: '12px',
                 }}
               />
-              <Legend />
+              <Legend 
+                layout="horizontal"
+                verticalAlign="bottom"
+                align="center"
+                wrapperStyle={{ fontSize: '10px', paddingTop: '8px' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
