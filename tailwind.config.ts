@@ -130,6 +130,27 @@ export default {
           "0%": { transform: "scaleX(0)" },
           "100%": { transform: "scaleX(1)" },
         },
+        "ripple": {
+          "0%": { transform: "scale(0)", opacity: "0.5" },
+          "100%": { transform: "scale(4)", opacity: "0" },
+        },
+        "border-glow": {
+          "0%, 100%": { borderColor: "hsl(var(--border))" },
+          "50%": { borderColor: "hsl(var(--gold))" },
+        },
+        "shimmer-gold": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "bounce-subtle": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        "press": {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(0.97)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -144,6 +165,11 @@ export default {
         "glow": "glow 2s ease-in-out infinite",
         "card-lift": "card-lift 0.3s ease-out forwards",
         "underline-grow": "underline-grow 0.3s ease-out forwards",
+        "ripple": "ripple 0.6s ease-out forwards",
+        "border-glow": "border-glow 2s ease-in-out infinite",
+        "shimmer-gold": "shimmer-gold 2s ease-in-out infinite",
+        "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
+        "press": "press 0.15s ease-out",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
