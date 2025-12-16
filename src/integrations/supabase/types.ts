@@ -455,10 +455,12 @@ export type Database = {
         Row: {
           active_listings: number | null
           average_agent_score: number | null
+          bayut_id: string | null
           created_at: string
           external_id: string
           id: string
           is_verified: boolean | null
+          last_synced_at: string | null
           license_number: string | null
           logo_url: string | null
           name: string
@@ -478,10 +480,12 @@ export type Database = {
         Insert: {
           active_listings?: number | null
           average_agent_score?: number | null
+          bayut_id?: string | null
           created_at?: string
           external_id: string
           id?: string
           is_verified?: boolean | null
+          last_synced_at?: string | null
           license_number?: string | null
           logo_url?: string | null
           name: string
@@ -501,10 +505,12 @@ export type Database = {
         Update: {
           active_listings?: number | null
           average_agent_score?: number | null
+          bayut_id?: string | null
           created_at?: string
           external_id?: string
           id?: string
           is_verified?: boolean | null
+          last_synced_at?: string | null
           license_number?: string | null
           logo_url?: string | null
           name?: string
@@ -527,6 +533,7 @@ export type Database = {
         Row: {
           agency_external_id: string | null
           agent_rating: number | null
+          bayut_id: string | null
           created_at: string
           email: string | null
           experience_since: number | null
@@ -536,6 +543,7 @@ export type Database = {
           is_trakheesi_verified: boolean | null
           is_verified: boolean | null
           languages: Json | null
+          last_synced_at: string | null
           name: string
           name_l1: string | null
           phone: string | null
@@ -553,6 +561,7 @@ export type Database = {
         Insert: {
           agency_external_id?: string | null
           agent_rating?: number | null
+          bayut_id?: string | null
           created_at?: string
           email?: string | null
           experience_since?: number | null
@@ -562,6 +571,7 @@ export type Database = {
           is_trakheesi_verified?: boolean | null
           is_verified?: boolean | null
           languages?: Json | null
+          last_synced_at?: string | null
           name: string
           name_l1?: string | null
           phone?: string | null
@@ -579,6 +589,7 @@ export type Database = {
         Update: {
           agency_external_id?: string | null
           agent_rating?: number | null
+          bayut_id?: string | null
           created_at?: string
           email?: string | null
           experience_since?: number | null
@@ -588,6 +599,7 @@ export type Database = {
           is_trakheesi_verified?: boolean | null
           is_verified?: boolean | null
           languages?: Json | null
+          last_synced_at?: string | null
           name?: string
           name_l1?: string | null
           phone?: string | null
