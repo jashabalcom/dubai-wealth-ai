@@ -30,7 +30,7 @@ const RSS_FEEDS = [
   },
 ];
 
-// Expanded keywords for better Dubai real estate content matching
+// Expanded keywords - now includes broader business/economic news that AI will give investor angle
 const DUBAI_KEYWORDS = [
   // Neighborhoods
   'palm jumeirah', 'downtown dubai', 'dubai marina', 'jvc', 'jumeirah village', 'business bay', 
@@ -39,13 +39,57 @@ const DUBAI_KEYWORDS = [
   'emaar', 'damac', 'nakheel', 'sobha', 'azizi', 'binghatti', 'ellington', 'meraas', 'omniyat',
   // Investment terms
   'yield', 'roi', 'off-plan', 'off plan', 'handover', 'golden visa', 'rera', 'dld', 'rental',
-  // General
+  // General real estate
   'dubai', 'uae', 'property', 'real estate', 'villa', 'apartment', 'townhouse', 'penthouse',
-  'developer', 'launch', 'project', 'investment', 'buyer', 'investor'
+  'developer', 'launch', 'project', 'investment', 'buyer', 'investor',
+  // Economic indicators (NEW - will get investor angle)
+  'gdp', 'economy', 'growth', 'inflation', 'interest rate', 'central bank',
+  // Tourism & hospitality (NEW - affects rental yields)
+  'tourism', 'hotel', 'visitor', 'expo', 'event', 'hospitality',
+  // Infrastructure (NEW - affects property values)
+  'metro', 'airport', 'road', 'infrastructure', 'development', 'transport',
+  // Business (NEW - economic health indicators)
+  'business', 'company', 'startup', 'expansion', 'headquarters'
 ];
 
-// Scrape article content using Firecrawl
-async function scrapeArticle(url: string, firecrawlKey: string): Promise<{ content: string; imageUrl: string | null } | null> {
+// Enhanced AI prompt for structured investor-angle content
+const INVESTOR_ANGLE_PROMPT = `You are a senior Dubai real estate investment analyst writing for sophisticated property investors.
+
+Your task: Analyze this news article and write a comprehensive investment-focused analysis.
+
+**IMPORTANT**: Even if the article is NOT directly about real estate, find and explain:
+- How this news could affect Dubai property values or rental yields
+- Which Dubai neighborhoods or property types might be impacted
+- Investment timing implications or opportunities
+- Indirect effects (tourism news = rental demand, infrastructure = property appreciation, etc.)
+
+Write your analysis with this EXACT structure using markdown:
+
+## Key Takeaway
+
+One powerful sentence summarizing the most important investment implication.
+
+## What's Happening
+
+2-3 paragraphs explaining the news clearly and concisely. Include any specific numbers, dates, or facts mentioned.
+
+## Investment Implications
+
+2-3 paragraphs analyzing how this affects Dubai real estate investors:
+- For direct real estate news: analyze market impact, pricing trends, demand shifts
+- For indirect news (tourism, economy, infrastructure): connect the dots to property values and rental yields
+- Mention specific Dubai areas that could be affected (Downtown, Marina, JVC, Palm, etc.)
+
+## Investor Action Items
+
+- 3-4 specific, actionable bullet points
+- Be concrete: mention property types, neighborhoods, or strategies
+- Include timing considerations if relevant
+
+Write 400-500 words total. Use professional, analytical tone. Be specific to Dubai market dynamics.`;
+
+// Scrape article content using Firecrawl with screenshot fallback
+async function scrapeArticle(url: string, firecrawlKey: string): Promise<{ content: string; imageUrl: string | null; screenshot: string | null } | null> {
   try {
     console.log(`[Firecrawl] Scraping: ${url}`);
     
@@ -57,8 +101,9 @@ async function scrapeArticle(url: string, firecrawlKey: string): Promise<{ conte
       },
       body: JSON.stringify({
         url,
-        formats: ['markdown'],
+        formats: ['markdown', 'screenshot'],
         onlyMainContent: true,
+        screenshot: true,
       }),
     });
 
@@ -70,20 +115,46 @@ async function scrapeArticle(url: string, firecrawlKey: string): Promise<{ conte
     const data = await response.json();
     const markdown = data.data?.markdown || data.markdown || '';
     const ogImage = data.data?.metadata?.ogImage || data.metadata?.ogImage || null;
+    const screenshot = data.data?.screenshot || data.screenshot || null;
     
-    console.log(`[Firecrawl] Got ${markdown.length} chars, image: ${ogImage ? 'yes' : 'no'}`);
+    console.log(`[Firecrawl] Got ${markdown.length} chars, OG image: ${ogImage ? 'yes' : 'no'}, screenshot: ${screenshot ? 'yes' : 'no'}`);
     
-    return { content: markdown, imageUrl: ogImage };
+    return { content: markdown, imageUrl: ogImage, screenshot };
   } catch (error) {
     console.error(`[Firecrawl] Error:`, error);
     return null;
   }
 }
 
-// Generate AI summary using Lovable AI
-async function generateSummary(title: string, content: string, lovableKey: string): Promise<string | null> {
+// Extract first image URL from markdown content
+function extractImageFromMarkdown(markdown: string): string | null {
+  // Try markdown image syntax: ![alt](url)
+  const mdMatch = markdown.match(/!\[.*?\]\((https?:\/\/[^)]+)\)/);
+  if (mdMatch) return mdMatch[1];
+  
+  // Try HTML img tag
+  const imgMatch = markdown.match(/<img[^>]*src="(https?:\/\/[^"]+)"/);
+  if (imgMatch) return imgMatch[1];
+  
+  return null;
+}
+
+// Category-specific placeholder images
+function getCategoryPlaceholder(category: string): string {
+  const placeholders: Record<string, string> = {
+    market_trends: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&h=450&fit=crop', // Dubai skyline
+    developer_news: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800&h=450&fit=crop', // Construction
+    golden_visa: 'https://images.unsplash.com/photo-1526495124232-a04e1849168c?w=800&h=450&fit=crop', // Passport/travel
+    regulations: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&h=450&fit=crop', // Legal documents
+    off_plan: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=450&fit=crop', // Modern building
+  };
+  return placeholders[category] || placeholders.market_trends;
+}
+
+// Generate enhanced AI analysis using Lovable AI
+async function generateInvestorAnalysis(title: string, content: string, lovableKey: string): Promise<string | null> {
   try {
-    console.log(`[AI] Generating summary for: ${title.slice(0, 50)}...`);
+    console.log(`[AI] Generating investor analysis for: ${title.slice(0, 50)}...`);
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -96,19 +167,11 @@ async function generateSummary(title: string, content: string, lovableKey: strin
         messages: [
           {
             role: 'system',
-            content: `You are a Dubai real estate investment analyst. Write a concise, investor-focused summary (150-200 words) of this news article. 
-
-Focus on:
-- Key takeaway for investors (1 sentence)
-- What this means for the Dubai property market
-- Any investment opportunities or risks mentioned
-- Relevant numbers/data if present
-
-Write in a professional, analytical tone. Do NOT use markdown headers. Just write flowing paragraphs.`
+            content: INVESTOR_ANGLE_PROMPT
           },
           {
             role: 'user',
-            content: `Title: ${title}\n\nArticle Content:\n${content.slice(0, 4000)}`
+            content: `Article Title: ${title}\n\nArticle Content:\n${content.slice(0, 6000)}`
           }
         ],
       }),
@@ -116,14 +179,21 @@ Write in a professional, analytical tone. Do NOT use markdown headers. Just writ
 
     if (!response.ok) {
       console.error(`[AI] Failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`[AI] Error response: ${errorText}`);
       return null;
     }
 
     const data = await response.json();
-    const summary = data.choices?.[0]?.message?.content || '';
+    let analysis = data.choices?.[0]?.message?.content || '';
     
-    console.log(`[AI] Generated ${summary.length} chars summary`);
-    return summary;
+    // Clean up any markdown code blocks if present
+    analysis = analysis.replace(/```markdown\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    const wordCount = analysis.split(/\s+/).length;
+    console.log(`[AI] Generated ${wordCount} words analysis`);
+    
+    return analysis;
   } catch (error) {
     console.error(`[AI] Error:`, error);
     return null;
@@ -272,13 +342,14 @@ serve(async (req) => {
     const lovableKey = Deno.env.get('LOVABLE_API_KEY');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('Starting RSS sync with Firecrawl + AI...');
+    console.log('Starting enhanced RSS sync with Firecrawl + AI investor analysis...');
     console.log(`Firecrawl key: ${firecrawlKey ? 'configured' : 'missing'}`);
     console.log(`Lovable AI key: ${lovableKey ? 'configured' : 'missing'}`);
     
     let totalSynced = 0;
     let totalSkipped = 0;
     let totalEnriched = 0;
+    let totalImages = 0;
     const errors: string[] = [];
 
     for (const feed of RSS_FEEDS) {
@@ -296,9 +367,9 @@ serve(async (req) => {
 
         if (!existing) {
           let enrichedContent = null;
-          let enrichedImage = article.image_url;
+          let finalImageUrl = article.image_url;
 
-          // Try to scrape and generate summary if keys are available
+          // Try to scrape and generate analysis if keys are available
           if (firecrawlKey && lovableKey) {
             // Rate limit: 600ms between scrapes
             await delay(600);
@@ -306,31 +377,58 @@ serve(async (req) => {
             const scraped = await scrapeArticle(article.source_url, firecrawlKey);
             
             if (scraped) {
-              // Use OG image from scrape if we don't have one
-              if (!enrichedImage && scraped.imageUrl) {
-                enrichedImage = scraped.imageUrl;
+              // Image fallback chain:
+              // 1. RSS feed image (already set)
+              // 2. OG image from Firecrawl
+              // 3. First image from markdown content
+              // 4. Screenshot from Firecrawl (base64 - would need storage, skip for now)
+              // 5. Category-specific placeholder
+              
+              if (!finalImageUrl && scraped.imageUrl) {
+                finalImageUrl = scraped.imageUrl;
+                console.log(`[Image] Using OG image from scrape`);
               }
               
-              // Generate AI summary
+              if (!finalImageUrl && scraped.content) {
+                const mdImage = extractImageFromMarkdown(scraped.content);
+                if (mdImage) {
+                  finalImageUrl = mdImage;
+                  console.log(`[Image] Using image extracted from markdown`);
+                }
+              }
+              
+              // Generate enhanced AI investor analysis
               if (scraped.content && scraped.content.length > 100) {
                 await delay(300); // Small delay between AI calls
-                enrichedContent = await generateSummary(article.title, scraped.content, lovableKey);
+                enrichedContent = await generateInvestorAnalysis(article.title, scraped.content, lovableKey);
                 if (enrichedContent) {
                   totalEnriched++;
+                  console.log(`[AI] ✓ Generated investor analysis for: ${article.title.slice(0, 40)}...`);
                 }
               }
             }
           }
 
+          // Final fallback: category placeholder
+          if (!finalImageUrl) {
+            finalImageUrl = getCategoryPlaceholder(article.category);
+            console.log(`[Image] Using category placeholder for ${article.category}`);
+          } else {
+            totalImages++;
+          }
+
+          const wordCount = enrichedContent ? enrichedContent.split(/\s+/).length : 0;
+          const readingTime = Math.max(2, Math.ceil(wordCount / 200));
+
           const { error } = await supabase
             .from('news_articles')
             .insert({
               ...article,
-              image_url: enrichedImage,
-              content: enrichedContent, // AI-generated summary
+              image_url: finalImageUrl,
+              content: enrichedContent, // Enhanced AI investor analysis
               article_type: 'headline',
               status: 'published',
-              reading_time_minutes: enrichedContent ? Math.ceil(enrichedContent.split(' ').length / 200) : 2,
+              reading_time_minutes: readingTime,
             });
 
           if (error) {
@@ -338,6 +436,7 @@ serve(async (req) => {
             errors.push(error.message);
           } else {
             totalSynced++;
+            console.log(`[Saved] ${article.title.slice(0, 50)}... (${wordCount} words, image: ${finalImageUrl ? 'yes' : 'no'})`);
           }
         } else {
           totalSkipped++;
@@ -345,13 +444,18 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Sync complete: ${totalSynced} new, ${totalEnriched} enriched, ${totalSkipped} skipped`);
+    console.log('=== SYNC COMPLETE ===');
+    console.log(`New articles: ${totalSynced}`);
+    console.log(`With AI analysis: ${totalEnriched}`);
+    console.log(`With real images: ${totalImages}`);
+    console.log(`Skipped (existing): ${totalSkipped}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         synced: totalSynced, 
         enriched: totalEnriched,
+        withImages: totalImages,
         skipped: totalSkipped,
         errors: errors.length > 0 ? errors : undefined
       }),
