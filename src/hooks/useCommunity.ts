@@ -80,7 +80,7 @@ export function useCommunity() {
     enabled: !!user,
   });
 
-  const { data: posts = [], isLoading: postsLoading } = useQuery({
+  const { data: posts = [], isLoading: postsLoading, refetch: refetchPosts } = useQuery({
     queryKey: ['community-posts', selectedChannelId],
     queryFn: async () => {
       if (!selectedChannelId) return [];
@@ -361,5 +361,6 @@ export function useCommunity() {
     toggleLike,
     getPostComments,
     addComment,
+    refetchPosts,
   };
 }

@@ -82,7 +82,7 @@ export function useQA() {
   const [selectedCategory, setSelectedCategory] = useState<QACategory | 'all'>('all');
 
   // Fetch all questions
-  const { data: questions = [], isLoading: questionsLoading } = useQuery({
+  const { data: questions = [], isLoading: questionsLoading, refetch: refetchQuestions } = useQuery({
     queryKey: ['qa-questions', selectedCategory],
     queryFn: async () => {
       let query = supabase
@@ -367,5 +367,6 @@ export function useQA() {
     createAnswer,
     voteAnswer,
     markBestAnswer,
+    refetchQuestions,
   };
 }

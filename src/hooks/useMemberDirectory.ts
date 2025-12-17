@@ -39,7 +39,7 @@ export function useMemberDirectory() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   // Fetch all directory-visible members using secure function
-  const { data: members = [], isLoading: membersLoading } = useQuery({
+  const { data: members = [], isLoading: membersLoading, refetch: refetchMembers } = useQuery({
     queryKey: ['directory-members'],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_directory_members');
@@ -136,5 +136,6 @@ export function useMemberDirectory() {
     filterOptions,
     sortBy,
     setSortBy,
+    refetchMembers,
   };
 }

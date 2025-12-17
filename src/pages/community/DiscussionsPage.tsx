@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Hash, MessageSquarePlus } from 'lucide-react';
 import { ChannelList } from '@/components/community/ChannelList';
@@ -8,6 +8,7 @@ import { CategoryFilterPills } from '@/components/community/CategoryFilterPills'
 import { CommunityInfoCard } from '@/components/community/CommunityInfoCard';
 import { PageTransition } from '@/components/community/PageTransition';
 import { ReadOnlyBadge } from '@/components/freemium/ReadOnlyBadge';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { useCommunity } from '@/hooks/useCommunity';
 import { useProfile } from '@/hooks/useProfile';
 import { useQueryClient } from '@tanstack/react-query';
@@ -40,7 +41,12 @@ export default function DiscussionsPage() {
     toggleLike,
     getPostComments,
     addComment,
+    refetchPosts,
   } = useCommunity();
+
+  const handleRefresh = useCallback(async () => {
+    await refetchPosts();
+  }, [refetchPosts]);
 
   // Auto-select first channel
   useEffect(() => {
@@ -98,6 +104,7 @@ export default function DiscussionsPage() {
         </motion.aside>
 
         {/* Main Content - Posts */}
+        <PullToRefresh onRefresh={handleRefresh} disabled={postsLoading}>
         <div className="lg:col-span-6 space-y-5">
           {/* Mobile Category Filter Pills */}
           <div className="lg:hidden">
@@ -201,6 +208,7 @@ export default function DiscussionsPage() {
             </motion.div>
           )}
         </div>
+        </PullToRefresh>
 
         {/* Right Sidebar - Community Info (Desktop only) */}
         <aside className="hidden lg:block lg:col-span-3">
