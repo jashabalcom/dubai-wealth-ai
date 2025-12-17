@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Grid3X3, List, SortAsc } from 'lucide-react';
 import { MemberCard } from '@/components/community/MemberCard';
 import { DirectoryFilters } from '@/components/community/DirectoryFilters';
 import { PageTransition } from '@/components/community/PageTransition';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -41,10 +42,16 @@ export default function MembersPage() {
     filterOptions,
     sortBy,
     setSortBy,
+    refetchMembers,
   } = useMemberDirectory();
+
+  const handleRefresh = useCallback(async () => {
+    await refetchMembers();
+  }, [refetchMembers]);
 
   return (
     <PageTransition>
+      <PullToRefresh onRefresh={handleRefresh} disabled={membersLoading}>
       <div className="space-y-5">
         {/* Header with controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -184,6 +191,7 @@ export default function MembersPage() {
         </div>
       </div>
     </div>
-  </PageTransition>
+      </PullToRefresh>
+    </PageTransition>
   );
 }

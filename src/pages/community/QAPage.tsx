@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { HelpCircle, Search, Filter, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,15 @@ import { useQA, QA_CATEGORIES, QACategory } from '@/hooks/useQA';
 import { QuestionCard } from '@/components/community/QuestionCard';
 import { AskQuestionDialog } from '@/components/community/AskQuestionDialog';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 
 export default function QAPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { questions, questionsLoading, selectedCategory, setSelectedCategory } = useQA();
+  const { questions, questionsLoading, selectedCategory, setSelectedCategory, refetchQuestions } = useQA();
+
+  const handleRefresh = useCallback(async () => {
+    await refetchQuestions();
+  }, [refetchQuestions]);
 
   // Filter questions by search
   const filteredQuestions = questions.filter(q => 
@@ -26,6 +31,7 @@ export default function QAPage() {
   const solvedQuestions = filteredQuestions.filter(q => q.is_solved);
 
   return (
+    <PullToRefresh onRefresh={handleRefresh} disabled={questionsLoading}>
     <div className="space-y-6">
       {/* Header */}
       <motion.div
@@ -169,5 +175,6 @@ export default function QAPage() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }
