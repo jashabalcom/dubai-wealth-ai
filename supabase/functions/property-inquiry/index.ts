@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { escapeHtml } from "../_shared/html-escape.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -15,17 +16,6 @@ const logStep = (step: string, details?: any) => {
 
 // Admin email for receiving Basic tier inquiries
 const ADMIN_EMAIL = Deno.env.get("ADMIN_INQUIRY_EMAIL") || "admin@dubaiwealth.club";
-
-// HTML escape function to prevent injection
-function escapeHtml(text: string | undefined | null): string {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
 
 interface InquiryRequest {
   propertyId: string;

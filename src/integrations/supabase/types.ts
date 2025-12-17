@@ -3560,6 +3560,13 @@ export type Database = {
           sample_ids: string[]
         }[]
       }
+      get_property_counts: {
+        Args: never
+        Returns: {
+          area_counts: Json
+          developer_counts: Json
+        }[]
+      }
       get_public_agent_profile: {
         Args: { agent_id: string }
         Returns: {
