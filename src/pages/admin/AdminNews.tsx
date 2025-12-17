@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Loader2,
   Eye,
-  Pencil
+  Pencil,
+  Image as ImageIcon
 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
@@ -45,6 +46,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -116,7 +124,7 @@ function ArticlePreviewModal({ article, onPublish }: { article: NewsArticle; onP
   );
 }
 
-// Edit Modal Component
+// Edit Modal Component with full editing capabilities
 function ArticleEditModal({ 
   article, 
   onSave, 
@@ -128,13 +136,23 @@ function ArticleEditModal({
 }) {
   const [title, setTitle] = useState(article.title);
   const [excerpt, setExcerpt] = useState(article.excerpt || '');
+  const [content, setContent] = useState(article.content || '');
+  const [imageUrl, setImageUrl] = useState(article.image_url || '');
+  const [category, setCategory] = useState(article.category);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleSave = async () => {
-    await onSave({ title, excerpt });
+    await onSave({ 
+      title, 
+      excerpt, 
+      content, 
+      image_url: imageUrl || null,
+      category 
+    });
   };
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <Pencil className="h-5 w-5" />
@@ -143,6 +161,7 @@ function ArticleEditModal({
       </DialogHeader>
       
       <div className="space-y-4 pt-4">
+        {/* Title */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Title</label>
           <Input 
@@ -152,22 +171,104 @@ function ArticleEditModal({
           />
         </div>
 
+        {/* Excerpt */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Excerpt</label>
           <Textarea 
             value={excerpt} 
             onChange={(e) => setExcerpt(e.target.value)}
-            placeholder="Brief description"
-            rows={3}
+            placeholder="Brief description shown in article cards"
+            rows={2}
           />
         </div>
 
-        <div className="text-xs text-muted-foreground">
-          Note: Full content editing is available in the database. This quick edit is for title/excerpt refinements.
+        {/* Category */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Category</label>
+          <Select value={category} onValueChange={(val) => setCategory(val as typeof category)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Image URL */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium flex items-center gap-2">
+            <ImageIcon className="h-4 w-4" />
+            Image URL
+          </label>
+          <Input 
+            value={imageUrl} 
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://example.com/image.jpg"
+          />
+          {imageUrl && (
+            <div className="mt-2 rounded-lg overflow-hidden bg-muted aspect-[21/9] max-w-md">
+              <img 
+                src={imageUrl} 
+                alt="Preview" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Content with Preview Toggle */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Content (Markdown)</label>
+            <div className="flex gap-1">
+              <Button 
+                type="button" 
+                size="sm" 
+                variant={!showPreview ? "default" : "outline"}
+                onClick={() => setShowPreview(false)}
+              >
+                Edit
+              </Button>
+              <Button 
+                type="button" 
+                size="sm" 
+                variant={showPreview ? "default" : "outline"}
+                onClick={() => setShowPreview(true)}
+              >
+                Preview
+              </Button>
+            </div>
+          </div>
+          
+          {showPreview ? (
+            <div className="border border-border rounded-lg p-4 min-h-[300px] max-h-[400px] overflow-y-auto bg-background">
+              <article className="prose-luxury prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {content || '*No content yet*'}
+                </ReactMarkdown>
+              </article>
+            </div>
+          ) : (
+            <Textarea 
+              value={content} 
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="## Key Takeaways&#10;&#10;- Point one&#10;- Point two&#10;&#10;## Analysis&#10;&#10;Full article content in markdown..."
+              rows={15}
+              className="font-mono text-sm"
+            />
+          )}
         </div>
       </div>
 
-      <DialogFooter>
+      <DialogFooter className="mt-4">
         <Button onClick={handleSave} disabled={isSaving}>
           {isSaving ? (
             <>
