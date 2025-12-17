@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 const PAGE_SIZE = 24;
 
@@ -190,44 +191,43 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
     }
   }, [buildQuery, applySorting]);
 
-  // Fetch area and developer counts (for autocomplete)
+  // Fetch area and developer counts using server-side aggregation
   const fetchCounts = useCallback(async () => {
-    // Fetch all areas with counts
-    const { data: areaData } = await supabase
-      .from('properties')
-      .select('location_area')
-      .eq('status', 'available');
+    try {
+      const { data, error } = await supabase.rpc('get_property_counts');
+      
+      if (error) {
+        console.error('Error fetching property counts:', error);
+        return;
+      }
 
-    if (areaData) {
-      const areaCounts: Record<string, number> = {};
-      areaData.forEach(p => {
-        areaCounts[p.location_area] = (areaCounts[p.location_area] || 0) + 1;
-      });
-      setPropertyCounts(areaCounts);
-    }
-
-    // Fetch all developers with counts
-    const { data: devData } = await supabase
-      .from('properties')
-      .select('developer_name')
-      .eq('status', 'available')
-      .not('developer_name', 'is', null);
-
-    if (devData) {
-      const devCounts: Record<string, number> = {};
-      devData.forEach(p => {
-        if (p.developer_name) {
-          devCounts[p.developer_name] = (devCounts[p.developer_name] || 0) + 1;
+      if (data && data.length > 0) {
+        const { area_counts, developer_counts } = data[0];
+        if (area_counts) {
+          setPropertyCounts(area_counts as Record<string, number>);
         }
-      });
-      setDeveloperCounts(devCounts);
+        if (developer_counts) {
+          setDeveloperCounts(developer_counts as Record<string, number>);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching property counts:', error);
     }
   }, []);
 
-  // Load more function
-  const loadMore = useCallback(() => {
+  // Load more function with error handling
+  const loadMore = useCallback(async () => {
     if (!isLoadingMore && hasMore) {
-      fetchProperties(false);
+      try {
+        await fetchProperties(false);
+      } catch (error) {
+        console.error('Error loading more properties:', error);
+        toast({
+          title: "Error loading properties",
+          description: "Failed to load more properties. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   }, [isLoadingMore, hasMore, fetchProperties]);
 

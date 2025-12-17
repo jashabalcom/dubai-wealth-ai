@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { escapeHtml } from "../_shared/html-escape.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -24,16 +25,6 @@ interface MortgageLeadEmailRequest {
     purchase_timeline: string;
     first_time_buyer: boolean;
   };
-}
-
-function escapeHtml(text: string | undefined | null): string {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
 }
 
 const formatAED = (amount: number): string => {

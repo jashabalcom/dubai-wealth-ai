@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { escapeHtml } from "../_shared/html-escape.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -22,17 +23,6 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, name }: WelcomeEmailRequest = await req.json();
 
     console.log(`Sending welcome email to: ${email}`);
-
-    // Escape HTML to prevent injection
-    const escapeHtml = (text: string | undefined | null): string => {
-      if (!text) return '';
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    };
 
     const rawFirstName = name?.split(" ")[0] || "Investor";
     const firstName = escapeHtml(rawFirstName);
