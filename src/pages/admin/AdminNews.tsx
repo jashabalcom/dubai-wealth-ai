@@ -202,6 +202,7 @@ export default function AdminNews() {
   const [generateUrl, setGenerateUrl] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   const handleSync = async () => {
     try {
@@ -216,6 +217,29 @@ export default function AdminNews() {
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleBackfill = async () => {
+    setIsBackfilling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('backfill-news-content');
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Backfill Complete',
+        description: `Processed ${data.processed} articles, ${data.failed} failed`,
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Backfill Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsBackfilling(false);
     }
   };
 
@@ -320,6 +344,20 @@ export default function AdminNews() {
                   <RefreshCw className="h-4 w-4 mr-2" />
                 )}
                 Sync RSS Feeds
+              </Button>
+
+              <Button 
+                onClick={handleBackfill} 
+                disabled={isBackfilling}
+                variant="outline"
+                className="border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+              >
+                {isBackfilling ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 mr-2" />
+                )}
+                Regenerate All Headlines
               </Button>
 
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

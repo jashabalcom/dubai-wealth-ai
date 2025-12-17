@@ -101,3 +101,6 @@ verify_jwt = false
 
 [functions.send-mortgage-lead-email]
 verify_jwt = false
+
+[functions.backfill-news-content]
+verify_jwt = false
