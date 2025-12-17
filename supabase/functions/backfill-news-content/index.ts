@@ -6,6 +6,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Decode HTML entities (numeric and named)
+function decodeHtmlEntities(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
+    .replace(/&hellip;/g, '...')
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&rdquo;/g, '"')
+    .replace(/&ldquo;/g, '"')
+    .trim();
+}
+
 const INVESTOR_ANGLE_PROMPT = `You are a senior Dubai real estate investment analyst writing for high-net-worth investors.
 
 TASK: Transform this news article into a 400-500 word investment analysis that explains why this matters to someone investing in Dubai real estate.
@@ -187,10 +209,12 @@ serve(async (req) => {
         const wordCount = aiContent.split(/\s+/).length;
         const readingTime = Math.ceil(wordCount / 200);
 
-        // Update article
+        // Update article with decoded title
+        const cleanTitle = decodeHtmlEntities(article.title);
         const { error: updateError } = await supabase
           .from('news_articles')
           .update({
+            title: cleanTitle,
             content: aiContent,
             image_url: imageUrl,
             reading_time_minutes: readingTime,

@@ -6,6 +6,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Decode HTML entities (numeric and named)
+function decodeHtmlEntities(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(parseInt(num, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&mdash;/g, '—')
+    .replace(/&ndash;/g, '–')
+    .replace(/&hellip;/g, '...')
+    .replace(/&rsquo;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&rdquo;/g, '"')
+    .replace(/&ldquo;/g, '"')
+    .trim();
+}
+
 // RSS Feed sources focused on Dubai real estate - VERIFIED WORKING as of Dec 2024
 const RSS_FEEDS = [
   {
@@ -276,9 +298,9 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: s
         if (srcsetMatch) imageUrl = srcsetMatch[1];
       }
 
-      // Clean up title and description
-      const cleanTitle = title.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim();
-      const cleanDescription = description.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim().slice(0, 400);
+      // Clean up title and description with HTML entity decoding
+      const cleanTitle = decodeHtmlEntities(title.replace(/<[^>]*>/g, ''));
+      const cleanDescription = decodeHtmlEntities(description.replace(/<[^>]*>/g, '')).slice(0, 400);
 
       if (!cleanTitle || !link) {
         continue;
