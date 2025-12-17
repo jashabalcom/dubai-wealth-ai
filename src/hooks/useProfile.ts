@@ -13,11 +13,14 @@ export interface Profile {
   budget_range: string | null;
   timeline: string | null;
   investment_goal: string | null;
+  bio?: string | null;
+  looking_for?: string | null;
+  linkedin_url?: string | null;
   membership_tier: 'free' | 'investor' | 'elite';
-  membership_status: 'active' | 'canceled' | 'trial' | 'expired';
-  membership_renews_at: string | null;
+  membership_status?: 'active' | 'canceled' | 'trial' | 'expired';
+  membership_renews_at?: string | null;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface UserPost {
@@ -47,21 +50,34 @@ export function useProfile(userId?: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const targetUserId = userId || user?.id;
+  const isOwnProfile = user?.id === targetUserId;
 
-  // Fetch profile
+  // Fetch profile - use direct query for own profile, secure function for others
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', targetUserId],
     queryFn: async () => {
       if (!targetUserId) return null;
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', targetUserId)
-        .maybeSingle();
+      // If viewing own profile, query directly (RLS allows this)
+      if (isOwnProfile) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', targetUserId)
+          .maybeSingle();
+        if (error) throw error;
+        return data as Profile | null;
+      }
+      
+      // For other users, use secure function that only returns safe columns
+      const { data, error } = await supabase.rpc('get_public_profile', {
+        profile_id: targetUserId
+      });
 
       if (error) throw error;
-      return data as Profile | null;
+      // The function returns an array, get first item
+      const profileData = Array.isArray(data) ? data[0] : data;
+      return profileData as Profile | null;
     },
     enabled: !!targetUserId,
   });
@@ -190,6 +206,6 @@ export function useProfile(userId?: string) {
     commentsLoading,
     updateProfile,
     uploadAvatar,
-    isOwnProfile: user?.id === targetUserId,
+    isOwnProfile,
   };
 }

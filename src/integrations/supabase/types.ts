@@ -3472,7 +3472,35 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      get_active_agents: {
+        Args: never
+        Returns: {
+          areas_covered: string[]
+          avatar_url: string
+          bio: string
+          brokerage_id: string
+          full_name: string
+          id: string
+          is_verified: boolean
+          languages: string[]
+          specializations: string[]
+          subscription_tier: Database["public"]["Enums"]["agent_tier"]
+          total_listings: number
+          years_experience: number
+        }[]
+      }
       get_agent_id_for_user: { Args: never; Returns: string }
+      get_community_profile: {
+        Args: { user_uuid: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+          level: number
+          membership_tier: Database["public"]["Enums"]["membership_tier"]
+          points: number
+        }[]
+      }
       get_community_stats: {
         Args: never
         Returns: {
