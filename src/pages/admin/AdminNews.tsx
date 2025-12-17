@@ -16,6 +16,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
+import { ImageUploader } from '@/components/admin/ImageUploader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -199,19 +200,16 @@ function ArticleEditModal({
           </Select>
         </div>
 
-        {/* Image URL */}
-        <div className="space-y-2">
+        {/* Image */}
+        <div className="space-y-3">
           <label className="text-sm font-medium flex items-center gap-2">
             <ImageIcon className="h-4 w-4" />
-            Image URL
+            Article Image
           </label>
-          <Input 
-            value={imageUrl} 
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
+          
+          {/* Current image preview */}
           {imageUrl && (
-            <div className="mt-2 rounded-lg overflow-hidden bg-muted aspect-[21/9] max-w-md">
+            <div className="rounded-lg overflow-hidden bg-muted aspect-[21/9] max-w-md">
               <img 
                 src={imageUrl} 
                 alt="Preview" 
@@ -222,6 +220,27 @@ function ArticleEditModal({
               />
             </div>
           )}
+
+          {/* Upload option */}
+          <ImageUploader
+            currentImageUrl={imageUrl || null}
+            onUpload={(url) => setImageUrl(url)}
+            bucket="post-images"
+            folder="news"
+            aspectRatio={21/9}
+            label="Upload Replacement Image"
+            previewClassName="hidden"
+          />
+
+          {/* URL input fallback */}
+          <div className="space-y-1">
+            <span className="text-xs text-muted-foreground">Or paste image URL:</span>
+            <Input 
+              value={imageUrl} 
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+            />
+          </div>
         </div>
 
         {/* Content with Preview Toggle */}
