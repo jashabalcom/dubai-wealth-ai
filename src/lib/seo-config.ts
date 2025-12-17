@@ -5,7 +5,7 @@ export const SITE_CONFIG = {
   name: 'Dubai Wealth Hub',
   tagline: 'AI-Powered Real Estate Investment Platform',
   url: 'https://dubaiwealthhub.com',
-  logo: 'https://dubaiwealthhub.com/logo.png',
+  logo: 'https://dubaiwealthhub.com/images/og-image.png',
   twitter: '@DubaiWealthHub',
   author: 'Balcom Privé',
   locale: 'en_US',

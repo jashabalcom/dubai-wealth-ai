@@ -18,7 +18,7 @@ export function SEOHead({
   description,
   keywords = [],
   canonical,
-  ogImage = 'https://lovable.dev/opengraph-image-p98pqg.png',
+  ogImage = 'https://dubaiwealthhub.com/images/og-image.png',
   ogType = 'website',
   noIndex = false,
   structuredData,
