@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.e83e2781268742608c66a76f029972ec',
   appName: 'Dubai Wealth Hub',
   webDir: 'dist',
-  server: {
-    url: 'https://e83e2781-2687-4260-8c66-a76f029972ec.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
   ios: {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
