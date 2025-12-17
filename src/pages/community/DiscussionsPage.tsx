@@ -104,8 +104,8 @@ export default function DiscussionsPage() {
         </motion.aside>
 
         {/* Main Content - Posts */}
-        <PullToRefresh onRefresh={handleRefresh} disabled={postsLoading}>
         <div className="lg:col-span-6 space-y-5">
+          <PullToRefresh onRefresh={handleRefresh} disabled={postsLoading}>
           {/* Mobile Category Filter Pills */}
           <div className="lg:hidden">
             {!channelsLoading && (
@@ -207,8 +207,8 @@ export default function DiscussionsPage() {
               ))}
             </motion.div>
           )}
+          </PullToRefresh>
         </div>
-        </PullToRefresh>
 
         {/* Right Sidebar - Community Info (Desktop only) */}
         <aside className="hidden lg:block lg:col-span-3">
