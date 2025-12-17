@@ -695,6 +695,18 @@ export default function AdminNews() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <ArticleEditModal 
+                            article={article}
+                            onSave={(updates) => handleSaveEdit(article.id, updates)}
+                            isSaving={isSaving}
+                          />
+                        </Dialog>
                         <a
                           href={article.source_url}
                           target="_blank"
