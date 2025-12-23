@@ -1225,11 +1225,25 @@ serve(async (req) => {
                     totalPhotosRehosted += imageResult.rehostedCount;
                     totalPhotosCdn += imageResult.cdnCount;
                   } else {
-                    // LITE MODE: Just extract cover photo URL for reference
-                    if (prop.media?.cover_photo) {
-                      imageResult.cdnGalleryUrls = [prop.media.cover_photo];
-                      imageResult.cdnCount = 1;
-                      totalPhotosCdn++;
+                    // LITE MODE: Rehost ONLY the cover photo to Supabase (owned image)
+                    // This avoids Bayut CDN exposure while keeping sync fast
+                    const coverPhotoUrl = prop.media?.cover_photo || prop.coverPhoto?.url;
+                    if (coverPhotoUrl) {
+                      try {
+                        const rehostedCoverUrl = await rehostPhoto(supabase, coverPhotoUrl, externalId, 'gallery');
+                        if (rehostedCoverUrl) {
+                          imageResult.rehostedImages = [rehostedCoverUrl];
+                          imageResult.rehostedCount = 1;
+                          totalPhotosRehosted++;
+                          console.log(`[Bayut API] Lite mode: rehosted cover for ${externalId}`);
+                        } else {
+                          // Fallback: if rehost fails, skip image entirely (don't expose CDN)
+                          console.warn(`[Bayut API] Lite mode: cover rehost failed for ${externalId}, skipping image`);
+                        }
+                      } catch (coverError) {
+                        console.error(`[Bayut API] Lite mode cover rehost error for ${externalId}:`, coverError);
+                        // Don't add CDN URL - we want owned images only
+                      }
                     }
                   }
 
