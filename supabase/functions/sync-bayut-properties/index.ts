@@ -16,13 +16,14 @@ const BATCH_SIZE = 20;
 const BATCH_COOLDOWN_MS = 5000; // 5 seconds between batches
 
 interface SyncRequest {
-  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details';
+  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects';
   // Location search
   query?: string;
   // Property search filters
   locations_ids?: number[];
   purpose?: 'for-sale' | 'for-rent';
   category?: string;
+  categories?: string[]; // NEW: multiple categories support
   rooms?: number[];
   baths?: number[];
   price_min?: number;
@@ -43,6 +44,10 @@ interface SyncRequest {
   end_date?: string;
   // Property details
   property_id?: string;
+  // Developer/agent/agency filtering (NEW API features)
+  developer_ids?: number[];
+  agent_ids?: number[];
+  agency_ids?: number[];
   // Dry run mode - counts only, no upserts
   dry_run?: boolean;
 }
@@ -351,6 +356,7 @@ serve(async (req) => {
         locations_ids = [],
         purpose = 'for-sale',
         category,
+        categories,
         rooms,
         baths,
         price_min,
@@ -367,6 +373,9 @@ serve(async (req) => {
         page = 0,
         limit = 20,
         dry_run = false,
+        developer_ids,
+        agent_ids,
+        agency_ids,
       } = body;
 
       // DRY RUN MODE - just count properties without processing
@@ -416,14 +425,25 @@ serve(async (req) => {
         );
       }
 
-      // Build request body with CORRECT API parameters
+      // Build request body with CORRECT API parameters (including NEW features)
       const searchBody: any = {
         purpose,
         locations_ids,
         index,
       };
 
-      if (category) searchBody.category = category;
+      // Support for multiple categories (NEW API feature)
+      if (categories && categories.length > 0) {
+        searchBody.categories = categories;
+      } else if (category) {
+        searchBody.category = category;
+      }
+      
+      // Support for developer/agent/agency filtering (NEW API feature)
+      if (developer_ids && developer_ids.length > 0) searchBody.developer_ids = developer_ids;
+      if (agent_ids && agent_ids.length > 0) searchBody.agent_ids = agent_ids;
+      if (agency_ids && agency_ids.length > 0) searchBody.agency_ids = agency_ids;
+      
       if (rooms && rooms.length > 0) searchBody.rooms = rooms;
       if (baths && baths.length > 0) searchBody.baths = baths;
       if (price_min) searchBody.price_min = price_min;
@@ -858,6 +878,167 @@ serve(async (req) => {
             properties_count: dev.properties_count,
           })),
           total: devData.nbHits || developers.length,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // SYNC NEW PROJECTS (NEW API ENDPOINT)
+    // ===========================================
+    if (action === 'sync_new_projects') {
+      const { 
+        locations_ids = [],
+        page = 0, 
+        limit = 20,
+        dry_run = false,
+      } = body;
+
+      console.log(`[Bayut API] Syncing new projects - page ${page}, limit ${limit}`);
+
+      // Build request body
+      const searchBody: any = {};
+      if (locations_ids.length > 0) searchBody.locations_ids = locations_ids;
+
+      const projectsUrl = `${API_BASE}/new_projects_search?page=${page}&hitsPerPage=${limit}`;
+      
+      const projectsResponse = await fetch(projectsUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RapidAPI-Key': rapidApiKey,
+          'X-RapidAPI-Host': API_HOST,
+        },
+        body: JSON.stringify(searchBody),
+      });
+
+      if (!projectsResponse.ok) {
+        const errorBody = await projectsResponse.text();
+        throw new Error(`New projects search failed: ${projectsResponse.status} - ${errorBody}`);
+      }
+
+      const projectsData = await projectsResponse.json();
+      const projects = projectsData.results || [];
+      const totalAvailable = projectsData.nbHits || projects.length;
+
+      console.log(`[Bayut API] Found ${projects.length} new projects (${totalAvailable} total)`);
+
+      // DRY RUN - just return counts
+      if (dry_run) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            dry_run: true,
+            totalAvailable,
+            wouldSync: Math.min(limit, totalAvailable),
+            message: `Would sync up to ${Math.min(limit, totalAvailable)} of ${totalAvailable} new projects`,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      let projectsSynced = 0;
+      const errors: string[] = [];
+
+      // Process each project and upsert to developer_projects
+      for (const project of projects) {
+        try {
+          const externalId = String(project.id);
+          
+          // Find or create developer
+          let developerId: string | null = null;
+          if (project.developer?.id) {
+            const developerExternalId = String(project.developer.id);
+            
+            // Check if developer exists
+            const { data: existingDev } = await supabase
+              .from('developers')
+              .select('id')
+              .eq('slug', developerExternalId)
+              .single();
+
+            if (existingDev) {
+              developerId = existingDev.id;
+            } else {
+              // Create developer
+              const devSlug = (project.developer.name || 'developer')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .substring(0, 50);
+
+              const { data: newDev, error: devError } = await supabase
+                .from('developers')
+                .insert({
+                  name: project.developer.name || 'Unknown Developer',
+                  slug: `${devSlug}-${developerExternalId}`,
+                  logo_url: project.developer.logo || null,
+                  is_active: true,
+                })
+                .select('id')
+                .single();
+
+              if (!devError && newDev) {
+                developerId = newDev.id;
+              }
+            }
+          }
+
+          // Generate project slug
+          const projectName = project.name || project.title || 'Project';
+          const baseSlug = projectName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .substring(0, 50);
+          const slug = `${baseSlug}-${externalId}`;
+
+          // Extract location
+          let locationArea = 'Dubai';
+          if (project.location?.community?.name) {
+            locationArea = project.location.community.name;
+          } else if (project.location?.city?.name) {
+            locationArea = project.location.city.name;
+          }
+
+          // Upsert to developer_projects
+          const { error: upsertError } = await supabase
+            .from('developer_projects')
+            .upsert({
+              developer_id: developerId,
+              name: projectName,
+              slug,
+              description: project.description || null,
+              location_area: locationArea,
+              image_url: project.media?.cover_photo || project.image || null,
+              status: project.completion_status === 'completed' ? 'completed' : 'under_construction',
+              completion_year: project.completion_date ? new Date(project.completion_date).getFullYear() : null,
+              total_units: project.total_units || null,
+              project_type: project.property_type || 'residential',
+              is_flagship: project.is_featured || false,
+              highlights: project.amenities || [],
+            }, { onConflict: 'slug' });
+
+          if (upsertError) {
+            console.error(`[Bayut API] Project upsert error:`, upsertError);
+            errors.push(`Project ${externalId}: ${upsertError.message}`);
+          } else {
+            projectsSynced++;
+            console.log(`[Bayut API] Synced project: ${projectName}`);
+          }
+
+        } catch (projectError) {
+          const errorMsg = projectError instanceof Error ? projectError.message : String(projectError);
+          errors.push(errorMsg);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Synced ${projectsSynced} of ${projects.length} new projects`,
+          projectsFound: projects.length,
+          projectsSynced,
+          totalAvailable,
+          errors: errors.length > 0 ? errors : undefined,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
