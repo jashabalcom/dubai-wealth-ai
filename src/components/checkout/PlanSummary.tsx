@@ -1,14 +1,10 @@
 import { Check, Crown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { STRIPE_TIERS, BillingPeriod } from "@/lib/stripe-config";
 
 interface PlanSummaryProps {
   tier: "investor" | "elite";
-  tierConfig: {
-    name: string;
-    price: number;
-    priceDisplay: string;
-    period: string;
-  };
+  billingPeriod?: BillingPeriod;
   isUpgrade: boolean;
   userEmail: string;
 }
@@ -34,9 +30,11 @@ const TIER_FEATURES = {
   ],
 };
 
-const PlanSummary = ({ tier, tierConfig, isUpgrade, userEmail }: PlanSummaryProps) => {
+const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: PlanSummaryProps) => {
   const features = TIER_FEATURES[tier];
   const isElite = tier === "elite";
+  const tierConfig = STRIPE_TIERS[tier];
+  const priceConfig = billingPeriod === 'annual' ? tierConfig.annual : tierConfig.monthly;
 
   return (
     <div className="sticky top-24">
@@ -65,12 +63,27 @@ const PlanSummary = ({ tier, tierConfig, isUpgrade, userEmail }: PlanSummaryProp
             </div>
           </div>
 
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold text-foreground">{tierConfig.priceDisplay}</span>
-            <span className="text-muted-foreground">{tierConfig.period}</span>
-          </div>
+          {billingPeriod === 'annual' && 'monthlyEquivalent' in priceConfig ? (
+            <>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-foreground">{priceConfig.monthlyEquivalent}</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Billed annually ({priceConfig.priceDisplay})
+              </p>
+              <p className="text-xs font-medium text-green-400 mt-1">
+                {priceConfig.savingsDisplay}
+              </p>
+            </>
+          ) : (
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-bold text-foreground">{priceConfig.priceDisplay}</span>
+              <span className="text-muted-foreground">{priceConfig.period}</span>
+            </div>
+          )}
 
-          {!isUpgrade && (
+          {!isUpgrade && billingPeriod === 'monthly' && (
             <p className="text-sm text-primary mt-2 font-medium">
               14-day free trial included
             </p>
@@ -102,10 +115,12 @@ const PlanSummary = ({ tier, tierConfig, isUpgrade, userEmail }: PlanSummaryProp
         <div className="p-6 border-t border-border">
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{tierConfig.name}</span>
-              <span className="text-foreground">{tierConfig.priceDisplay}{tierConfig.period}</span>
+              <span className="text-muted-foreground">
+                {tierConfig.name} ({billingPeriod === 'annual' ? 'Annual' : 'Monthly'})
+              </span>
+              <span className="text-foreground">{priceConfig.priceDisplay}{priceConfig.period}</span>
             </div>
-            {!isUpgrade && (
+            {!isUpgrade && billingPeriod === 'monthly' && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">14-day trial</span>
                 <span className="text-green-500 font-medium">Free</span>
@@ -114,7 +129,7 @@ const PlanSummary = ({ tier, tierConfig, isUpgrade, userEmail }: PlanSummaryProp
             <div className="pt-3 border-t border-border flex justify-between">
               <span className="font-medium text-foreground">Due today</span>
               <span className="font-bold text-foreground">
-                {isUpgrade ? tierConfig.priceDisplay : "$0.00"}
+                {isUpgrade || billingPeriod === 'annual' ? priceConfig.priceDisplay : "$0.00"}
               </span>
             </div>
           </div>

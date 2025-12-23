@@ -115,8 +115,8 @@ const Upgrade = () => {
                       <CardTitle>{STRIPE_TIERS.investor.name}</CardTitle>
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">{STRIPE_TIERS.investor.priceDisplay}</span>
-                      <span className="text-muted-foreground">{STRIPE_TIERS.investor.period}</span>
+                      <span className="text-3xl font-bold">{STRIPE_TIERS.investor.monthly.priceDisplay}</span>
+                      <span className="text-muted-foreground">{STRIPE_TIERS.investor.monthly.period}</span>
                     </div>
                     <CardDescription>
                       Perfect for getting started with Dubai real estate investing
@@ -176,8 +176,8 @@ const Upgrade = () => {
                       <CardTitle>{STRIPE_TIERS.elite.name}</CardTitle>
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">{STRIPE_TIERS.elite.priceDisplay}</span>
-                      <span className="text-muted-foreground">{STRIPE_TIERS.elite.period}</span>
+                      <span className="text-3xl font-bold">{STRIPE_TIERS.elite.monthly.priceDisplay}</span>
+                      <span className="text-muted-foreground">{STRIPE_TIERS.elite.monthly.period}</span>
                     </div>
                     <CardDescription>
                       For serious investors who want every advantage

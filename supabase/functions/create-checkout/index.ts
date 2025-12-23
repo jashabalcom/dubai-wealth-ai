@@ -12,16 +12,32 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Price ID mapping
-const TIER_PRICES: Record<string, string> = {
-  investor: "price_1Sbv2KHVQx2jO318h20jYHWa",
-  elite: "price_1Sbv2UHVQx2jO318S54njLC4",
+// Price ID mapping - monthly and annual
+const TIER_PRICES: Record<string, { monthly: string; annual: string }> = {
+  investor: {
+    monthly: "price_1Sbv2KHVQx2jO318h20jYHWa",
+    annual: "price_1ShQ9DHVQx2jO318EopokNIq",
+  },
+  elite: {
+    monthly: "price_1Sbv2UHVQx2jO318S54njLC4",
+    annual: "price_1ShQ9OHVQx2jO318x9l7kYEV",
+  },
 };
+
+// All valid price IDs for lookup
+const ALL_PRICE_IDS = [
+  "price_1Sbv2KHVQx2jO318h20jYHWa", // investor monthly
+  "price_1ShQ9DHVQx2jO318EopokNIq", // investor annual
+  "price_1Sbv2UHVQx2jO318S54njLC4", // elite monthly
+  "price_1ShQ9OHVQx2jO318x9l7kYEV", // elite annual
+];
 
 // Reverse lookup: price ID to tier
 const PRICE_TO_TIER: Record<string, string> = {
   "price_1Sbv2KHVQx2jO318h20jYHWa": "investor",
+  "price_1ShQ9DHVQx2jO318EopokNIq": "investor",
   "price_1Sbv2UHVQx2jO318S54njLC4": "elite",
+  "price_1ShQ9OHVQx2jO318x9l7kYEV": "elite",
 };
 
 // Helper to get current tier from subscription
@@ -47,12 +63,17 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     
-    const { priceId, tier } = await req.json();
-    logStep("Received request", { priceId, tier });
+    const { priceId, tier, billingPeriod = 'monthly' } = await req.json();
+    logStep("Received request", { priceId, tier, billingPeriod });
 
     // Validate tier
     if (!tier || !TIER_PRICES[tier]) {
       throw new Error(`Invalid tier: ${tier}`);
+    }
+
+    // Validate price ID
+    if (!ALL_PRICE_IDS.includes(priceId)) {
+      throw new Error(`Invalid price ID: ${priceId}`);
     }
 
     const authHeader = req.headers.get("Authorization")!;
@@ -104,18 +125,20 @@ serve(async (req) => {
           subscriptionStatus: allActiveSubs[0].status 
         });
 
-        // Check if requesting same tier
-        if (existingTier === tier) {
-          throw new Error("You already have an active subscription for this tier. Please use the customer portal to manage it.");
+        // Check if requesting same tier with same price (same billing period)
+        const existingPriceId = allActiveSubs[0].items.data[0]?.price?.id;
+        if (existingPriceId === priceId) {
+          throw new Error("You already have an active subscription for this plan. Please use the customer portal to manage it.");
         }
 
-        // Cancel existing subscriptions for upgrade - user will pay immediately via checkout
+        // Cancel existing subscriptions for upgrade/change - user will pay immediately via checkout
         for (const sub of allActiveSubs) {
           await stripe.subscriptions.cancel(sub.id, { prorate: true });
           logStep("Cancelled existing subscription for upgrade", { 
             subId: sub.id, 
             previousTier: existingTier,
-            newTier: tier 
+            newTier: tier,
+            billingPeriod
           });
         }
       }
@@ -146,8 +169,9 @@ serve(async (req) => {
     const origin = req.headers.get("origin") || "https://bswllmynuxkhekqqeznr.lovable.app";
     
     // Trial decision: no trial for upgrades (when they had an existing subscription)
-    const hasTrial = !hasExistingSubscription;
-    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier });
+    // Also no trial for annual plans (immediate value)
+    const hasTrial = !hasExistingSubscription && billingPeriod === 'monthly';
+    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier, billingPeriod });
 
     // Create checkout session with smart trial handling
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
@@ -164,16 +188,18 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         tier: tier,
+        billing_period: billingPeriod,
         upgraded_from: existingTier || '',
       },
     };
 
-    // Add trial period only for new subscribers (not upgrades)
+    // Add trial period only for new monthly subscribers (not upgrades, not annual)
     if (hasTrial) {
       sessionConfig.subscription_data = {
         trial_period_days: 14,
         metadata: {
           tier,
+          billing_period: billingPeriod,
           supabase_user_id: user.id,
         },
       };
@@ -182,11 +208,12 @@ serve(async (req) => {
       sessionConfig.subscription_data = {
         metadata: {
           tier,
+          billing_period: billingPeriod,
           supabase_user_id: user.id,
           upgraded_from: existingTier || '',
         },
       };
-      logStep("No trial - upgrade flow");
+      logStep("No trial - upgrade or annual flow", { billingPeriod });
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
@@ -195,7 +222,8 @@ serve(async (req) => {
       sessionId: session.id, 
       url: session.url,
       hasTrial,
-      upgradedFrom: existingTier 
+      upgradedFrom: existingTier,
+      billingPeriod
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

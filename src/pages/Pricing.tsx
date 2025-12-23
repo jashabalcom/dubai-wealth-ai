@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { PAGE_SEO } from "@/lib/seo-config";
 import { MEMBERSHIP_TIERS, FEATURE_COMPARISON, PRICING_TESTIMONIALS } from "@/lib/membership-tiers-config";
+import { BillingPeriod } from "@/lib/stripe-config";
 
 const tiers = [
   MEMBERSHIP_TIERS.free,
@@ -22,11 +23,13 @@ export default function Pricing() {
   const { loading, startCheckout, openCustomerPortal } = useSubscription();
   const navigate = useNavigate();
   const [showComparison, setShowComparison] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
 
   const handleTierClick = async (tierId: 'free' | 'investor' | 'elite') => {
     if (!user) {
       if (tierId !== 'free') {
         localStorage.setItem('pending_checkout_tier', tierId);
+        localStorage.setItem('pending_checkout_billing', billingPeriod);
       }
       navigate('/auth');
       return;
@@ -54,7 +57,7 @@ export default function Pricing() {
     }
 
     // Use Stripe hosted checkout (opens in new tab)
-    await startCheckout(tierId);
+    await startCheckout(tierId, billingPeriod);
   };
 
   const getButtonText = (tierId: 'free' | 'investor' | 'elite', defaultCta: string) => {
@@ -76,6 +79,26 @@ export default function Pricing() {
     return profile?.membership_tier === tierId;
   };
 
+  const getPriceDisplay = (tier: typeof tiers[number]) => {
+    if (tier.id === 'free') {
+      return { price: tier.priceDisplay, period: tier.period };
+    }
+    
+    const paidTier = tier as typeof MEMBERSHIP_TIERS.investor | typeof MEMBERSHIP_TIERS.elite;
+    
+    if (billingPeriod === 'annual') {
+      return {
+        price: paidTier.annualMonthlyEquivalent,
+        period: '/month',
+        fullPrice: paidTier.annualPriceDisplay,
+        savings: paidTier.annualSavings,
+        billedAs: 'Billed annually',
+      };
+    }
+    
+    return { price: paidTier.priceDisplay, period: paidTier.period };
+  };
+
   // Group features by category for comparison table
   const categories = [...new Set(FEATURE_COMPARISON.map(f => f.category))];
 
@@ -91,7 +114,7 @@ export default function Pricing() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center max-w-3xl mx-auto mb-16"
+            className="text-center max-w-3xl mx-auto mb-10"
           >
             <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans mb-4 block">
               Membership Plans
@@ -111,81 +134,125 @@ export default function Pricing() {
             </div>
           </motion.div>
 
+          {/* Billing Period Toggle */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="flex justify-center mb-12"
+          >
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingPeriod('annual')}
+                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                  billingPeriod === 'annual'
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Annual
+                <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold">
+                  2 Months Free
+                </span>
+              </button>
+            </div>
+          </motion.div>
+
           {/* Pricing Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto mb-12">
-            {tiers.map((tier, index) => (
-              <motion.div
-                key={tier.name}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.15 }}
-                className={`relative ${tier.highlighted ? "lg:-mt-4 lg:mb-4" : ""}`}
-              >
-                {tier.badge && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.1em] font-sans">
-                      {tier.id === "investor" ? <Zap size={12} /> : <Star size={12} />}
-                      {tier.badge}
-                    </span>
-                  </div>
-                )}
-
-                {isCurrentPlan(tier.id) && (
-                  <div className="absolute -top-4 right-4 z-10">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30">
-                      <Crown size={12} />
-                      Your Plan
-                    </span>
-                  </div>
-                )}
-
-                <div
-                  className={`h-full rounded-2xl p-8 lg:p-10 transition-all duration-300 ${
-                    tier.highlighted
-                      ? "bg-card border-2 border-primary shadow-elegant"
-                      : isCurrentPlan(tier.id)
-                      ? "bg-card border-2 border-green-500/50"
-                      : "bg-card border border-border hover:border-primary/30"
-                  }`}
+            {tiers.map((tier, index) => {
+              const priceInfo = getPriceDisplay(tier);
+              
+              return (
+                <motion.div
+                  key={tier.name}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  className={`relative ${tier.highlighted ? "lg:-mt-4 lg:mb-4" : ""}`}
                 >
-                  <div className="text-center mb-8">
-                    <h3 className="text-xl font-serif text-foreground mb-2">{tier.name}</h3>
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-4xl md:text-5xl font-serif text-foreground">
-                        {tier.priceDisplay}
+                  {tier.badge && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.1em] font-sans">
+                        {tier.id === "investor" ? <Zap size={12} /> : <Star size={12} />}
+                        {tier.badge}
                       </span>
-                      <span className="text-muted-foreground text-sm">{tier.period}</span>
                     </div>
-                    <p className="text-muted-foreground text-sm mt-4">{tier.description}</p>
-                  </div>
+                  )}
 
-                  <ul className="space-y-3 mb-10">
-                    {tier.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${tier.id === 'elite' ? 'text-gold' : 'text-primary'}`} />
-                        <span className={`text-sm ${i === 0 && tier.id === 'elite' ? 'font-medium text-foreground' : 'text-foreground/80'}`}>
-                          {feature}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                  {isCurrentPlan(tier.id) && (
+                    <div className="absolute -top-4 right-4 z-10">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30">
+                        <Crown size={12} />
+                        Your Plan
+                      </span>
+                    </div>
+                  )}
 
-                  <Button
-                    variant={tier.highlighted ? "default" : tier.id === 'elite' ? "gold" : "outline"}
-                    size="lg"
-                    className="w-full"
-                    onClick={() => handleTierClick(tier.id)}
-                    disabled={loading || isCurrentPlan(tier.id)}
+                  <div
+                    className={`h-full rounded-2xl p-8 lg:p-10 transition-all duration-300 ${
+                      tier.highlighted
+                        ? "bg-card border-2 border-primary shadow-elegant"
+                        : isCurrentPlan(tier.id)
+                        ? "bg-card border-2 border-green-500/50"
+                        : "bg-card border border-border hover:border-primary/30"
+                    }`}
                   >
-                    {loading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      getButtonText(tier.id, tier.cta)
-                    )}
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+                    <div className="text-center mb-8">
+                      <h3 className="text-xl font-serif text-foreground mb-2">{tier.name}</h3>
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-4xl md:text-5xl font-serif text-foreground">
+                          {priceInfo.price}
+                        </span>
+                        <span className="text-muted-foreground text-sm">{priceInfo.period}</span>
+                      </div>
+                      {'billedAs' in priceInfo && (
+                        <div className="mt-2 space-y-1">
+                          <p className="text-xs text-muted-foreground">{priceInfo.billedAs} ({priceInfo.fullPrice})</p>
+                          <p className="text-xs font-medium text-green-400">Save {priceInfo.savings}/year</p>
+                        </div>
+                      )}
+                      <p className="text-muted-foreground text-sm mt-4">{tier.description}</p>
+                    </div>
+
+                    <ul className="space-y-3 mb-10">
+                      {tier.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${tier.id === 'elite' ? 'text-gold' : 'text-primary'}`} />
+                          <span className={`text-sm ${i === 0 && tier.id === 'elite' ? 'font-medium text-foreground' : 'text-foreground/80'}`}>
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      variant={tier.highlighted ? "default" : tier.id === 'elite' ? "gold" : "outline"}
+                      size="lg"
+                      className="w-full"
+                      onClick={() => handleTierClick(tier.id)}
+                      disabled={loading || isCurrentPlan(tier.id)}
+                    >
+                      {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        getButtonText(tier.id, tier.cta)
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* Compare Features Toggle */}
@@ -225,14 +292,18 @@ export default function Pricing() {
                     </div>
                     <div className="text-center">
                       <div className="font-medium text-primary">Investor</div>
-                      <div className="text-sm text-muted-foreground">$29/mo</div>
+                      <div className="text-sm text-muted-foreground">
+                        {billingPeriod === 'annual' ? '$24/mo' : '$29/mo'}
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 font-medium text-gold">
                         <Crown className="w-4 h-4" />
                         Elite
                       </div>
-                      <div className="text-sm text-gold/70">$97/mo</div>
+                      <div className="text-sm text-gold/70">
+                        {billingPeriod === 'annual' ? '$81/mo' : '$97/mo'}
+                      </div>
                     </div>
                   </div>
 
