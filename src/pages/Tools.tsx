@@ -86,6 +86,15 @@ const residentialTools = [
     href: '/tools/total-cost',
   },
   {
+    id: 'offplan',
+    title: 'Off-Plan Payment Calculator',
+    description: 'Compare 20/80, 40/60, post-handover payment plans with Oqood fees and cash flow timeline.',
+    icon: Building2,
+    color: 'purple',
+    href: '/tools/offplan',
+    featured: true,
+  },
+  {
     id: 'golden-visa',
     title: 'Golden Visa Wizard',
     description: 'Get AI-powered personalized guidance for your UAE Golden Visa eligibility and investment recommendations.',
