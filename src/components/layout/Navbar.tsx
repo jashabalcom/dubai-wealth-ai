@@ -361,7 +361,7 @@ export function Navbar() {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-40 bg-secondary pt-24 lg:hidden"
           >
-            <div className="container-luxury flex flex-col gap-6 py-8">
+            <div className="container-luxury flex flex-col gap-3 py-6">
               {navLinks.map((link, index) => {
                 const isActive = link.isRoute && isActiveLink(link.href);
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
@@ -376,14 +376,14 @@ export function Navbar() {
                       transition={{ delay: index * 0.1 }}
                       className="space-y-2"
                     >
-                      <button
-                        onClick={() => setIsMobilePropertiesOpen(!isMobilePropertiesOpen)}
-                        className={cn(
-                          "text-2xl font-serif flex items-center gap-2 w-full text-left min-h-[48px] transition-colors",
-                          "active:scale-[0.98]",
-                          isActive ? "text-primary" : "text-secondary-foreground hover:text-primary"
-                        )}
-                      >
+                    <button
+                      onClick={() => setIsMobilePropertiesOpen(!isMobilePropertiesOpen)}
+                      className={cn(
+                        "text-xl font-serif flex items-center gap-2 w-full text-left min-h-[44px] transition-colors",
+                        "active:scale-[0.98]",
+                        isActive ? "text-primary" : "text-secondary-foreground hover:text-primary"
+                      )}
+                    >
                         {link.label}
                         <ChevronDown className={cn(
                           "w-5 h-5 transition-transform duration-300",
@@ -400,7 +400,7 @@ export function Navbar() {
                             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                             className="overflow-hidden"
                           >
-                            <div className="ml-2 space-y-2 border-l-2 border-gold/30 bg-secondary/50 rounded-r-lg py-2">
+                            <div className="ml-2 space-y-1 border-l-2 border-gold/30 bg-secondary/50 rounded-r-lg py-2">
                               {propertiesDropdownItems.map((item, subIndex) => {
                                 const isSubItemActive = location.pathname === item.href || 
                                   (item.href.includes('?') && location.pathname + location.search === item.href);
@@ -457,17 +457,17 @@ export function Navbar() {
                 }
                 
                 return (
-                  <motion.div
-                    key={link.label}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
+                    <motion.div
+                      key={link.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
                     <Link
                       to={link.href}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
-                        "text-2xl font-serif transition-colors block min-h-[48px] flex items-center",
+                        "text-xl font-serif transition-colors block min-h-[44px] flex items-center",
                         link.isUpgrade
                           ? "text-gold hover:text-gold/80"
                           : isActive 
@@ -497,7 +497,7 @@ export function Navbar() {
                 <CurrencyPill />
               </div>
               
-              <div className="flex flex-col gap-4 pt-4 border-t border-primary/20">
+              <div className="flex flex-col gap-3 pt-3 border-t border-primary/20">
                 {user ? (
                   <>
                     <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>

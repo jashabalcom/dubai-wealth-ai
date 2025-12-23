@@ -177,7 +177,7 @@ export default function Properties() {
         </div>
       </section>
 
-      <section className="py-6 border-b border-border bg-card/50 sticky top-16 z-30">
+      <section className="py-6 border-b border-border bg-card/50 sticky top-20 z-30">
         <div className="container mx-auto px-4">
           <PropertyFiltersComponent
             searchQuery={searchQuery}
