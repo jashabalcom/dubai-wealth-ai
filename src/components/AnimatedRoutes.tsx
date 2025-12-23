@@ -1,7 +1,11 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { Suspense, lazy } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
+import { LazyLoadFallback } from "@/components/LazyLoadFallback";
+
+// Eagerly loaded pages (core user journey)
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
 import Dashboard from "@/pages/Dashboard";
@@ -12,41 +16,13 @@ import Properties from "@/pages/Properties";
 import PropertyDetail from "@/pages/PropertyDetail";
 import SavedProperties from "@/pages/SavedProperties";
 import Tools from "@/pages/Tools";
-import ROICalculator from "@/pages/tools/ROICalculator";
-import MortgageCalculator from "@/pages/tools/MortgageCalculator";
-import RentVsBuyCalculator from "@/pages/tools/RentVsBuyCalculator";
-import AirbnbCalculator from "@/pages/tools/AirbnbCalculator";
-import StrVsLtrCalculator from "@/pages/tools/StrVsLtrCalculator";
-import TotalCostCalculator from "@/pages/tools/TotalCostCalculator";
-import CapRateCalculator from "@/pages/tools/CapRateCalculator";
-import DSCRCalculator from "@/pages/tools/DSCRCalculator";
-import FreeZoneComparison from "@/pages/tools/FreeZoneComparison";
-import CommercialLeaseAnalyzer from "@/pages/tools/CommercialLeaseAnalyzer";
-import AIAssistant from "@/pages/AIAssistant";
-import Portfolio from "@/pages/Portfolio";
 import Profile from "@/pages/Profile";
-import GoldenVisaWizard from "@/pages/GoldenVisaWizard";
 import Pricing from "@/pages/Pricing";
 import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
-import MembershipFunnel from "@/pages/MembershipFunnel";
-import EliteFunnel from "@/pages/EliteFunnel";
 import CheckoutRedirect from "@/pages/CheckoutRedirect";
 import Upgrade from "@/pages/Upgrade";
 import ResetPassword from "@/pages/ResetPassword";
 import Settings from "@/pages/Settings";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import AdminUsers from "@/pages/admin/AdminUsers";
-import AdminCourses from "@/pages/admin/AdminCourses";
-import AdminLessons from "@/pages/admin/AdminLessons";
-import AdminProperties from "@/pages/admin/AdminProperties";
-import AdminAgents from "@/pages/admin/AdminAgents";
-import AdminBrokerages from "@/pages/admin/AdminBrokerages";
-import AdminDevelopers from "@/pages/admin/AdminDevelopers";
-import AdminDeveloperProjects from "@/pages/admin/AdminDeveloperProjects";
-import AdminEvents from "@/pages/admin/AdminEvents";
-import AdminAnalytics from "@/pages/admin/AdminAnalytics";
-import AdminRevenue from "@/pages/admin/AdminRevenue";
-import AdminMarketing from "@/pages/admin/AdminMarketing";
 import NotFound from "@/pages/NotFound";
 import Disclaimer from "@/pages/Disclaimer";
 import TermsOfService from "@/pages/TermsOfService";
@@ -56,14 +32,9 @@ import Developers from "@/pages/Developers";
 import DeveloperDetail from "@/pages/DeveloperDetail";
 import Neighborhoods from "@/pages/Neighborhoods";
 import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
-import AdminNeighborhoods from "@/pages/admin/AdminNeighborhoods";
-import AdminNeighborhoodPOIs from "@/pages/admin/AdminNeighborhoodPOIs";
-import AdminBayutSync from "@/pages/admin/AdminBayutSync";
-import AdminNews from "@/pages/admin/AdminNews";
-import AdminMortgageLeads from "@/pages/admin/AdminMortgageLeads";
-import AdminMortgagePartners from "@/pages/admin/AdminMortgagePartners";
+import AIAssistant from "@/pages/AIAssistant";
 
-// Community Hub Pages
+// Community Hub Pages (eagerly loaded - frequently used)
 import { CommunityLayout } from "@/components/community/CommunityLayout";
 import DiscussionsPage from "@/pages/community/DiscussionsPage";
 import EventsPage from "@/pages/community/EventsPage";
@@ -75,19 +46,67 @@ import QAPage from "@/pages/community/QAPage";
 import QuestionDetailPage from "@/pages/community/QuestionDetailPage";
 import NewsPage from "@/pages/community/NewsPage";
 
-// Agent Portal Pages
-import AgentPortalLanding from "@/pages/agent-portal/AgentPortalLanding";
-import AgentLogin from "@/pages/agent-portal/AgentLogin";
-import AgentRegister from "@/pages/agent-portal/AgentRegister";
-import AgentDashboard from "@/pages/agent-portal/AgentDashboard";
-import AgentListings from "@/pages/agent-portal/AgentListings";
-import AgentPropertyForm from "@/pages/agent-portal/AgentPropertyForm";
+// Lazy loaded pages - Tool calculators (users typically use 1-2)
+const ROICalculator = lazy(() => import("@/pages/tools/ROICalculator"));
+const MortgageCalculator = lazy(() => import("@/pages/tools/MortgageCalculator"));
+const RentVsBuyCalculator = lazy(() => import("@/pages/tools/RentVsBuyCalculator"));
+const AirbnbCalculator = lazy(() => import("@/pages/tools/AirbnbCalculator"));
+const StrVsLtrCalculator = lazy(() => import("@/pages/tools/StrVsLtrCalculator"));
+const TotalCostCalculator = lazy(() => import("@/pages/tools/TotalCostCalculator"));
+const CapRateCalculator = lazy(() => import("@/pages/tools/CapRateCalculator"));
+const DSCRCalculator = lazy(() => import("@/pages/tools/DSCRCalculator"));
+const FreeZoneComparison = lazy(() => import("@/pages/tools/FreeZoneComparison"));
+const CommercialLeaseAnalyzer = lazy(() => import("@/pages/tools/CommercialLeaseAnalyzer"));
+
+// Lazy loaded pages - Less frequently visited
+const Portfolio = lazy(() => import("@/pages/Portfolio"));
+const GoldenVisaWizard = lazy(() => import("@/pages/GoldenVisaWizard"));
+const MembershipFunnel = lazy(() => import("@/pages/MembershipFunnel"));
+const EliteFunnel = lazy(() => import("@/pages/EliteFunnel"));
+
+// Lazy loaded pages - Admin (only ~1% of users are admins)
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("@/pages/admin/AdminUsers"));
+const AdminCourses = lazy(() => import("@/pages/admin/AdminCourses"));
+const AdminLessons = lazy(() => import("@/pages/admin/AdminLessons"));
+const AdminProperties = lazy(() => import("@/pages/admin/AdminProperties"));
+const AdminAgents = lazy(() => import("@/pages/admin/AdminAgents"));
+const AdminBrokerages = lazy(() => import("@/pages/admin/AdminBrokerages"));
+const AdminDevelopers = lazy(() => import("@/pages/admin/AdminDevelopers"));
+const AdminDeveloperProjects = lazy(() => import("@/pages/admin/AdminDeveloperProjects"));
+const AdminEvents = lazy(() => import("@/pages/admin/AdminEvents"));
+const AdminAnalytics = lazy(() => import("@/pages/admin/AdminAnalytics"));
+const AdminRevenue = lazy(() => import("@/pages/admin/AdminRevenue"));
+const AdminMarketing = lazy(() => import("@/pages/admin/AdminMarketing"));
+const AdminNeighborhoods = lazy(() => import("@/pages/admin/AdminNeighborhoods"));
+const AdminNeighborhoodPOIs = lazy(() => import("@/pages/admin/AdminNeighborhoodPOIs"));
+const AdminBayutSync = lazy(() => import("@/pages/admin/AdminBayutSync"));
+const AdminNews = lazy(() => import("@/pages/admin/AdminNews"));
+const AdminMortgageLeads = lazy(() => import("@/pages/admin/AdminMortgageLeads"));
+const AdminMortgagePartners = lazy(() => import("@/pages/admin/AdminMortgagePartners"));
+
+// Lazy loaded pages - Agent Portal (only agents use these)
+const AgentPortalLanding = lazy(() => import("@/pages/agent-portal/AgentPortalLanding"));
+const AgentLogin = lazy(() => import("@/pages/agent-portal/AgentLogin"));
+const AgentRegister = lazy(() => import("@/pages/agent-portal/AgentRegister"));
+const AgentDashboard = lazy(() => import("@/pages/agent-portal/AgentDashboard"));
+const AgentListings = lazy(() => import("@/pages/agent-portal/AgentListings"));
+const AgentPropertyForm = lazy(() => import("@/pages/agent-portal/AgentPropertyForm"));
 import { AgentPortalLayout } from "@/components/agent-portal/AgentPortalLayout";
 import { AgentProtectedRoute } from "@/components/agent-portal/AgentProtectedRoute";
 
 // Wrapper component for page transitions
 function AnimatedPage({ children }: { children: React.ReactNode }) {
   return <PageTransition>{children}</PageTransition>;
+}
+
+// Wrapper for lazy-loaded pages with Suspense
+function LazyPage({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<LazyLoadFallback />}>
+      <PageTransition>{children}</PageTransition>
+    </Suspense>
+  );
 }
 
 export function AnimatedRoutes() {
@@ -126,25 +145,25 @@ export function AnimatedRoutes() {
         <Route path="/neighborhoods" element={<AnimatedPage><Neighborhoods /></AnimatedPage>} />
         <Route path="/neighborhoods/:slug" element={<AnimatedPage><NeighborhoodDetail /></AnimatedPage>} />
         
-        {/* Tools - Auth required, usage-based gating in-page */}
+        {/* Tools - Auth required, usage-based gating in-page (lazy loaded) */}
         <Route path="/tools" element={<ProtectedRoute><AnimatedPage><Tools /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/roi" element={<ProtectedRoute><AnimatedPage><ROICalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/mortgage" element={<ProtectedRoute><AnimatedPage><MortgageCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/rent-vs-buy" element={<ProtectedRoute><AnimatedPage><RentVsBuyCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/airbnb" element={<ProtectedRoute><AnimatedPage><AirbnbCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/str-vs-ltr" element={<ProtectedRoute><AnimatedPage><StrVsLtrCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/total-cost" element={<ProtectedRoute><AnimatedPage><TotalCostCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/cap-rate" element={<ProtectedRoute><AnimatedPage><CapRateCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/dscr" element={<ProtectedRoute><AnimatedPage><DSCRCalculator /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/free-zone" element={<ProtectedRoute><AnimatedPage><FreeZoneComparison /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/tools/lease-analyzer" element={<ProtectedRoute><AnimatedPage><CommercialLeaseAnalyzer /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools/roi" element={<ProtectedRoute><LazyPage><ROICalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/mortgage" element={<ProtectedRoute><LazyPage><MortgageCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/rent-vs-buy" element={<ProtectedRoute><LazyPage><RentVsBuyCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/airbnb" element={<ProtectedRoute><LazyPage><AirbnbCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/str-vs-ltr" element={<ProtectedRoute><LazyPage><StrVsLtrCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/total-cost" element={<ProtectedRoute><LazyPage><TotalCostCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/cap-rate" element={<ProtectedRoute><LazyPage><CapRateCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/dscr" element={<ProtectedRoute><LazyPage><DSCRCalculator /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/free-zone" element={<ProtectedRoute><LazyPage><FreeZoneComparison /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/lease-analyzer" element={<ProtectedRoute><LazyPage><CommercialLeaseAnalyzer /></LazyPage></ProtectedRoute>} />
         
         {/* AI Assistant - Auth required, usage-based gating in-page */}
         <Route path="/ai" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
         <Route path="/ai-assistant" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
         
-        {/* Portfolio - Elite tier required */}
-        <Route path="/portfolio" element={<ProtectedRoute requiredTier="elite"><AnimatedPage><Portfolio /></AnimatedPage></ProtectedRoute>} />
+        {/* Portfolio - Elite tier required (lazy loaded) */}
+        <Route path="/portfolio" element={<ProtectedRoute requiredTier="elite"><LazyPage><Portfolio /></LazyPage></ProtectedRoute>} />
         
         <Route path="/profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
         <Route path="/profile/:userId" element={<AnimatedPage><Profile /></AnimatedPage>} />
@@ -164,46 +183,49 @@ export function AnimatedRoutes() {
           <Route path="leaderboard" element={<LeaderboardPage />} />
         </Route>
         
-        {/* Golden Visa - Elite tier required */}
-        <Route path="/golden-visa" element={<ProtectedRoute requiredTier="elite"><AnimatedPage><GoldenVisaWizard /></AnimatedPage></ProtectedRoute>} />
+        {/* Golden Visa - Elite tier required (lazy loaded) */}
+        <Route path="/golden-visa" element={<ProtectedRoute requiredTier="elite"><LazyPage><GoldenVisaWizard /></LazyPage></ProtectedRoute>} />
         <Route path="/pricing" element={<AnimatedPage><Pricing /></AnimatedPage>} />
-        <Route path="/join" element={<AnimatedPage><MembershipFunnel /></AnimatedPage>} />
-        <Route path="/join-elite" element={<AnimatedPage><EliteFunnel /></AnimatedPage>} />
+        <Route path="/join" element={<LazyPage><MembershipFunnel /></LazyPage>} />
+        <Route path="/join-elite" element={<LazyPage><EliteFunnel /></LazyPage>} />
         <Route path="/checkout/:tier" element={<AnimatedPage><CheckoutRedirect /></AnimatedPage>} />
         <Route path="/upgrade" element={<AnimatedPage><Upgrade /></AnimatedPage>} />
         <Route path="/subscription-success" element={<AnimatedPage><SubscriptionSuccess /></AnimatedPage>} />
-        <Route path="/admin" element={<AnimatedPage><AdminDashboard /></AnimatedPage>} />
-        <Route path="/admin/users" element={<AnimatedPage><AdminUsers /></AnimatedPage>} />
-        <Route path="/admin/courses" element={<AnimatedPage><AdminCourses /></AnimatedPage>} />
-        <Route path="/admin/courses/:courseId/lessons" element={<AnimatedPage><AdminLessons /></AnimatedPage>} />
-        <Route path="/admin/properties" element={<AnimatedPage><AdminProperties /></AnimatedPage>} />
-        <Route path="/admin/agents" element={<AnimatedPage><AdminAgents /></AnimatedPage>} />
-        <Route path="/admin/brokerages" element={<AnimatedPage><AdminBrokerages /></AnimatedPage>} />
-        <Route path="/admin/developers" element={<AnimatedPage><AdminDevelopers /></AnimatedPage>} />
-        <Route path="/admin/developers/:developerId/projects" element={<AnimatedPage><AdminDeveloperProjects /></AnimatedPage>} />
-        <Route path="/admin/neighborhoods" element={<AnimatedPage><AdminNeighborhoods /></AnimatedPage>} />
-        <Route path="/admin/neighborhoods/:neighborhoodId/pois" element={<AnimatedPage><AdminNeighborhoodPOIs /></AnimatedPage>} />
-        <Route path="/admin/events" element={<AnimatedPage><AdminEvents /></AnimatedPage>} />
-        <Route path="/admin/analytics" element={<AnimatedPage><AdminAnalytics /></AnimatedPage>} />
-        <Route path="/admin/revenue" element={<AnimatedPage><AdminRevenue /></AnimatedPage>} />
-        <Route path="/admin/marketing" element={<AnimatedPage><AdminMarketing /></AnimatedPage>} />
-        <Route path="/admin/news" element={<AnimatedPage><AdminNews /></AnimatedPage>} />
-        <Route path="/admin/mortgage-leads" element={<AnimatedPage><AdminMortgageLeads /></AnimatedPage>} />
-        <Route path="/admin/mortgage-partners" element={<AnimatedPage><AdminMortgagePartners /></AnimatedPage>} />
-        <Route path="/admin/bayut-sync" element={<AnimatedPage><AdminBayutSync /></AnimatedPage>} />
+        
+        {/* Admin Routes (lazy loaded) */}
+        <Route path="/admin" element={<LazyPage><AdminDashboard /></LazyPage>} />
+        <Route path="/admin/users" element={<LazyPage><AdminUsers /></LazyPage>} />
+        <Route path="/admin/courses" element={<LazyPage><AdminCourses /></LazyPage>} />
+        <Route path="/admin/courses/:courseId/lessons" element={<LazyPage><AdminLessons /></LazyPage>} />
+        <Route path="/admin/properties" element={<LazyPage><AdminProperties /></LazyPage>} />
+        <Route path="/admin/agents" element={<LazyPage><AdminAgents /></LazyPage>} />
+        <Route path="/admin/brokerages" element={<LazyPage><AdminBrokerages /></LazyPage>} />
+        <Route path="/admin/developers" element={<LazyPage><AdminDevelopers /></LazyPage>} />
+        <Route path="/admin/developers/:developerId/projects" element={<LazyPage><AdminDeveloperProjects /></LazyPage>} />
+        <Route path="/admin/neighborhoods" element={<LazyPage><AdminNeighborhoods /></LazyPage>} />
+        <Route path="/admin/neighborhoods/:neighborhoodId/pois" element={<LazyPage><AdminNeighborhoodPOIs /></LazyPage>} />
+        <Route path="/admin/events" element={<LazyPage><AdminEvents /></LazyPage>} />
+        <Route path="/admin/analytics" element={<LazyPage><AdminAnalytics /></LazyPage>} />
+        <Route path="/admin/revenue" element={<LazyPage><AdminRevenue /></LazyPage>} />
+        <Route path="/admin/marketing" element={<LazyPage><AdminMarketing /></LazyPage>} />
+        <Route path="/admin/news" element={<LazyPage><AdminNews /></LazyPage>} />
+        <Route path="/admin/mortgage-leads" element={<LazyPage><AdminMortgageLeads /></LazyPage>} />
+        <Route path="/admin/mortgage-partners" element={<LazyPage><AdminMortgagePartners /></LazyPage>} />
+        <Route path="/admin/bayut-sync" element={<LazyPage><AdminBayutSync /></LazyPage>} />
+        
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
         <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
         <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
         
-        {/* Agent Portal Routes */}
-        <Route path="/agent-portal" element={<AnimatedPage><AgentPortalLanding /></AnimatedPage>} />
-        <Route path="/agent-portal/login" element={<AnimatedPage><AgentLogin /></AnimatedPage>} />
-        <Route path="/agent-portal/register" element={<AnimatedPage><AgentRegister /></AnimatedPage>} />
-        <Route path="/agent-portal/dashboard" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentDashboard /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
-        <Route path="/agent-portal/listings" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentListings /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
-        <Route path="/agent-portal/listings/new" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentPropertyForm /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
-        <Route path="/agent-portal/listings/:id/edit" element={<AgentProtectedRoute><AgentPortalLayout><AnimatedPage><AgentPropertyForm /></AnimatedPage></AgentPortalLayout></AgentProtectedRoute>} />
+        {/* Agent Portal Routes (lazy loaded) */}
+        <Route path="/agent-portal" element={<LazyPage><AgentPortalLanding /></LazyPage>} />
+        <Route path="/agent-portal/login" element={<LazyPage><AgentLogin /></LazyPage>} />
+        <Route path="/agent-portal/register" element={<LazyPage><AgentRegister /></LazyPage>} />
+        <Route path="/agent-portal/dashboard" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentDashboard /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/listings" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentListings /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/listings/new" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentPropertyForm /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/listings/:id/edit" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentPropertyForm /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
         
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
