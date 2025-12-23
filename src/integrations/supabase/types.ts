@@ -1834,7 +1834,21 @@ export type Database = {
             foreignKeyName: "member_follows_follower_id_fkey"
             columns: ["follower_id"]
             isOneToOne: false
+            referencedRelation: "member_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory_view"
             referencedColumns: ["id"]
           },
           {
@@ -2464,6 +2478,13 @@ export type Database = {
             columns: ["poll_id"]
             isOneToOne: false
             referencedRelation: "community_polls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "poll_votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory_view"
             referencedColumns: ["id"]
           },
           {
@@ -3465,7 +3486,55 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      member_directory_view: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          budget_range: string | null
+          country: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          investment_goal: string | null
+          is_visible_in_directory: boolean | null
+          looking_for: string | null
+          membership_tier: Database["public"]["Enums"]["membership_tier"] | null
+          timeline: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          budget_range?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          investment_goal?: string | null
+          is_visible_in_directory?: boolean | null
+          looking_for?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          timeline?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          budget_range?: string | null
+          country?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          investment_goal?: string | null
+          is_visible_in_directory?: boolean | null
+          looking_for?: string | null
+          membership_tier?:
+            | Database["public"]["Enums"]["membership_tier"]
+            | null
+          timeline?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       are_connected: {
