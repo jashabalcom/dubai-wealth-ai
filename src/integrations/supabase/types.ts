@@ -3570,6 +3570,14 @@ export type Database = {
           years_experience: number
         }[]
       }
+      get_agent_contact: {
+        Args: { agent_uuid: string }
+        Returns: {
+          email: string
+          phone: string
+          whatsapp: string
+        }[]
+      }
       get_agent_id_for_user: { Args: never; Returns: string }
       get_community_profile: {
         Args: { user_uuid: string }
@@ -3650,6 +3658,23 @@ export type Database = {
       }
       get_public_agent_profile: {
         Args: { agent_id: string }
+        Returns: {
+          areas_covered: string[]
+          avatar_url: string
+          bio: string
+          brokerage_id: string
+          full_name: string
+          id: string
+          is_verified: boolean
+          languages: string[]
+          specializations: string[]
+          subscription_tier: Database["public"]["Enums"]["agent_tier"]
+          total_listings: number
+          years_experience: number
+        }[]
+      }
+      get_public_agents: {
+        Args: never
         Returns: {
           areas_covered: string[]
           avatar_url: string
