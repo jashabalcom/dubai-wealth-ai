@@ -1023,49 +1023,79 @@ function extractBuildingInfo(prop: any): any | null {
 }
 
 // ===========================================
-// TRANSFORM PROPERTY
+// TRANSFORM PROPERTY (FIXED FOR NEW BAYUT API)
 // ===========================================
 function transformProperty(prop: any): any {
   const externalId = String(prop.id);
   const title = prop.title || prop.name || 'Property';
   
-  // Extract location
+  // Extract location - PRIORITY ORDER based on Bayut API structure
   let locationArea = 'Dubai';
-  if (prop.location) {
-    if (typeof prop.location === 'string') {
-      locationArea = prop.location;
-    } else if (prop.location.name) {
-      locationArea = prop.location.name;
-    } else if (Array.isArray(prop.location) && prop.location.length > 0) {
-      locationArea = prop.location[0]?.name || 'Dubai';
-    }
+  
+  // Try location.community.name first (most specific)
+  if (prop.location?.community?.name) {
+    locationArea = prop.location.community.name;
+  } 
+  // Then location.sub_community.name
+  else if (prop.location?.sub_community?.name) {
+    locationArea = prop.location.sub_community.name;
+  }
+  // Then location.city.name
+  else if (prop.location?.city?.name) {
+    locationArea = prop.location.city.name;
+  }
+  // Fallback: location array (legacy format)
+  else if (Array.isArray(prop.location) && prop.location.length > 0) {
+    // Find level 1 or 2 for area name (level 0 is usually country/city)
+    const areaLevel = prop.location.find((l: any) => l.level === 1 || l.level === 2);
+    locationArea = areaLevel?.name || prop.location[0]?.name || 'Dubai';
+  }
+  // Fallback: string location
+  else if (typeof prop.location === 'string') {
+    locationArea = prop.location;
   }
 
-  // Extract property type
+  // Extract property type - PRIORITY ORDER based on Bayut API structure
   let propertyType = 'apartment';
-  if (prop.category) {
-    const cat = typeof prop.category === 'string' ? prop.category.toLowerCase() : prop.category?.name?.toLowerCase() || '';
-    const typeMap: Record<string, string> = {
-      'apartment': 'apartment',
-      'apartments': 'apartment',
-      'villa': 'villa',
-      'villas': 'villa',
-      'townhouse': 'townhouse',
-      'townhouses': 'townhouse',
-      'penthouse': 'penthouse',
-      'duplex': 'duplex',
-      'studio': 'studio',
-      'land': 'land',
-      'office': 'office',
-      'retail': 'retail',
-      'warehouse': 'warehouse',
-    };
-    propertyType = typeMap[cat] || 'apartment';
+  
+  // Try type.sub first (e.g., "Apartments", "Villas")
+  if (prop.type?.sub) {
+    const subType = prop.type.sub.toLowerCase();
+    propertyType = mapPropertyType(subType);
+  }
+  // Then category.main or category.sub
+  else if (prop.category?.main || prop.category?.sub) {
+    const cat = (prop.category.sub || prop.category.main || '').toLowerCase();
+    propertyType = mapPropertyType(cat);
+  }
+  // Fallback: category as string
+  else if (typeof prop.category === 'string') {
+    propertyType = mapPropertyType(prop.category.toLowerCase());
+  }
+  
+  // ALSO check title for property type hints (e.g., "Villa For Sale...")
+  const titleLower = title.toLowerCase();
+  if (titleLower.includes('villa') && propertyType === 'apartment') {
+    propertyType = 'villa';
+  } else if (titleLower.includes('townhouse') && propertyType === 'apartment') {
+    propertyType = 'townhouse';
+  } else if (titleLower.includes('penthouse') && propertyType === 'apartment') {
+    propertyType = 'penthouse';
   }
 
-  // Parse rooms/bedrooms
+  // Parse bedrooms - PRIORITY ORDER based on Bayut API structure
   let bedrooms = 0;
-  if (prop.rooms !== undefined) {
+  
+  // Try details.bedrooms first (NEW API format)
+  if (prop.details?.bedrooms !== undefined) {
+    bedrooms = parseInt(prop.details.bedrooms, 10) || 0;
+  }
+  // Then direct bedrooms field
+  else if (prop.bedrooms !== undefined) {
+    bedrooms = parseInt(prop.bedrooms, 10) || 0;
+  }
+  // Then rooms field (legacy)
+  else if (prop.rooms !== undefined) {
     if (typeof prop.rooms === 'number') {
       bedrooms = prop.rooms;
     } else if (typeof prop.rooms === 'string') {
@@ -1077,6 +1107,89 @@ function transformProperty(prop: any): any {
       }
     }
   }
+  
+  // VALIDATION: Cross-check bedrooms from title if we got 0 but title mentions beds
+  if (bedrooms === 0) {
+    const bedroomMatch = title.match(/(\d+)\s*(?:bed|br|bedroom)/i);
+    if (bedroomMatch) {
+      const titleBeds = parseInt(bedroomMatch[1], 10);
+      if (!isNaN(titleBeds) && titleBeds > 0) {
+        console.log(`[Bayut API] Correcting bedrooms from 0 to ${titleBeds} based on title: "${title}"`);
+        bedrooms = titleBeds;
+      }
+    }
+    // Check for "master room" patterns like "6 master room"
+    const masterMatch = title.match(/(\d+)\s*master\s*room/i);
+    if (masterMatch) {
+      const masterBeds = parseInt(masterMatch[1], 10);
+      if (!isNaN(masterBeds) && masterBeds > 0) {
+        console.log(`[Bayut API] Correcting bedrooms from 0 to ${masterBeds} based on master room in title`);
+        bedrooms = masterBeds;
+      }
+    }
+  }
+  
+  // Extract bathrooms
+  let bathrooms = 0;
+  if (prop.details?.bathrooms !== undefined) {
+    bathrooms = parseInt(prop.details.bathrooms, 10) || 0;
+  } else if (prop.baths !== undefined) {
+    bathrooms = parseInt(prop.baths, 10) || 0;
+  } else if (prop.bathrooms !== undefined) {
+    bathrooms = parseInt(prop.bathrooms, 10) || 0;
+  }
+  
+  // Extract size - PRIORITY ORDER with VALIDATION
+  let sizeSqft = 1;
+  
+  // Try area.built_up first (NEW API format)
+  if (prop.area?.built_up) {
+    sizeSqft = parseFloat(prop.area.built_up) || 1;
+  }
+  // Then area.size
+  else if (prop.area?.size) {
+    sizeSqft = parseFloat(prop.area.size) || 1;
+  }
+  // Then direct area as number
+  else if (typeof prop.area === 'number') {
+    sizeSqft = prop.area || 1;
+  }
+  // Then sqft / builtupArea fields
+  else if (prop.sqft) {
+    sizeSqft = parseFloat(prop.sqft) || 1;
+  } 
+  else if (prop.builtupArea) {
+    sizeSqft = parseFloat(prop.builtupArea) || 1;
+  }
+  
+  // VALIDATION: Size must make sense for property type
+  // Studios typically < 1500 sqft, apartments < 6000 sqft
+  if (bedrooms === 0 && sizeSqft > 2000) {
+    console.log(`[Bayut API] WARNING: Studio with ${sizeSqft} sqft - likely incorrect bedroom count for property ${externalId}`);
+    // The bedroom correction from title should have fixed this, but log it
+  }
+  
+  sizeSqft = Math.max(1, Math.round(sizeSqft));
+  
+  // Extract coordinates - PRIORITY ORDER
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+  
+  // Try location.coordinates first (NEW API format)
+  if (prop.location?.coordinates?.lat && prop.location?.coordinates?.lng) {
+    latitude = parseFloat(prop.location.coordinates.lat) || null;
+    longitude = parseFloat(prop.location.coordinates.lng) || null;
+  }
+  // Then geo object
+  else if (prop.geo?.lat && prop.geo?.lng) {
+    latitude = parseFloat(prop.geo.lat) || null;
+    longitude = parseFloat(prop.geo.lng) || null;
+  }
+  // Then direct lat/lng
+  else if (prop.latitude && prop.longitude) {
+    latitude = parseFloat(prop.latitude) || null;
+    longitude = parseFloat(prop.longitude) || null;
+  }
 
   // Generate slug
   const baseSlug = title
@@ -1086,6 +1199,14 @@ function transformProperty(prop: any): any {
     .substring(0, 50);
   const slug = `${baseSlug}-${externalId}`;
 
+  // Extract developer name
+  let developerName: string | null = null;
+  if (prop.developer?.name) {
+    developerName = prop.developer.name;
+  } else if (prop.building?.developer?.name) {
+    developerName = prop.building.developer.name;
+  }
+
   return {
     external_id: externalId,
     external_source: 'bayut',
@@ -1093,33 +1214,18 @@ function transformProperty(prop: any): any {
     title,
     description: prop.description || null,
     price_aed: Math.max(0, prop.price || 0),
-    // Robust size_sqft parsing with NaN protection
-    // Handles: area.built_up (nested), area (number), sqft, builtupArea
-    size_sqft: (() => {
-      let rawArea = 0;
-      if (prop.area?.built_up) {
-        rawArea = prop.area.built_up;
-      } else if (typeof prop.area === 'number') {
-        rawArea = prop.area;
-      } else if (prop.sqft) {
-        rawArea = prop.sqft;
-      } else if (prop.builtupArea) {
-        rawArea = prop.builtupArea;
-      }
-      const parsed = typeof rawArea === 'number' ? rawArea : parseFloat(rawArea);
-      return Math.max(1, Math.round(isNaN(parsed) ? 1 : parsed));
-    })(),
-    bedrooms: bedrooms || 0,
-    bathrooms: Math.max(0, prop.baths || 0),
+    size_sqft: sizeSqft,
+    bedrooms: bedrooms,
+    bathrooms: bathrooms,
     property_type: propertyType,
     listing_type: prop.purpose === 'for-rent' ? 'rent' : 'sale',
     location_area: locationArea,
-    latitude: prop.geo?.lat || prop.latitude || null,
-    longitude: prop.geo?.lng || prop.longitude || null,
-    is_off_plan: prop.is_completed === false || prop.completion_status === 'off_plan',
+    latitude,
+    longitude,
+    is_off_plan: prop.is_completed === false || prop.completion_status === 'off_plan' || prop.completion_status === 'offplan',
     completion_percent: prop.completion_percent || null,
     furnishing: prop.is_furnished ? 'furnished' : (prop.furnishing || null),
-    rera_permit_number: prop.rera_permit || prop.permit_number || null,
+    rera_permit_number: prop.rera_permit || prop.permit_number || prop.trakheesi || null,
     amenities: prop.amenities || [],
     images: [],
     gallery_urls: [],
@@ -1127,13 +1233,57 @@ function transformProperty(prop: any): any {
     last_synced_at: new Date().toISOString(),
     is_published: true,
     slug,
+    developer_name: developerName,
     // Enhanced fields
-    year_built: prop.year_built || null,
+    year_built: prop.year_built || prop.details?.year_built || null,
     service_charge_per_sqft: prop.service_charge || null,
     view_type: prop.view || null,
-    floor_number: prop.floor || null,
-    parking_spaces: prop.parking || null,
+    floor_number: prop.floor || prop.details?.floor || null,
+    parking_spaces: prop.parking || prop.details?.parking || null,
   };
+}
+
+// Helper function to map property types
+function mapPropertyType(typeStr: string): string {
+  const typeMap: Record<string, string> = {
+    'apartment': 'apartment',
+    'apartments': 'apartment',
+    'flat': 'apartment',
+    'flats': 'apartment',
+    'villa': 'villa',
+    'villas': 'villa',
+    'townhouse': 'townhouse',
+    'townhouses': 'townhouse',
+    'town house': 'townhouse',
+    'penthouse': 'penthouse',
+    'penthouses': 'penthouse',
+    'duplex': 'duplex',
+    'studio': 'studio',
+    'land': 'land',
+    'plot': 'land',
+    'plots': 'land',
+    'residential plot': 'land',
+    'office': 'office',
+    'offices': 'office',
+    'retail': 'retail',
+    'shop': 'retail',
+    'warehouse': 'warehouse',
+    'residential': 'apartment',
+  };
+  
+  // Check for direct match
+  if (typeMap[typeStr]) {
+    return typeMap[typeStr];
+  }
+  
+  // Check for partial match
+  for (const [key, value] of Object.entries(typeMap)) {
+    if (typeStr.includes(key)) {
+      return value;
+    }
+  }
+  
+  return 'apartment';
 }
 
 // Extract photo URLs - handles Bayut API structure (media.cover_photo, media.photos)
