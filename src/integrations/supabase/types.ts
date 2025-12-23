@@ -1581,27 +1581,39 @@ export type Database = {
           created_at: string
           id: string
           is_completed: boolean
+          last_position_seconds: number | null
+          last_watched_at: string | null
           lesson_id: string
           updated_at: string
           user_id: string
+          video_duration_seconds: number | null
+          watch_progress_percent: number | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
           id?: string
           is_completed?: boolean
+          last_position_seconds?: number | null
+          last_watched_at?: string | null
           lesson_id: string
           updated_at?: string
           user_id: string
+          video_duration_seconds?: number | null
+          watch_progress_percent?: number | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
           id?: string
           is_completed?: boolean
+          last_position_seconds?: number | null
+          last_watched_at?: string | null
           lesson_id?: string
           updated_at?: string
           user_id?: string
+          video_duration_seconds?: number | null
+          watch_progress_percent?: number | null
         }
         Relationships: [
           {
