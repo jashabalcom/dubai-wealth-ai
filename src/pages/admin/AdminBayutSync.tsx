@@ -529,14 +529,14 @@ export default function AdminBayutSync() {
     }
   };
 
-  // SCALE SYNC - Bulk sync to reach 10K+ properties
+  // SCALE SYNC - Bulk sync to reach 10K+ properties (Fire-and-Forget with Polling)
   const runScaleSync = async () => {
     setShowScaleConfirmDialog(false);
     setIsScaleSyncing(true);
     abortRef.current = false;
     
     setScaleSyncProgress({
-      currentArea: '',
+      currentArea: 'Starting...',
       currentAreaIndex: 0,
       totalAreas: scaleTargetAreas.length,
       totalPropertiesSynced: 0,
@@ -560,19 +560,68 @@ export default function AdminBayutSync() {
 
       if (error) throw error;
 
-      if (data?.success) {
-        toast.success(
-          `Scale Sync complete! ${data.totalPropertiesSynced} properties synced from ${data.areaResults?.length || scaleTargetAreas.length} areas. API calls: ${data.totalApiCalls}`
-        );
-        fetchSyncLogs();
-        fetchTotalStats();
+      if (data?.success && data?.syncLogId) {
+        toast.success(`Bulk sync started in background! Estimated: ${data.estimatedProperties} properties`);
+        
+        // Start polling for progress
+        const syncLogId = data.syncLogId;
+        const pollInterval = setInterval(async () => {
+          try {
+            const { data: logData } = await supabase
+              .from('bayut_sync_logs')
+              .select('*')
+              .eq('id', syncLogId)
+              .single();
+            
+            if (logData) {
+              const errorsData = logData.errors as Record<string, unknown> | null;
+              const areaResults = errorsData?.area_results as unknown[] | undefined;
+              
+              setScaleSyncProgress({
+                currentArea: logData.area_name || 'Processing...',
+                currentAreaIndex: areaResults?.length || 0,
+                totalAreas: scaleTargetAreas.length,
+                totalPropertiesSynced: logData.properties_synced || 0,
+                totalApiCalls: logData.api_calls_used || 0,
+              });
+
+              // Check if completed
+              if (logData.status === 'completed' || logData.status === 'completed_with_errors' || logData.status === 'failed') {
+                clearInterval(pollInterval);
+                setIsScaleSyncing(false);
+                
+                if (logData.status === 'failed') {
+                  const fatalError = errorsData?.fatal as string | undefined;
+                  toast.error(`Sync failed: ${fatalError || 'Unknown error'}`);
+                } else {
+                  toast.success(`Scale Sync complete! ${logData.properties_synced} properties synced.`);
+                }
+                
+                fetchSyncLogs();
+                fetchTotalStats();
+                setScaleSyncProgress({
+                  currentArea: '',
+                  currentAreaIndex: 0,
+                  totalAreas: 0,
+                  totalPropertiesSynced: 0,
+                  totalApiCalls: 0,
+                });
+              }
+            }
+          } catch (pollError) {
+            console.error('Polling error:', pollError);
+          }
+        }, 3000); // Poll every 3 seconds
+
+        // Cleanup on unmount or abort
+        return () => clearInterval(pollInterval);
       } else {
-        toast.error(data?.error || 'Scale sync failed');
+        toast.error(data?.error || 'Failed to start scale sync');
+        setIsScaleSyncing(false);
       }
     } catch (error) {
       console.error('Scale sync error:', error);
-      toast.error('Scale sync failed. Check console for details.');
-    } finally {
+      toast.error('Scale sync failed to start. Check console for details.');
       setIsScaleSyncing(false);
       setScaleSyncProgress({
         currentArea: '',
