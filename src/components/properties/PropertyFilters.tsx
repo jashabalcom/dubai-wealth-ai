@@ -38,6 +38,7 @@ export const propertyTypes = [
   { value: 'apartment', label: 'Apartment' },
   { value: 'villa', label: 'Villa' },
   { value: 'townhouse', label: 'Townhouse' },
+  { value: 'penthouse', label: 'Penthouse' },
 ];
 
 export const bedroomOptions = [

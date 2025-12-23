@@ -15,6 +15,7 @@ export interface PropertyFilters {
   goldenVisaOnly?: boolean;
   yieldMin?: number;
   sortBy?: string;
+  developer?: string;
 }
 
 export interface Property {
@@ -118,6 +119,11 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
     // Yield filter
     if (filters.yieldMin !== undefined && filters.yieldMin > 0) {
       query = query.gte('rental_yield_estimate', filters.yieldMin);
+    }
+
+    // Developer filter
+    if (filters.developer && filters.developer.trim()) {
+      query = query.ilike('developer_name', `%${filters.developer.trim()}%`);
     }
 
     return query;
