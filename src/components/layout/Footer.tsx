@@ -54,9 +54,9 @@ export function Footer() {
     <footer className="bg-secondary text-secondary-foreground">
       {/* Main Footer */}
       <div className="container-luxury py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-8 lg:gap-8">
           {/* Brand Column */}
-          <div className="lg:col-span-2">
+          <div className="col-span-2 lg:col-span-2">
             <Link to="/" className="inline-block mb-6 group">
               <BrandLogo variant="dark" size="lg" />
             </Link>

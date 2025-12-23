@@ -339,7 +339,7 @@ export default function PropertyDetail() {
           galleryUrls={property.gallery_urls}
           title={property.title} 
         />
-        <div className="absolute top-24 left-4 flex flex-wrap gap-2 z-10">
+        <div className="absolute top-4 left-4 md:top-24 md:left-4 flex flex-wrap gap-2 z-10">
           {property.is_off_plan && (
             <span className="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full">
               Off-Plan

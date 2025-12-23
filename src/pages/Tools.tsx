@@ -237,7 +237,7 @@ export default function Tools() {
                     className="group block h-full"
                   >
                     <div className={cn(
-                      "h-full p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl",
+                      "h-full p-6 md:p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl",
                       isFeatured 
                         ? "border-gold/30 bg-gradient-to-r from-gold/5 to-transparent hover:border-gold/50" 
                         : "border-border hover:border-gold/30",
@@ -314,7 +314,7 @@ export default function Tools() {
                   {isComingSoon ? (
                     <div className="group block h-full cursor-not-allowed opacity-60">
                       <div className={cn(
-                        "h-full p-8 rounded-2xl bg-card border border-border",
+                        "h-full p-6 md:p-8 rounded-2xl bg-card border border-border",
                       )}>
                         <div className="flex items-start gap-6">
                           <div 
@@ -346,7 +346,7 @@ export default function Tools() {
                       className="group block h-full"
                     >
                       <div className={cn(
-                        "h-full p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl border-border hover:border-slate-500/30",
+                        "h-full p-6 md:p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl border-border hover:border-slate-500/30",
                         colors.glow
                       )}>
                         <div className="flex items-start gap-6">
