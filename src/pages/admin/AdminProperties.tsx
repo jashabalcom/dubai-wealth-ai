@@ -1,15 +1,22 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, Star, MapPin, User, Building2, Image as ImageIcon, FileImage } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, MapPin, User, Building2, Image as ImageIcon, FileImage, ExternalLink, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ImageGalleryManager } from '@/components/admin/ImageGalleryManager';
 import { FloorPlansManager } from '@/components/admin/FloorPlansManager';
+import { PropertyStatsCards } from '@/components/admin/PropertyStatsCards';
+import { PropertyFiltersBar } from '@/components/admin/PropertyFiltersBar';
+import { PropertyBulkActions } from '@/components/admin/PropertyBulkActions';
+import { PropertyPagination } from '@/components/admin/PropertyPagination';
+import { useAdminProperties } from '@/hooks/useAdminProperties';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -44,6 +51,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
 const PROPERTY_TYPES = ['apartment', 'villa', 'townhouse', 'penthouse', 'studio'];
@@ -81,6 +89,32 @@ export default function AdminProperties() {
   const [floorPlansPropertyId, setFloorPlansPropertyId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
+  const {
+    properties,
+    stats,
+    totalCount,
+    locationAreas,
+    isLoading,
+    statsLoading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    PAGE_SIZE_OPTIONS,
+    filters,
+    updateFilter,
+    clearFilters,
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    bulkPublish,
+    bulkUnpublish,
+    bulkDelete,
+    bulkAssignAgent,
+  } = useAdminProperties();
+
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -96,7 +130,6 @@ export default function AdminProperties() {
     is_featured: false,
     is_off_plan: false,
     status: 'available',
-    // New fields
     listing_type: 'sale',
     agent_id: '',
     brokerage_id: '',
@@ -114,24 +147,6 @@ export default function AdminProperties() {
     virtual_tour_url: '',
     video_url: '',
     rental_frequency: 'yearly',
-  });
-
-  const { data: properties = [], isLoading } = useQuery({
-    queryKey: ['admin-properties'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          agent:agents(id, full_name),
-          brokerage:brokerages(id, name),
-          community:communities(id, name)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
   });
 
   const { data: agents = [] } = useQuery({
@@ -205,6 +220,7 @@ export default function AdminProperties() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-properties-stats'] });
       toast.success('Property created');
       resetForm();
     },
@@ -233,6 +249,7 @@ export default function AdminProperties() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-properties-stats'] });
       toast.success('Property updated');
       resetForm();
     },
@@ -245,6 +262,7 @@ export default function AdminProperties() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-properties-stats'] });
       toast.success('Property deleted');
     },
   });
@@ -338,10 +356,24 @@ export default function AdminProperties() {
     return new Intl.NumberFormat('en-AE', { style: 'currency', currency: 'AED', minimumFractionDigits: 0 }).format(price);
   };
 
+  const hasPropertyIssues = (property: any) => {
+    const hasImages = property.images?.length > 0 || property.gallery_urls?.length > 0;
+    const hasCoords = property.latitude && property.longitude;
+    return !hasImages || !hasCoords;
+  };
+
   return (
     <AdminLayout title="Properties Manager">
       <div className="flex justify-between items-center mb-6">
-        <p className="text-muted-foreground">Manage property listings</p>
+        <div className="flex items-center gap-4">
+          <p className="text-muted-foreground">Manage property listings</p>
+          <Link to="/admin/bayut-sync">
+            <Button variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Bayut Sync
+            </Button>
+          </Link>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gold hover:bg-gold/90 text-background" onClick={() => resetForm()}>
@@ -632,13 +664,42 @@ export default function AdminProperties() {
         </Dialog>
       </div>
 
+      {/* Stats Dashboard */}
+      <PropertyStatsCards stats={stats} isLoading={statsLoading} />
+
+      {/* Filters */}
+      <PropertyFiltersBar 
+        filters={filters}
+        updateFilter={updateFilter}
+        clearFilters={clearFilters}
+        locationAreas={locationAreas}
+      />
+
       <div className="bg-card border border-border rounded-xl overflow-hidden">
+        {/* Bulk Actions Bar */}
+        <PropertyBulkActions
+          selectedCount={selectedIds.size}
+          totalOnPage={properties.length}
+          isAllSelected={selectedIds.size === properties.length && properties.length > 0}
+          onSelectAll={selectAll}
+          onClearSelection={clearSelection}
+          onBulkPublish={() => bulkPublish.mutate(Array.from(selectedIds))}
+          onBulkUnpublish={() => bulkUnpublish.mutate(Array.from(selectedIds))}
+          onBulkDelete={() => bulkDelete.mutate(Array.from(selectedIds))}
+          onBulkAssignAgent={(agentId) => bulkAssignAgent.mutate({ ids: Array.from(selectedIds), agentId })}
+          agents={agents.map(a => ({ id: a.id, full_name: a.full_name }))}
+          isLoading={bulkPublish.isPending || bulkUnpublish.isPending || bulkDelete.isPending}
+        />
+
         {isLoading ? (
           <div className="p-8 text-center text-muted-foreground">Loading properties...</div>
+        ) : properties.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">No properties found matching your filters.</div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10"></TableHead>
                 <TableHead>Property</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Price</TableHead>
@@ -650,7 +711,13 @@ export default function AdminProperties() {
             </TableHeader>
             <TableBody>
               {properties.map((property: any) => (
-                <TableRow key={property.id}>
+                <TableRow key={property.id} className={selectedIds.has(property.id) ? 'bg-muted/50' : ''}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(property.id)}
+                      onCheckedChange={() => toggleSelect(property.id)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {property.is_featured && <Star className="h-4 w-4 text-gold fill-gold" />}
@@ -659,7 +726,13 @@ export default function AdminProperties() {
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span className="capitalize">{property.listing_type || 'sale'}</span>
                           {property.rera_permit_number && (
-                            <span className="text-emerald-500">RERA #{property.rera_permit_number}</span>
+                            <span className="text-emerald-500">RERA</span>
+                          )}
+                          {property.external_id && (
+                            <Badge variant="outline" className="text-[10px] py-0 px-1">Bayut</Badge>
+                          )}
+                          {hasPropertyIssues(property) && (
+                            <Badge variant="destructive" className="text-[10px] py-0 px-1">Issues</Badge>
                           )}
                         </div>
                       </div>
@@ -668,7 +741,7 @@ export default function AdminProperties() {
                   <TableCell>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <MapPin className="h-3 w-3" />
-                      <span>{property.community?.name || property.location_area}</span>
+                      <span className="truncate max-w-[120px]">{property.community?.name || property.location_area}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-gold font-medium">{formatPrice(property.price_aed)}</TableCell>
@@ -684,27 +757,41 @@ export default function AdminProperties() {
                     {property.agent ? (
                       <div className="flex items-center gap-1 text-sm">
                         <User className="h-3 w-3 text-muted-foreground" />
-                        <span>{property.agent.full_name}</span>
+                        <span className="truncate max-w-[100px]">{property.agent.full_name}</span>
                       </div>
                     ) : property.brokerage ? (
                       <div className="flex items-center gap-1 text-sm">
                         <Building2 className="h-3 w-3 text-muted-foreground" />
-                        <span>{property.brokerage.name}</span>
+                        <span className="truncate max-w-[100px]">{property.brokerage.name}</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      property.status === 'available' ? 'bg-emerald-500/10 text-emerald-500' :
-                      property.status === 'sold' ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'
-                    }`}>
-                      {property.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        property.status === 'available' ? 'bg-emerald-500/10 text-emerald-500' :
+                        property.status === 'sold' ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-500'
+                      }`}>
+                        {property.status}
+                      </span>
+                      {property.is_published ? (
+                        <Eye className="h-3 w-3 text-emerald-500" />
+                      ) : (
+                        <EyeOff className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      {property.external_url && (
+                        <Button variant="ghost" size="icon" asChild title="View on Bayut">
+                          <a href={property.external_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => setGalleryPropertyId(property.id)} title="Manage Images">
                         <ImageIcon className="h-4 w-4" />
                       </Button>
@@ -744,6 +831,19 @@ export default function AdminProperties() {
               ))}
             </TableBody>
           </Table>
+        )}
+
+        {/* Pagination */}
+        {totalCount > 0 && (
+          <PropertyPagination
+            page={page}
+            setPage={setPage}
+            pageSize={pageSize}
+            setPageSize={setPageSize}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            PAGE_SIZE_OPTIONS={PAGE_SIZE_OPTIONS}
+          />
         )}
       </div>
 
