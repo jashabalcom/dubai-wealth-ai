@@ -125,10 +125,10 @@ export function WistiaPlayer({
   return (
     <div className="relative aspect-video bg-black" ref={containerRef}>
       {/* Wistia embed div */}
-      <div
-        className={`wistia_embed wistia_async_${videoId} seo=true videoFoam=true`}
-        style={{ width: '100%', height: '100%' }}
-      />
+        <div
+          className={`wistia_embed wistia_async_${videoId} seo=true videoFoam=true playerColor=C4B59A`}
+          style={{ width: '100%', height: '100%' }}
+        />
 
       {/* Resume overlay */}
       {showResume && isLoaded && initialPosition > 10 && !hasResumedRef.current && (
