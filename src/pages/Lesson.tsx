@@ -9,12 +9,14 @@ import {
   X,
   Clock,
   Lock,
+  Play,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useProfile } from '@/hooks/useProfile';
+import { useVideoProgress } from '@/hooks/useVideoProgress';
 import { VideoPlayer } from '@/components/lessons/VideoPlayer';
 import { ResourceList } from '@/components/lessons/ResourceList';
 import { sanitizeMarkdownHtml } from '@/lib/sanitize';
@@ -45,6 +47,12 @@ interface Lesson {
   resources: unknown;
 }
 
+interface LessonProgress {
+  lesson_id: string;
+  is_completed: boolean;
+  watch_progress_percent: number;
+}
+
 export default function Lesson() {
   const { courseSlug, lessonSlug } = useParams();
   const navigate = useNavigate();
@@ -55,11 +63,17 @@ export default function Lesson() {
   const [course, setCourse] = useState<Course | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [lessonProgressMap, setLessonProgressMap] = useState<Map<string, LessonProgress>>(new Map());
   const [showSidebar, setShowSidebar] = useState(false);
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
+
+  // Video progress tracking
+  const { progress, saveProgress, markComplete } = useVideoProgress(lesson?.id);
+  const isCompleted = progress?.is_completed || false;
+  const completedLessons = Array.from(lessonProgressMap.values())
+    .filter(p => p.is_completed)
+    .map(p => p.lesson_id);
 
   // Check if user can access the lesson
   const canAccessLesson = (lessonData: Lesson) => {
@@ -77,10 +91,10 @@ export default function Lesson() {
   }, [courseSlug, lessonSlug, profile]);
 
   useEffect(() => {
-    if (user && lesson) {
-      checkProgress();
+    if (user && lessons.length > 0) {
+      fetchAllProgress();
     }
-  }, [user, lesson]);
+  }, [user, lessons]);
 
   const fetchData = async () => {
     // Fetch course
@@ -129,58 +143,49 @@ export default function Lesson() {
     setLoading(false);
   };
 
-  const checkProgress = async () => {
-    if (!lesson) return;
-
-    // Check if current lesson is completed
-    const { data: progressData } = await supabase
-      .from('lesson_progress')
-      .select('is_completed')
-      .eq('lesson_id', lesson.id)
-      .maybeSingle();
-
-    setIsCompleted(progressData?.is_completed || false);
-
-    // Get all completed lessons for sidebar
+  const fetchAllProgress = async () => {
+    if (!user) return;
+    
     const lessonIds = lessons.map((l) => l.id);
     const { data: allProgress } = await supabase
       .from('lesson_progress')
-      .select('lesson_id')
+      .select('lesson_id, is_completed, watch_progress_percent')
       .in('lesson_id', lessonIds)
-      .eq('is_completed', true);
+      .eq('user_id', user.id);
 
     if (allProgress) {
-      setCompletedLessons(allProgress.map((p) => p.lesson_id));
+      const progressMap = new Map<string, LessonProgress>();
+      allProgress.forEach((p) => {
+        progressMap.set(p.lesson_id, {
+          lesson_id: p.lesson_id,
+          is_completed: p.is_completed || false,
+          watch_progress_percent: p.watch_progress_percent || 0,
+        });
+      });
+      setLessonProgressMap(progressMap);
     }
   };
 
-  const markAsComplete = async () => {
-    if (!user || !lesson) return;
+  const handleVideoProgress = (positionSeconds: number, durationSeconds: number) => {
+    saveProgress(positionSeconds, durationSeconds);
+  };
 
-    const { error } = await supabase
-      .from('lesson_progress')
-      .upsert({
-        user_id: user.id,
-        lesson_id: lesson.id,
-        is_completed: true,
-        completed_at: new Date().toISOString(),
-      });
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Could not mark lesson as complete.',
-        variant: 'destructive',
-      });
-      return;
+  const handleVideoComplete = () => {
+    if (!isCompleted) {
+      markComplete();
+      // Update local state
+      if (lesson) {
+        setLessonProgressMap((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(lesson.id, {
+            lesson_id: lesson.id,
+            is_completed: true,
+            watch_progress_percent: 100,
+          });
+          return newMap;
+        });
+      }
     }
-
-    setIsCompleted(true);
-    setCompletedLessons([...completedLessons, lesson.id]);
-    toast({
-      title: 'Lesson completed!',
-      description: 'Great job! Keep learning.',
-    });
   };
 
   const getPrevLesson = () => {
@@ -296,7 +301,9 @@ export default function Lesson() {
           <div className="overflow-y-auto h-full pb-20">
             {lessons.map((l) => {
               const isActive = l.id === lesson.id;
-              const isLessonCompleted = completedLessons.includes(l.id);
+              const lessonProgress = lessonProgressMap.get(l.id);
+              const isLessonCompleted = lessonProgress?.is_completed || false;
+              const watchPercent = lessonProgress?.watch_progress_percent || 0;
 
               return (
                 <Link
@@ -309,24 +316,59 @@ export default function Lesson() {
                       : 'hover:bg-muted/50'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    isLessonCompleted 
-                      ? 'bg-gold text-primary-dark' 
-                      : isActive
-                        ? 'bg-gold/20 text-gold'
-                        : 'bg-muted text-muted-foreground'
-                  }`}>
+                  {/* Progress indicator */}
+                  <div className="relative w-8 h-8 flex-shrink-0">
                     {isLessonCompleted ? (
-                      <CheckCircle2 className="w-4 h-4" />
+                      <div className="w-8 h-8 rounded-full bg-gold text-primary-dark flex items-center justify-center">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                    ) : watchPercent > 0 ? (
+                      <div className="relative w-8 h-8">
+                        {/* Background circle */}
+                        <svg className="w-8 h-8 -rotate-90">
+                          <circle
+                            cx="16"
+                            cy="16"
+                            r="14"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            className="text-muted"
+                          />
+                          <circle
+                            cx="16"
+                            cy="16"
+                            r="14"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeDasharray={`${(watchPercent / 100) * 88} 88`}
+                            className="text-gold"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Play className="w-3 h-3 text-gold fill-gold" />
+                        </div>
+                      </div>
                     ) : (
-                      <span className="text-sm">{l.order_index}</span>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        isActive ? 'bg-gold/20 text-gold' : 'bg-muted text-muted-foreground'
+                      }`}>
+                        <span className="text-sm">{l.order_index}</span>
+                      </div>
                     )}
                   </div>
+                  
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-medium truncate ${isActive ? 'text-gold' : 'text-foreground'}`}>
                       {l.title}
                     </p>
-                    <p className="text-xs text-muted-foreground">{l.duration_minutes}min</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>{l.duration_minutes}min</span>
+                      {watchPercent > 0 && watchPercent < 100 && !isLessonCompleted && (
+                        <span className="text-gold">{watchPercent}% watched</span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               );
@@ -351,7 +393,14 @@ export default function Lesson() {
             transition={{ duration: 0.3 }}
           >
             {/* Video Player */}
-            <VideoPlayer url={lesson.video_url} title={lesson.title} />
+            <VideoPlayer 
+              url={lesson.video_url} 
+              title={lesson.title}
+              lessonId={lesson.id}
+              initialPosition={progress?.last_position_seconds || 0}
+              onProgress={handleVideoProgress}
+              onComplete={handleVideoComplete}
+            />
 
             {/* Lesson Content */}
             <div className="max-w-4xl mx-auto px-4 py-8">
@@ -363,6 +412,11 @@ export default function Lesson() {
                   <Clock className="w-4 h-4" />
                   {lesson.duration_minutes} min
                 </span>
+                {progress && progress.watch_progress_percent > 0 && progress.watch_progress_percent < 100 && !isCompleted && (
+                  <span className="text-sm text-gold">
+                    {progress.watch_progress_percent}% watched
+                  </span>
+                )}
               </div>
 
               <h1 className="font-heading text-2xl md:text-3xl text-foreground mb-4">
@@ -410,7 +464,7 @@ export default function Lesson() {
                       <span>Lesson completed</span>
                     </div>
                   ) : (
-                    <Button variant="gold" onClick={markAsComplete}>
+                    <Button variant="gold" onClick={markComplete}>
                       <CheckCircle2 className="w-5 h-5 mr-2" />
                       Mark as Complete
                     </Button>
