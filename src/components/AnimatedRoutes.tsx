@@ -57,6 +57,7 @@ const CapRateCalculator = lazy(() => import("@/pages/tools/CapRateCalculator"));
 const DSCRCalculator = lazy(() => import("@/pages/tools/DSCRCalculator"));
 const FreeZoneComparison = lazy(() => import("@/pages/tools/FreeZoneComparison"));
 const CommercialLeaseAnalyzer = lazy(() => import("@/pages/tools/CommercialLeaseAnalyzer"));
+const OffPlanCalculator = lazy(() => import("@/pages/tools/OffPlanCalculator"));
 
 // Lazy loaded pages - Less frequently visited
 const Portfolio = lazy(() => import("@/pages/Portfolio"));
@@ -157,6 +158,7 @@ export function AnimatedRoutes() {
         <Route path="/tools/dscr" element={<ProtectedRoute><LazyPage><DSCRCalculator /></LazyPage></ProtectedRoute>} />
         <Route path="/tools/free-zone" element={<ProtectedRoute><LazyPage><FreeZoneComparison /></LazyPage></ProtectedRoute>} />
         <Route path="/tools/lease-analyzer" element={<ProtectedRoute><LazyPage><CommercialLeaseAnalyzer /></LazyPage></ProtectedRoute>} />
+        <Route path="/tools/offplan" element={<ProtectedRoute><LazyPage><OffPlanCalculator /></LazyPage></ProtectedRoute>} />
         
         {/* AI Assistant - Auth required, usage-based gating in-page */}
         <Route path="/ai" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
