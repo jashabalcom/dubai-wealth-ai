@@ -40,7 +40,10 @@ import {
   StopCircle,
   PlayCircle,
   TestTube2,
-  HardDrive
+  HardDrive,
+  Rocket,
+  Settings2,
+  Target
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -167,6 +170,22 @@ export default function AdminBayutSync() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [dryRunResults, setDryRunResults] = useState<{ area: string; count: number }[]>([]);
   const [estimatedTotalProperties, setEstimatedTotalProperties] = useState(0);
+  
+  // Scale Sync (10K) state
+  const [isScaleSyncing, setIsScaleSyncing] = useState(false);
+  const [scaleSyncProgress, setScaleSyncProgress] = useState({
+    currentArea: '',
+    currentAreaIndex: 0,
+    totalAreas: 0,
+    totalPropertiesSynced: 0,
+    totalApiCalls: 0,
+  });
+  const [scaleTargetAreas, setScaleTargetAreas] = useState<typeof TOP_DUBAI_AREAS>([...TOP_DUBAI_AREAS]);
+  const [scalePagesPerArea, setScalePagesPerArea] = useState(10); // 10 pages = 500 props per area
+  const [scaleLiteMode, setScaleLiteMode] = useState(true); // Default to lite mode for speed
+  const [scaleIncludeRentals, setScaleIncludeRentals] = useState(false);
+  const [scaleSkipRecent, setScaleSkipRecent] = useState(false);
+  const [showScaleConfirmDialog, setShowScaleConfirmDialog] = useState(false);
   
   // Abort ref
   const abortRef = useRef(false);
@@ -509,6 +528,81 @@ export default function AdminBayutSync() {
       toast.warning(`Quick sync complete. ${successCount} areas succeeded, ${failCount} failed. ${totalPropertiesSynced} properties synced.`);
     }
   };
+
+  // SCALE SYNC - Bulk sync to reach 10K+ properties
+  const runScaleSync = async () => {
+    setShowScaleConfirmDialog(false);
+    setIsScaleSyncing(true);
+    abortRef.current = false;
+    
+    setScaleSyncProgress({
+      currentArea: '',
+      currentAreaIndex: 0,
+      totalAreas: scaleTargetAreas.length,
+      totalPropertiesSynced: 0,
+      totalApiCalls: 0,
+    });
+
+    toast.info(`Starting Scale Sync: ${scaleTargetAreas.length} areas, ${scalePagesPerArea} pages each${scaleLiteMode ? ' (Lite Mode)' : ''}...`);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: {
+          action: 'bulk_sync',
+          areas: scaleTargetAreas.map(a => ({ id: a.id, name: a.name })),
+          max_pages: scalePagesPerArea,
+          lite_mode: scaleLiteMode,
+          include_rentals: scaleIncludeRentals,
+          skip_recently_synced: scaleSkipRecent,
+          limit: 50,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(
+          `Scale Sync complete! ${data.totalPropertiesSynced} properties synced from ${data.areaResults?.length || scaleTargetAreas.length} areas. API calls: ${data.totalApiCalls}`
+        );
+        fetchSyncLogs();
+        fetchTotalStats();
+      } else {
+        toast.error(data?.error || 'Scale sync failed');
+      }
+    } catch (error) {
+      console.error('Scale sync error:', error);
+      toast.error('Scale sync failed. Check console for details.');
+    } finally {
+      setIsScaleSyncing(false);
+      setScaleSyncProgress({
+        currentArea: '',
+        currentAreaIndex: 0,
+        totalAreas: 0,
+        totalPropertiesSynced: 0,
+        totalApiCalls: 0,
+      });
+    }
+  };
+
+  const toggleScaleArea = (areaId: number) => {
+    setScaleTargetAreas(prev => {
+      const exists = prev.find(a => a.id === areaId);
+      if (exists) {
+        return prev.filter(a => a.id !== areaId);
+      } else {
+        const area = TOP_DUBAI_AREAS.find(a => a.id === areaId);
+        return area ? [...prev, area] : prev;
+      }
+    });
+  };
+
+  const selectAllAreas = () => setScaleTargetAreas([...TOP_DUBAI_AREAS]);
+  const selectNoAreas = () => setScaleTargetAreas([]);
+
+  const estimatedPropertiesCount = scaleTargetAreas.length * scalePagesPerArea * 50 * (scaleIncludeRentals ? 2 : 1);
+  const estimatedApiCalls = scaleLiteMode 
+    ? scaleTargetAreas.length * scalePagesPerArea * (scaleIncludeRentals ? 2 : 1)
+    : estimatedPropertiesCount + scaleTargetAreas.length * scalePagesPerArea * (scaleIncludeRentals ? 2 : 1);
 
   const fetchTransactions = async () => {
     setIsLoadingTransactions(true);
@@ -911,6 +1005,191 @@ export default function AdminBayutSync() {
                       {area.name}
                     </Badge>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SCALE TO 10K - Bulk Sync */}
+            <Card className="border-emerald-500/30 bg-emerald-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Rocket className="h-5 w-5 text-emerald-500" />
+                  Scale to 10K Properties
+                </CardTitle>
+                <CardDescription>
+                  Bulk sync with multi-page pagination. Lite mode syncs faster using search data only.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Sync Controls */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium flex items-center gap-1">
+                      <Target className="h-3 w-3" /> Pages per Area
+                    </label>
+                    <Select 
+                      value={String(scalePagesPerArea)} 
+                      onValueChange={(v) => setScalePagesPerArea(Number(v))}
+                      disabled={isScaleSyncing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 page (50 props)</SelectItem>
+                        <SelectItem value="5">5 pages (250 props)</SelectItem>
+                        <SelectItem value="10">10 pages (500 props)</SelectItem>
+                        <SelectItem value="15">15 pages (750 props)</SelectItem>
+                        <SelectItem value="20">20 pages (1000 props)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium flex items-center gap-1">
+                      <Zap className="h-3 w-3" /> Lite Mode
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="lite-mode"
+                        checked={scaleLiteMode}
+                        onCheckedChange={(checked) => setScaleLiteMode(!!checked)}
+                        disabled={isScaleSyncing}
+                      />
+                      <label htmlFor="lite-mode" className="text-sm text-muted-foreground">
+                        Skip photo rehosting
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Include Rentals</label>
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="include-rentals"
+                        checked={scaleIncludeRentals}
+                        onCheckedChange={(checked) => setScaleIncludeRentals(!!checked)}
+                        disabled={isScaleSyncing}
+                      />
+                      <label htmlFor="include-rentals" className="text-sm text-muted-foreground">
+                        Sync for-rent too
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Force Re-sync</label>
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        id="skip-recent"
+                        checked={scaleSkipRecent}
+                        onCheckedChange={(checked) => setScaleSkipRecent(!!checked)}
+                        disabled={isScaleSyncing}
+                      />
+                      <label htmlFor="skip-recent" className="text-sm text-muted-foreground">
+                        Skip 24h check
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estimates */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-background/50 border">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-emerald-500">{scaleTargetAreas.length}</p>
+                    <p className="text-xs text-muted-foreground">Areas Selected</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-500">{estimatedPropertiesCount.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">Est. Properties</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-amber-500">{estimatedApiCalls.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">Est. API Calls</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-500">
+                      {scaleLiteMode ? '~5 min' : '~30 min'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Est. Duration</p>
+                  </div>
+                </div>
+
+                {/* Area Selection */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Target Areas</label>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={selectAllAreas}
+                        disabled={isScaleSyncing}
+                      >
+                        Select All
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={selectNoAreas}
+                        disabled={isScaleSyncing}
+                      >
+                        Clear All
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 border rounded-md">
+                    {TOP_DUBAI_AREAS.map((area) => {
+                      const isSelected = scaleTargetAreas.some(a => a.id === area.id);
+                      return (
+                        <Badge 
+                          key={area.id}
+                          variant={isSelected ? "default" : "outline"}
+                          className={`text-xs cursor-pointer transition-colors ${
+                            isSelected 
+                              ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+                              : 'hover:bg-muted'
+                          }`}
+                          onClick={() => !isScaleSyncing && toggleScaleArea(area.id)}
+                        >
+                          {isSelected && <CheckCircle className="h-3 w-3 mr-1" />}
+                          {area.name}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button 
+                    onClick={() => setShowScaleConfirmDialog(true)} 
+                    disabled={isScaleSyncing || scaleTargetAreas.length === 0}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    size="lg"
+                  >
+                    {isScaleSyncing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Scale Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <Rocket className="h-4 w-4 mr-2" />
+                        Start Scale Sync ({estimatedPropertiesCount.toLocaleString()} props)
+                      </>
+                    )}
+                  </Button>
+                  
+                  {isScaleSyncing && (
+                    <Button 
+                      onClick={abortSync}
+                      variant="destructive"
+                    >
+                      <StopCircle className="h-4 w-4 mr-2" />
+                      Abort
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1408,6 +1687,75 @@ export default function AdminBayutSync() {
               >
                 <PlayCircle className="h-4 w-4 mr-2" />
                 Start Sync
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Scale Sync Confirmation Dialog */}
+        <AlertDialog open={showScaleConfirmDialog} onOpenChange={setShowScaleConfirmDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Rocket className="h-5 w-5 text-emerald-500" />
+                Scale Sync to {estimatedPropertiesCount.toLocaleString()} Properties?
+              </AlertDialogTitle>
+              <AlertDialogDescription asChild>
+                <div className="space-y-4">
+                  <p>This will sync properties from {scaleTargetAreas.length} areas with {scalePagesPerArea} pages each.</p>
+                  
+                  <div className="p-3 bg-muted rounded-md space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Areas selected:</span>
+                      <span className="font-semibold">{scaleTargetAreas.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Pages per area:</span>
+                      <span className="font-semibold">{scalePagesPerArea}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Mode:</span>
+                      <Badge variant={scaleLiteMode ? "secondary" : "default"}>
+                        {scaleLiteMode ? 'Lite (Fast)' : 'Full (With Photos)'}
+                      </Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Include rentals:</span>
+                      <span className="font-semibold">{scaleIncludeRentals ? 'Yes (2x)' : 'No'}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t pt-2">
+                      <span className="text-sm">Est. properties:</span>
+                      <span className="font-semibold text-emerald-500">{estimatedPropertiesCount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Est. API calls:</span>
+                      <span className="font-semibold text-amber-500">{estimatedApiCalls.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Est. duration:</span>
+                      <span className="font-semibold">{scaleLiteMode ? '~5 min' : '~30 min'}</span>
+                    </div>
+                  </div>
+
+                  {scaleLiteMode && (
+                    <div className="flex items-start gap-2 p-3 bg-blue-500/10 rounded-md border border-blue-500/30">
+                      <Zap className="h-4 w-4 text-blue-500 mt-0.5" />
+                      <p className="text-sm text-blue-400">
+                        <strong>Lite Mode:</strong> Syncs quickly using search results only. Photos will reference Bayut CDN instead of being re-hosted.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={runScaleSync}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Rocket className="h-4 w-4 mr-2" />
+                Start Scale Sync
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

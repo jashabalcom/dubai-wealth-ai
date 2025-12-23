@@ -16,7 +16,7 @@ const BATCH_SIZE = 20;
 const BATCH_COOLDOWN_MS = 5000; // 5 seconds between batches
 
 interface SyncRequest {
-  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects';
+  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects' | 'bulk_sync';
   // Location search
   query?: string;
   // Property search filters
@@ -50,6 +50,12 @@ interface SyncRequest {
   agency_ids?: number[];
   // Dry run mode - counts only, no upserts
   dry_run?: boolean;
+  // BULK SYNC options (new for 10K strategy)
+  areas?: { id: number; name: string }[]; // Multiple areas to sync
+  max_pages?: number; // Max pages per area (default: 1, max: 20)
+  lite_mode?: boolean; // Skip detail fetches - uses search data only
+  include_rentals?: boolean; // Also sync rental properties
+  skip_recently_synced?: boolean; // Skip 24-hour check (force re-sync)
 }
 
 // Organic throttling: random delay between 800-2000ms
@@ -1039,6 +1045,307 @@ serve(async (req) => {
           projectsSynced,
           totalAvailable,
           errors: errors.length > 0 ? errors : undefined,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // BULK SYNC - Scale to 10K Properties
+    // ===========================================
+    if (action === 'bulk_sync') {
+      const {
+        areas = [],
+        purpose = 'for-sale',
+        categories,
+        max_pages = 1,
+        lite_mode = false,
+        include_rentals = false,
+        skip_recently_synced = false,
+        limit = 50, // per page
+      } = body;
+
+      if (areas.length === 0) {
+        return new Response(
+          JSON.stringify({ error: 'At least one area is required for bulk sync' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const maxPagesPerArea = Math.min(max_pages, 20); // Cap at 20 pages = 1000 properties per area
+      const propertiesPerPage = Math.min(limit, 50); // Cap at 50 per page
+
+      console.log(`[Bayut API] BULK SYNC - ${areas.length} areas, ${maxPagesPerArea} pages each, lite_mode=${lite_mode}`);
+
+      // Create sync log for bulk operation
+      const { data: syncLog } = await supabase
+        .from('bayut_sync_logs')
+        .insert({
+          sync_type: 'bulk_sync',
+          area_name: `Bulk: ${areas.length} areas`,
+          status: 'running',
+        })
+        .select()
+        .single();
+
+      const syncLogId = syncLog?.id;
+
+      let totalApiCalls = 0;
+      let totalPropertiesFound = 0;
+      let totalPropertiesSynced = 0;
+      let totalPhotosRehosted = 0;
+      let totalPhotosCdn = 0;
+      let totalAgentsDiscovered = 0;
+      let totalAgenciesDiscovered = 0;
+      const allErrors: string[] = [];
+      const areaResults: { name: string; synced: number; pages: number }[] = [];
+      const discoveredAgentIds = new Set<string>();
+      const discoveredAgencyIds = new Set<string>();
+
+      const purposes = include_rentals ? ['for-sale', 'for-rent'] : [purpose];
+
+      for (const area of areas) {
+        let areaSynced = 0;
+        let areaPagesProcessed = 0;
+
+        for (const currentPurpose of purposes) {
+          // Paginate through results for this area
+          for (let pageNum = 0; pageNum < maxPagesPerArea; pageNum++) {
+            try {
+              // Build search body
+              const searchBody: any = {
+                purpose: currentPurpose,
+                locations_ids: [area.id],
+                index: 'latest',
+              };
+              if (categories && categories.length > 0) {
+                searchBody.categories = categories;
+              }
+
+              const searchUrl = `${API_BASE}/properties_search?page=${pageNum}&hitsPerPage=${propertiesPerPage}`;
+              console.log(`[Bayut API] Bulk sync: ${area.name} page ${pageNum + 1}/${maxPagesPerArea} (${currentPurpose})`);
+
+              const searchResponse = await fetch(searchUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-RapidAPI-Key': rapidApiKey,
+                  'X-RapidAPI-Host': API_HOST,
+                },
+                body: JSON.stringify(searchBody),
+              });
+              totalApiCalls++;
+
+              if (!searchResponse.ok) {
+                const errorBody = await searchResponse.text();
+                console.error(`[Bayut API] Search failed for ${area.name}:`, errorBody);
+                allErrors.push(`${area.name} page ${pageNum}: ${searchResponse.status}`);
+                break; // Stop pagination for this area on error
+              }
+
+              const searchData = await searchResponse.json();
+              const properties = searchData.results || [];
+              const totalAvailable = searchData.nbHits || 0;
+              totalPropertiesFound += properties.length;
+
+              if (properties.length === 0) {
+                console.log(`[Bayut API] No more properties for ${area.name}, stopping pagination`);
+                break; // No more results, stop pagination
+              }
+
+              areaPagesProcessed++;
+
+              // Process properties (LITE MODE or FULL MODE)
+              for (const prop of properties) {
+                try {
+                  const externalId = String(prop.id);
+
+                  // Basic validation
+                  if (!prop.id || !prop.price || prop.price <= 0) continue;
+
+                  // Skip land/plots
+                  const propTitle = (prop.title || '').toLowerCase();
+                  const propCategory = (prop.category || '').toLowerCase();
+                  if (propTitle.includes('plot') || propTitle.includes('land') || 
+                      propCategory.includes('plot') || propCategory.includes('land')) {
+                    continue;
+                  }
+
+                  // Check if recently synced (unless skip_recently_synced)
+                  if (!skip_recently_synced) {
+                    const { data: existing } = await supabase
+                      .from('properties')
+                      .select('id, last_synced_at')
+                      .eq('external_id', externalId)
+                      .eq('external_source', 'bayut')
+                      .single();
+
+                    if (existing?.last_synced_at) {
+                      const lastSync = new Date(existing.last_synced_at);
+                      const hoursSinceSync = (Date.now() - lastSync.getTime()) / (1000 * 60 * 60);
+                      if (hoursSinceSync < 24) continue;
+                    }
+                  }
+
+                  let fullProp = prop;
+                  let imageResult = {
+                    rehostedImages: [] as string[],
+                    cdnGalleryUrls: [] as string[],
+                    floorPlanUrls: [] as string[],
+                    rehostedCount: 0,
+                    cdnCount: 0,
+                    floorPlansCount: 0,
+                  };
+
+                  // LITE MODE: Use search data directly, skip detail fetch
+                  // FULL MODE: Fetch details and rehost images
+                  if (!lite_mode) {
+                    try {
+                      const detailResponse = await fetch(
+                        `${API_BASE}/property/${externalId}`,
+                        {
+                          headers: {
+                            'X-RapidAPI-Key': rapidApiKey,
+                            'X-RapidAPI-Host': API_HOST,
+                          },
+                        }
+                      );
+                      totalApiCalls++;
+
+                      if (detailResponse.ok) {
+                        fullProp = await detailResponse.json();
+                      }
+                      await new Promise(r => setTimeout(r, 200));
+                    } catch (e) {
+                      console.error(`[Bayut API] Detail fetch error:`, e);
+                    }
+
+                    // Process images
+                    imageResult = await processPropertyImages(supabase, fullProp, externalId);
+                    totalPhotosRehosted += imageResult.rehostedCount;
+                    totalPhotosCdn += imageResult.cdnCount;
+                  } else {
+                    // LITE MODE: Just extract cover photo URL for reference
+                    if (prop.media?.cover_photo) {
+                      imageResult.cdnGalleryUrls = [prop.media.cover_photo];
+                      imageResult.cdnCount = 1;
+                      totalPhotosCdn++;
+                    }
+                  }
+
+                  // Extract agent/agency
+                  const agentData = extractAgentData(prop);
+                  const agencyData = extractAgencyData(prop);
+
+                  if (agentData?.agent_id && !discoveredAgentIds.has(String(agentData.agent_id))) {
+                    discoveredAgentIds.add(String(agentData.agent_id));
+                    totalAgentsDiscovered++;
+                  }
+                  if (agencyData?.agency_id && !discoveredAgencyIds.has(String(agencyData.agency_id))) {
+                    discoveredAgencyIds.add(String(agencyData.agency_id));
+                    totalAgenciesDiscovered++;
+                  }
+
+                  // Transform property
+                  const transformedProperty = transformProperty(fullProp);
+                  if (!transformedProperty.size_sqft || transformedProperty.size_sqft < 1) {
+                    transformedProperty.size_sqft = 1;
+                  }
+
+                  transformedProperty.images = imageResult.rehostedImages;
+                  transformedProperty.gallery_urls = imageResult.cdnGalleryUrls;
+                  transformedProperty.floor_plan_urls = imageResult.floorPlanUrls;
+                  transformedProperty.bayut_agent_data = agentData;
+                  transformedProperty.bayut_agency_data = agencyData;
+                  transformedProperty.bayut_building_info = extractBuildingInfo(prop);
+
+                  // Check for existing record
+                  const { data: existingProp } = await supabase
+                    .from('properties')
+                    .select('id')
+                    .eq('external_id', externalId)
+                    .eq('external_source', 'bayut')
+                    .single();
+
+                  // Upsert
+                  const { error: upsertError } = await supabase
+                    .from('properties')
+                    .upsert(
+                      {
+                        ...transformedProperty,
+                        id: existingProp?.id,
+                      },
+                      { onConflict: 'external_source,external_id' }
+                    );
+
+                  if (!upsertError) {
+                    totalPropertiesSynced++;
+                    areaSynced++;
+                  } else {
+                    allErrors.push(`${externalId}: ${upsertError.message}`);
+                  }
+
+                } catch (propError) {
+                  const msg = propError instanceof Error ? propError.message : String(propError);
+                  allErrors.push(msg);
+                }
+              }
+
+              // Small delay between pages
+              await new Promise(r => setTimeout(r, 300));
+
+            } catch (pageError) {
+              const msg = pageError instanceof Error ? pageError.message : String(pageError);
+              allErrors.push(`${area.name} page ${pageNum}: ${msg}`);
+            }
+          }
+        }
+
+        areaResults.push({ name: area.name, synced: areaSynced, pages: areaPagesProcessed });
+        console.log(`[Bayut API] Completed ${area.name}: ${areaSynced} properties synced`);
+      }
+
+      // Update sync log
+      if (syncLogId) {
+        await supabase
+          .from('bayut_sync_logs')
+          .update({
+            completed_at: new Date().toISOString(),
+            properties_found: totalPropertiesFound,
+            properties_synced: totalPropertiesSynced,
+            photos_synced: totalPhotosRehosted,
+            api_calls_used: totalApiCalls,
+            errors: allErrors.length > 0 ? { 
+              messages: allErrors.slice(0, 50), // Limit errors stored
+              total_errors: allErrors.length,
+              photos_cdn: totalPhotosCdn,
+              agents_discovered: totalAgentsDiscovered,
+              agencies_discovered: totalAgenciesDiscovered,
+              area_results: areaResults,
+            } : null,
+            status: allErrors.length > 0 ? 'completed_with_errors' : 'completed',
+          })
+          .eq('id', syncLogId);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: `Bulk sync complete: ${totalPropertiesSynced} properties from ${areas.length} areas`,
+          totalPropertiesFound,
+          totalPropertiesSynced,
+          totalApiCalls,
+          lite_mode,
+          storage: {
+            photosRehosted: totalPhotosRehosted,
+            photosCdnReferenced: totalPhotosCdn,
+          },
+          intelligence: {
+            agentsDiscovered: totalAgentsDiscovered,
+            agenciesDiscovered: totalAgenciesDiscovered,
+          },
+          areaResults,
+          errors: allErrors.length > 0 ? allErrors.slice(0, 20) : undefined,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
