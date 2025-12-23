@@ -5,21 +5,17 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
+import { STRIPE_TIERS, BillingPeriod } from "@/lib/stripe-config";
 
 interface CheckoutFormProps {
   tier: "investor" | "elite";
-  tierConfig: {
-    name: string;
-    price: number;
-    priceDisplay: string;
-    period: string;
-  };
+  billingPeriod?: BillingPeriod;
   isUpgrade: boolean;
   subscriptionId: string;
   intentType?: 'setup' | 'payment';
 }
 
-const CheckoutForm = ({ tier, tierConfig, isUpgrade, subscriptionId, intentType = 'payment' }: CheckoutFormProps) => {
+const CheckoutForm = ({ tier, billingPeriod = 'monthly', isUpgrade, subscriptionId, intentType = 'payment' }: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -28,6 +24,9 @@ const CheckoutForm = ({ tier, tierConfig, isUpgrade, subscriptionId, intentType 
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const tierConfig = STRIPE_TIERS[tier];
+  const priceConfig = billingPeriod === 'annual' ? tierConfig.annual : tierConfig.monthly;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,12 +138,12 @@ const CheckoutForm = ({ tier, tierConfig, isUpgrade, subscriptionId, intentType 
           </>
         ) : (
           <>
-            {isUpgrade ? "Upgrade Now" : "Start Free Trial"} — {tierConfig.priceDisplay}{tierConfig.period}
+            {isUpgrade ? "Upgrade Now" : billingPeriod === 'annual' ? "Subscribe Now" : "Start Free Trial"} — {priceConfig.priceDisplay}{priceConfig.period}
           </>
         )}
       </Button>
 
-      {!isUpgrade && (
+      {!isUpgrade && billingPeriod === 'monthly' && (
         <p className="text-xs text-muted-foreground text-center mt-4">
           Your 14-day free trial starts today. You won't be charged until {new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
         </p>

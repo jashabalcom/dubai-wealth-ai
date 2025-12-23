@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
 import PlanSummary from "@/components/checkout/PlanSummary";
 import { SEOHead } from "@/components/SEOHead";
-import { STRIPE_TIERS, STRIPE_PUBLISHABLE_KEY } from "@/lib/stripe-config";
+import { STRIPE_TIERS, STRIPE_PUBLISHABLE_KEY, BillingPeriod } from "@/lib/stripe-config";
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
@@ -19,6 +19,7 @@ const Checkout = () => {
   const { tier } = useParams<{ tier: string }>();
   const [searchParams] = useSearchParams();
   const isUpgrade = searchParams.get("upgrade") === "true";
+  const billingPeriod = (searchParams.get("billing") || 'monthly') as BillingPeriod;
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -39,6 +40,7 @@ const Checkout = () => {
       // Store intent and redirect to auth
       if (validTier) {
         localStorage.setItem("pending_checkout_tier", validTier);
+        localStorage.setItem("pending_checkout_billing", billingPeriod);
         if (isUpgrade) {
           localStorage.setItem("pending_checkout_upgrade", "true");
         }
@@ -68,7 +70,7 @@ const Checkout = () => {
       const { data, error: fnError } = await supabase.functions.invoke(
         "create-subscription-intent",
         {
-          body: { tier: validTier, isUpgrade },
+          body: { tier: validTier, isUpgrade, billingPeriod },
         }
       );
 
@@ -230,7 +232,7 @@ const Checkout = () => {
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto">
                 Complete your payment details below to {isUpgrade ? "upgrade" : "start"} your membership
-                {!isUpgrade && " with a 14-day free trial"}.
+                {!isUpgrade && billingPeriod === 'monthly' && " with a 14-day free trial"}.
               </p>
             </div>
 
@@ -250,7 +252,7 @@ const Checkout = () => {
                   >
                     <CheckoutForm
                       tier={validTier}
-                      tierConfig={tierConfig}
+                      billingPeriod={billingPeriod}
                       isUpgrade={isUpgrade}
                       subscriptionId={subscriptionId!}
                       intentType={intentType}
@@ -285,7 +287,7 @@ const Checkout = () => {
               <div className="lg:col-span-2 order-1 lg:order-2">
                 <PlanSummary
                   tier={validTier}
-                  tierConfig={tierConfig}
+                  billingPeriod={billingPeriod}
                   isUpgrade={isUpgrade}
                   userEmail={user?.email || ""}
                 />

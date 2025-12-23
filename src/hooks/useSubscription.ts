@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { STRIPE_TIERS, SubscriptionTier } from '@/lib/stripe-config';
+import { STRIPE_TIERS, SubscriptionTier, BillingPeriod } from '@/lib/stripe-config';
 
 interface SubscriptionStatus {
   subscribed: boolean;
@@ -31,16 +31,18 @@ export function useSubscription() {
     }
   }, []);
 
-  const startCheckout = useCallback(async (tier: 'investor' | 'elite') => {
+  const startCheckout = useCallback(async (tier: 'investor' | 'elite', billingPeriod: BillingPeriod = 'monthly') => {
     setLoading(true);
     
     try {
       const tierConfig = STRIPE_TIERS[tier];
+      const priceConfig = billingPeriod === 'annual' ? tierConfig.annual : tierConfig.monthly;
       
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { 
-          priceId: tierConfig.price_id,
-          tier: tier
+          priceId: priceConfig.price_id,
+          tier: tier,
+          billingPeriod: billingPeriod
         }
       });
 

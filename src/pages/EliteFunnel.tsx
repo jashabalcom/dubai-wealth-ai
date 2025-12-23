@@ -249,14 +249,14 @@ const EliteFunnel = () => {
               <div className="col-span-1" />
               <div className="text-center p-4 rounded-lg bg-muted/50">
                 <div className="font-medium text-foreground">Investor</div>
-                <div className="text-2xl font-display text-foreground">${STRIPE_TIERS.investor.price}<span className="text-sm text-muted-foreground">/mo</span></div>
+                <div className="text-2xl font-display text-foreground">${STRIPE_TIERS.investor.monthly.price}<span className="text-sm text-muted-foreground">/mo</span></div>
               </div>
               <div className="text-center p-4 rounded-lg bg-gold/10 border border-gold/30">
                 <div className="flex items-center justify-center gap-1 font-medium text-gold">
                   <Crown className="w-4 h-4" />
                   Elite
                 </div>
-                <div className="text-2xl font-display text-gold">${STRIPE_TIERS.elite.price}<span className="text-sm text-gold/70">/mo</span></div>
+                <div className="text-2xl font-display text-gold">${STRIPE_TIERS.elite.monthly.price}<span className="text-sm text-gold/70">/mo</span></div>
               </div>
             </div>
 
@@ -391,7 +391,7 @@ const EliteFunnel = () => {
                   <h3 className="font-display text-2xl text-foreground">Dubai Elite Investor</h3>
                 </div>
                 <div className="mb-6">
-                  <span className="text-4xl font-display text-gold">${STRIPE_TIERS.elite.price}</span>
+                  <span className="text-4xl font-display text-gold">${STRIPE_TIERS.elite.monthly.price}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
@@ -438,7 +438,7 @@ const EliteFunnel = () => {
               >
                 <h3 className="font-display text-2xl text-foreground mb-4">Dubai Investor</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-display text-foreground">${STRIPE_TIERS.investor.price}</span>
+                  <span className="text-4xl font-display text-foreground">${STRIPE_TIERS.investor.monthly.price}</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
