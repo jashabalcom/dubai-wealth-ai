@@ -1,11 +1,23 @@
 import { Play } from 'lucide-react';
+import { WistiaPlayer } from './WistiaPlayer';
 
 interface VideoPlayerProps {
   url: string | null;
   title?: string;
+  lessonId?: string;
+  initialPosition?: number;
+  onProgress?: (positionSeconds: number, durationSeconds: number) => void;
+  onComplete?: () => void;
 }
 
-export function VideoPlayer({ url, title }: VideoPlayerProps) {
+export function VideoPlayer({ 
+  url, 
+  title, 
+  lessonId,
+  initialPosition = 0,
+  onProgress,
+  onComplete,
+}: VideoPlayerProps) {
   if (!url) {
     return (
       <div className="aspect-video bg-secondary relative">
@@ -21,6 +33,20 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
 
   // Detect video type and render appropriate player
   const getVideoEmbed = () => {
+    // Wistia - Use enhanced player with progress tracking
+    const wistiaMatch = url.match(/wistia\.com\/medias\/([a-zA-Z0-9]+)/);
+    if (wistiaMatch) {
+      return (
+        <WistiaPlayer
+          videoId={wistiaMatch[1]}
+          title={title}
+          initialPosition={initialPosition}
+          onProgress={onProgress}
+          onComplete={onComplete}
+        />
+      );
+    }
+
     // YouTube
     const youtubeMatch = url.match(
       /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
@@ -64,26 +90,25 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
       );
     }
 
-    // Wistia
-    const wistiaMatch = url.match(/wistia\.com\/medias\/([a-zA-Z0-9]+)/);
-    if (wistiaMatch) {
-      return (
-        <iframe
-          src={`https://fast.wistia.net/embed/iframe/${wistiaMatch[1]}`}
-          title={title || 'Video'}
-          allow="autoplay; fullscreen"
-          allowFullScreen
-          className="absolute inset-0 w-full h-full"
-        />
-      );
-    }
-
-    // Direct video URL (mp4, webm, etc.)
+    // Direct video URL (mp4, webm, etc.) - with progress tracking
     if (url.match(/\.(mp4|webm|ogg)(\?|$)/i)) {
       return (
         <video
           controls
           className="absolute inset-0 w-full h-full object-contain bg-black"
+          onTimeUpdate={(e) => {
+            const video = e.currentTarget;
+            if (onProgress && video.duration) {
+              onProgress(video.currentTime, video.duration);
+            }
+          }}
+          onEnded={() => onComplete?.()}
+          onLoadedMetadata={(e) => {
+            // Resume from saved position for direct videos
+            if (initialPosition > 0) {
+              e.currentTarget.currentTime = initialPosition;
+            }
+          }}
         >
           <source src={url} type={`video/${url.split('.').pop()?.split('?')[0]}`} />
           Your browser does not support video playback.
@@ -102,9 +127,17 @@ export function VideoPlayer({ url, title }: VideoPlayerProps) {
     );
   };
 
+  const embed = getVideoEmbed();
+  
+  // WistiaPlayer handles its own container
+  const isWistia = url.match(/wistia\.com\/medias\/([a-zA-Z0-9]+)/);
+  if (isWistia) {
+    return embed;
+  }
+
   return (
     <div className="aspect-video bg-black relative overflow-hidden">
-      {getVideoEmbed()}
+      {embed}
     </div>
   );
 }
