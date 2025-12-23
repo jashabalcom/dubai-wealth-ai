@@ -14,7 +14,27 @@ import { CookieConsent } from "@/components/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Data stays fresh for 30 seconds - reduces redundant API calls
+      staleTime: 1000 * 30,
+      // Cache persists for 10 minutes - good for memory management
+      gcTime: 1000 * 60 * 10,
+      // Retry failed requests 2 times with exponential backoff
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Don't refetch on window focus for better UX
+      refetchOnWindowFocus: false,
+      // Don't refetch on reconnect (manual refresh preferred)
+      refetchOnReconnect: false,
+    },
+    mutations: {
+      // Retry mutations once
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
