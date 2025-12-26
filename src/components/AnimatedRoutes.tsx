@@ -27,6 +27,9 @@ import NotFound from "@/pages/NotFound";
 import Disclaimer from "@/pages/Disclaimer";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import CookiePolicy from "@/pages/CookiePolicy";
+import About from "@/pages/About";
+import Blog from "@/pages/Blog";
 import Contact from "@/pages/Contact";
 import Developers from "@/pages/Developers";
 import DeveloperDetail from "@/pages/DeveloperDetail";
@@ -218,6 +221,9 @@ export function AnimatedRoutes() {
         <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
         <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
         <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
+        <Route path="/cookie-policy" element={<AnimatedPage><CookiePolicy /></AnimatedPage>} />
+        <Route path="/about" element={<AnimatedPage><About /></AnimatedPage>} />
+        <Route path="/blog" element={<AnimatedPage><Blog /></AnimatedPage>} />
         <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
         
         {/* Agent Portal Routes (lazy loaded) */}
