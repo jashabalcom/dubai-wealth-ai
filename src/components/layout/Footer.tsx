@@ -22,13 +22,13 @@ const getFooterLinks = (t: (key: string) => string) => ({
       { label: t('footer.offPlanGuide'), href: "#" },
       { label: t('footer.goldenVisaWizard'), href: "/golden-visa" },
       { label: t('footer.developerDirectory'), href: "/developers" },
-      { label: t('footer.blog'), href: "#" },
+      { label: t('footer.blog'), href: "/blog" },
     ],
   },
   company: {
     title: t('footer.company'),
     links: [
-      { label: t('footer.about'), href: "#" },
+      { label: t('footer.about'), href: "/about" },
       { label: t('footer.contact'), href: "/contact" },
       { label: t('footer.forAgents'), href: "/agent-portal" },
       { label: t('footer.careers'), href: "#" },
@@ -40,7 +40,7 @@ const getFooterLinks = (t: (key: string) => string) => ({
     links: [
       { label: t('footer.privacyPolicy'), href: "/privacy" },
       { label: t('footer.termsOfService'), href: "/terms" },
-      { label: t('footer.cookiePolicy'), href: "#" },
+      { label: t('footer.cookiePolicy'), href: "/cookie-policy" },
       { label: t('footer.disclaimer'), href: "/disclaimer" },
     ],
   },
