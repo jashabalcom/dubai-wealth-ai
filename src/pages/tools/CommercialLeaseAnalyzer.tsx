@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Building2, Calculator, TrendingUp, AlertTriangle, Sparkles, FileText, Scale, ArrowUpRight, Calendar, DollarSign, Percent, Info } from "lucide-react";
 import { CalculatorAIAnalysis } from "@/components/tools/CalculatorAIAnalysis";
 import { useAuth } from "@/hooks/useAuth";
+import { useToolUsage } from "@/hooks/useToolUsage";
 import { UpgradeModal } from "@/components/freemium/UpgradeModal";
 import { ContextualUpgradePrompt } from "@/components/freemium/ContextualUpgradePrompt";
 import { SliderInput } from "@/components/tools/SliderInput";
@@ -77,6 +78,7 @@ const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--mu
 
 const CommercialLeaseAnalyzer = () => {
   const { profile } = useAuth();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('commercial-lease');
   const [inputs, setInputs] = useState<LeaseInputs>(defaultInputs);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
@@ -901,6 +903,15 @@ const CommercialLeaseAnalyzer = () => {
             </Card>
           </div>
         </div>
+
+        {!isUnlimited && hasReachedLimit && (
+          <div className="mt-8">
+            <ContextualUpgradePrompt
+              feature="Unlimited Calculator Access"
+              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+            />
+          </div>
+        )}
 
         {/* Upgrade Modal */}
         <UpgradeModal

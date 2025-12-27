@@ -14,6 +14,7 @@ import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { Badge } from '@/components/ui/badge';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useAuth } from '@/hooks/useAuth';
+import { useToolUsage } from '@/hooks/useToolUsage';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend,
@@ -34,6 +35,7 @@ function formatAED(amount: number): string {
 
 export default function StrVsLtrCalculator() {
   const { formatPrice } = useCurrency();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('str-vs-ltr');
   const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
@@ -503,6 +505,14 @@ export default function StrVsLtrCalculator() {
               </div>
             </motion.div>
           </div>
+
+          {!isUnlimited && hasReachedLimit && (
+            <ContextualUpgradePrompt
+              feature="Unlimited Calculator Access"
+              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+              className="mt-8"
+            />
+          )}
         </div>
       </section>
 

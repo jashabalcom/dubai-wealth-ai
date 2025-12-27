@@ -45,6 +45,7 @@ import {
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useAuth } from '@/hooks/useAuth';
+import { useToolUsage } from '@/hooks/useToolUsage';
 
 type UsageType = 'personal' | 'long-term' | 'short-term';
 
@@ -64,6 +65,7 @@ const currencySymbols: Record<string, string> = {
 export default function TotalCostCalculator() {
   const { convert, formatPrice, selectedCurrency } = useCurrency();
   const { toast } = useToast();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('total-cost');
   const [activePreset, setActivePreset] = useState<string>('');
 
   // Property Details
@@ -812,6 +814,14 @@ export default function TotalCostCalculator() {
               </Card>
             </div>
           </div>
+
+          {!isUnlimited && hasReachedLimit && (
+            <ContextualUpgradePrompt
+              feature="Unlimited Calculator Access"
+              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+              className="mt-8"
+            />
+          )}
         </div>
       </section>
 
