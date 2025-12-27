@@ -104,3 +104,12 @@ verify_jwt = false
 
 [functions.backfill-news-content]
 verify_jwt = false
+
+[functions.enqueue-welcome-sequence]
+verify_jwt = false
+
+[functions.send-drip-email]
+verify_jwt = false
+
+[functions.process-drip-queue]
+verify_jwt = false
