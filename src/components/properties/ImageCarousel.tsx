@@ -2,14 +2,21 @@ import { useState, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  getOptimizedImageUrl, 
+  generateSrcSet, 
+  IMAGE_SIZES,
+  PROPERTY_CARD_SIZES 
+} from '@/lib/imageUtils';
 
 interface ImageCarouselProps {
   images: string[];
   alt: string;
   className?: string;
+  sizes?: string;
 }
 
-export function ImageCarousel({ images, alt, className }: ImageCarouselProps) {
+export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SIZES }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,9 +72,11 @@ export function ImageCarousel({ images, alt, className }: ImageCarouselProps) {
         </div>
       )}
 
-      {/* Image with lazy loading */}
+      {/* Image with lazy loading and responsive srcset */}
       <img
-        src={validImages[currentIndex]}
+        src={getOptimizedImageUrl(validImages[currentIndex], IMAGE_SIZES.large)}
+        srcSet={generateSrcSet(validImages[currentIndex])}
+        sizes={sizes}
         alt={`${alt} - Image ${currentIndex + 1}`}
         loading="lazy"
         decoding="async"
