@@ -18,17 +18,17 @@ export function UsageLimitBanner({ remaining, total, type, toolName }: UsageLimi
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-lg border p-3 sm:p-4 mb-6 ${
+      className={`rounded-lg border p-4 mb-6 ${
         isLow 
           ? 'bg-destructive/10 border-destructive/30' 
           : 'bg-muted/50 border-border'
       }`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div className="flex-1 min-w-0">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className={`h-4 w-4 shrink-0 ${isLow ? 'text-destructive' : 'text-gold'}`} />
-            <span className="text-xs sm:text-sm font-medium">
+            <Sparkles className={`h-4 w-4 ${isLow ? 'text-destructive' : 'text-gold'}`} />
+            <span className="text-sm font-medium">
               {remaining === 0 
                 ? `You've used all your free ${type === 'tool' ? 'calculations' : 'AI queries'}`
                 : `${remaining} free ${type === 'tool' ? 'calculation' : 'AI quer'}${remaining === 1 ? (type === 'ai' ? 'y' : '') : (type === 'ai' ? 'ies' : 's')} remaining`
@@ -44,9 +44,9 @@ export function UsageLimitBanner({ remaining, total, type, toolName }: UsageLimi
             />
           </div>
         </div>
-        <Button asChild size="sm" className="shrink-0 w-full sm:w-auto">
+        <Button asChild size="sm" className="shrink-0">
           <Link to="/pricing">
-            Upgrade
+            Upgrade for Unlimited
           </Link>
         </Button>
       </div>
