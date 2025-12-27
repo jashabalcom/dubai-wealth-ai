@@ -11,6 +11,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';

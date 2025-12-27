@@ -16,6 +16,7 @@ import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/
 import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { OffPlanCharts } from '@/components/tools/OffPlanCharts';
 import { cn } from '@/lib/utils';
 

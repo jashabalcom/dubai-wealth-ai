@@ -10,6 +10,7 @@ import { SliderInput } from '@/components/tools/SliderInput';
 import { DSCRCharts } from '@/components/tools/DSCRCharts';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useToolUsage } from '@/hooks/useToolUsage';
 import { Building2, TrendingUp, Calculator, AlertTriangle, CheckCircle, ArrowLeft, Sparkles } from 'lucide-react';
 

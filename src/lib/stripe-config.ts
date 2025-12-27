@@ -41,19 +41,15 @@ export const STRIPE_TIERS = {
     name: "Dubai Elite",
   },
   private: {
-    // NOTE: These price IDs need to be created in Stripe dashboard
-    // Create a product called "Dubai Private" with:
-    // - Monthly price: $149/month
-    // - Annual price: $1,500/year
-    product_id: "prod_private_placeholder",
+    product_id: "prod_TgMfiaX6U5k905",
     monthly: {
-      price_id: "price_private_monthly_placeholder",
+      price_id: "price_1SizvrHVQx2jO318FYaOxTqr",
       price: 149,
       priceDisplay: "$149",
       period: "/month",
     },
     annual: {
-      price_id: "price_private_annual_placeholder",
+      price_id: "price_1SizwHHVQx2jO318PaFBNJmX",
       price: 1500,
       priceDisplay: "$1,500",
       monthlyEquivalent: "$125",

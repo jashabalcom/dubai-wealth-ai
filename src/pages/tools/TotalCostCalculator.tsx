@@ -43,6 +43,8 @@ import {
   FEE_DESCRIPTIONS
 } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { useAuth } from '@/hooks/useAuth';
 
 type UsageType = 'personal' | 'long-term' | 'short-term';
 

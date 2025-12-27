@@ -21,7 +21,7 @@ export function NeighborhoodTierGate({
 }: NeighborhoodTierGateProps) {
   const { profile, user } = useAuth();
   
-  const tierOrder = { free: 0, investor: 1, elite: 2 };
+  const tierOrder = { free: 0, investor: 1, elite: 2, private: 3 };
   const userTier = profile?.membership_tier || 'free';
   const userTierLevel = tierOrder[userTier as keyof typeof tierOrder] || 0;
   const requiredTierLevel = tierOrder[requiredTier] || 0;

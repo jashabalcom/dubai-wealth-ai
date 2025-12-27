@@ -18,6 +18,7 @@ import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRea
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
