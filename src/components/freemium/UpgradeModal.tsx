@@ -84,9 +84,9 @@ export function UpgradeModal({ isOpen, onClose, feature, toolName }: UpgradeModa
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md"
+            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-50 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-md"
           >
-            <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-card border border-border rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto">
               {/* Header with gradient */}
               <div className="bg-gradient-to-br from-gold/20 via-gold/10 to-transparent p-6 relative">
                 <button
