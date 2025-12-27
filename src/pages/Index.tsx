@@ -2,10 +2,13 @@ import { Navbar } from "@/components/layout/Navbar";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { PlatformSection } from "@/components/sections/PlatformSection";
 import { WhoItsForSection } from "@/components/sections/WhoItsForSection";
+import { EmailCaptureSection } from "@/components/sections/EmailCaptureSection";
+import { FAQSection } from "@/components/sections/FAQSection";
 import { MembershipSection } from "@/components/sections/MembershipSection";
 import { CTASection } from "@/components/sections/CTASection";
 import { Footer } from "@/components/layout/Footer";
 import { HomePageSEO } from "@/components/SEOHead";
+import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 
 const Index = () => {
   return (
@@ -16,10 +19,13 @@ const Index = () => {
         <HeroSection />
         <PlatformSection />
         <WhoItsForSection />
+        <EmailCaptureSection />
+        <FAQSection />
         <MembershipSection />
         <CTASection />
       </main>
       <Footer />
+      <ExitIntentPopup />
     </div>
   );
 };
