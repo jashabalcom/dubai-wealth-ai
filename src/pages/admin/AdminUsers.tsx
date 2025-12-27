@@ -23,7 +23,7 @@ import {
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-type MembershipTier = 'free' | 'investor' | 'elite';
+type MembershipTier = 'free' | 'investor' | 'elite' | 'private';
 
 export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +67,8 @@ export default function AdminUsers() {
 
   const getTierIcon = (tier: string) => {
     switch (tier) {
+      case 'private':
+        return <Crown className="h-4 w-4 text-amber-400" />;
       case 'elite':
         return <Crown className="h-4 w-4 text-gold" />;
       case 'investor':
@@ -133,7 +135,9 @@ export default function AdminUsers() {
                   </TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                      user.membership_tier === 'elite'
+                      user.membership_tier === 'private'
+                        ? 'bg-gradient-to-r from-gold/20 to-amber-500/20 text-amber-400 border border-gold/30'
+                        : user.membership_tier === 'elite'
                         ? 'bg-gold/10 text-gold'
                         : user.membership_tier === 'investor'
                         ? 'bg-blue-500/10 text-blue-500'
@@ -155,6 +159,7 @@ export default function AdminUsers() {
                         <SelectItem value="free">Free</SelectItem>
                         <SelectItem value="investor">Investor</SelectItem>
                         <SelectItem value="elite">Elite</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
