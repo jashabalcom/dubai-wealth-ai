@@ -1,4 +1,5 @@
-import { Filter, X, Calendar, ArrowUpDown, Grid3X3, Map, Sparkles, Award, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Filter, X, Calendar, ArrowUpDown, Grid3X3, Map, Sparkles, Award, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,6 +16,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { SearchAutocomplete } from './SearchAutocomplete';
 
@@ -148,6 +150,16 @@ export function PropertyFilters({
   propertyCounts = {},
   developerCounts = {},
 }: PropertyFiltersProps) {
+  // Progressive disclosure - remember user preference
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(() => {
+    const saved = localStorage.getItem('showAdvancedFilters');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('showAdvancedFilters', String(showAdvancedFilters));
+  }, [showAdvancedFilters]);
+
   const hasActiveFilters = 
     searchQuery || 
     selectedArea !== 'All Areas' || 
@@ -332,76 +344,92 @@ export function PropertyFilters({
         </Select>
       </div>
 
-      {/* Smart Investment Filters Row */}
-      <div className="hidden lg:flex items-center gap-3 p-3 bg-gold/5 border border-gold/20 rounded-lg">
-        <div className="flex items-center gap-2 text-gold">
-          <Sparkles className="w-4 h-4" />
-          <span className="text-sm font-medium">Smart Filters</span>
-          {smartFilterCount > 0 && (
-            <Badge className="bg-gold text-navy h-5 px-1.5">
-              {smartFilterCount}
-            </Badge>
-          )}
+      {/* Smart Investment Filters Row - Progressive Disclosure */}
+      <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
+        <div className="hidden lg:block">
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-between p-3 bg-gold/5 border border-gold/20 rounded-lg hover:bg-gold/10"
+            >
+              <div className="flex items-center gap-2 text-gold">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-sm font-medium">Smart Investment Filters</span>
+                {smartFilterCount > 0 && (
+                  <Badge className="bg-gold text-navy h-5 px-1.5">
+                    {smartFilterCount}
+                  </Badge>
+                )}
+              </div>
+              {showAdvancedFilters ? (
+                <ChevronUp className="w-4 h-4 text-gold" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gold" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            <div className="flex items-center gap-3 p-3 bg-gold/5 border border-t-0 border-gold/20 rounded-b-lg -mt-px">
+              {onScoreChange && (
+                <Select value={selectedScore} onValueChange={onScoreChange}>
+                  <SelectTrigger className="w-[140px] border-gold/30 bg-transparent">
+                    <TrendingUp className="w-4 h-4 mr-2 text-gold" />
+                    <SelectValue placeholder="Score" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {scoreRanges.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {onYieldChange && (
+                <Select value={selectedYield} onValueChange={onYieldChange}>
+                  <SelectTrigger className="w-[120px] border-gold/30 bg-transparent">
+                    <SelectValue placeholder="Yield" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {yieldRanges.map((range) => (
+                      <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {onGoldenVisaChange && (
+                <Button
+                  variant={showGoldenVisaOnly ? 'gold' : 'outline'}
+                  size="sm"
+                  onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
+                  className={cn(
+                    "border-gold/30",
+                    !showGoldenVisaOnly && "bg-transparent hover:bg-gold/10"
+                  )}
+                >
+                  <Award className="w-4 h-4 mr-2" />
+                  Golden Visa
+                </Button>
+              )}
+
+              {onBelowMarketChange && (
+                <Button
+                  variant={showBelowMarketOnly ? 'gold' : 'outline'}
+                  size="sm"
+                  onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
+                  className={cn(
+                    "border-gold/30",
+                    !showBelowMarketOnly && "bg-transparent hover:bg-gold/10"
+                  )}
+                >
+                  Below Market
+                </Button>
+              )}
+            </div>
+          </CollapsibleContent>
         </div>
-        
-        <div className="h-4 w-px bg-gold/30" />
-
-        {onScoreChange && (
-          <Select value={selectedScore} onValueChange={onScoreChange}>
-            <SelectTrigger className="w-[140px] border-gold/30 bg-transparent">
-              <TrendingUp className="w-4 h-4 mr-2 text-gold" />
-              <SelectValue placeholder="Score" />
-            </SelectTrigger>
-            <SelectContent>
-              {scoreRanges.map((range) => (
-                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        {onYieldChange && (
-          <Select value={selectedYield} onValueChange={onYieldChange}>
-            <SelectTrigger className="w-[120px] border-gold/30 bg-transparent">
-              <SelectValue placeholder="Yield" />
-            </SelectTrigger>
-            <SelectContent>
-              {yieldRanges.map((range) => (
-                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        {onGoldenVisaChange && (
-          <Button
-            variant={showGoldenVisaOnly ? 'gold' : 'outline'}
-            size="sm"
-            onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
-            className={cn(
-              "border-gold/30",
-              !showGoldenVisaOnly && "bg-transparent hover:bg-gold/10"
-            )}
-          >
-            <Award className="w-4 h-4 mr-2" />
-            Golden Visa
-          </Button>
-        )}
-
-        {onBelowMarketChange && (
-          <Button
-            variant={showBelowMarketOnly ? 'gold' : 'outline'}
-            size="sm"
-            onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
-            className={cn(
-              "border-gold/30",
-              !showBelowMarketOnly && "bg-transparent hover:bg-gold/10"
-            )}
-          >
-            Below Market
-          </Button>
-        )}
-      </div>
+      </Collapsible>
 
       {/* Active Filters */}
       {hasActiveFilters && (

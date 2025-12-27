@@ -19,6 +19,7 @@ import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/
 import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
@@ -467,6 +468,16 @@ export default function ROICalculator() {
                   </div>
                 </div>
               </div>
+
+              {/* Upgrade Prompt for Free Users */}
+              {!isUnlimited && hasReachedLimit && (
+                <ContextualUpgradePrompt
+                  feature="Unlimited Calculator Access"
+                  description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+                  requiredTier="investor"
+                  variant="card"
+                />
+              )}
             </motion.div>
           </div>
         </div>

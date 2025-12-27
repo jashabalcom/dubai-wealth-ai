@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Target, Wallet, MapPin, Camera } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Target, Wallet, MapPin, Camera, Sparkles, GraduationCap, Building2, TrendingUp, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,8 @@ interface ProfileWizardProps {
   onClose: () => void;
   onComplete: () => void;
   initialStep?: number;
+  showWelcome?: boolean;
+  userName?: string;
 }
 
 const investmentGoals = [
@@ -48,16 +50,25 @@ const countries = [
   'Saudi Arabia', 'UAE', 'Qatar', 'Kuwait', 'Other'
 ];
 
+const features = [
+  { icon: GraduationCap, title: 'Academy', description: 'Expert-led courses', color: 'text-blue-500', bgColor: 'bg-blue-500/10' },
+  { icon: Building2, title: 'Properties', description: 'Exclusive listings', color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
+  { icon: TrendingUp, title: 'Tools', description: 'ROI calculators', color: 'text-purple-500', bgColor: 'bg-purple-500/10' },
+  { icon: Users, title: 'Community', description: 'Global network', color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
+];
+
 const steps = [
+  { icon: Sparkles, title: 'Welcome', description: 'Your journey starts here' },
   { icon: Target, title: 'Investment Goals', description: 'What are you looking to achieve?' },
   { icon: Wallet, title: 'Budget & Timeline', description: 'Help us personalize your experience' },
   { icon: MapPin, title: 'About You', description: 'Tell the community who you are' },
   { icon: Camera, title: 'Profile Photo', description: 'Add a photo to build trust' },
 ];
 
-export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: ProfileWizardProps) {
-  const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(initialStep);
+export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0, showWelcome = true, userName }: ProfileWizardProps) {
+  const { user, profile } = useAuth();
+  const startStep = showWelcome ? 0 : 1;
+  const [currentStep, setCurrentStep] = useState(initialStep || startStep);
   const [saving, setSaving] = useState(false);
   
   // Form state
@@ -131,7 +142,7 @@ export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: 
       const updateData: Record<string, unknown> = {
         ...formData,
         onboarding_completed_at: new Date().toISOString(),
-        onboarding_step: 4,
+        onboarding_step: 5,
       };
 
       if (avatarUrl) {
@@ -158,17 +169,21 @@ export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: 
   const canProceed = () => {
     switch (currentStep) {
       case 0:
-        return !!formData.investment_goal;
+        return true; // Welcome step - always can proceed
       case 1:
-        return !!formData.budget_range && !!formData.timeline;
+        return !!formData.investment_goal;
       case 2:
-        return !!formData.country;
+        return !!formData.budget_range && !!formData.timeline;
       case 3:
+        return !!formData.country;
+      case 4:
         return true; // Avatar is optional
       default:
         return false;
     }
   };
+
+  const displayName = userName || profile?.full_name?.split(' ')[0] || 'Investor';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -212,7 +227,47 @@ export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: 
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
+              {/* Step 0: Welcome */}
               {currentStep === 0 && (
+                <div className="text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                    className="w-16 h-16 rounded-2xl bg-gold flex items-center justify-center mx-auto mb-4"
+                  >
+                    <Sparkles className="w-8 h-8 text-primary-dark" />
+                  </motion.div>
+                  
+                  <h2 className="font-heading text-2xl text-foreground mb-2">
+                    Welcome{displayName ? `, ${displayName}` : ''}!
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Your journey to Dubai real estate success starts here
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    {features.map((feature, index) => (
+                      <motion.div
+                        key={feature.title}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + index * 0.05 }}
+                        className="p-3 rounded-lg bg-muted/50 border border-border text-left"
+                      >
+                        <div className={`w-8 h-8 rounded-lg ${feature.bgColor} flex items-center justify-center mb-2`}>
+                          <feature.icon className={`w-4 h-4 ${feature.color}`} />
+                        </div>
+                        <h3 className="font-medium text-foreground text-sm">{feature.title}</h3>
+                        <p className="text-xs text-muted-foreground">{feature.description}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Investment Goals */}
+              {currentStep === 1 && (
                 <RadioGroup
                   value={formData.investment_goal}
                   onValueChange={(value) => updateField('investment_goal', value)}
@@ -237,7 +292,8 @@ export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: 
                 </RadioGroup>
               )}
 
-              {currentStep === 1 && (
+              {/* Step 2: Budget & Timeline */}
+              {currentStep === 2 && (
                 <div className="space-y-4">
                   <div>
                     <Label className="text-foreground">Investment Budget</Label>
@@ -279,7 +335,8 @@ export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: 
                 </div>
               )}
 
-              {currentStep === 2 && (
+              {/* Step 3: About You */}
+              {currentStep === 3 && (
                 <div className="space-y-4">
                   <div>
                     <Label className="text-foreground">Country</Label>
@@ -323,7 +380,8 @@ export function ProfileWizard({ isOpen, onClose, onComplete, initialStep = 0 }: 
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {/* Step 4: Profile Photo */}
+              {currentStep === 4 && (
                 <div className="text-center">
                   <div className="mb-4">
                     {avatarPreview ? (
