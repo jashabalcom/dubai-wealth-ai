@@ -38,9 +38,32 @@ export const STRIPE_TIERS = {
       savings: 194,
       savingsDisplay: "Save $194",
     },
-    name: "Dubai Elite Investor",
+    name: "Dubai Elite",
+  },
+  private: {
+    // NOTE: These price IDs need to be created in Stripe dashboard
+    // Create a product called "Dubai Private" with:
+    // - Monthly price: $149/month
+    // - Annual price: $1,500/year
+    product_id: "prod_private_placeholder",
+    monthly: {
+      price_id: "price_private_monthly_placeholder",
+      price: 149,
+      priceDisplay: "$149",
+      period: "/month",
+    },
+    annual: {
+      price_id: "price_private_annual_placeholder",
+      price: 1500,
+      priceDisplay: "$1,500",
+      monthlyEquivalent: "$125",
+      period: "/year",
+      savings: 288,
+      savingsDisplay: "Save $288",
+    },
+    name: "Dubai Private",
   },
 } as const;
 
-export type SubscriptionTier = 'free' | 'investor' | 'elite';
+export type SubscriptionTier = 'free' | 'investor' | 'elite' | 'private';
 export type BillingPeriod = 'monthly' | 'annual';
