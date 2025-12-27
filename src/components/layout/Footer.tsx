@@ -1,7 +1,15 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Shield } from "lucide-react";
+import { Shield, Cookie } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/BrandLogo";
+import { CookiePreferencesManager } from "@/components/CookiePreferences";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const getFooterLinks = (t: (key: string) => string) => ({
   platform: {
@@ -42,13 +50,23 @@ const getFooterLinks = (t: (key: string) => string) => ({
       { label: t('footer.termsOfService'), href: "/terms" },
       { label: t('footer.cookiePolicy'), href: "/cookie-policy" },
       { label: t('footer.disclaimer'), href: "/disclaimer" },
+      { label: "Manage Cookies", href: "#manage-cookies", action: "manageCookies" },
     ],
   },
 });
 
 export function Footer() {
   const { t } = useTranslation();
+  const [showCookiePrefs, setShowCookiePrefs] = useState(false);
   const footerLinks = getFooterLinks(t);
+
+  const handleLinkClick = (link: { label: string; href: string; action?: string }) => {
+    if (link.action === "manageCookies") {
+      setShowCookiePrefs(true);
+      return false;
+    }
+    return true;
+  };
   
   return (
     <footer className="bg-secondary text-secondary-foreground">
@@ -85,7 +103,14 @@ export function Footer() {
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    {link.href.startsWith('/') ? (
+                    {(link as { action?: string }).action === "manageCookies" ? (
+                      <button
+                        onClick={() => handleLinkClick(link as { label: string; href: string; action?: string })}
+                        className="text-sm text-secondary-foreground/60 hover:text-secondary-foreground transition-colors text-left"
+                      >
+                        {link.label}
+                      </button>
+                    ) : link.href.startsWith('/') ? (
                       <Link
                         to={link.href}
                         className="text-sm text-secondary-foreground/60 hover:text-secondary-foreground transition-colors"
@@ -158,6 +183,22 @@ export function Footer() {
           </a>
         </div>
       </div>
+
+      {/* Cookie Preferences Dialog */}
+      <Dialog open={showCookiePrefs} onOpenChange={setShowCookiePrefs}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Cookie className="w-5 h-5" />
+              Cookie Preferences
+            </DialogTitle>
+          </DialogHeader>
+          <CookiePreferencesManager 
+            variant="inline" 
+            onSave={() => setShowCookiePrefs(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </footer>
   );
 }
