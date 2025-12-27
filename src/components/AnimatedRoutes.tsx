@@ -67,6 +67,7 @@ const Portfolio = lazy(() => import("@/pages/Portfolio"));
 const GoldenVisaWizard = lazy(() => import("@/pages/GoldenVisaWizard"));
 const MembershipFunnel = lazy(() => import("@/pages/MembershipFunnel"));
 const EliteFunnel = lazy(() => import("@/pages/EliteFunnel"));
+const BlogArticle = lazy(() => import("@/pages/BlogArticle"));
 
 // Lazy loaded pages - Admin (only ~1% of users are admins)
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
@@ -224,6 +225,7 @@ export function AnimatedRoutes() {
         <Route path="/cookie-policy" element={<AnimatedPage><CookiePolicy /></AnimatedPage>} />
         <Route path="/about" element={<AnimatedPage><About /></AnimatedPage>} />
         <Route path="/blog" element={<AnimatedPage><Blog /></AnimatedPage>} />
+        <Route path="/blog/:slug" element={<LazyPage><BlogArticle /></LazyPage>} />
         <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
         
         {/* Agent Portal Routes (lazy loaded) */}
