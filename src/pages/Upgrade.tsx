@@ -1,24 +1,50 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Crown, TrendingUp, ArrowRight, Check, Loader2 } from "lucide-react";
+import { AlertCircle, Crown, TrendingUp, ArrowRight, Check, Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SEOHead } from "@/components/SEOHead";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { STRIPE_TIERS } from "@/lib/stripe-config";
+import { STRIPE_TIERS, BillingPeriod } from "@/lib/stripe-config";
+import { MEMBERSHIP_TIERS } from "@/lib/membership-tiers-config";
 
 const Upgrade = () => {
-  const { profile, user } = useAuth();
+  const { profile } = useAuth();
   const { loading, startCheckout } = useSubscription();
+  const [searchParams] = useSearchParams();
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
 
   const currentTier = profile?.membership_tier || "free";
   const isExpired = profile?.membership_status === "expired";
+  const highlightedTier = searchParams.get('tier') || 'elite';
 
-  const handleSelectPlan = async (tier: "investor" | "elite") => {
-    await startCheckout(tier);
+  const handleSelectPlan = async (tier: "investor" | "elite" | "private") => {
+    if (tier === 'private') {
+      window.location.href = '/contact?subject=Private+Membership';
+      return;
+    }
+    await startCheckout(tier, billingPeriod);
+  };
+
+  const getPrice = (tier: 'investor' | 'elite' | 'private') => {
+    const tierConfig = MEMBERSHIP_TIERS[tier];
+    if (billingPeriod === 'annual') {
+      return {
+        display: tierConfig.annualMonthlyEquivalent,
+        period: '/month',
+        billedAs: `Billed annually (${tierConfig.annualPriceDisplay})`,
+        savings: tierConfig.annualSavings,
+      };
+    }
+    return {
+      display: tierConfig.priceDisplay,
+      period: tierConfig.period,
+    };
   };
 
   return (
@@ -30,14 +56,14 @@ const Upgrade = () => {
       <Navbar />
       
       <main className="min-h-screen bg-background pt-24 pb-16">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             {/* Header */}
-            <div className="text-center mb-12">
+            <div className="text-center mb-8">
               {isExpired ? (
                 <>
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-500 mb-4">
@@ -67,6 +93,35 @@ const Upgrade = () => {
                   </p>
                 </>
               )}
+            </div>
+
+            {/* Billing Toggle */}
+            <div className="flex justify-center mb-8">
+              <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border">
+                <button
+                  onClick={() => setBillingPeriod('monthly')}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingPeriod === 'monthly'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingPeriod('annual')}
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                    billingPeriod === 'annual'
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  Annual
+                  <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold">
+                    2 Months Free
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* What You're Missing (for expired) */}
@@ -99,14 +154,18 @@ const Upgrade = () => {
             )}
 
             {/* Pricing Cards */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               {/* Investor Tier */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <Card className="h-full border-border hover:border-primary/50 transition-colors">
+                <Card className={`h-full transition-colors ${
+                  highlightedTier === 'investor' 
+                    ? 'border-primary/50 shadow-lg shadow-primary/10' 
+                    : 'border-border hover:border-primary/30'
+                }`}>
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
                       <div className="p-2 rounded-lg bg-muted">
@@ -115,10 +174,16 @@ const Upgrade = () => {
                       <CardTitle>{STRIPE_TIERS.investor.name}</CardTitle>
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">{STRIPE_TIERS.investor.monthly.priceDisplay}</span>
-                      <span className="text-muted-foreground">{STRIPE_TIERS.investor.monthly.period}</span>
+                      <span className="text-3xl font-bold">{getPrice('investor').display}</span>
+                      <span className="text-muted-foreground">{getPrice('investor').period}</span>
                     </div>
-                    <CardDescription>
+                    {'billedAs' in getPrice('investor') && (
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs text-muted-foreground">{getPrice('investor').billedAs}</p>
+                        <p className="text-xs font-medium text-green-400">Save {getPrice('investor').savings}/year</p>
+                      </div>
+                    )}
+                    <CardDescription className="mt-2">
                       Perfect for getting started with Dubai real estate investing
                     </CardDescription>
                   </CardHeader>
@@ -139,7 +204,7 @@ const Upgrade = () => {
                     </ul>
                     <Button
                       onClick={() => handleSelectPlan("investor")}
-                      variant="outline"
+                      variant={highlightedTier === 'investor' ? 'default' : 'outline'}
                       className="w-full"
                       disabled={loading}
                     >
@@ -162,7 +227,11 @@ const Upgrade = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <Card className="h-full border-primary/50 shadow-lg shadow-primary/10 relative overflow-hidden">
+                <Card className={`h-full relative overflow-hidden ${
+                  highlightedTier === 'elite' 
+                    ? 'border-primary/50 shadow-lg shadow-primary/10' 
+                    : 'border-border hover:border-primary/30'
+                }`}>
                   <div className="absolute top-0 right-0">
                     <Badge className="rounded-none rounded-bl-lg bg-primary text-primary-foreground">
                       Recommended
@@ -176,10 +245,16 @@ const Upgrade = () => {
                       <CardTitle>{STRIPE_TIERS.elite.name}</CardTitle>
                     </div>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold">{STRIPE_TIERS.elite.monthly.priceDisplay}</span>
-                      <span className="text-muted-foreground">{STRIPE_TIERS.elite.monthly.period}</span>
+                      <span className="text-3xl font-bold">{getPrice('elite').display}</span>
+                      <span className="text-muted-foreground">{getPrice('elite').period}</span>
                     </div>
-                    <CardDescription>
+                    {'billedAs' in getPrice('elite') && (
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs text-muted-foreground">{getPrice('elite').billedAs}</p>
+                        <p className="text-xs font-medium text-green-400">Save {getPrice('elite').savings}/year</p>
+                      </div>
+                    )}
+                    <CardDescription className="mt-2">
                       For serious investors who want every advantage
                     </CardDescription>
                   </CardHeader>
@@ -201,7 +276,8 @@ const Upgrade = () => {
                     </ul>
                     <Button
                       onClick={() => handleSelectPlan("elite")}
-                      className="w-full bg-primary hover:bg-primary/90"
+                      className={`w-full ${highlightedTier === 'elite' ? 'bg-primary hover:bg-primary/90' : ''}`}
+                      variant={highlightedTier === 'elite' ? 'default' : 'outline'}
                       disabled={loading}
                     >
                       {loading ? (
@@ -209,6 +285,78 @@ const Upgrade = () => {
                       ) : (
                         <>
                           {isExpired ? "Renew" : "Select"} Elite
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Private Tier */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className={`h-full relative overflow-hidden ${
+                  highlightedTier === 'private' 
+                    ? 'border-gold/50 shadow-lg shadow-gold/10' 
+                    : 'border-border hover:border-gold/30'
+                }`}>
+                  <div className="absolute top-0 right-0">
+                    <Badge className="rounded-none rounded-bl-lg bg-gold text-gold-foreground">
+                      Concierge
+                    </Badge>
+                  </div>
+                  <CardHeader>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-gold/20">
+                        <Shield className="h-5 w-5 text-gold" />
+                      </div>
+                      <CardTitle>{STRIPE_TIERS.private.name}</CardTitle>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold">{getPrice('private').display}</span>
+                      <span className="text-muted-foreground">{getPrice('private').period}</span>
+                    </div>
+                    {'billedAs' in getPrice('private') && (
+                      <div className="mt-1 space-y-0.5">
+                        <p className="text-xs text-muted-foreground">{getPrice('private').billedAs}</p>
+                        <p className="text-xs font-medium text-green-400">Save {getPrice('private').savings}/year</p>
+                      </div>
+                    )}
+                    <CardDescription className="mt-2">
+                      High-touch advisory with your dedicated team in Dubai
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3 mb-6">
+                      {[
+                        "Everything in Elite",
+                        "Dedicated Concierge",
+                        "Off-Market Opportunities",
+                        "Same-Day Priority Response",
+                        "White-Glove Transaction Support",
+                        "Quarterly Portfolio Reviews",
+                      ].map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-gold" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      onClick={() => handleSelectPlan("private")}
+                      variant="gold"
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          Request Private Access
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </>
                       )}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
-import { Check, X, Star, Zap, Crown, Loader2, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, Star, Zap, Crown, Loader2, Sparkles, ChevronDown, ChevronUp, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ const tiers = [
   MEMBERSHIP_TIERS.free,
   MEMBERSHIP_TIERS.investor,
   MEMBERSHIP_TIERS.elite,
+  MEMBERSHIP_TIERS.private,
 ];
 
 export default function Pricing() {
@@ -25,7 +26,7 @@ export default function Pricing() {
   const [showComparison, setShowComparison] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
 
-  const handleTierClick = async (tierId: 'free' | 'investor' | 'elite') => {
+  const handleTierClick = async (tierId: 'free' | 'investor' | 'elite' | 'private') => {
     if (!user) {
       if (tierId !== 'free') {
         localStorage.setItem('pending_checkout_tier', tierId);
@@ -37,6 +38,12 @@ export default function Pricing() {
 
     if (tierId === 'free') {
       navigate('/dashboard');
+      return;
+    }
+
+    // Private tier uses contact flow
+    if (tierId === 'private') {
+      window.location.href = '/contact?subject=Private+Membership';
       return;
     }
 
@@ -60,7 +67,7 @@ export default function Pricing() {
     await startCheckout(tierId, billingPeriod);
   };
 
-  const getButtonText = (tierId: 'free' | 'investor' | 'elite', defaultCta: string) => {
+  const getButtonText = (tierId: 'free' | 'investor' | 'elite' | 'private', defaultCta: string) => {
     if (!user) return "Sign Up";
     if (!profile) return defaultCta;
     
@@ -68,9 +75,11 @@ export default function Pricing() {
     
     if (tierId === currentTier) return "Current Plan";
     if (tierId === 'free' && currentTier !== 'free') return "Downgrade";
-    if (tierId === 'investor' && currentTier === 'elite') return "Downgrade";
+    if (tierId === 'investor' && (currentTier === 'elite' || currentTier === 'private')) return "Downgrade";
     if (tierId === 'investor' && currentTier === 'free') return "Upgrade";
-    if (tierId === 'elite') return "Upgrade to Elite";
+    if (tierId === 'elite' && currentTier === 'private') return "Downgrade";
+    if (tierId === 'elite' && (currentTier === 'free' || currentTier === 'investor')) return "Upgrade to Elite";
+    if (tierId === 'private') return "Request Access";
     
     return defaultCta;
   };
@@ -84,7 +93,7 @@ export default function Pricing() {
       return { price: tier.priceDisplay, period: tier.period };
     }
     
-    const paidTier = tier as typeof MEMBERSHIP_TIERS.investor | typeof MEMBERSHIP_TIERS.elite;
+    const paidTier = tier as typeof MEMBERSHIP_TIERS.investor | typeof MEMBERSHIP_TIERS.elite | typeof MEMBERSHIP_TIERS.private;
     
     if (billingPeriod === 'annual') {
       return {
@@ -97,6 +106,15 @@ export default function Pricing() {
     }
     
     return { price: paidTier.priceDisplay, period: paidTier.period };
+  };
+
+  const getTierIcon = (tierId: string) => {
+    switch (tierId) {
+      case 'investor': return <Zap size={12} />;
+      case 'elite': return <Crown size={12} />;
+      case 'private': return <Shield size={12} />;
+      default: return <Star size={12} />;
+    }
   };
 
   // Group features by category for comparison table
@@ -169,22 +187,27 @@ export default function Pricing() {
           </motion.div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
             {tiers.map((tier, index) => {
               const priceInfo = getPriceDisplay(tier);
+              const isPrivate = tier.id === 'private';
               
               return (
                 <motion.div
                   key={tier.name}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
                   className={`relative ${tier.highlighted ? "lg:-mt-4 lg:mb-4" : ""}`}
                 >
                   {tier.badge && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs uppercase tracking-[0.1em] font-sans">
-                        {tier.id === "investor" ? <Zap size={12} /> : <Star size={12} />}
+                      <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.1em] font-sans ${
+                        isPrivate 
+                          ? 'bg-gold text-gold-foreground' 
+                          : 'bg-primary text-primary-foreground'
+                      }`}>
+                        {getTierIcon(tier.id)}
                         {tier.badge}
                       </span>
                     </div>
@@ -200,18 +223,20 @@ export default function Pricing() {
                   )}
 
                   <div
-                    className={`h-full rounded-2xl p-8 lg:p-10 transition-all duration-300 ${
+                    className={`h-full rounded-2xl p-6 lg:p-8 transition-all duration-300 ${
                       tier.highlighted
                         ? "bg-card border-2 border-primary shadow-elegant"
+                        : isPrivate
+                        ? "bg-card border-2 border-gold/50"
                         : isCurrentPlan(tier.id)
                         ? "bg-card border-2 border-green-500/50"
                         : "bg-card border border-border hover:border-primary/30"
                     }`}
                   >
-                    <div className="text-center mb-8">
-                      <h3 className="text-xl font-serif text-foreground mb-2">{tier.name}</h3>
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-serif text-foreground mb-2">{tier.name}</h3>
                       <div className="flex items-baseline justify-center gap-1">
-                        <span className="text-4xl md:text-5xl font-serif text-foreground">
+                        <span className="text-3xl md:text-4xl font-serif text-foreground">
                           {priceInfo.price}
                         </span>
                         <span className="text-muted-foreground text-sm">{priceInfo.period}</span>
@@ -222,23 +247,28 @@ export default function Pricing() {
                           <p className="text-xs font-medium text-green-400">Save {priceInfo.savings}/year</p>
                         </div>
                       )}
-                      <p className="text-muted-foreground text-sm mt-4">{tier.description}</p>
+                      <p className="text-muted-foreground text-xs mt-3 line-clamp-2">{tier.shortDescription || tier.description}</p>
                     </div>
 
-                    <ul className="space-y-3 mb-10">
-                      {tier.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${tier.id === 'elite' ? 'text-gold' : 'text-primary'}`} />
-                          <span className={`text-sm ${i === 0 && tier.id === 'elite' ? 'font-medium text-foreground' : 'text-foreground/80'}`}>
-                            {feature}
-                          </span>
+                    <ul className="space-y-2 mb-8">
+                      {tier.features.slice(0, 6).map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                            isPrivate ? 'text-gold' : tier.id === 'elite' ? 'text-gold' : 'text-primary'
+                          }`} />
+                          <span className="text-xs text-foreground/80">{feature}</span>
                         </li>
                       ))}
+                      {tier.features.length > 6 && (
+                        <li className="text-xs text-muted-foreground pl-6">
+                          +{tier.features.length - 6} more features
+                        </li>
+                      )}
                     </ul>
 
                     <Button
-                      variant={tier.highlighted ? "default" : tier.id === 'elite' ? "gold" : "outline"}
-                      size="lg"
+                      variant={isPrivate ? "gold" : tier.highlighted ? "default" : "outline"}
+                      size="default"
                       className="w-full"
                       onClick={() => handleTierClick(tier.id)}
                       disabled={loading || isCurrentPlan(tier.id)}
@@ -280,11 +310,11 @@ export default function Pricing() {
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
-                className="max-w-5xl mx-auto mb-16 overflow-hidden"
+                className="max-w-6xl mx-auto mb-16 overflow-hidden"
               >
-                <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                <div className="bg-card rounded-2xl border border-border overflow-x-auto">
                   {/* Table Header */}
-                  <div className="grid grid-cols-4 gap-4 p-4 md:p-6 border-b border-border bg-muted/30">
+                  <div className="grid grid-cols-5 gap-4 p-4 md:p-6 border-b border-border bg-muted/30 min-w-[600px]">
                     <div className="font-medium text-foreground">Features</div>
                     <div className="text-center">
                       <div className="font-medium text-foreground">Free</div>
@@ -305,12 +335,21 @@ export default function Pricing() {
                         {billingPeriod === 'annual' ? '$81/mo' : '$97/mo'}
                       </div>
                     </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 font-medium text-gold">
+                        <Shield className="w-4 h-4" />
+                        Private
+                      </div>
+                      <div className="text-sm text-gold/70">
+                        {billingPeriod === 'annual' ? '$125/mo' : '$149/mo'}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Table Body by Category */}
                   {categories.map((category) => (
                     <div key={category}>
-                      <div className="px-4 md:px-6 py-3 bg-muted/20 border-b border-border">
+                      <div className="px-4 md:px-6 py-3 bg-muted/20 border-b border-border min-w-[600px]">
                         <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                           {category}
                         </span>
@@ -318,7 +357,7 @@ export default function Pricing() {
                       {FEATURE_COMPARISON.filter(f => f.category === category).map((item, index) => (
                         <div
                           key={item.feature}
-                          className={`grid grid-cols-4 gap-4 px-4 md:px-6 py-3 ${
+                          className={`grid grid-cols-5 gap-4 px-4 md:px-6 py-3 min-w-[600px] ${
                             index !== FEATURE_COMPARISON.filter(f => f.category === category).length - 1 
                               ? 'border-b border-border/50' 
                               : ''
@@ -341,6 +380,13 @@ export default function Pricing() {
                           </div>
                           <div className="flex justify-center">
                             {item.elite ? (
+                              <Check className="w-5 h-5 text-gold" />
+                            ) : (
+                              <X className="w-5 h-5 text-muted-foreground/30" />
+                            )}
+                          </div>
+                          <div className="flex justify-center">
+                            {item.private ? (
                               <Check className="w-5 h-5 text-gold" />
                             ) : (
                               <X className="w-5 h-5 text-muted-foreground/30" />
@@ -400,9 +446,12 @@ export default function Pricing() {
                   <p className="text-foreground mb-6 italic text-sm leading-relaxed">"{testimonial.quote}"</p>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      testimonial.tier === 'private' ? 'bg-gold/20' :
                       testimonial.tier === 'elite' ? 'bg-gold/20' : 'bg-primary/20'
                     }`}>
-                      {testimonial.tier === 'elite' ? (
+                      {testimonial.tier === 'private' ? (
+                        <Shield className="w-5 h-5 text-gold" />
+                      ) : testimonial.tier === 'elite' ? (
                         <Crown className="w-5 h-5 text-gold" />
                       ) : (
                         <Zap className="w-5 h-5 text-primary" />
