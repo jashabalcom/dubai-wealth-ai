@@ -31,6 +31,7 @@ import { TrueCostCard } from '@/components/properties/TrueCostCard';
 import { NeighborhoodWidget } from '@/components/properties/NeighborhoodWidget';
 import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
 import { DualPrice } from '@/components/DualPrice';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -765,15 +766,26 @@ export default function PropertyDetail() {
                   </div>
                 </div>
                 
-                {/* AI Analysis Button */}
-                <Button 
-                  variant="gold" 
-                  className="w-full mt-4" 
-                  onClick={() => setShowAIAnalysis(true)}
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Get AI Investment Analysis
-                </Button>
+                {/* AI Analysis Button or Upgrade Prompt */}
+                {profile && ['elite', 'private'].includes((profile.membership_tier || 'free') as string) ? (
+                  <Button 
+                    variant="gold" 
+                    className="w-full mt-4" 
+                    onClick={() => setShowAIAnalysis(true)}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Get AI Investment Analysis
+                  </Button>
+                ) : (
+                  <div className="mt-4">
+                    <ContextualUpgradePrompt
+                      feature="AI Investment Analysis"
+                      description="Get detailed AI-powered insights on this property's investment potential, risks, and opportunities."
+                      requiredTier="elite"
+                      variant="banner"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* STR Yield Card */}

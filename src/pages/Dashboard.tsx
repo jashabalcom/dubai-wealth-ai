@@ -17,7 +17,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
 import { NewsWidget } from '@/components/dashboard/NewsWidget';
-import { WelcomeModal } from '@/components/onboarding/WelcomeModal';
 import { ProfileWizard } from '@/components/onboarding/ProfileWizard';
 import { FirstActionPrompts } from '@/components/onboarding/FirstActionPrompts';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
@@ -69,9 +68,11 @@ export default function Dashboard() {
   if (!user) return null;
 
   const firstName = profile?.full_name?.split(' ')[0] || 'Investor';
-  const membershipTier = profile?.membership_tier || 'free';
+  const membershipTier = (profile?.membership_tier || 'free') as string;
+  const isPrivate = membershipTier === 'private';
   const isElite = membershipTier === 'elite';
   const isInvestor = membershipTier === 'investor';
+  const isPaidMember = isPrivate || isElite || isInvestor;
 
   const handleSignOut = async () => {
     await signOut();
@@ -125,21 +126,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Onboarding Modals */}
-      <WelcomeModal
-        isOpen={showWelcomeModal}
-        userName={firstName}
-        onStartWizard={startProfileWizard}
-        onExplore={() => {
+      {/* Unified Onboarding Wizard (includes welcome step) */}
+      <ProfileWizard
+        isOpen={showWelcomeModal || showProfileWizard}
+        onClose={() => {
           dismissWelcomeModal();
+          closeProfileWizard();
           skipOnboarding();
         }}
-      />
-
-      <ProfileWizard
-        isOpen={showProfileWizard}
-        onClose={closeProfileWizard}
         onComplete={completeOnboarding}
+        showWelcome={showWelcomeModal}
+        userName={firstName}
       />
 
       {/* Onboarding Checklist Widget */}
@@ -165,13 +162,15 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Membership Badge */}
             <div className={`px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${
-              isElite 
-                ? 'bg-gold/20 text-gold border border-gold/30' 
-                : isInvestor 
-                  ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  : 'bg-muted text-muted-foreground'
+              isPrivate
+                ? 'bg-gradient-to-r from-gold/20 to-amber-500/20 text-amber-400 border border-gold/30'
+                : isElite 
+                  ? 'bg-gold/20 text-gold border border-gold/30' 
+                  : isInvestor 
+                    ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    : 'bg-muted text-muted-foreground'
             }`}>
-              {isElite && <Crown className="w-3 h-3 inline mr-1" />}
+              {(isPrivate || isElite) && <Crown className="w-3 h-3 inline mr-1" />}
               <span className="hidden xs:inline">{membershipTier.charAt(0).toUpperCase() + membershipTier.slice(1)} </span>Member
             </div>
 
@@ -200,8 +199,27 @@ export default function Dashboard() {
           </p>
         </motion.div>
 
-        {/* Upgrade CTA for non-Elite */}
-        {!isElite && (
+        {/* Tier-specific CTA */}
+        {isPrivate ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-gold/20 via-amber-500/10 to-transparent border border-gold/30"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gold/20 flex items-center justify-center">
+                <Crown className="w-6 h-6 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="font-heading text-lg text-foreground">Welcome to Private Membership</h3>
+                <p className="text-muted-foreground">
+                  Your dedicated concierge team is ready to assist. Access exclusive off-market opportunities.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ) : !isElite && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -212,14 +230,18 @@ export default function Dashboard() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Crown className="w-5 h-5 text-gold" />
-                  <span className="text-gold font-medium">Upgrade to Elite</span>
+                  <span className="text-gold font-medium">
+                    {isInvestor ? 'Upgrade to Elite' : 'Unlock Premium Features'}
+                  </span>
                 </div>
                 <p className="text-muted-foreground">
-                  Get priority access to off-plan launches, advanced AI tools, and portfolio tracking.
+                  {isInvestor 
+                    ? 'Get portfolio tracking, priority access to off-plan launches, and advanced AI tools.'
+                    : 'Start your investment journey with full property access, calculators, and community.'}
                 </p>
               </div>
               <Button variant="gold" onClick={() => navigate('/upgrade')}>
-                Upgrade Now
+                {isInvestor ? 'Upgrade to Elite' : 'View Plans'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
