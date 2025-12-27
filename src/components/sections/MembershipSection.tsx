@@ -5,12 +5,17 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useState } from "react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { STRIPE_TIERS, type BillingPeriod } from "@/lib/stripe-config";
 
 const tiers = [
   {
     name: "Free",
-    price: "$0",
+    monthlyPrice: "$0",
+    annualPrice: "$0",
     period: "forever",
+    annualPeriod: "forever",
     description: "Explore Dubai real estate basics and community access.",
     features: [
       "Property listings browser",
@@ -25,8 +30,11 @@ const tiers = [
   },
   {
     name: "Dubai Investor",
-    price: "$29",
+    monthlyPrice: STRIPE_TIERS.investor.monthly.priceDisplay,
+    annualPrice: STRIPE_TIERS.investor.annual.monthlyEquivalent,
     period: "/month",
+    annualPeriod: "/month (billed yearly)",
+    annualSavings: STRIPE_TIERS.investor.annual.savingsDisplay,
     description: "Full access to education, tools, and community.",
     features: [
       "Full Academy (50+ lessons)",
@@ -45,8 +53,11 @@ const tiers = [
   },
   {
     name: "Dubai Elite",
-    price: "$97",
+    monthlyPrice: STRIPE_TIERS.elite.monthly.priceDisplay,
+    annualPrice: STRIPE_TIERS.elite.annual.monthlyEquivalent,
     period: "/month",
+    annualPeriod: "/month (billed yearly)",
+    annualSavings: STRIPE_TIERS.elite.annual.savingsDisplay,
     description: "Priority access, advanced AI, and elite networking.",
     features: [
       "Everything in Investor, plus:",
@@ -66,8 +77,11 @@ const tiers = [
   },
   {
     name: "Dubai Private",
-    price: "$149",
+    monthlyPrice: STRIPE_TIERS.private.monthly.priceDisplay,
+    annualPrice: STRIPE_TIERS.private.annual.monthlyEquivalent,
     period: "/month",
+    annualPeriod: "/month (billed yearly)",
+    annualSavings: STRIPE_TIERS.private.annual.savingsDisplay,
     description: "You now have a team in Dubai.",
     features: [
       "Everything in Elite, plus:",
@@ -91,6 +105,7 @@ export function MembershipSection() {
   const { user } = useAuth();
   const { startCheckout, loading } = useSubscription();
   const [loadingTier, setLoadingTier] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(true);
 
   const handleTierClick = async (tier: "free" | "investor" | "elite" | "private") => {
     if (tier === "free") {
@@ -100,6 +115,7 @@ export function MembershipSection() {
 
     if (!user) {
       localStorage.setItem('pending_checkout_tier', tier);
+      localStorage.setItem('pending_checkout_billing', isAnnual ? 'annual' : 'monthly');
       navigate('/auth');
       return;
     }
@@ -111,7 +127,8 @@ export function MembershipSection() {
     }
 
     setLoadingTier(tier);
-    await startCheckout(tier);
+    const billingPeriod: BillingPeriod = isAnnual ? 'annual' : 'monthly';
+    await startCheckout(tier, billingPeriod);
     setLoadingTier(null);
   };
   
@@ -141,6 +158,33 @@ export function MembershipSection() {
             Select the membership that aligns with your investment goals. 
             Upgrade or adjust anytime.
           </p>
+
+          {/* Annual/Monthly Toggle */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <Label 
+              htmlFor="billing-toggle" 
+              className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}
+            >
+              Monthly
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={isAnnual}
+              onCheckedChange={setIsAnnual}
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label 
+              htmlFor="billing-toggle" 
+              className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}
+            >
+              Annual
+            </Label>
+            {isAnnual && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                Save up to 17%
+              </span>
+            )}
+          </div>
         </motion.div>
 
         {/* Pricing Cards - 4 tiers */}
@@ -174,10 +218,17 @@ export function MembershipSection() {
                   <h3 className="text-lg font-serif text-foreground mb-2">{tier.name}</h3>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-3xl md:text-4xl font-serif text-foreground">
-                      {tier.price}
+                      {isAnnual ? tier.annualPrice : tier.monthlyPrice}
                     </span>
-                    <span className="text-muted-foreground text-sm">{tier.period}</span>
+                    <span className="text-muted-foreground text-sm">
+                      {isAnnual ? tier.annualPeriod : tier.period}
+                    </span>
                   </div>
+                  {isAnnual && tier.annualSavings && (
+                    <span className="inline-block mt-2 text-xs text-emerald-500 font-medium">
+                      {tier.annualSavings}
+                    </span>
+                  )}
                   <p className="text-muted-foreground text-sm mt-3">{tier.description}</p>
                 </div>
 

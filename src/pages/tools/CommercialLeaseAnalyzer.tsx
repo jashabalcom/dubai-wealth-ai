@@ -12,6 +12,7 @@ import { Building2, Calculator, TrendingUp, AlertTriangle, Sparkles, FileText, S
 import { CalculatorAIAnalysis } from "@/components/tools/CalculatorAIAnalysis";
 import { useAuth } from "@/hooks/useAuth";
 import { UpgradeModal } from "@/components/freemium/UpgradeModal";
+import { ContextualUpgradePrompt } from "@/components/freemium/ContextualUpgradePrompt";
 import { SliderInput } from "@/components/tools/SliderInput";
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell

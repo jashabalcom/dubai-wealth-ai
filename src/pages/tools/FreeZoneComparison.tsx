@@ -23,6 +23,7 @@ import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { FreeZoneCard } from '@/components/tools/FreeZoneCard';
 import { FreeZoneCharts } from '@/components/tools/FreeZoneCharts';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useProfile } from '@/hooks/useProfile';
 import { useCalculatorAnalysis } from '@/hooks/useCalculatorAnalysis';
 import { DUBAI_FREE_ZONES, getAllSectors, calculateFirstYearCost, calculateAnnualRenewal } from '@/lib/commercialRealEstateFees';

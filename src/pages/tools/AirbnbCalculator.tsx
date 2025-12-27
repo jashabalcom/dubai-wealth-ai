@@ -19,6 +19,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { useAuth } from '@/hooks/useAuth';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {

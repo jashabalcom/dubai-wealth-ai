@@ -12,6 +12,8 @@ import { useAirbnbMarketData } from '@/hooks/useAirbnbMarketData';
 import { DEFAULT_SHORT_TERM_COSTS, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { Badge } from '@/components/ui/badge';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { useAuth } from '@/hooks/useAuth';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend,

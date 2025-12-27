@@ -12,6 +12,8 @@ import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { calculateAcquisitionCosts, AREA_SERVICE_CHARGES, DEFAULT_RENTAL_COSTS } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
+import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { useAuth } from '@/hooks/useAuth';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
