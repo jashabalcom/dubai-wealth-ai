@@ -146,15 +146,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    // Send welcome email if signup was successful
+    // Enqueue welcome email sequence if signup was successful
     if (!error && data.user) {
       try {
-        await supabase.functions.invoke('send-welcome-email', {
-          body: { email, name: fullName },
+        // Enqueue the full drip campaign sequence
+        await supabase.functions.invoke('enqueue-welcome-sequence', {
+          body: { 
+            user_id: data.user.id,
+            email, 
+            full_name: fullName,
+            membership_tier: 'free'
+          },
         });
-        console.log('Welcome email sent successfully');
+        console.log('Welcome email sequence enqueued successfully');
       } catch (emailError) {
-        console.error('Failed to send welcome email:', emailError);
+        console.error('Failed to enqueue welcome sequence:', emailError);
         // Don't fail signup if email fails
       }
     }
