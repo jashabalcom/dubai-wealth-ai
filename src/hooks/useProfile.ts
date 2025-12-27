@@ -16,7 +16,7 @@ export interface Profile {
   bio?: string | null;
   looking_for?: string | null;
   linkedin_url?: string | null;
-  membership_tier: 'free' | 'investor' | 'elite';
+  membership_tier: 'free' | 'investor' | 'elite' | 'private';
   membership_status?: 'active' | 'canceled' | 'trial' | 'expired';
   membership_renews_at?: string | null;
   created_at: string;

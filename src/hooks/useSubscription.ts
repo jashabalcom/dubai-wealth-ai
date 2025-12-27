@@ -38,12 +38,9 @@ export function useSubscription() {
       const tierConfig = STRIPE_TIERS[tier];
       const priceConfig = billingPeriod === 'annual' ? tierConfig.annual : tierConfig.monthly;
       
-      // Check if this is the private tier with placeholder IDs
-      if (priceConfig.price_id.includes('placeholder')) {
-        toast({
-          title: "Private Tier Coming Soon",
-          description: "Please contact us directly to discuss Private membership options.",
-        });
+      // Private tier uses contact flow instead of direct checkout
+      if (tier === 'private') {
+        window.location.href = '/contact?subject=Private+Membership';
         setLoading(false);
         return;
       }

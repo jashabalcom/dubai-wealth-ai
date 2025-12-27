@@ -7,7 +7,7 @@ export interface DirectoryMember {
   full_name: string | null;
   avatar_url: string | null;
   country: string | null;
-  membership_tier: 'free' | 'investor' | 'elite';
+  membership_tier: 'free' | 'investor' | 'elite' | 'private';
   investment_goal: string | null;
   budget_range: string | null;
   timeline: string | null;
