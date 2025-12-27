@@ -54,10 +54,10 @@ export function ContextualUpgradePrompt({
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`p-4 rounded-lg bg-primary/5 border border-primary/20 flex items-center justify-between gap-4 ${className}`}
+        className={`p-4 rounded-lg bg-primary/5 border border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${className}`}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
             <Lock className="w-5 h-5 text-primary" />
           </div>
           <div>
@@ -67,7 +67,7 @@ export function ContextualUpgradePrompt({
             )}
           </div>
         </div>
-        <Button variant="gold" size="sm" onClick={handleUpgradeClick}>
+        <Button variant="gold" size="sm" onClick={handleUpgradeClick} className="w-full sm:w-auto flex-shrink-0">
           Unlock Access
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
