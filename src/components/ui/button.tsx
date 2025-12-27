@@ -29,6 +29,8 @@ const buttonVariants = cva(
           "bg-transparent border border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/50 rounded-sm uppercase tracking-[0.15em]",
         nav:
           "bg-transparent text-foreground hover:text-primary transition-colors uppercase tracking-[0.1em] text-xs active:scale-100",
+        private:
+          "border-2 border-primary bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50",
       },
       size: {
         default: "h-12 px-6 sm:px-8 py-3",

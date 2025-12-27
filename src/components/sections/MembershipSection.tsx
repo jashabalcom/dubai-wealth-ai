@@ -58,7 +58,7 @@ const tiers = [
       "Direct expert consultation",
     ],
     cta: "Go Elite",
-    variant: "secondary" as const,
+    variant: "default" as const,
     highlighted: false,
     badge: "Best Value",
     tier: "elite" as const,
@@ -77,8 +77,8 @@ const tiers = [
       "Same-day priority response",
       "White-glove transaction support",
     ],
-    cta: "Request Private Access",
-    variant: "outline" as const,
+    cta: "Request Access",
+    variant: "private" as const,
     highlighted: false,
     badge: "Concierge",
     tier: "private" as const,
@@ -192,8 +192,8 @@ export function MembershipSection() {
 
                 <Button
                   variant={tier.variant}
-                  size="lg"
-                  className="w-full"
+                  size="default"
+                  className="w-full min-h-[48px] text-xs sm:text-sm"
                   onClick={() => handleTierClick(tier.tier)}
                   disabled={loading || loadingTier === tier.tier}
                 >
