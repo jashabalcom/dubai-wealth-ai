@@ -84,8 +84,8 @@ export function PropertyCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="group h-full"
+      transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
+      className="group h-full will-change-transform"
     >
       <Link to={`/properties/${property.slug}`} className="block h-full">
         <div className={cn(
