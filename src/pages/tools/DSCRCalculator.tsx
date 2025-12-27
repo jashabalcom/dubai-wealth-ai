@@ -377,6 +377,14 @@ export default function DSCRCalculator() {
                 interestRate={inputs.interestRate}
                 formatAED={formatAED}
               />
+
+              {!isUnlimited && hasReachedLimit && (
+                <ContextualUpgradePrompt
+                  feature="Unlimited Calculator Access"
+                  description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+                  className="mt-8"
+                />
+              )}
             </div>
           </div>
         </div>

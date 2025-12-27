@@ -14,6 +14,7 @@ import { calculateAcquisitionCosts, AREA_SERVICE_CHARGES, DEFAULT_RENTAL_COSTS }
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useAuth } from '@/hooks/useAuth';
+import { useToolUsage } from '@/hooks/useToolUsage';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
@@ -22,6 +23,7 @@ function formatAED(amount: number): string {
 
 export default function RentVsBuyCalculator() {
   const { formatPrice } = useCurrency();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('rent-vs-buy');
   const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
@@ -361,6 +363,14 @@ export default function RentVsBuyCalculator() {
               </div>
             </motion.div>
           </div>
+
+          {!isUnlimited && hasReachedLimit && (
+            <ContextualUpgradePrompt
+              feature="Unlimited Calculator Access"
+              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+              className="mt-8"
+            />
+          )}
         </div>
       </section>
       <Footer />

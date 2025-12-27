@@ -99,10 +99,9 @@ export const MEMBERSHIP_TIERS = {
     annualPriceDisplay: "$1,500",
     annualMonthlyEquivalent: "$125",
     annualSavings: "$288",
-    // Note: These IDs need to be created in Stripe
-    product_id: "prod_private_placeholder",
-    price_id: "price_private_monthly_placeholder",
-    annual_price_id: "price_private_annual_placeholder",
+    product_id: "prod_TgMfiaX6U5k905",
+    price_id: "price_1SizvrHVQx2jO318FYaOxTqr",
+    annual_price_id: "price_1SizwHHVQx2jO318PaFBNJmX",
     description: "You now have a team in Dubai. High-touch advisory and concierge services.",
     shortDescription: "Your dedicated team in Dubai",
     features: [

@@ -14,6 +14,7 @@ import { MortgageLeadForm } from '@/components/tools/MortgageLeadForm';
 import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useToolUsage } from '@/hooks/useToolUsage';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
@@ -28,6 +29,7 @@ function formatAED(amount: number): string {
 export default function MortgageCalculator() {
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('mortgage');
   const [activePreset, setActivePreset] = useState<string>();
   const [leadFormOpen, setLeadFormOpen] = useState(false);
 
@@ -493,6 +495,14 @@ export default function MortgageCalculator() {
               </div>
             </motion.div>
           </div>
+
+          {!isUnlimited && hasReachedLimit && (
+            <ContextualUpgradePrompt
+              feature="Unlimited Calculator Access"
+              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+              className="mt-8"
+            />
+          )}
         </div>
       </section>
 

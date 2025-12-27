@@ -25,6 +25,7 @@ import { FreeZoneCharts } from '@/components/tools/FreeZoneCharts';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useProfile } from '@/hooks/useProfile';
+import { useToolUsage } from '@/hooks/useToolUsage';
 import { useCalculatorAnalysis } from '@/hooks/useCalculatorAnalysis';
 import { DUBAI_FREE_ZONES, getAllSectors, calculateFirstYearCost, calculateAnnualRenewal } from '@/lib/commercialRealEstateFees';
 import type { FreeZoneInfo } from '@/lib/commercialRealEstateFees';
@@ -35,6 +36,7 @@ const MAX_ZONES_PAID = 4;
 
 export default function FreeZoneComparison() {
   const { profile } = useProfile();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('free-zone');
   const membershipTier = profile?.membership_tier || 'free';
   const { analysis, isAnalyzing, error: analysisError, analyze, reset: resetAnalysis } = useCalculatorAnalysis({ calculatorType: 'free-zone' });
   
@@ -693,6 +695,15 @@ export default function FreeZoneComparison() {
           )}
         </DialogContent>
       </Dialog>
+
+      {!isUnlimited && hasReachedLimit && (
+        <div className="container mx-auto px-4 pb-8">
+          <ContextualUpgradePrompt
+            feature="Unlimited Calculator Access"
+            description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+          />
+        </div>
+      )}
 
       <UpgradeModal
         isOpen={showUpgradeModal}

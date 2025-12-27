@@ -21,6 +21,7 @@ import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { useAuth } from '@/hooks/useAuth';
+import { useToolUsage } from '@/hooks/useToolUsage';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
@@ -74,6 +75,7 @@ function MarketBenchmark({
 
 export default function AirbnbCalculator() {
   const { formatPrice } = useCurrency();
+  const { hasReachedLimit, isUnlimited } = useToolUsage('airbnb');
   const [activePreset, setActivePreset] = useState<string>();
   const [isUsingMarketData, setIsUsingMarketData] = useState(false);
   const prevAreaRef = useRef<string>();
@@ -578,6 +580,14 @@ export default function AirbnbCalculator() {
               </div>
             </motion.div>
           </div>
+
+          {!isUnlimited && hasReachedLimit && (
+            <ContextualUpgradePrompt
+              feature="Unlimited Calculator Access"
+              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+              className="mt-8"
+            />
+          )}
         </div>
       </section>
       <Footer />
