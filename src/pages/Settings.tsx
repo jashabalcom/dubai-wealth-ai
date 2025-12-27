@@ -26,6 +26,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
+import { CookiePreferencesManager } from '@/components/CookiePreferences';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
 
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
@@ -250,6 +251,9 @@ export default function Settings() {
 
               {/* Notification Preferences */}
               <NotificationPreferences />
+
+              {/* Cookie Preferences */}
+              <CookiePreferencesManager />
 
               {/* Change Password */}
               <Card>

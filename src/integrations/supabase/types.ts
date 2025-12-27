@@ -2729,6 +2729,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           budget_range: string | null
+          cookie_consent: Json | null
           country: string | null
           created_at: string
           email: string | null
@@ -2763,6 +2764,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           budget_range?: string | null
+          cookie_consent?: Json | null
           country?: string | null
           created_at?: string
           email?: string | null
@@ -2797,6 +2799,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           budget_range?: string | null
+          cookie_consent?: Json | null
           country?: string | null
           created_at?: string
           email?: string | null
