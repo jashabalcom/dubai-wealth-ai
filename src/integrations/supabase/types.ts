@@ -1377,6 +1377,89 @@ export type Database = {
         }
         Relationships: []
       }
+      email_drip_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          scheduled_for: string
+          sent_at: string | null
+          sequence_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for: string
+          sent_at?: string | null
+          sequence_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          scheduled_for?: string
+          sent_at?: string | null
+          sequence_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_drip_queue_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "email_drip_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_drip_sequences: {
+        Row: {
+          created_at: string
+          day_offset: number
+          email_key: string
+          email_type: string
+          id: string
+          is_active: boolean
+          sequence_name: string
+          subject: string
+          target_tier: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_offset?: number
+          email_key: string
+          email_type?: string
+          id?: string
+          is_active?: boolean
+          sequence_name: string
+          subject: string
+          target_tier?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_offset?: number
+          email_key?: string
+          email_type?: string
+          id?: string
+          is_active?: boolean
+          sequence_name?: string
+          subject?: string
+          target_tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_subscribers: {
         Row: {
           created_at: string
