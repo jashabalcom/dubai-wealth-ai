@@ -1,10 +1,11 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, GraduationCap, Calculator, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCountUp, useInView } from "@/hooks/useCountUp";
 import { useTranslation } from "react-i18next";
+import { usePlatformStats } from "@/hooks/usePlatformStats";
 import heroImage from "@/assets/hero-dubai-skyline.jpg";
 
 interface CountUpStatProps {
@@ -40,6 +41,7 @@ export function HeroSection() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { ref: statsRef, hasBeenInView } = useInView();
+  const { data: stats } = usePlatformStats();
   
   // Parallax setup
   const sectionRef = useRef<HTMLElement>(null);
@@ -148,7 +150,7 @@ export function HeroSection() {
             </Button>
           </motion.div>
 
-        {/* Trust Indicators with Count-Up Animation */}
+        {/* Platform Stats with Count-Up Animation */}
         <motion.div
           ref={statsRef}
           initial={{ opacity: 0 }}
@@ -156,32 +158,46 @@ export function HeroSection() {
           transition={{ duration: 1, delay: 1.2 }}
           className="mt-20 pt-12 border-t border-primary/10"
         >
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-            <CountUpStat 
-              end={850} 
-              prefix="$" 
-              suffix="M+" 
-              decimals={0}
-              label={t('hero.stats.investment')}
-              enabled={hasBeenInView}
-            />
-            <div className="hidden md:block w-px h-12 bg-primary/20" />
-            <CountUpStat 
-              end={2500} 
-              suffix="+"
-              label={t('hero.stats.investors')}
-              enabled={hasBeenInView}
-            />
-            <div className="hidden md:block w-px h-12 bg-primary/20" />
-            <CountUpStat 
-              end={35}
-              label={t('hero.stats.countries')}
-              enabled={hasBeenInView}
-            />
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
+            <div className="flex items-center gap-3">
+              <Building2 className="w-5 h-5 text-primary" />
+              <CountUpStat 
+                end={stats?.properties ?? 700} 
+                suffix="+"
+                label="Properties"
+                enabled={hasBeenInView}
+              />
+            </div>
+            <div className="hidden md:block w-px h-10 bg-primary/20" />
+            <div className="flex items-center gap-3">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              <CountUpStat 
+                end={stats?.lessons ?? 100} 
+                suffix="+"
+                label="Lessons"
+                enabled={hasBeenInView}
+              />
+            </div>
+            <div className="hidden md:block w-px h-10 bg-primary/20" />
+            <div className="flex items-center gap-3">
+              <Calculator className="w-5 h-5 text-primary" />
+              <CountUpStat 
+                end={stats?.tools ?? 11}
+                label="Tools"
+                enabled={hasBeenInView}
+              />
+            </div>
+            <div className="hidden md:block w-px h-10 bg-primary/20" />
+            <div className="flex items-center gap-3">
+              <MapPin className="w-5 h-5 text-primary" />
+              <CountUpStat 
+                end={stats?.neighborhoods ?? 100} 
+                suffix="+"
+                label="Neighborhoods"
+                enabled={hasBeenInView}
+              />
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground/50 mt-4 text-center">
-            {t('hero.stats.disclaimer')}
-          </p>
         </motion.div>
       </motion.div>
     </motion.div>

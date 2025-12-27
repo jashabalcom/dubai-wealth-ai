@@ -1377,6 +1377,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_verified: boolean
+          lead_magnet: string | null
+          source: string
+          subscribed_at: string
+          unsubscribed_at: string | null
+          updated_at: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_verified?: boolean
+          lead_magnet?: string | null
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_verified?: boolean
+          lead_magnet?: string | null
+          source?: string
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
+      }
       event_registrations: {
         Row: {
           event_id: string
