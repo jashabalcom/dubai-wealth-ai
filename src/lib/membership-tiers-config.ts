@@ -1,4 +1,4 @@
-import { Crown, Zap, Star, Calculator, BookOpen, Users, MessageSquare, TrendingUp, Sparkles, LineChart, Shield, Phone, Map, FileText, BarChart3, Home, Briefcase, Award } from "lucide-react";
+import { Crown, Zap, Star, Shield, Phone } from "lucide-react";
 
 // Centralized membership tier configuration - Single source of truth
 export const MEMBERSHIP_TIERS = {
@@ -8,7 +8,7 @@ export const MEMBERSHIP_TIERS = {
     price: 0,
     priceDisplay: "$0",
     period: "forever",
-    description: "Get started with basic insights and community access.",
+    description: "Explore Dubai real estate basics and community access.",
     shortDescription: "Explore Dubai real estate basics",
     features: [
       "Limited market reports",
@@ -38,9 +38,8 @@ export const MEMBERSHIP_TIERS = {
     shortDescription: "Everything you need to invest confidently",
     features: [
       "Full Academy access (50+ video lessons)",
-      "6 Investment Calculators (ROI, Mortgage, Airbnb, Rent vs Buy, STR vs LTR, Total Cost)",
-      "AI-Powered Calculator Analysis",
-      "Property comparison tool (up to 4 properties)",
+      "6 Investment Calculators with AI Analysis",
+      "Property comparison tool (up to 4)",
       "Save & track favorite properties",
       "Core community channels",
       "Member directory & networking",
@@ -51,14 +50,14 @@ export const MEMBERSHIP_TIERS = {
       "PDF export for all reports",
       "Email support",
     ],
-    cta: "Start Investing",
+    cta: "Become an Investor",
     highlighted: true,
-    badge: "Most Popular",
+    badge: "Recommended",
     icon: Zap,
   },
   elite: {
     id: 'elite' as const,
-    name: "Dubai Elite Investor",
+    name: "Dubai Elite",
     price: 97,
     priceDisplay: "$97",
     period: "/month",
@@ -69,15 +68,15 @@ export const MEMBERSHIP_TIERS = {
     product_id: "prod_TZ38flxttNDJ5W",
     price_id: "price_1Sbv2UHVQx2jO318S54njLC4",
     annual_price_id: "price_1ShQ9OHVQx2jO318x9l7kYEV",
-    description: "Priority access, advanced AI, and elite networking for serious wealth builders.",
+    description: "Advanced AI tools, priority access, and elite networking for wealth builders.",
     shortDescription: "Maximum returns with exclusive access",
     features: [
       "Everything in Dubai Investor, plus:",
-      "Golden Visa Investment Wizard (AI-powered)",
+      "Golden Visa Investment Wizard (AI)",
       "AI Investment Blueprint Generator",
-      "AI Property Analysis (market comparables)",
+      "AI Property Analysis (comparables)",
       "AI Dashboard Insights (personalized)",
-      "Portfolio tracking dashboard (unlimited properties)",
+      "Portfolio tracking dashboard",
       "Elite-only community & Deal Room",
       "Priority off-plan allocations",
       "Weekly market intelligence reports",
@@ -90,58 +89,94 @@ export const MEMBERSHIP_TIERS = {
     badge: "Best Value",
     icon: Crown,
   },
+  private: {
+    id: 'private' as const,
+    name: "Dubai Private",
+    price: 149,
+    priceDisplay: "$149",
+    period: "/month",
+    annualPrice: 1500,
+    annualPriceDisplay: "$1,500",
+    annualMonthlyEquivalent: "$125",
+    annualSavings: "$288",
+    // Note: These IDs need to be created in Stripe
+    product_id: "prod_private_placeholder",
+    price_id: "price_private_monthly_placeholder",
+    annual_price_id: "price_private_annual_placeholder",
+    description: "You now have a team in Dubai. High-touch advisory and concierge services.",
+    shortDescription: "Your dedicated team in Dubai",
+    features: [
+      "Everything in Dubai Elite, plus:",
+      "Dedicated concierge & sourcing",
+      "Priority deal access (48-72hr early)",
+      "Direct advisory support",
+      "Off-market opportunities",
+      "Personalized investment strategy",
+      "Quarterly portfolio reviews",
+      "Priority response (same-day)",
+      "White-glove transaction support",
+    ],
+    cta: "Request Private Access",
+    highlighted: false,
+    badge: "Concierge",
+    icon: Shield,
+  },
 } as const;
 
 // Feature comparison for pricing tables
 export const FEATURE_COMPARISON = [
   // Education & Learning
-  { category: "Education", feature: "Academy Courses (50+ lessons)", free: false, investor: true, elite: true },
-  { category: "Education", feature: "Video Lessons & Resources", free: false, investor: true, elite: true },
-  { category: "Education", feature: "Progress Tracking", free: false, investor: true, elite: true },
+  { category: "Education", feature: "Academy Courses (50+ lessons)", free: false, investor: true, elite: true, private: true },
+  { category: "Education", feature: "Video Lessons & Resources", free: false, investor: true, elite: true, private: true },
+  { category: "Education", feature: "Progress Tracking", free: false, investor: true, elite: true, private: true },
   
   // Investment Tools
-  { category: "Tools", feature: "ROI Calculator", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "Mortgage Calculator", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "Airbnb Yield Calculator", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "Rent vs Buy Calculator", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "STR vs LTR Comparison", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "Total Cost of Ownership", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "AI Calculator Analysis", free: false, investor: true, elite: true },
-  { category: "Tools", feature: "PDF Export", free: false, investor: true, elite: true },
+  { category: "Tools", feature: "ROI Calculator", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "Mortgage Calculator", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "Airbnb Yield Calculator", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "Rent vs Buy Calculator", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "STR vs LTR Comparison", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "Total Cost of Ownership", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "AI Calculator Analysis", free: false, investor: true, elite: true, private: true },
+  { category: "Tools", feature: "PDF Export", free: false, investor: true, elite: true, private: true },
   
   // Properties
-  { category: "Properties", feature: "Property Listings Browser", free: true, investor: true, elite: true },
-  { category: "Properties", feature: "Save Favorite Properties", free: false, investor: true, elite: true },
-  { category: "Properties", feature: "Property Comparison (4 properties)", free: false, investor: true, elite: true },
-  { category: "Properties", feature: "Off-Plan Project Browser", free: false, investor: true, elite: true },
-  { category: "Properties", feature: "Priority Off-Plan Allocations", free: false, investor: false, elite: true },
-  { category: "Properties", feature: "AI Property Analysis", free: false, investor: false, elite: true },
+  { category: "Properties", feature: "Property Listings Browser", free: true, investor: true, elite: true, private: true },
+  { category: "Properties", feature: "Save Favorite Properties", free: false, investor: true, elite: true, private: true },
+  { category: "Properties", feature: "Property Comparison (4 properties)", free: false, investor: true, elite: true, private: true },
+  { category: "Properties", feature: "Off-Plan Project Browser", free: false, investor: true, elite: true, private: true },
+  { category: "Properties", feature: "Priority Off-Plan Allocations", free: false, investor: false, elite: true, private: true },
+  { category: "Properties", feature: "AI Property Analysis", free: false, investor: false, elite: true, private: true },
+  { category: "Properties", feature: "Off-Market Opportunities", free: false, investor: false, elite: false, private: true },
   
   // Community
-  { category: "Community", feature: "Basic Community Access", free: true, investor: true, elite: true },
-  { category: "Community", feature: "Core Community Channels", free: false, investor: true, elite: true },
-  { category: "Community", feature: "Member Directory", free: false, investor: true, elite: true },
-  { category: "Community", feature: "Direct Messaging", free: false, investor: true, elite: true },
-  { category: "Community", feature: "Elite-Only Deal Room", free: false, investor: false, elite: true },
+  { category: "Community", feature: "Basic Community Access", free: true, investor: true, elite: true, private: true },
+  { category: "Community", feature: "Core Community Channels", free: false, investor: true, elite: true, private: true },
+  { category: "Community", feature: "Member Directory", free: false, investor: true, elite: true, private: true },
+  { category: "Community", feature: "Direct Messaging", free: false, investor: true, elite: true, private: true },
+  { category: "Community", feature: "Elite-Only Deal Room", free: false, investor: false, elite: true, private: true },
   
   // AI Features
-  { category: "AI", feature: "Basic AI Assistant", free: false, investor: true, elite: true },
-  { category: "AI", feature: "AI Dashboard Insights", free: false, investor: false, elite: true },
-  { category: "AI", feature: "AI Investment Blueprint Generator", free: false, investor: false, elite: true },
-  { category: "AI", feature: "Golden Visa Wizard (AI)", free: false, investor: false, elite: true },
+  { category: "AI", feature: "Basic AI Assistant", free: false, investor: true, elite: true, private: true },
+  { category: "AI", feature: "AI Dashboard Insights", free: false, investor: false, elite: true, private: true },
+  { category: "AI", feature: "AI Investment Blueprint Generator", free: false, investor: false, elite: true, private: true },
+  { category: "AI", feature: "Golden Visa Wizard (AI)", free: false, investor: false, elite: true, private: true },
   
   // Portfolio & Tracking
-  { category: "Portfolio", feature: "Dashboard Summary", free: false, investor: true, elite: true },
-  { category: "Portfolio", feature: "Portfolio Tracking Dashboard", free: false, investor: false, elite: true },
-  { category: "Portfolio", feature: "Multi-Property Analytics", free: false, investor: false, elite: true },
+  { category: "Portfolio", feature: "Dashboard Summary", free: false, investor: true, elite: true, private: true },
+  { category: "Portfolio", feature: "Portfolio Tracking Dashboard", free: false, investor: false, elite: true, private: true },
+  { category: "Portfolio", feature: "Multi-Property Analytics", free: false, investor: false, elite: true, private: true },
   
-  // Reports & Support
-  { category: "Support", feature: "Monthly Market Reports", free: false, investor: true, elite: true },
-  { category: "Support", feature: "Weekly Market Intelligence", free: false, investor: false, elite: true },
-  { category: "Support", feature: "Monthly Live Investor Calls", free: false, investor: false, elite: true },
-  { category: "Support", feature: "Email Support", free: false, investor: true, elite: true },
-  { category: "Support", feature: "Direct Expert Consultation", free: false, investor: false, elite: true },
-  { category: "Support", feature: "Elite Badge on Profile", free: false, investor: false, elite: true },
+  // Support & Concierge
+  { category: "Support", feature: "Monthly Market Reports", free: false, investor: true, elite: true, private: true },
+  { category: "Support", feature: "Weekly Market Intelligence", free: false, investor: false, elite: true, private: true },
+  { category: "Support", feature: "Monthly Live Investor Calls", free: false, investor: false, elite: true, private: true },
+  { category: "Support", feature: "Email Support", free: false, investor: true, elite: true, private: true },
+  { category: "Support", feature: "Direct Expert Consultation", free: false, investor: false, elite: true, private: true },
+  { category: "Support", feature: "Elite Badge on Profile", free: false, investor: false, elite: true, private: true },
+  { category: "Support", feature: "Dedicated Concierge", free: false, investor: false, elite: false, private: true },
+  { category: "Support", feature: "Same-Day Priority Response", free: false, investor: false, elite: false, private: true },
+  { category: "Support", feature: "White-Glove Transaction Support", free: false, investor: false, elite: false, private: true },
 ];
 
 // Testimonials for pricing page
@@ -162,16 +197,35 @@ export const PRICING_TESTIMONIALS = [
     avatar: null,
   },
   {
-    quote: "Moving from Investor to Elite was the best decision. The Deal Room alone has connected me with 3 co-investment partners.",
+    quote: "Having a dedicated team in Dubai changed everything. The Private concierge found me an off-market villa I never would have discovered.",
     author: "James Mitchell",
     role: "HNWI Expat",
-    investment: "$800K+ Portfolio",
-    tier: "elite" as const,
+    investment: "$2.5M+ Portfolio",
+    tier: "private" as const,
     avatar: null,
   },
 ];
 
-// Elite exclusive features with descriptions
+// Private exclusive features with descriptions
+export const PRIVATE_EXCLUSIVE_FEATURES = [
+  {
+    icon: Shield,
+    title: "Dedicated Concierge",
+    description: "Your personal team handles sourcing, due diligence, and transaction support.",
+  },
+  {
+    icon: Phone,
+    title: "Same-Day Response",
+    description: "Priority access to investment advisors with guaranteed same-day response.",
+  },
+  {
+    icon: Crown,
+    title: "Off-Market Access",
+    description: "Exclusive access to properties and deals not available to the public.",
+  },
+];
+
+// Elite exclusive features with descriptions (kept for backward compatibility)
 export const ELITE_EXCLUSIVE_FEATURES = [
   {
     icon: Crown,
@@ -179,30 +233,15 @@ export const ELITE_EXCLUSIVE_FEATURES = [
     description: "Get first access to exclusive off-plan launches 48-72 hours before public release.",
   },
   {
-    icon: Sparkles,
+    icon: Zap,
     title: "AI Investment Blueprint",
     description: "Personalized investment strategies based on your goals, budget, and timeline.",
   },
   {
-    icon: LineChart,
-    title: "Portfolio Dashboard",
-    description: "Track all properties in one place with real-time value and cash flow analytics.",
-  },
-  {
-    icon: Users,
+    icon: Crown,
     title: "Elite Deal Room",
     description: "Private community for exclusive deals and co-investment opportunities.",
   },
-  {
-    icon: Phone,
-    title: "Direct Expert Line",
-    description: "Priority access to investment consultants with 24-hour response guarantee.",
-  },
-  {
-    icon: Shield,
-    title: "Weekly Intelligence",
-    description: "Curated market reports with actionable insights on opportunities.",
-  },
 ];
 
-export type MembershipTierId = 'free' | 'investor' | 'elite';
+export type MembershipTierId = 'free' | 'investor' | 'elite' | 'private';

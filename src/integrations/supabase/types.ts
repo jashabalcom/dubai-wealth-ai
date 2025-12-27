@@ -3721,7 +3721,7 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       channel_visibility: "all_members" | "elite_only"
       membership_status: "active" | "canceled" | "trial" | "expired"
-      membership_tier: "free" | "investor" | "elite"
+      membership_tier: "free" | "investor" | "elite" | "private"
       qa_category:
         | "mortgages"
         | "legal"
@@ -3862,7 +3862,7 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       channel_visibility: ["all_members", "elite_only"],
       membership_status: ["active", "canceled", "trial", "expired"],
-      membership_tier: ["free", "investor", "elite"],
+      membership_tier: ["free", "investor", "elite", "private"],
       qa_category: [
         "mortgages",
         "legal",

@@ -31,12 +31,22 @@ export function useSubscription() {
     }
   }, []);
 
-  const startCheckout = useCallback(async (tier: 'investor' | 'elite', billingPeriod: BillingPeriod = 'monthly') => {
+  const startCheckout = useCallback(async (tier: 'investor' | 'elite' | 'private', billingPeriod: BillingPeriod = 'monthly') => {
     setLoading(true);
     
     try {
       const tierConfig = STRIPE_TIERS[tier];
       const priceConfig = billingPeriod === 'annual' ? tierConfig.annual : tierConfig.monthly;
+      
+      // Check if this is the private tier with placeholder IDs
+      if (priceConfig.price_id.includes('placeholder')) {
+        toast({
+          title: "Private Tier Coming Soon",
+          description: "Please contact us directly to discuss Private membership options.",
+        });
+        setLoading(false);
+        return;
+      }
       
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { 
