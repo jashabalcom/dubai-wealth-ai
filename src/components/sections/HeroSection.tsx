@@ -7,7 +7,8 @@ import { useCountUp, useInView } from "@/hooks/useCountUp";
 import { useTranslation } from "react-i18next";
 import { usePlatformStats } from "@/hooks/usePlatformStats";
 import { useMobileOptimizedMotion } from "@/hooks/useReducedMotion";
-import heroImage from "@/assets/hero-dubai-skyline.jpg";
+import heroImageWebp from "@/assets/hero-dubai-skyline.webp";
+import heroImageJpg from "@/assets/hero-dubai-skyline.jpg";
 
 interface CountUpStatProps {
   end: number;
@@ -80,14 +81,17 @@ export function HeroSection() {
         className="absolute inset-0 will-change-transform"
         style={{ y: reduceMotion ? 0 : backgroundY }}
       >
-        <img
-          src={heroImage}
-          alt="Dubai skyline at golden hour"
-          loading="eager"
-          decoding="async"
-          className="w-full h-[120%] object-cover"
-          style={{ opacity: 0.6 }}
-        />
+        <picture>
+          <source srcSet={heroImageWebp} type="image/webp" />
+          <img
+            src={heroImageJpg}
+            alt="Dubai skyline at golden hour"
+            loading="eager"
+            decoding="async"
+            className="w-full h-[120%] object-cover"
+            style={{ opacity: 0.6 }}
+          />
+        </picture>
         <div className="absolute inset-0 bg-gradient-to-b from-secondary/70 via-secondary/50 to-secondary" />
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/60 via-transparent to-secondary/60" />
       </motion.div>
