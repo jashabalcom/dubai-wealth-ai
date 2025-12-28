@@ -185,7 +185,7 @@ const colorClasses: Record<string, { bg: string; border: string; text: string; g
   slate: {
     bg: 'bg-slate-500/10',
     border: 'border-slate-500/20',
-    text: 'text-slate-400',
+    text: 'text-slate-600',
     glow: 'group-hover:shadow-slate-500/20',
   },
 };
@@ -263,7 +263,7 @@ export default function Tools() {
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className={`font-heading text-2xl text-foreground group-hover:${colors.text} transition-colors`}>
+                            <h3 className="font-heading text-2xl text-foreground group-hover:text-gold transition-colors">
                               {tool.title}
                             </h3>
                             {isFeatured && (
@@ -369,9 +369,9 @@ export default function Tools() {
 
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h3 className={`font-heading text-2xl text-foreground group-hover:${colors.text} transition-colors`}>
-                                {tool.title}
-                              </h3>
+                            <h3 className="font-heading text-2xl text-foreground group-hover:text-slate-600 transition-colors">
+                              {tool.title}
+                            </h3>
                               <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
                                 Commercial
                               </Badge>
