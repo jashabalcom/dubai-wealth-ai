@@ -92,7 +92,7 @@ export function ExitIntentPopup() {
           onClick={handleClose}
           className="absolute right-4 top-4 z-10 p-1 rounded-full hover:bg-primary/10 transition-colors"
         >
-          <X className="w-5 h-5 text-muted-foreground" />
+          <X className="w-5 h-5 text-secondary-foreground/60" />
         </button>
 
         <div className="p-8">
@@ -121,7 +121,7 @@ export function ExitIntentPopup() {
 
                 {/* Intent Selection */}
                 <div className="mb-4">
-                  <p className="text-sm text-muted-foreground mb-2 text-center">What interests you most?</p>
+                  <p className="text-sm text-secondary-foreground/70 mb-2 text-center">What interests you most?</p>
                   <div className="grid grid-cols-2 gap-2">
                     {intentOptions.map((option) => (
                       <button
@@ -131,8 +131,8 @@ export function ExitIntentPopup() {
                         className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all",
                           selectedIntent === option.value
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background/50 text-muted-foreground hover:border-primary/50"
+                            ? "border-primary bg-primary/20 text-secondary-foreground"
+                            : "border-secondary-foreground/20 bg-background/10 text-secondary-foreground/70 hover:border-primary/50 hover:text-secondary-foreground"
                         )}
                       >
                         {option.icon}
@@ -144,14 +144,14 @@ export function ExitIntentPopup() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground/50" />
                     <Input
                       type="email"
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="pl-10 h-12 bg-background/50 border-primary/20 focus:border-primary"
+                      className="pl-10 h-12 bg-background/20 border-secondary-foreground/20 focus:border-primary text-secondary-foreground placeholder:text-secondary-foreground/50"
                     />
                   </div>
                   <Button
@@ -166,7 +166,7 @@ export function ExitIntentPopup() {
                   </Button>
                 </form>
 
-                <p className="text-xs text-muted-foreground/50 text-center mt-4">
+                <p className="text-xs text-secondary-foreground/50 text-center mt-4">
                   No spam. Unsubscribe anytime.
                 </p>
               </motion.div>
