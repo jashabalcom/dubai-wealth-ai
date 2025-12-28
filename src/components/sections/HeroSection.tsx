@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Building2, GraduationCap, Calculator, MapPin } from "lucide-react";
@@ -40,26 +40,37 @@ export function HeroSection() {
   const { data: stats } = usePlatformStats();
   const reduceMotion = useMobileOptimizedMotion();
   
-  // Parallax setup
+  // Defer parallax initialization to after first paint for better Speed Index
+  const [parallaxReady, setParallaxReady] = useState(false);
+  useEffect(() => {
+    // Use requestIdleCallback to defer parallax setup
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => setParallaxReady(true), { timeout: 1000 });
+    } else {
+      const timer = setTimeout(() => setParallaxReady(true), 100);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+  
+  // Parallax setup - only active after initial paint
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"]
   });
   
-  // Parallax transforms - reduced on mobile for performance
-  const parallaxIntensity = reduceMotion ? 0 : 1;
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", `${30 * parallaxIntensity}%`]);
-  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", `${15 * parallaxIntensity}%`]);
-  const decorativeLeftY = useTransform(scrollYProgress, [0, 1], ["0%", `${50 * parallaxIntensity}%`]);
-  const decorativeRightY = useTransform(scrollYProgress, [0, 1], ["0%", `${40 * parallaxIntensity}%`]);
-  const overlayOpacity = useTransform(scrollYProgress, [0, 0.5], [0.5, 0.8]);
+  // Parallax transforms - disabled until parallaxReady and on mobile
+  const enableParallax = parallaxReady && !reduceMotion;
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", enableParallax ? "30%" : "0%"]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0%", enableParallax ? "15%" : "0%"]);
+  const decorativeLeftY = useTransform(scrollYProgress, [0, 1], ["0%", enableParallax ? "50%" : "0%"]);
+  const decorativeRightY = useTransform(scrollYProgress, [0, 1], ["0%", enableParallax ? "40%" : "0%"]);
 
-  // Simple fade-in animation config
+  // Simplified animation config - no delay on initial render for faster Speed Index
   const fadeIn = {
-    initial: reduceMotion ? { opacity: 1 } : { opacity: 0, y: 20 },
+    initial: { opacity: 1, y: 0 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: reduceMotion ? 0 : 0.6 }
+    transition: { duration: 0 }
   };
 
   return (
@@ -81,8 +92,8 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/60 via-transparent to-secondary/60" />
       </motion.div>
 
-      {/* Decorative Elements with Parallax - Hidden on mobile */}
-      {!reduceMotion && (
+      {/* Decorative Elements with Parallax - Hidden on mobile, deferred */}
+      {enableParallax && (
         <>
           <motion.div 
             className="absolute top-1/4 left-10 w-px h-40 bg-gradient-to-b from-transparent via-primary/40 to-transparent hidden md:block"
@@ -203,8 +214,8 @@ export function HeroSection() {
         </div>
       </motion.div>
 
-      {/* Scroll Indicator - Hidden on mobile */}
-      {!reduceMotion && (
+      {/* Scroll Indicator - Hidden on mobile, deferred */}
+      {enableParallax && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
