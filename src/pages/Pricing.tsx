@@ -148,7 +148,7 @@ export default function Pricing() {
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">14-Day Free Trial • Credit Card Required</span>
+              <span className="text-sm font-medium text-primary">Cancel anytime • Secure checkout</span>
             </div>
           </motion.div>
 

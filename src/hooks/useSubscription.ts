@@ -31,7 +31,11 @@ export function useSubscription() {
     }
   }, []);
 
-  const startCheckout = useCallback(async (tier: 'investor' | 'elite' | 'private', billingPeriod: BillingPeriod = 'monthly') => {
+  const startCheckout = useCallback(async (
+    tier: 'investor' | 'elite' | 'private', 
+    billingPeriod: BillingPeriod = 'monthly',
+    trialSource?: string // Only pass this from special funnels (webinar, lead-magnet, partner, special-offer)
+  ) => {
     setLoading(true);
     
     try {
@@ -49,7 +53,8 @@ export function useSubscription() {
         body: { 
           priceId: priceConfig.price_id,
           tier: tier,
-          billingPeriod: billingPeriod
+          billingPeriod: billingPeriod,
+          ...(trialSource && { trialSource }) // Only include if provided (funnel-exclusive)
         }
       });
 
