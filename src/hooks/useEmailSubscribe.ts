@@ -5,6 +5,7 @@ import { toast } from "sonner";
 interface SubscribeOptions {
   source: string;
   leadMagnet?: string;
+  investorIntent?: "investor" | "off_plan" | "rental" | "golden_visa";
 }
 
 export function useEmailSubscribe() {
@@ -21,6 +22,7 @@ export function useEmailSubscribe() {
         email: email.toLowerCase().trim(),
         source: options.source,
         lead_magnet: options.leadMagnet,
+        investor_intent: options.investorIntent,
         utm_source: urlParams.get("utm_source"),
         utm_medium: urlParams.get("utm_medium"),
         utm_campaign: urlParams.get("utm_campaign"),
@@ -33,6 +35,20 @@ export function useEmailSubscribe() {
           return true;
         }
         throw error;
+      }
+
+      // Trigger intent-based email sequence if intent is specified
+      if (options.investorIntent) {
+        try {
+          await supabase.functions.invoke('enqueue-welcome-sequence', {
+            body: { 
+              email: email.toLowerCase().trim(),
+              membership_tier: options.investorIntent,
+            },
+          });
+        } catch (sequenceError) {
+          console.error('Failed to enqueue email sequence:', sequenceError);
+        }
       }
 
       toast.success("Successfully subscribed!");

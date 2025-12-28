@@ -3,15 +3,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Gift, Mail, ArrowRight } from "lucide-react";
+import { X, Gift, Mail, ArrowRight, Building2, Home, CreditCard, Shield } from "lucide-react";
 import { useEmailSubscribe } from "@/hooks/useEmailSubscribe";
+import { cn } from "@/lib/utils";
 
 const POPUP_SHOWN_KEY = "exit_intent_popup_shown";
 const POPUP_COOLDOWN_DAYS = 7;
 
+type InvestorIntent = "investor" | "off_plan" | "rental" | "golden_visa";
+
+const intentOptions: { value: InvestorIntent; label: string; icon: React.ReactNode }[] = [
+  { value: "investor", label: "General Investment", icon: <Building2 className="w-4 h-4" /> },
+  { value: "off_plan", label: "Off-Plan Properties", icon: <CreditCard className="w-4 h-4" /> },
+  { value: "rental", label: "Rental Income", icon: <Home className="w-4 h-4" /> },
+  { value: "golden_visa", label: "Golden Visa", icon: <Shield className="w-4 h-4" /> },
+];
+
 export function ExitIntentPopup() {
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [selectedIntent, setSelectedIntent] = useState<InvestorIntent>("investor");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { subscribe, isLoading } = useEmailSubscribe();
 
@@ -59,6 +70,7 @@ export function ExitIntentPopup() {
     const success = await subscribe(email, {
       source: "exit_intent",
       leadMagnet: "dubai_investment_guide_2025",
+      investorIntent: selectedIntent,
     });
 
     if (success) {
@@ -103,6 +115,29 @@ export function ExitIntentPopup() {
                     the same research our Elite members use.
                   </p>
                 </DialogHeader>
+
+                {/* Intent Selection */}
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground mb-2 text-center">What interests you most?</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {intentOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setSelectedIntent(option.value)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all",
+                          selectedIntent === option.value
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background/50 text-muted-foreground hover:border-primary/50"
+                        )}
+                      >
+                        {option.icon}
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="relative">

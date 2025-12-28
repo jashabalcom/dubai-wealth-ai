@@ -19,6 +19,7 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { PropertyGallery } from '@/components/properties/PropertyGallery';
 import { SimilarProperties } from '@/components/properties/SimilarProperties';
 import { PropertyInquiryForm } from '@/components/properties/PropertyInquiryForm';
+import { PropertyLeadMagnet } from '@/components/leadgen/PropertyLeadMagnet';
 import { InlineROICalculator } from '@/components/properties/InlineROICalculator';
 import { PropertyAIAnalysis } from '@/components/properties/PropertyAIAnalysis';
 import { AgentContactCard } from '@/components/properties/AgentContactCard';
@@ -806,6 +807,13 @@ export default function PropertyDetail() {
               )}
 
               <PropertyInquiryForm propertyTitle={property.title} propertyId={property.id} />
+              
+              {/* Lead Magnet for non-logged-in users */}
+              <PropertyLeadMagnet 
+                propertyTitle={property.title}
+                propertyArea={property.location_area}
+                isOffPlan={property.is_off_plan}
+              />
               
               <SimilarProperties 
                 currentPropertyId={property.id} 
