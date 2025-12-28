@@ -5,49 +5,65 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
 import { LazyLoadFallback } from "@/components/LazyLoadFallback";
 
-// Eagerly loaded pages (core user journey)
+// Eagerly loaded pages (critical for initial load / SEO)
 import Index from "@/pages/Index";
 import Auth from "@/pages/Auth";
-import Dashboard from "@/pages/Dashboard";
-import Academy from "@/pages/Academy";
-import Course from "@/pages/Course";
-import Lesson from "@/pages/Lesson";
-import Properties from "@/pages/Properties";
-import PropertyDetail from "@/pages/PropertyDetail";
-import SavedProperties from "@/pages/SavedProperties";
-import Tools from "@/pages/Tools";
-import Profile from "@/pages/Profile";
-import Pricing from "@/pages/Pricing";
-import SubscriptionSuccess from "@/pages/SubscriptionSuccess";
-import CheckoutRedirect from "@/pages/CheckoutRedirect";
-import Upgrade from "@/pages/Upgrade";
-import ResetPassword from "@/pages/ResetPassword";
-import Settings from "@/pages/Settings";
 import NotFound from "@/pages/NotFound";
-import Disclaimer from "@/pages/Disclaimer";
-import TermsOfService from "@/pages/TermsOfService";
-import PrivacyPolicy from "@/pages/PrivacyPolicy";
-import CookiePolicy from "@/pages/CookiePolicy";
-import About from "@/pages/About";
-import Blog from "@/pages/Blog";
-import Contact from "@/pages/Contact";
-import Developers from "@/pages/Developers";
-import DeveloperDetail from "@/pages/DeveloperDetail";
-import Neighborhoods from "@/pages/Neighborhoods";
-import NeighborhoodDetail from "@/pages/NeighborhoodDetail";
-import AIAssistant from "@/pages/AIAssistant";
 
-// Community Hub Pages (eagerly loaded - frequently used)
-import { CommunityLayout } from "@/components/community/CommunityLayout";
-import DiscussionsPage from "@/pages/community/DiscussionsPage";
-import EventsPage from "@/pages/community/EventsPage";
-import MembersPage from "@/pages/community/MembersPage";
-import ConnectionsPage from "@/pages/community/ConnectionsPage";
-import MessagesPage from "@/pages/community/MessagesPage";
-import LeaderboardPage from "@/pages/community/LeaderboardPage";
-import QAPage from "@/pages/community/QAPage";
-import QuestionDetailPage from "@/pages/community/QuestionDetailPage";
-import NewsPage from "@/pages/community/NewsPage";
+// Lazy loaded - Dashboard & Core pages (loaded after auth)
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Settings = lazy(() => import("@/pages/Settings"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const Profile = lazy(() => import("@/pages/Profile"));
+
+// Lazy loaded - Academy pages
+const Academy = lazy(() => import("@/pages/Academy"));
+const Course = lazy(() => import("@/pages/Course"));
+const Lesson = lazy(() => import("@/pages/Lesson"));
+
+// Lazy loaded - Properties pages
+const Properties = lazy(() => import("@/pages/Properties"));
+const PropertyDetail = lazy(() => import("@/pages/PropertyDetail"));
+const SavedProperties = lazy(() => import("@/pages/SavedProperties"));
+
+// Lazy loaded - Tools main page
+const Tools = lazy(() => import("@/pages/Tools"));
+
+// Lazy loaded - Pricing & Subscription pages
+const Pricing = lazy(() => import("@/pages/Pricing"));
+const SubscriptionSuccess = lazy(() => import("@/pages/SubscriptionSuccess"));
+const CheckoutRedirect = lazy(() => import("@/pages/CheckoutRedirect"));
+const Upgrade = lazy(() => import("@/pages/Upgrade"));
+
+// Lazy loaded - Static/Legal pages
+const Disclaimer = lazy(() => import("@/pages/Disclaimer"));
+const TermsOfService = lazy(() => import("@/pages/TermsOfService"));
+const PrivacyPolicy = lazy(() => import("@/pages/PrivacyPolicy"));
+const CookiePolicy = lazy(() => import("@/pages/CookiePolicy"));
+const About = lazy(() => import("@/pages/About"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const Contact = lazy(() => import("@/pages/Contact"));
+
+// Lazy loaded - Developers & Neighborhoods
+const Developers = lazy(() => import("@/pages/Developers"));
+const DeveloperDetail = lazy(() => import("@/pages/DeveloperDetail"));
+const Neighborhoods = lazy(() => import("@/pages/Neighborhoods"));
+const NeighborhoodDetail = lazy(() => import("@/pages/NeighborhoodDetail"));
+
+// Lazy loaded - AI Assistant
+const AIAssistant = lazy(() => import("@/pages/AIAssistant"));
+
+// Community Hub Pages (lazy loaded)
+const CommunityLayout = lazy(() => import("@/components/community/CommunityLayout").then(m => ({ default: m.CommunityLayout })));
+const DiscussionsPage = lazy(() => import("@/pages/community/DiscussionsPage"));
+const EventsPage = lazy(() => import("@/pages/community/EventsPage"));
+const MembersPage = lazy(() => import("@/pages/community/MembersPage"));
+const ConnectionsPage = lazy(() => import("@/pages/community/ConnectionsPage"));
+const MessagesPage = lazy(() => import("@/pages/community/MessagesPage"));
+const LeaderboardPage = lazy(() => import("@/pages/community/LeaderboardPage"));
+const QAPage = lazy(() => import("@/pages/community/QAPage"));
+const QuestionDetailPage = lazy(() => import("@/pages/community/QuestionDetailPage"));
+const NewsPage = lazy(() => import("@/pages/community/NewsPage"));
 
 // Lazy loaded pages - Tool calculators (users typically use 1-2)
 const ROICalculator = lazy(() => import("@/pages/tools/ROICalculator"));
@@ -97,8 +113,8 @@ const AgentRegister = lazy(() => import("@/pages/agent-portal/AgentRegister"));
 const AgentDashboard = lazy(() => import("@/pages/agent-portal/AgentDashboard"));
 const AgentListings = lazy(() => import("@/pages/agent-portal/AgentListings"));
 const AgentPropertyForm = lazy(() => import("@/pages/agent-portal/AgentPropertyForm"));
-import { AgentPortalLayout } from "@/components/agent-portal/AgentPortalLayout";
-import { AgentProtectedRoute } from "@/components/agent-portal/AgentProtectedRoute";
+const AgentPortalLayout = lazy(() => import("@/components/agent-portal/AgentPortalLayout").then(m => ({ default: m.AgentPortalLayout })));
+const AgentProtectedRoute = lazy(() => import("@/components/agent-portal/AgentProtectedRoute").then(m => ({ default: m.AgentProtectedRoute })));
 
 // Wrapper component for page transitions
 function AnimatedPage({ children }: { children: React.ReactNode }) {
@@ -122,36 +138,36 @@ export function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<AnimatedPage><Index /></AnimatedPage>} />
         <Route path="/auth" element={<AnimatedPage><Auth /></AnimatedPage>} />
-        <Route path="/reset-password" element={<AnimatedPage><ResetPassword /></AnimatedPage>} />
-        <Route path="/settings" element={<ProtectedRoute><AnimatedPage><Settings /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
+        <Route path="/settings" element={<ProtectedRoute><LazyPage><Settings /></LazyPage></ProtectedRoute>} />
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <AnimatedPage><Dashboard /></AnimatedPage>
+              <LazyPage><Dashboard /></LazyPage>
             </ProtectedRoute>
           }
         />
         {/* Academy - Free to browse, lesson access controlled in-page */}
-        <Route path="/academy" element={<AnimatedPage><Academy /></AnimatedPage>} />
-        <Route path="/academy/:slug" element={<AnimatedPage><Course /></AnimatedPage>} />
-        <Route path="/academy/:courseSlug/:lessonSlug" element={<ProtectedRoute><AnimatedPage><Lesson /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/academy" element={<LazyPage><Academy /></LazyPage>} />
+        <Route path="/academy/:slug" element={<LazyPage><Course /></LazyPage>} />
+        <Route path="/academy/:courseSlug/:lessonSlug" element={<ProtectedRoute><LazyPage><Lesson /></LazyPage></ProtectedRoute>} />
         
         {/* Properties - Public browse, saved requires auth */}
-        <Route path="/properties" element={<AnimatedPage><Properties /></AnimatedPage>} />
-        <Route path="/properties/:slug" element={<AnimatedPage><PropertyDetail /></AnimatedPage>} />
-        <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><SavedProperties /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/properties" element={<LazyPage><Properties /></LazyPage>} />
+        <Route path="/properties/:slug" element={<LazyPage><PropertyDetail /></LazyPage>} />
+        <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><LazyPage><SavedProperties /></LazyPage></ProtectedRoute>} />
         
         {/* Developers - Free to browse listing, detail pages require Investor tier */}
-        <Route path="/developers" element={<AnimatedPage><Developers /></AnimatedPage>} />
-        <Route path="/developers/:slug" element={<ProtectedRoute requiredTier="investor"><AnimatedPage><DeveloperDetail /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />
+        <Route path="/developers/:slug" element={<ProtectedRoute requiredTier="investor"><LazyPage><DeveloperDetail /></LazyPage></ProtectedRoute>} />
         
         {/* Neighborhoods - Public browse */}
-        <Route path="/neighborhoods" element={<AnimatedPage><Neighborhoods /></AnimatedPage>} />
-        <Route path="/neighborhoods/:slug" element={<AnimatedPage><NeighborhoodDetail /></AnimatedPage>} />
+        <Route path="/neighborhoods" element={<LazyPage><Neighborhoods /></LazyPage>} />
+        <Route path="/neighborhoods/:slug" element={<LazyPage><NeighborhoodDetail /></LazyPage>} />
         
         {/* Tools - Auth required, usage-based gating in-page (lazy loaded) */}
-        <Route path="/tools" element={<ProtectedRoute><AnimatedPage><Tools /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/tools" element={<ProtectedRoute><LazyPage><Tools /></LazyPage></ProtectedRoute>} />
         <Route path="/tools/roi" element={<ProtectedRoute><LazyPage><ROICalculator /></LazyPage></ProtectedRoute>} />
         <Route path="/tools/mortgage" element={<ProtectedRoute><LazyPage><MortgageCalculator /></LazyPage></ProtectedRoute>} />
         <Route path="/tools/rent-vs-buy" element={<ProtectedRoute><LazyPage><RentVsBuyCalculator /></LazyPage></ProtectedRoute>} />
@@ -165,38 +181,44 @@ export function AnimatedRoutes() {
         <Route path="/tools/offplan" element={<ProtectedRoute><LazyPage><OffPlanCalculator /></LazyPage></ProtectedRoute>} />
         
         {/* AI Assistant - Auth required, usage-based gating in-page */}
-        <Route path="/ai" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
-        <Route path="/ai-assistant" element={<ProtectedRoute><AnimatedPage><AIAssistant /></AnimatedPage></ProtectedRoute>} />
+        <Route path="/ai" element={<ProtectedRoute><LazyPage><AIAssistant /></LazyPage></ProtectedRoute>} />
+        <Route path="/ai-assistant" element={<ProtectedRoute><LazyPage><AIAssistant /></LazyPage></ProtectedRoute>} />
         
         {/* Portfolio - Elite tier required (lazy loaded) */}
         <Route path="/portfolio" element={<ProtectedRoute requiredTier="elite"><LazyPage><Portfolio /></LazyPage></ProtectedRoute>} />
         
-        <Route path="/profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
-        <Route path="/profile/:userId" element={<AnimatedPage><Profile /></AnimatedPage>} />
+        <Route path="/profile" element={<LazyPage><Profile /></LazyPage>} />
+        <Route path="/profile/:userId" element={<LazyPage><Profile /></LazyPage>} />
         
         {/* Community Hub Routes - Auth required, read-only gating in-page */}
-        <Route path="/community" element={<ProtectedRoute><CommunityLayout /></ProtectedRoute>}>
-          <Route index element={<DiscussionsPage />} />
-          <Route path="news" element={<NewsPage />} />
-          <Route path="qa" element={<QAPage />} />
-          <Route path="qa/:questionId" element={<QuestionDetailPage />} />
-          <Route path="events" element={<EventsPage />} />
-          <Route path="members" element={<MembersPage />} />
-          <Route path="connections" element={<ConnectionsPage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="messages/:oderId" element={<MessagesPage />} />
-          <Route path="messages/group/:groupId" element={<MessagesPage />} />
-          <Route path="leaderboard" element={<LeaderboardPage />} />
+        <Route path="/community" element={
+          <ProtectedRoute>
+            <Suspense fallback={<LazyLoadFallback />}>
+              <CommunityLayout />
+            </Suspense>
+          </ProtectedRoute>
+        }>
+          <Route index element={<Suspense fallback={<LazyLoadFallback />}><DiscussionsPage /></Suspense>} />
+          <Route path="news" element={<Suspense fallback={<LazyLoadFallback />}><NewsPage /></Suspense>} />
+          <Route path="qa" element={<Suspense fallback={<LazyLoadFallback />}><QAPage /></Suspense>} />
+          <Route path="qa/:questionId" element={<Suspense fallback={<LazyLoadFallback />}><QuestionDetailPage /></Suspense>} />
+          <Route path="events" element={<Suspense fallback={<LazyLoadFallback />}><EventsPage /></Suspense>} />
+          <Route path="members" element={<Suspense fallback={<LazyLoadFallback />}><MembersPage /></Suspense>} />
+          <Route path="connections" element={<Suspense fallback={<LazyLoadFallback />}><ConnectionsPage /></Suspense>} />
+          <Route path="messages" element={<Suspense fallback={<LazyLoadFallback />}><MessagesPage /></Suspense>} />
+          <Route path="messages/:oderId" element={<Suspense fallback={<LazyLoadFallback />}><MessagesPage /></Suspense>} />
+          <Route path="messages/group/:groupId" element={<Suspense fallback={<LazyLoadFallback />}><MessagesPage /></Suspense>} />
+          <Route path="leaderboard" element={<Suspense fallback={<LazyLoadFallback />}><LeaderboardPage /></Suspense>} />
         </Route>
         
         {/* Golden Visa - Elite tier required (lazy loaded) */}
         <Route path="/golden-visa" element={<ProtectedRoute requiredTier="elite"><LazyPage><GoldenVisaWizard /></LazyPage></ProtectedRoute>} />
-        <Route path="/pricing" element={<AnimatedPage><Pricing /></AnimatedPage>} />
+        <Route path="/pricing" element={<LazyPage><Pricing /></LazyPage>} />
         <Route path="/join" element={<LazyPage><MembershipFunnel /></LazyPage>} />
         <Route path="/join-elite" element={<LazyPage><EliteFunnel /></LazyPage>} />
-        <Route path="/checkout/:tier" element={<AnimatedPage><CheckoutRedirect /></AnimatedPage>} />
-        <Route path="/upgrade" element={<AnimatedPage><Upgrade /></AnimatedPage>} />
-        <Route path="/subscription-success" element={<AnimatedPage><SubscriptionSuccess /></AnimatedPage>} />
+        <Route path="/checkout/:tier" element={<LazyPage><CheckoutRedirect /></LazyPage>} />
+        <Route path="/upgrade" element={<LazyPage><Upgrade /></LazyPage>} />
+        <Route path="/subscription-success" element={<LazyPage><SubscriptionSuccess /></LazyPage>} />
         
         {/* Admin Routes (lazy loaded) */}
         <Route path="/admin" element={<LazyPage><AdminDashboard /></LazyPage>} />
@@ -219,23 +241,63 @@ export function AnimatedRoutes() {
         <Route path="/admin/mortgage-partners" element={<LazyPage><AdminMortgagePartners /></LazyPage>} />
         <Route path="/admin/bayut-sync" element={<LazyPage><AdminBayutSync /></LazyPage>} />
         
-        <Route path="/disclaimer" element={<AnimatedPage><Disclaimer /></AnimatedPage>} />
-        <Route path="/terms" element={<AnimatedPage><TermsOfService /></AnimatedPage>} />
-        <Route path="/privacy" element={<AnimatedPage><PrivacyPolicy /></AnimatedPage>} />
-        <Route path="/cookie-policy" element={<AnimatedPage><CookiePolicy /></AnimatedPage>} />
-        <Route path="/about" element={<AnimatedPage><About /></AnimatedPage>} />
-        <Route path="/blog" element={<AnimatedPage><Blog /></AnimatedPage>} />
+        <Route path="/disclaimer" element={<LazyPage><Disclaimer /></LazyPage>} />
+        <Route path="/terms" element={<LazyPage><TermsOfService /></LazyPage>} />
+        <Route path="/privacy" element={<LazyPage><PrivacyPolicy /></LazyPage>} />
+        <Route path="/cookie-policy" element={<LazyPage><CookiePolicy /></LazyPage>} />
+        <Route path="/about" element={<LazyPage><About /></LazyPage>} />
+        <Route path="/blog" element={<LazyPage><Blog /></LazyPage>} />
         <Route path="/blog/:slug" element={<LazyPage><BlogArticle /></LazyPage>} />
-        <Route path="/contact" element={<AnimatedPage><Contact /></AnimatedPage>} />
+        <Route path="/contact" element={<LazyPage><Contact /></LazyPage>} />
         
         {/* Agent Portal Routes (lazy loaded) */}
         <Route path="/agent-portal" element={<LazyPage><AgentPortalLanding /></LazyPage>} />
         <Route path="/agent-portal/login" element={<LazyPage><AgentLogin /></LazyPage>} />
         <Route path="/agent-portal/register" element={<LazyPage><AgentRegister /></LazyPage>} />
-        <Route path="/agent-portal/dashboard" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentDashboard /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
-        <Route path="/agent-portal/listings" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentListings /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
-        <Route path="/agent-portal/listings/new" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentPropertyForm /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
-        <Route path="/agent-portal/listings/:id/edit" element={<AgentProtectedRoute><AgentPortalLayout><LazyPage><AgentPropertyForm /></LazyPage></AgentPortalLayout></AgentProtectedRoute>} />
+        <Route path="/agent-portal/dashboard" element={
+          <Suspense fallback={<LazyLoadFallback />}>
+            <AgentProtectedRoute>
+              <Suspense fallback={<LazyLoadFallback />}>
+                <AgentPortalLayout>
+                  <LazyPage><AgentDashboard /></LazyPage>
+                </AgentPortalLayout>
+              </Suspense>
+            </AgentProtectedRoute>
+          </Suspense>
+        } />
+        <Route path="/agent-portal/listings" element={
+          <Suspense fallback={<LazyLoadFallback />}>
+            <AgentProtectedRoute>
+              <Suspense fallback={<LazyLoadFallback />}>
+                <AgentPortalLayout>
+                  <LazyPage><AgentListings /></LazyPage>
+                </AgentPortalLayout>
+              </Suspense>
+            </AgentProtectedRoute>
+          </Suspense>
+        } />
+        <Route path="/agent-portal/listings/new" element={
+          <Suspense fallback={<LazyLoadFallback />}>
+            <AgentProtectedRoute>
+              <Suspense fallback={<LazyLoadFallback />}>
+                <AgentPortalLayout>
+                  <LazyPage><AgentPropertyForm /></LazyPage>
+                </AgentPortalLayout>
+              </Suspense>
+            </AgentProtectedRoute>
+          </Suspense>
+        } />
+        <Route path="/agent-portal/listings/:id/edit" element={
+          <Suspense fallback={<LazyLoadFallback />}>
+            <AgentProtectedRoute>
+              <Suspense fallback={<LazyLoadFallback />}>
+                <AgentPortalLayout>
+                  <LazyPage><AgentPropertyForm /></LazyPage>
+                </AgentPortalLayout>
+              </Suspense>
+            </AgentProtectedRoute>
+          </Suspense>
+        } />
         
         <Route path="*" element={<AnimatedPage><NotFound /></AnimatedPage>} />
       </Routes>
