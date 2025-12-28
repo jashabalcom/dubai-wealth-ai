@@ -49,6 +49,11 @@
   </head>
 
   <body>
+    <!-- Critical inline styles for instant first paint -->
+    <style>
+      #root{min-height:100vh;background:#0A0F1D}
+      .hero-placeholder{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0A0F1D}
+    </style>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
