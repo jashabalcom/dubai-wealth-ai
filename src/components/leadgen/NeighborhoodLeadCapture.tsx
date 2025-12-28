@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEmailSubscribe } from "@/hooks/useEmailSubscribe";
 import { useAuth } from "@/hooks/useAuth";
+import { trackLeadMagnetDownload } from "@/lib/analytics";
 
 interface NeighborhoodLeadCaptureProps {
   neighborhoodName: string;
@@ -31,6 +32,8 @@ export function NeighborhoodLeadCapture({ neighborhoodName }: NeighborhoodLeadCa
     });
 
     if (success) {
+      // Track lead magnet conversion
+      trackLeadMagnetDownload('neighborhood_picks', 'neighborhood_detail', 'investor', neighborhoodName);
       setIsSubmitted(true);
     }
   };

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { trackPropertyInquiry } from '@/lib/analytics';
 
 const inquirySchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -24,9 +25,11 @@ type InquiryFormData = z.infer<typeof inquirySchema>;
 interface PropertyInquiryFormProps {
   propertyTitle: string;
   propertyId: string;
+  propertyArea?: string;
+  propertyPrice?: number;
 }
 
-export function PropertyInquiryForm({ propertyTitle, propertyId }: PropertyInquiryFormProps) {
+export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, propertyPrice }: PropertyInquiryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [inquiryType, setInquiryType] = useState<'viewing' | 'enquiry'>('enquiry');
@@ -61,6 +64,9 @@ export function PropertyInquiryForm({ propertyTitle, propertyId }: PropertyInqui
       if (error) throw error;
 
       console.log('Inquiry submitted:', response);
+      
+      // Track conversion in GA4
+      trackPropertyInquiry(propertyId, propertyTitle, inquiryType, propertyArea, propertyPrice);
       
       setIsSubmitted(true);
       

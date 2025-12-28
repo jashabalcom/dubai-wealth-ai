@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { trackSignUp, trackLogin } from '@/lib/analytics';
 
 interface Profile {
   id: string;
@@ -148,6 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Enqueue welcome email sequence if signup was successful
     if (!error && data.user) {
+      // Track sign-up conversion
+      trackSignUp('email');
+      
       try {
         // Enqueue the full drip campaign sequence
         await supabase.functions.invoke('enqueue-welcome-sequence', {
@@ -173,6 +177,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
+
+    if (!error) {
+      // Track login event
+      trackLogin('email');
+    }
 
     return { error: error as Error | null };
   };

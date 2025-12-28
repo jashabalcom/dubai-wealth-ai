@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { X, Gift, Mail, ArrowRight, Building2, Home, CreditCard, Shield } from "lucide-react";
 import { useEmailSubscribe } from "@/hooks/useEmailSubscribe";
 import { cn } from "@/lib/utils";
+import { trackLeadMagnetDownload } from "@/lib/analytics";
 
 const POPUP_SHOWN_KEY = "exit_intent_popup_shown";
 const POPUP_COOLDOWN_DAYS = 7;
@@ -74,6 +75,8 @@ export function ExitIntentPopup() {
     });
 
     if (success) {
+      // Track lead magnet conversion with intent type
+      trackLeadMagnetDownload('exit_intent_guide', 'exit_intent', selectedIntent);
       setIsSubmitted(true);
     }
   };
