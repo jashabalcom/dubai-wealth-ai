@@ -139,10 +139,10 @@ export default function Academy() {
             transition={{ duration: 0.5 }}
             className="text-center max-w-3xl mx-auto"
           >
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-foreground mb-4">
+            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-secondary-foreground mb-4">
               Dubai Real Estate <span className="text-gradient-gold">Academy</span>
             </h1>
-            <p className="text-lg text-muted-foreground mb-8">
+            <p className="text-lg text-secondary-foreground/70 mb-8">
               Master Dubai real estate investing with expert-led courses designed for global investors.
             </p>
           </motion.div>
