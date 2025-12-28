@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
@@ -6,14 +6,17 @@ import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, ArrowRight } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { trackSubscription } from "@/lib/analytics";
 
 export default function SubscriptionSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
+  const tier = searchParams.get('tier') as 'investor' | 'elite' | null;
   const { checkSubscription } = useSubscription();
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
+  const hasTracked = useRef(false);
 
   useEffect(() => {
     const verify = async () => {
@@ -23,6 +26,13 @@ export default function SubscriptionSuccess() {
       const status = await checkSubscription();
       if (status?.subscribed) {
         setVerified(true);
+        
+        // Fallback tracking - only fire once and if not already tracked in checkout
+        if (!hasTracked.current && tier) {
+          hasTracked.current = true;
+          // Use a lower value as fallback since we don't have exact price here
+          trackSubscription(tier, 'monthly', tier === 'elite' ? 149 : 49, false);
+        }
       }
       setVerifying(false);
     };
@@ -32,7 +42,7 @@ export default function SubscriptionSuccess() {
     } else {
       setVerifying(false);
     }
-  }, [sessionId, checkSubscription]);
+  }, [sessionId, checkSubscription, tier]);
 
   return (
     <div className="min-h-screen bg-background">

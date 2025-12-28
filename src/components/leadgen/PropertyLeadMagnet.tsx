@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEmailSubscribe } from "@/hooks/useEmailSubscribe";
 import { useAuth } from "@/hooks/useAuth";
+import { trackLeadMagnetDownload } from "@/lib/analytics";
 
 interface PropertyLeadMagnetProps {
   propertyTitle: string;
@@ -37,6 +38,8 @@ export function PropertyLeadMagnet({
     });
 
     if (success) {
+      // Track lead magnet conversion
+      trackLeadMagnetDownload('property_deal_breakdown', 'property_detail', isOffPlan ? 'off_plan' : 'investor', propertyTitle);
       setIsSubmitted(true);
     }
   };

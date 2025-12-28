@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEmailSubscribe } from "@/hooks/useEmailSubscribe";
 import { useAuth } from "@/hooks/useAuth";
+import { trackLeadMagnetDownload } from "@/lib/analytics";
 
 interface AcademyLeadCaptureProps {
   lessonTitle?: string;
@@ -32,6 +33,8 @@ export function AcademyLeadCapture({ lessonTitle, courseTitle }: AcademyLeadCapt
     });
 
     if (success) {
+      // Track lead magnet conversion
+      trackLeadMagnetDownload('investor_guide', 'academy_lesson', 'investor', lessonTitle || courseTitle);
       setIsSubmitted(true);
     }
   };

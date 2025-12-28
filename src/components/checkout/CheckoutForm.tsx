@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { STRIPE_TIERS, BillingPeriod } from "@/lib/stripe-config";
+import { trackSubscription, trackTrialStart } from "@/lib/analytics";
 
 interface CheckoutFormProps {
   tier: "investor" | "elite";
@@ -63,6 +64,9 @@ const CheckoutForm = ({ tier, billingPeriod = 'monthly', isUpgrade, subscription
           // Setup succeeded - trial started
           await checkSubscription();
           
+          // Track trial start conversion
+          trackTrialStart(tier, billingPeriod);
+          
           toast({
             title: "Welcome to Dubai Wealth Hub!",
             description: `Your ${tierConfig.name} trial has started. You won't be charged for 14 days.`,
@@ -90,6 +94,9 @@ const CheckoutForm = ({ tier, billingPeriod = 'monthly', isUpgrade, subscription
         } else if (paymentIntent && paymentIntent.status === "succeeded") {
           // Refresh subscription status
           await checkSubscription();
+          
+          // Track subscription purchase conversion
+          trackSubscription(tier, billingPeriod, priceConfig.price, isUpgrade);
           
           toast({
             title: "Welcome to Dubai Wealth Hub!",
