@@ -90,14 +90,14 @@ export function EmailCaptureSection() {
               className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto"
             >
               <div className="relative flex-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground/50" />
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-10 h-12 bg-background/50 border-primary/20 focus:border-primary"
+                  className="pl-10 h-12 bg-background/20 border-secondary-foreground/20 focus:border-primary text-secondary-foreground placeholder:text-secondary-foreground/50"
                 />
               </div>
               <Button
@@ -129,7 +129,7 @@ export function EmailCaptureSection() {
             </motion.div>
           )}
 
-          <p className="text-xs text-muted-foreground/50 mt-6">
+          <p className="text-xs text-secondary-foreground/50 mt-6">
             No spam, ever. Unsubscribe anytime.
           </p>
         </motion.div>

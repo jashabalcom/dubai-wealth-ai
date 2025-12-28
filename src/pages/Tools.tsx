@@ -208,10 +208,10 @@ export default function Tools() {
             <div className="w-16 h-16 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center mx-auto mb-6">
               <Calculator className="w-8 h-8 text-gold" />
             </div>
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-foreground mb-4">
+            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-secondary-foreground mb-4">
               Investment <span className="text-gradient-gold">Tools</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-secondary-foreground/70">
               Powerful calculators to analyze Dubai real estate investments with real-time currency conversion.
             </p>
           </motion.div>
