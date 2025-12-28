@@ -63,8 +63,8 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     
-    const { priceId, tier, billingPeriod = 'monthly' } = await req.json();
-    logStep("Received request", { priceId, tier, billingPeriod });
+    const { priceId, tier, billingPeriod = 'monthly', trialSource } = await req.json();
+    logStep("Received request", { priceId, tier, billingPeriod, trialSource });
 
     // Validate tier
     if (!tier || !TIER_PRICES[tier]) {
@@ -168,10 +168,12 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://bswllmynuxkhekqqeznr.lovable.app";
     
-    // Trial decision: no trial for upgrades (when they had an existing subscription)
-    // Also no trial for annual plans (immediate value)
-    const hasTrial = !hasExistingSubscription && billingPeriod === 'monthly';
-    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier, billingPeriod });
+    // Trial decision: Only apply trial if trialSource is provided (webinar, lead-magnet, partner, etc.)
+    // Direct checkout from pricing page = no trial (trialSource will be undefined)
+    const validTrialSources = ['webinar', 'lead-magnet', 'partner', 'special-offer'];
+    const isValidTrialSource = trialSource && validTrialSources.includes(trialSource);
+    const hasTrial = !hasExistingSubscription && billingPeriod === 'monthly' && isValidTrialSource;
+    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier, billingPeriod, trialSource, isValidTrialSource });
 
     // Create checkout session with smart trial handling
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
