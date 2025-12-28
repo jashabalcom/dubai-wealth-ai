@@ -1465,6 +1465,7 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          investor_intent: string | null
           is_verified: boolean
           lead_magnet: string | null
           source: string
@@ -1479,6 +1480,7 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          investor_intent?: string | null
           is_verified?: boolean
           lead_magnet?: string | null
           source?: string
@@ -1493,6 +1495,7 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          investor_intent?: string | null
           is_verified?: boolean
           lead_magnet?: string | null
           source?: string

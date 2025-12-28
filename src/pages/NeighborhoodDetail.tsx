@@ -15,6 +15,7 @@ import { useNeighborhood, useNeighborhoodPOIs, useNeighborhoodProperties } from 
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
+import { NeighborhoodLeadCapture } from '@/components/leadgen/NeighborhoodLeadCapture';
 import { NeighborhoodTierGate } from '@/components/neighborhoods/NeighborhoodTierGate';
 import { useCountUp, useInView } from '@/hooks/useCountUp';
 import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
@@ -288,6 +289,16 @@ export default function NeighborhoodDetail() {
           <div className="container">
             <div className="grid lg:grid-cols-3 gap-8">
               {/* Main Content */}
+              <div className="lg:col-span-2 space-y-8">
+              
+              {/* Sidebar - Lead Capture for non-logged-in users */}
+              </div>
+              <div className="space-y-6">
+                <NeighborhoodLeadCapture neighborhoodName={neighborhood.name} />
+              </div>
+            </div>
+            
+            <div className="grid lg:grid-cols-3 gap-8 mt-8">
               <div className="lg:col-span-2 space-y-8">
                 {/* Glass-morphism Overview Card */}
                 {neighborhood.overview && (

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { AcademyLeadCapture } from '@/components/leadgen/AcademyLeadCapture';
 import { useProfile } from '@/hooks/useProfile';
 import { useVideoProgress } from '@/hooks/useVideoProgress';
 import { VideoPlayer } from '@/components/lessons/VideoPlayer';
@@ -452,6 +453,13 @@ export default function Lesson() {
               {Array.isArray(lesson.resources) && lesson.resources.length > 0 && (
                 <div className="mb-8">
                   <ResourceList resources={lesson.resources as Resource[]} />
+                </div>
+              )}
+
+              {/* Lead Magnet for non-logged-in users */}
+              {!user && (
+                <div className="mb-8">
+                  <AcademyLeadCapture lessonTitle={lesson.title} courseTitle={course.title} />
                 </div>
               )}
 
