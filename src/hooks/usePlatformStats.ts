@@ -8,6 +8,14 @@ interface PlatformStats {
   neighborhoods: number;
 }
 
+// Default stats to show immediately while loading
+const DEFAULT_STATS: PlatformStats = {
+  properties: 700,
+  lessons: 100,
+  tools: 11,
+  neighborhoods: 100,
+};
+
 export function usePlatformStats() {
   return useQuery({
     queryKey: ["platform-stats"],
@@ -19,12 +27,13 @@ export function usePlatformStats() {
       ]);
 
       return {
-        properties: propertiesRes.count ?? 0,
-        lessons: lessonsRes.count ?? 0,
+        properties: propertiesRes.count ?? DEFAULT_STATS.properties,
+        lessons: lessonsRes.count ?? DEFAULT_STATS.lessons,
         tools: 11, // Static - number of calculator tools
-        neighborhoods: neighborhoodsRes.count ?? 0,
+        neighborhoods: neighborhoodsRes.count ?? DEFAULT_STATS.neighborhoods,
       };
     },
     staleTime: 1000 * 60 * 60, // Cache for 1 hour
+    placeholderData: DEFAULT_STATS, // Show default stats immediately
   });
 }

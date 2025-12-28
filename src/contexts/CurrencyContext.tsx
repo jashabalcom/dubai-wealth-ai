@@ -121,29 +121,45 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      try {
-        const response = await fetch(
-          `https://api.exchangerate-api.com/v4/latest/${BASE_CURRENCY}`
-        );
-        
-        if (!response.ok) throw new Error('Failed to fetch');
+      // Defer exchange rate fetch to after initial paint to improve TTI
+      // Use requestIdleCallback if available, otherwise setTimeout
+      const deferFetch = () => {
+        const doFetch = async () => {
+          try {
+            const response = await fetch(
+              `https://api.exchangerate-api.com/v4/latest/${BASE_CURRENCY}`
+            );
+            
+            if (!response.ok) throw new Error('Failed to fetch');
 
-        const data = await response.json();
-        setRates(data.rates);
-        setLastUpdated(new Date());
-        
-        // Cache the rates
-        try {
-          localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({
-            rates: data.rates,
-            timestamp: Date.now(),
-          }));
-        } catch {}
-      } catch (err) {
-        console.error('Error fetching exchange rates:', err);
-        setRates(FALLBACK_RATES);
-      }
+            const data = await response.json();
+            setRates(data.rates);
+            setLastUpdated(new Date());
+            
+            // Cache the rates
+            try {
+              localStorage.setItem(RATES_CACHE_KEY, JSON.stringify({
+                rates: data.rates,
+                timestamp: Date.now(),
+              }));
+            } catch {}
+          } catch (err) {
+            console.error('Error fetching exchange rates:', err);
+            setRates(FALLBACK_RATES);
+          }
+          setLoading(false);
+        };
+
+        if ('requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(doFetch, { timeout: 2000 });
+        } else {
+          setTimeout(doFetch, 100);
+        }
+      };
+
+      // Use fallback rates immediately, fetch updated rates in background
       setLoading(false);
+      deferFetch();
     };
 
     fetchRates();
