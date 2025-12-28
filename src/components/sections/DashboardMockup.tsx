@@ -16,8 +16,8 @@ const stats = [
 ];
 
 const properties = [
-  { name: "Dubai Marina", price: "2.5M", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=200&h=120&fit=crop" },
-  { name: "Palm Jumeirah", price: "4.8M", image: "https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?w=200&h=120&fit=crop" },
+  { name: "Dubai Marina", price: "2.5M", image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=200&h=120&fit=crop&auto=format" },
+  { name: "Palm Jumeirah", price: "4.8M", image: "https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?w=200&h=120&fit=crop&auto=format" },
 ];
 
 export function DashboardMockup() {
