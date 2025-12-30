@@ -2643,6 +2643,124 @@ export type Database = {
         }
         Relationships: []
       }
+      okr_key_results: {
+        Row: {
+          created_at: string
+          current_value: number
+          due_date: string | null
+          id: string
+          objective_id: string
+          status: string
+          target_value: number
+          title: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number
+          due_date?: string | null
+          id?: string
+          objective_id: string
+          status?: string
+          target_value?: number
+          title: string
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          due_date?: string | null
+          id?: string
+          objective_id?: string
+          status?: string
+          target_value?: number
+          title?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "okr_key_results_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "okr_objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      okr_objectives: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          quarter: string | null
+          status: string
+          timeframe: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          quarter?: string | null
+          status?: string
+          timeframe?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          quarter?: string | null
+          status?: string
+          timeframe?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      okr_updates: {
+        Row: {
+          id: string
+          key_result_id: string
+          new_value: number
+          notes: string | null
+          previous_value: number | null
+          recorded_at: string
+          recorded_by: string | null
+        }
+        Insert: {
+          id?: string
+          key_result_id: string
+          new_value: number
+          notes?: string | null
+          previous_value?: number | null
+          recorded_at?: string
+          recorded_by?: string | null
+        }
+        Update: {
+          id?: string
+          key_result_id?: string
+          new_value?: number
+          notes?: string | null
+          previous_value?: number | null
+          recorded_at?: string
+          recorded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "okr_updates_key_result_id_fkey"
+            columns: ["key_result_id"]
+            isOneToOne: false
+            referencedRelation: "okr_key_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       poll_votes: {
         Row: {
           created_at: string | null
