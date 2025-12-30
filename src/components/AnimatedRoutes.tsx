@@ -106,6 +106,7 @@ const AdminBayutSync = lazy(() => import("@/pages/admin/AdminBayutSync"));
 const AdminNews = lazy(() => import("@/pages/admin/AdminNews"));
 const AdminMortgageLeads = lazy(() => import("@/pages/admin/AdminMortgageLeads"));
 const AdminMortgagePartners = lazy(() => import("@/pages/admin/AdminMortgagePartners"));
+const AdminCalendarEvents = lazy(() => import("@/pages/admin/AdminCalendarEvents"));
 
 // Lazy loaded pages - Agent Portal (only agents use these)
 const AgentPortalLanding = lazy(() => import("@/pages/agent-portal/AgentPortalLanding"));
@@ -244,6 +245,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/mortgage-leads" element={<LazyPage><AdminMortgageLeads /></LazyPage>} />
         <Route path="/admin/mortgage-partners" element={<LazyPage><AdminMortgagePartners /></LazyPage>} />
         <Route path="/admin/bayut-sync" element={<LazyPage><AdminBayutSync /></LazyPage>} />
+        <Route path="/admin/calendar-events" element={<LazyPage><AdminCalendarEvents /></LazyPage>} />
         
         <Route path="/disclaimer" element={<LazyPage><Disclaimer /></LazyPage>} />
         <Route path="/terms" element={<LazyPage><TermsOfService /></LazyPage>} />
