@@ -1,25 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { 
+  getCorsHeaders, 
+  safeErrorResponse, 
+  sanitizeGoldenVisaInput,
+  type GoldenVisaInput 
+} from "../_shared/security.ts";
 
 // Cache configuration
 const CACHE_TTL_DAYS = 7;
 const FUNCTION_NAME = "golden-visa-wizard";
-
-interface GoldenVisaInput {
-  fullName: string;
-  nationality: string;
-  currentResidence: string;
-  investmentBudget: string;
-  investmentType: string;
-  timeline: string;
-  familySize: number;
-  additionalNotes?: string;
-}
 
 // Normalize budget to range for better cache hits
 function normalizeBudget(budget: string): string {
@@ -103,20 +93,40 @@ async function storeCache(supabase: any, cacheKey: string, response: any, inputH
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const input: GoldenVisaInput = await req.json();
-    console.log('Processing Golden Visa analysis for:', input.fullName);
+    const rawInput: GoldenVisaInput = await req.json();
+    
+    // Sanitize and validate all input
+    const { hasSuspiciousContent, ...input } = sanitizeGoldenVisaInput(rawInput);
+    
+    // Log sanitized input (not raw) for debugging
+    console.log('Processing Golden Visa analysis for:', input.fullName || 'Anonymous');
+    
+    // Reject suspicious input
+    if (hasSuspiciousContent) {
+      console.warn('Suspicious prompt injection attempt detected');
+      return new Response(
+        JSON.stringify({ error: 'Invalid request data. Please check your input.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+      console.error('LOVABLE_API_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'Service configuration error. Please contact support.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Initialize Supabase client for caching
@@ -166,15 +176,16 @@ Your response must be a valid JSON object with this exact structure:
   "considerations": ["important consideration 1", "important consideration 2"]
 }`;
 
+    // Build user prompt with sanitized input
     const userPrompt = `Analyze this Golden Visa applicant profile and provide personalized recommendations:
 
 **Applicant Profile:**
-- Name: ${input.fullName}
-- Nationality: ${input.nationality}
-- Current Residence: ${input.currentResidence}
-- Investment Budget: ${input.investmentBudget}
-- Preferred Investment Type: ${input.investmentType}
-- Timeline: ${input.timeline}
+- Name: ${input.fullName || 'Not provided'}
+- Nationality: ${input.nationality || 'Not provided'}
+- Current Residence: ${input.currentResidence || 'Not provided'}
+- Investment Budget: ${input.investmentBudget || 'Not provided'}
+- Preferred Investment Type: ${input.investmentType || 'Not provided'}
+- Timeline: ${input.timeline || 'Not provided'}
 - Family Size: ${input.familySize} ${input.familySize > 1 ? 'people (including dependents)' : 'person'}
 ${input.additionalNotes ? `- Additional Notes: ${input.additionalNotes}` : ''}
 
@@ -211,14 +222,22 @@ Provide a comprehensive analysis with specific property recommendations if appli
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error('Failed to get AI response');
+      
+      return new Response(JSON.stringify({ error: 'AI service temporarily unavailable. Please try again.' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
     
     if (!content) {
-      throw new Error('No content in AI response');
+      console.error('No content in AI response');
+      return new Response(JSON.stringify({ error: 'Unable to generate analysis. Please try again.' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Parse the JSON from the response
@@ -252,11 +271,7 @@ Provide a comprehensive analysis with specific property recommendations if appli
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error in golden-visa-wizard:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to process request';
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const corsHeaders = getCorsHeaders(req);
+    return safeErrorResponse(error, corsHeaders, 'golden-visa-wizard');
   }
 });
