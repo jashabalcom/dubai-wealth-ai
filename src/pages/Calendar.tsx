@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SEOHead } from "@/components/SEOHead";
@@ -18,9 +18,12 @@ import { format, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, List, Rocket, Building2, Mic2, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Calendar() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEvents, setSelectedEvents] = useState<(CalendarEvent | UserPropertyEvent)[]>([]);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
@@ -41,6 +44,11 @@ export default function Calendar() {
     setSelectedEvents(events);
   };
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+    await queryClient.invalidateQueries({ queryKey: ['upcoming-events'] });
+  }, [queryClient]);
+
   // Group events by type for stats
   const eventStats = {
     launches: allEvents.filter(e => e.event_type === 'launch').length,
@@ -50,7 +58,7 @@ export default function Calendar() {
   };
 
   return (
-    <>
+    <PullToRefresh onRefresh={handleRefresh}>
       <SEOHead
         title="Dubai Real Estate Calendar 2026 | Launches, Handovers & Events"
         description="Stay ahead with Dubai's most comprehensive real estate calendar. Track developer launches, project handovers, industry conferences, and DLD market reports."
@@ -215,6 +223,6 @@ export default function Calendar() {
       </main>
 
       <Footer />
-    </>
+    </PullToRefresh>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, Heart, Users, ArrowRight } from 'lucide-react';
@@ -19,13 +19,20 @@ import { RecentlyViewedSection } from '@/components/properties/RecentlyViewedSec
 import { InfiniteScrollTrigger } from '@/components/properties/InfiniteScrollTrigger';
 import { PropertyDisclaimer } from '@/components/ui/disclaimers';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
+import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } from '@/lib/investmentScore';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toggleSave, isSaved } = useSavedProperties();
   const { recentlyViewed, clearRecentlyViewed } = useRecentlyViewed();
+  const queryClient = useQueryClient();
+  
+  // Scroll restoration
+  useScrollRestoration('properties-list');
   
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
@@ -150,13 +157,18 @@ export default function Properties() {
     );
   };
 
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['properties'] });
+  }, [queryClient]);
+
   const compareProperties = properties.filter(p => compareIds.includes(p.id));
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-screen bg-background">
+        <Navbar />
 
-      <section className="pt-32 pb-8 bg-gradient-to-b from-secondary to-background">
+        <section className="pt-32 pb-8 bg-gradient-to-b from-secondary to-background">
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto">
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-foreground mb-4">
@@ -308,7 +320,8 @@ export default function Properties() {
       )}
 
       <ScrollToTopButton />
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </PullToRefresh>
   );
 }
