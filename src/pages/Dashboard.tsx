@@ -10,7 +10,8 @@ import {
   Crown,
   ArrowRight,
   LogOut,
-  Heart
+  Heart,
+  Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -122,6 +123,14 @@ export default function Dashboard() {
       href: '/properties/saved',
       color: 'bg-rose-500/10 text-rose-500',
     },
+    // Portfolio - Elite+ only
+    ...((isElite || isPrivate) ? [{
+      icon: Briefcase,
+      title: 'Portfolio',
+      description: 'Track your investments',
+      href: '/portfolio',
+      color: 'bg-gold/10 text-gold',
+    }] : []),
   ];
 
   return (

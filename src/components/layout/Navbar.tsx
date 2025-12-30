@@ -21,7 +21,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, Building2, Users, Calendar, ChevronDown } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, Building2, Users, Calendar, ChevronDown, Briefcase } from "lucide-react";
 import { useSavedProperties } from "@/hooks/useSavedProperties";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
@@ -310,6 +310,14 @@ export function Navbar() {
                           Settings
                         </Link>
                       </DropdownMenuItem>
+                      {(membershipTier === 'elite' || membershipTier === 'private') && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/portfolio" className="flex items-center gap-2 cursor-pointer">
+                            <Briefcase className="h-4 w-4" />
+                            Portfolio
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
                         <LogOut className="h-4 w-4" />
