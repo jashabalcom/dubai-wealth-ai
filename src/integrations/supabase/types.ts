@@ -802,6 +802,68 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          developer_id: string | null
+          end_date: string | null
+          event_date: string
+          event_type: string
+          external_url: string | null
+          id: string
+          image_url: string | null
+          importance: string | null
+          is_published: boolean | null
+          location_area: string | null
+          project_name: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          developer_id?: string | null
+          end_date?: string | null
+          event_date: string
+          event_type: string
+          external_url?: string | null
+          id?: string
+          image_url?: string | null
+          importance?: string | null
+          is_published?: boolean | null
+          location_area?: string | null
+          project_name?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          developer_id?: string | null
+          end_date?: string | null
+          event_date?: string
+          event_type?: string
+          external_url?: string | null
+          id?: string
+          image_url?: string | null
+          importance?: string | null
+          is_published?: boolean | null
+          location_area?: string | null
+          project_name?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communities: {
         Row: {
           area_id: string | null
@@ -3649,6 +3711,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_property_events: {
+        Row: {
+          created_at: string | null
+          event_date: string
+          event_type: string
+          id: string
+          is_completed: boolean | null
+          is_recurring: boolean | null
+          notes: string | null
+          portfolio_property_id: string | null
+          recurrence_interval: string | null
+          reminder_days_before: number | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_date: string
+          event_type: string
+          id?: string
+          is_completed?: boolean | null
+          is_recurring?: boolean | null
+          notes?: string | null
+          portfolio_property_id?: string | null
+          recurrence_interval?: string | null
+          reminder_days_before?: number | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          is_completed?: boolean | null
+          is_recurring?: boolean | null
+          notes?: string | null
+          portfolio_property_id?: string | null
+          recurrence_interval?: string | null
+          reminder_days_before?: number | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_property_events_portfolio_property_id_fkey"
+            columns: ["portfolio_property_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
