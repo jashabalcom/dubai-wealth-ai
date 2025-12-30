@@ -11,13 +11,15 @@ import {
   ArrowRight,
   LogOut,
   Heart,
-  Briefcase
+  Briefcase,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
 import { NewsWidget } from '@/components/dashboard/NewsWidget';
+import { UpcomingEventsWidget } from '@/components/dashboard/UpcomingEventsWidget';
 import { ProfileWizard } from '@/components/onboarding/ProfileWizard';
 import { FirstActionPrompts } from '@/components/onboarding/FirstActionPrompts';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
@@ -123,13 +125,20 @@ export default function Dashboard() {
       href: '/properties/saved',
       color: 'bg-rose-500/10 text-rose-500',
     },
+    {
+      icon: CalendarDays,
+      title: 'Calendar',
+      description: 'Track launches & reminders',
+      href: '/calendar',
+      color: 'bg-gold/10 text-gold',
+    },
     // Portfolio - Elite+ only
     ...((isElite || isPrivate) ? [{
       icon: Briefcase,
       title: 'Portfolio',
       description: 'Track your investments',
       href: '/portfolio',
-      color: 'bg-gold/10 text-gold',
+      color: 'bg-amber-500/10 text-amber-500',
     }] : []),
   ];
 
@@ -291,15 +300,16 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* AI-Powered Insights */}
+        {/* AI-Powered Insights & Events */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6"
+          className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6"
         >
           <AIInsightsCard />
           <NewsWidget />
+          <UpcomingEventsWidget />
         </motion.div>
       </main>
     </div>
