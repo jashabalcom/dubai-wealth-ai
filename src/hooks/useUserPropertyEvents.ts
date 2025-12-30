@@ -83,7 +83,29 @@ export function useUserPropertyEventMutations() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    // Optimistic update
+    onMutate: async (newEvent) => {
+      await queryClient.cancelQueries({ queryKey: ['user-property-events', user?.id] });
+      await queryClient.cancelQueries({ queryKey: ['upcoming-user-events', user?.id] });
+      
+      const previousEvents = queryClient.getQueryData<UserPropertyEvent[]>(['user-property-events', user?.id]) || [];
+      
+      const optimisticEvent: UserPropertyEvent = {
+        id: `temp-${Date.now()}`,
+        user_id: user?.id || '',
+        created_at: new Date().toISOString(),
+        ...newEvent,
+      };
+      
+      queryClient.setQueryData(['user-property-events', user?.id], [optimisticEvent, ...previousEvents]);
+      return { previousEvents };
+    },
+    onError: (error, newEvent, context) => {
+      if (context?.previousEvents) {
+        queryClient.setQueryData(['user-property-events', user?.id], context.previousEvents);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['user-property-events'] });
       queryClient.invalidateQueries({ queryKey: ['upcoming-user-events'] });
     },
@@ -101,7 +123,22 @@ export function useUserPropertyEventMutations() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async ({ id, ...updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['user-property-events', user?.id] });
+      const previousEvents = queryClient.getQueryData<UserPropertyEvent[]>(['user-property-events', user?.id]) || [];
+      
+      queryClient.setQueryData(
+        ['user-property-events', user?.id],
+        previousEvents.map(e => e.id === id ? { ...e, ...updates } : e)
+      );
+      return { previousEvents };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousEvents) {
+        queryClient.setQueryData(['user-property-events', user?.id], context.previousEvents);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['user-property-events'] });
       queryClient.invalidateQueries({ queryKey: ['upcoming-user-events'] });
     },
@@ -116,7 +153,22 @@ export function useUserPropertyEventMutations() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ['user-property-events', user?.id] });
+      const previousEvents = queryClient.getQueryData<UserPropertyEvent[]>(['user-property-events', user?.id]) || [];
+      
+      queryClient.setQueryData(
+        ['user-property-events', user?.id],
+        previousEvents.filter(e => e.id !== id)
+      );
+      return { previousEvents };
+    },
+    onError: (error, id, context) => {
+      if (context?.previousEvents) {
+        queryClient.setQueryData(['user-property-events', user?.id], context.previousEvents);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['user-property-events'] });
       queryClient.invalidateQueries({ queryKey: ['upcoming-user-events'] });
     },
@@ -134,7 +186,22 @@ export function useUserPropertyEventMutations() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ['user-property-events', user?.id] });
+      const previousEvents = queryClient.getQueryData<UserPropertyEvent[]>(['user-property-events', user?.id]) || [];
+      
+      queryClient.setQueryData(
+        ['user-property-events', user?.id],
+        previousEvents.map(e => e.id === id ? { ...e, is_completed: true } : e)
+      );
+      return { previousEvents };
+    },
+    onError: (error, id, context) => {
+      if (context?.previousEvents) {
+        queryClient.setQueryData(['user-property-events', user?.id], context.previousEvents);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['user-property-events'] });
       queryClient.invalidateQueries({ queryKey: ['upcoming-user-events'] });
     },

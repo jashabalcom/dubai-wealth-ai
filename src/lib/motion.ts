@@ -279,3 +279,55 @@ export const rippleKeyframes = {
   '0%': { transform: 'scale(0)', opacity: 0.5 },
   '100%': { transform: 'scale(4)', opacity: 0 },
 };
+
+// Crossfade variants for skeleton-to-content transitions
+export const crossfadeVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { duration: 0.3, ease: 'easeOut' },
+  },
+  exit: { 
+    opacity: 0,
+    transition: { duration: 0.2 },
+  },
+};
+
+// Skeleton to content with slight lift
+export const contentRevealVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 25,
+    },
+  },
+};
+
+// Pull to refresh variants
+export const pullToRefreshVariants: Variants = {
+  pulling: { 
+    scale: 1,
+    rotate: 0,
+  },
+  releasing: {
+    scale: 1.2,
+    rotate: 180,
+    transition: {
+      type: 'spring',
+      stiffness: 400,
+      damping: 25,
+    },
+  },
+  refreshing: {
+    rotate: 360,
+    transition: {
+      duration: 1,
+      repeat: Infinity,
+      ease: 'linear',
+    },
+  },
+};

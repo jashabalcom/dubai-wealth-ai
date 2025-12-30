@@ -121,18 +121,46 @@ export function usePortfolio() {
     }) => {
       if (!portfolio) throw new Error('No portfolio found');
       
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('portfolio_properties')
-        .insert({ ...property, portfolio_id: portfolio.id });
+        .insert({ ...property, portfolio_id: portfolio.id })
+        .select()
+        .single();
       
       if (error) throw error;
+      return data;
+    },
+    // Optimistic update
+    onMutate: async (newProperty) => {
+      await queryClient.cancelQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
+      const previousProperties = queryClient.getQueryData<PortfolioProperty[]>(['portfolio-properties', portfolio?.id]) || [];
+      
+      const optimisticProperty: PortfolioProperty = {
+        id: `temp-${Date.now()}`,
+        portfolio_id: portfolio?.id || '',
+        ...newProperty,
+        notes: newProperty.notes,
+        size_sqft: newProperty.size_sqft || null,
+        bedrooms: newProperty.bedrooms || null,
+        last_valuation_date: null,
+        valuation_source: null,
+        created_at: new Date().toISOString(),
+      };
+      
+      queryClient.setQueryData(['portfolio-properties', portfolio?.id], [optimisticProperty, ...previousProperties]);
+      return { previousProperties };
+    },
+    onError: (error, newProperty, context) => {
+      if (context?.previousProperties) {
+        queryClient.setQueryData(['portfolio-properties', portfolio?.id], context.previousProperties);
+      }
+      toast.error('Failed to add property: ' + error.message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
       toast.success('Property added to portfolio');
     },
-    onError: (error) => {
-      toast.error('Failed to add property: ' + error.message);
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
     },
   });
 
@@ -145,9 +173,28 @@ export function usePortfolio() {
       
       if (error) throw error;
     },
+    // Optimistic update
+    onMutate: async ({ id, ...updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
+      const previousProperties = queryClient.getQueryData<PortfolioProperty[]>(['portfolio-properties', portfolio?.id]) || [];
+      
+      queryClient.setQueryData(
+        ['portfolio-properties', portfolio?.id],
+        previousProperties.map(p => p.id === id ? { ...p, ...updates } : p)
+      );
+      return { previousProperties };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousProperties) {
+        queryClient.setQueryData(['portfolio-properties', portfolio?.id], context.previousProperties);
+      }
+      toast.error('Failed to update property');
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
       toast.success('Property updated');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
     },
   });
 
@@ -160,9 +207,28 @@ export function usePortfolio() {
       
       if (error) throw error;
     },
+    // Optimistic update
+    onMutate: async (propertyId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
+      const previousProperties = queryClient.getQueryData<PortfolioProperty[]>(['portfolio-properties', portfolio?.id]) || [];
+      
+      queryClient.setQueryData(
+        ['portfolio-properties', portfolio?.id],
+        previousProperties.filter(p => p.id !== propertyId)
+      );
+      return { previousProperties };
+    },
+    onError: (error, propertyId, context) => {
+      if (context?.previousProperties) {
+        queryClient.setQueryData(['portfolio-properties', portfolio?.id], context.previousProperties);
+      }
+      toast.error('Failed to remove property');
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
       toast.success('Property removed from portfolio');
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio-properties', portfolio?.id] });
     },
   });
 

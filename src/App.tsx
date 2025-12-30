@@ -13,12 +13,13 @@ import { NavigationProgress } from "@/components/NavigationProgress";
 import { CookieConsent } from "@/components/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
+import { OfflineBanner } from "@/components/ui/offline-banner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Data stays fresh for 30 seconds - reduces redundant API calls
-      staleTime: 1000 * 30,
+      // Data stays fresh for 2 minutes - reduces redundant API calls
+      staleTime: 1000 * 60 * 2,
       // Cache persists for 10 minutes - good for memory management
       gcTime: 1000 * 60 * 10,
       // Retry failed requests 2 times with exponential backoff
@@ -26,8 +27,8 @@ const queryClient = new QueryClient({
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
       // Don't refetch on window focus for better UX
       refetchOnWindowFocus: false,
-      // Don't refetch on reconnect (manual refresh preferred)
-      refetchOnReconnect: false,
+      // Refetch when reconnecting to network
+      refetchOnReconnect: 'always',
     },
     mutations: {
       // Retry mutations once
@@ -44,6 +45,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <OfflineBanner />
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <GoogleAnalytics />
               <NavigationProgress />

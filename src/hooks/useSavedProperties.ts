@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { cacheSavedPropertyIds, getCachedSavedPropertyIds } from '@/lib/offlineCache';
 
 export function useSavedProperties() {
   const { user } = useAuth();
@@ -17,9 +18,14 @@ export function useSavedProperties() {
         .eq('user_id', user.id);
       
       if (error) throw error;
-      return data.map(sp => sp.property_id);
+      const ids = data.map(sp => sp.property_id);
+      // Cache for offline use
+      cacheSavedPropertyIds(ids);
+      return ids;
     },
     enabled: !!user,
+    staleTime: 1000 * 30, // 30 seconds
+    placeholderData: () => getCachedSavedPropertyIds(),
   });
 
   const saveProperty = useMutation({
@@ -30,12 +36,25 @@ export function useSavedProperties() {
         .insert({ user_id: user.id, property_id: propertyId });
       if (error) throw error;
     },
+    // Optimistic update
+    onMutate: async (propertyId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['saved-properties', user?.id] });
+      const previousIds = queryClient.getQueryData<string[]>(['saved-properties', user?.id]) || [];
+      queryClient.setQueryData(['saved-properties', user?.id], [...previousIds, propertyId]);
+      return { previousIds };
+    },
+    onError: (error, propertyId, context) => {
+      // Rollback on error
+      if (context?.previousIds) {
+        queryClient.setQueryData(['saved-properties', user?.id], context.previousIds);
+      }
+      toast({ title: 'Error', description: 'Failed to save property', variant: 'destructive' });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['saved-properties'] });
       toast({ title: 'Property saved', description: 'Added to your favorites' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to save property', variant: 'destructive' });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-properties'] });
     },
   });
 
@@ -49,12 +68,28 @@ export function useSavedProperties() {
         .eq('property_id', propertyId);
       if (error) throw error;
     },
+    // Optimistic update
+    onMutate: async (propertyId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['saved-properties', user?.id] });
+      const previousIds = queryClient.getQueryData<string[]>(['saved-properties', user?.id]) || [];
+      queryClient.setQueryData(
+        ['saved-properties', user?.id], 
+        previousIds.filter(id => id !== propertyId)
+      );
+      return { previousIds };
+    },
+    onError: (error, propertyId, context) => {
+      // Rollback on error
+      if (context?.previousIds) {
+        queryClient.setQueryData(['saved-properties', user?.id], context.previousIds);
+      }
+      toast({ title: 'Error', description: 'Failed to remove property', variant: 'destructive' });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['saved-properties'] });
       toast({ title: 'Property removed', description: 'Removed from your favorites' });
     },
-    onError: () => {
-      toast({ title: 'Error', description: 'Failed to remove property', variant: 'destructive' });
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-properties'] });
     },
   });
 

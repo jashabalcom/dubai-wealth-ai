@@ -10,6 +10,7 @@ import { GoldenVisaBadge } from './GoldenVisaBadge';
 import { PopularityIndicator } from './PopularityIndicator';
 import { DualPrice } from '@/components/DualPrice';
 import { ImageCarousel } from './ImageCarousel';
+import { usePrefetch } from '@/hooks/usePrefetch';
 
 interface Property {
   id: string;
@@ -60,6 +61,16 @@ export function PropertyCard({
   showCompareButton = false,
   isAuthenticated = false,
 }: PropertyCardProps) {
+  const { prefetchPropertyDetail, cancelPrefetch } = usePrefetch();
+
+  const handleMouseEnter = () => {
+    prefetchPropertyDetail(property.slug);
+  };
+
+  const handleMouseLeave = () => {
+    cancelPrefetch();
+  };
+
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -87,7 +98,12 @@ export function PropertyCard({
       transition={{ duration: 0.3, delay: Math.min(index * 0.03, 0.3) }}
       className="group h-full will-change-transform"
     >
-      <Link to={`/properties/${property.slug}`} className="block h-full">
+      <Link 
+        to={`/properties/${property.slug}`} 
+        className="block h-full"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className={cn(
           "h-full rounded-2xl bg-card border overflow-hidden transition-all duration-300",
           "hover:-translate-y-2 hover:shadow-2xl hover:shadow-gold/10",
