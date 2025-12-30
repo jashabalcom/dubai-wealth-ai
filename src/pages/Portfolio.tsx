@@ -123,7 +123,7 @@ export default function Portfolio() {
             </div>
 
             {/* Metrics Cards */}
-            <PortfolioMetricsCards metrics={metrics} propertyCount={properties.length} />
+            <PortfolioMetricsCards metrics={metrics} propertyCount={properties.length} portfolioId={portfolio?.id} />
 
             {/* Wealth Growth Chart */}
             {properties.length > 0 && <WealthGrowthChart properties={properties} />}

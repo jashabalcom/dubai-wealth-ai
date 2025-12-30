@@ -16,6 +16,10 @@ export interface PortfolioProperty {
   monthly_expenses: number;
   mortgage_balance: number;
   notes: string | null;
+  size_sqft: number | null;
+  bedrooms: number | null;
+  last_valuation_date: string | null;
+  valuation_source: string | null;
   created_at: string;
 }
 
@@ -101,7 +105,20 @@ export function usePortfolio() {
   });
 
   const addProperty = useMutation({
-    mutationFn: async (property: Omit<PortfolioProperty, 'id' | 'portfolio_id' | 'created_at'>) => {
+    mutationFn: async (property: {
+      property_name: string;
+      location_area: string;
+      property_type: string;
+      purchase_price: number;
+      current_value: number;
+      purchase_date: string;
+      monthly_rental_income: number;
+      monthly_expenses: number;
+      mortgage_balance: number;
+      notes: string | null;
+      size_sqft?: number | null;
+      bedrooms?: number | null;
+    }) => {
       if (!portfolio) throw new Error('No portfolio found');
       
       const { error } = await supabase

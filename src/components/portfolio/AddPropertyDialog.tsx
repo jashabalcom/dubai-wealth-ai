@@ -31,6 +31,8 @@ interface AddPropertyDialogProps {
     monthly_expenses: number;
     mortgage_balance: number;
     notes: string | null;
+    size_sqft: number | null;
+    bedrooms: number | null;
   }) => void;
   isSubmitting: boolean;
 }
@@ -63,6 +65,8 @@ export function AddPropertyDialog({ onSubmit, isSubmitting }: AddPropertyDialogP
     monthly_expenses: '',
     mortgage_balance: '',
     notes: '',
+    size_sqft: '',
+    bedrooms: '2',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -78,6 +82,8 @@ export function AddPropertyDialog({ onSubmit, isSubmitting }: AddPropertyDialogP
       monthly_expenses: Number(formData.monthly_expenses) || 0,
       mortgage_balance: Number(formData.mortgage_balance) || 0,
       notes: formData.notes || null,
+      size_sqft: formData.size_sqft ? Number(formData.size_sqft) : null,
+      bedrooms: formData.bedrooms ? Number(formData.bedrooms) : null,
     });
     setFormData({
       property_name: '',
@@ -90,9 +96,15 @@ export function AddPropertyDialog({ onSubmit, isSubmitting }: AddPropertyDialogP
       monthly_expenses: '',
       mortgage_balance: '',
       notes: '',
+      size_sqft: '',
+      bedrooms: '2',
     });
     setOpen(false);
   };
+
+  const pricePerSqft = formData.size_sqft && formData.current_value 
+    ? (Number(formData.current_value) / Number(formData.size_sqft)).toFixed(0)
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -153,6 +165,42 @@ export function AddPropertyDialog({ onSubmit, isSubmitting }: AddPropertyDialogP
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="size_sqft">Size (sqft)</Label>
+              <Input
+                id="size_sqft"
+                type="number"
+                value={formData.size_sqft}
+                onChange={(e) => setFormData({ ...formData, size_sqft: e.target.value })}
+                placeholder="1,200"
+              />
+              {pricePerSqft && (
+                <p className="text-xs text-muted-foreground">
+                  AED {Number(pricePerSqft).toLocaleString()}/sqft
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bedrooms">Bedrooms</Label>
+              <Select
+                value={formData.bedrooms}
+                onValueChange={(value) => setFormData({ ...formData, bedrooms: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select bedrooms" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Studio</SelectItem>
+                  <SelectItem value="1">1 BR</SelectItem>
+                  <SelectItem value="2">2 BR</SelectItem>
+                  <SelectItem value="3">3 BR</SelectItem>
+                  <SelectItem value="4">4 BR</SelectItem>
+                  <SelectItem value="5">5+ BR</SelectItem>
                 </SelectContent>
               </Select>
             </div>
