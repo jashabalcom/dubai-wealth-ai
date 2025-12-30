@@ -86,7 +86,7 @@ export default function Neighborhoods() {
       />
       <Navbar />
       
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen bg-background overflow-x-hidden">
         {/* Hero Section with Parallax */}
         <section ref={heroRef} className="relative py-24 lg:py-32 overflow-hidden">
           {/* Layered Background Effects */}

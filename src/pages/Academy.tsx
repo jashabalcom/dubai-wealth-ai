@@ -126,7 +126,7 @@ export default function Academy() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead {...PAGE_SEO.academy} />
       <Navbar />
 
