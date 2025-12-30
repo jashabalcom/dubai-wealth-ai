@@ -154,18 +154,29 @@ export function PropertyCard({
             {/* Action Buttons - Always visible on mobile, hover on desktop */}
             <div className="absolute bottom-3 right-3 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 translate-y-0 sm:translate-y-2 sm:group-hover:translate-y-0">
               {isAuthenticated && onToggleSave && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform active:scale-95 hover:scale-110"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onToggleSave();
-                  }}
+                <motion.div
+                  whileTap={{ scale: 0.9 }}
+                  animate={isSaved ? { scale: [1, 1.3, 1] } : {}}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Heart className={cn("w-5 h-5 sm:w-4 sm:h-4 transition-colors", isSaved && "fill-red-500 text-red-500")} />
-                </Button>
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-full bg-background/90 hover:bg-background backdrop-blur-sm transition-transform hover:scale-110"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onToggleSave();
+                    }}
+                  >
+                    <motion.div
+                      animate={isSaved ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Heart className={cn("w-5 h-5 sm:w-4 sm:h-4 transition-all duration-300", isSaved && "fill-red-500 text-red-500")} />
+                    </motion.div>
+                  </Button>
+                </motion.div>
               )}
               {showCompareButton && onCompare && (
                 <Button
