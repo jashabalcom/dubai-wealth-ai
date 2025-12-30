@@ -28,7 +28,7 @@ export function AddObjectiveDialog({ open, onOpenChange, onSubmit }: AddObjectiv
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [timeframe, setTimeframe] = useState('2026');
-  const [quarter, setQuarter] = useState<string>('');
+  const [quarter, setQuarter] = useState<string>('full-year');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +38,13 @@ export function AddObjectiveDialog({ open, onOpenChange, onSubmit }: AddObjectiv
       title: title.trim(),
       description: description.trim() || undefined,
       timeframe,
-      quarter: quarter || undefined,
+      quarter: quarter === 'full-year' ? undefined : quarter,
     });
 
     setTitle('');
     setDescription('');
     setTimeframe('2026');
-    setQuarter('');
+    setQuarter('full-year');
     onOpenChange(false);
   };
 
@@ -99,7 +99,7 @@ export function AddObjectiveDialog({ open, onOpenChange, onSubmit }: AddObjectiv
                   <SelectValue placeholder="Full Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Full Year</SelectItem>
+                  <SelectItem value="full-year">Full Year</SelectItem>
                   <SelectItem value="Q1">Q1</SelectItem>
                   <SelectItem value="Q2">Q2</SelectItem>
                   <SelectItem value="Q3">Q3</SelectItem>
