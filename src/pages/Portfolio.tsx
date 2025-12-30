@@ -1,14 +1,21 @@
-import { useEffect } from 'react';
-import { Crown, Briefcase, Lock } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Crown, Lock } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
+import { PortfolioHeader } from '@/components/portfolio/PortfolioHeader';
 import { PortfolioMetricsCards } from '@/components/portfolio/PortfolioMetricsCards';
 import { PortfolioCharts } from '@/components/portfolio/PortfolioCharts';
+import { WealthGrowthChart } from '@/components/portfolio/WealthGrowthChart';
 import { AddPropertyDialog } from '@/components/portfolio/AddPropertyDialog';
-import { PropertyList } from '@/components/portfolio/PropertyList';
+import { ExpandablePropertyCard } from '@/components/portfolio/ExpandablePropertyCard';
+import { ComparisonFloatingBar } from '@/components/portfolio/ComparisonFloatingBar';
+import { PortfolioComparisonPanel } from '@/components/portfolio/PortfolioComparisonPanel';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Briefcase } from 'lucide-react';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { usePortfolioHistory } from '@/hooks/usePortfolioHistory';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Portfolio() {
@@ -22,6 +29,12 @@ export default function Portfolio() {
     addProperty,
     deleteProperty,
   } = usePortfolio();
+  
+  const { propertyValueHistory } = usePortfolioHistory(portfolio?.id);
+  
+  // Selection state for comparison
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
 
   // Create portfolio on first load for Elite users
   useEffect(() => {
@@ -29,6 +42,14 @@ export default function Portfolio() {
       createPortfolio.mutate();
     }
   }, [user, profile, portfolio, loading]);
+
+  const handleSelectProperty = (id: string, selected: boolean) => {
+    setSelectedIds(prev => 
+      selected ? [...prev, id] : prev.filter(pid => pid !== id)
+    );
+  };
+
+  const selectedProperties = properties.filter(p => selectedIds.includes(p.id));
 
   if (authLoading) {
     return (
@@ -74,34 +95,9 @@ export default function Portfolio() {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 pt-28 md:pt-32 pb-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gold/10">
-              <Briefcase className="h-6 w-6 text-gold" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">Portfolio Dashboard</h1>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gold/20 text-gold text-xs">
-                  <Crown className="h-3 w-3" />
-                  Elite
-                </span>
-              </div>
-              <p className="text-muted-foreground">
-                Track your Dubai real estate investments
-              </p>
-            </div>
-          </div>
-          
-          <AddPropertyDialog
-            onSubmit={(property) => addProperty.mutate(property)}
-            isSubmitting={addProperty.isPending}
-          />
-        </div>
-
         {loading ? (
           <div className="space-y-6">
+            <div className="h-48 bg-card border border-border rounded-2xl animate-pulse" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="h-28 bg-card border border-border rounded-xl animate-pulse" />
@@ -110,25 +106,76 @@ export default function Portfolio() {
           </div>
         ) : (
           <div className="space-y-8">
+            {/* Header with Actions */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div className="flex-1">
+                <PortfolioHeader 
+                  totalValue={metrics.totalValue}
+                  dataSource="user"
+                />
+              </div>
+              <div className="flex-shrink-0">
+                <AddPropertyDialog
+                  onSubmit={(property) => addProperty.mutate(property)}
+                  isSubmitting={addProperty.isPending}
+                />
+              </div>
+            </div>
+
             {/* Metrics Cards */}
             <PortfolioMetricsCards metrics={metrics} propertyCount={properties.length} />
 
-            {/* Charts */}
+            {/* Wealth Growth Chart */}
+            {properties.length > 0 && <WealthGrowthChart properties={properties} />}
+
+            {/* Portfolio Charts */}
             {properties.length > 0 && <PortfolioCharts properties={properties} />}
 
             {/* Properties List */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Your Properties</h2>
-              <PropertyList
-                properties={properties}
-                onDelete={(id) => deleteProperty.mutate(id)}
-              />
+              {properties.length === 0 ? (
+                <div className="bg-card border border-border rounded-xl">
+                  <EmptyState
+                    icon={Briefcase}
+                    title="Your portfolio is empty"
+                    description="Add your first property to start tracking your Dubai real estate investments."
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {properties.map((property) => (
+                    <ExpandablePropertyCard
+                      key={property.id}
+                      property={property}
+                      isSelected={selectedIds.includes(property.id)}
+                      onSelect={handleSelectProperty}
+                      onDelete={(id) => deleteProperty.mutate(id)}
+                      historicalValues={propertyValueHistory[property.id] || []}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
       </main>
 
       <Footer />
+
+      {/* Comparison Floating Bar */}
+      <ComparisonFloatingBar
+        selectedCount={selectedIds.length}
+        onClear={() => setSelectedIds([])}
+        onCompare={() => setShowComparison(true)}
+      />
+
+      {/* Comparison Panel */}
+      <PortfolioComparisonPanel
+        isOpen={showComparison}
+        onClose={() => setShowComparison(false)}
+        properties={selectedProperties}
+      />
     </div>
   );
 }

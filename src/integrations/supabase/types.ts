@@ -2629,9 +2629,11 @@ export type Database = {
       }
       portfolio_properties: {
         Row: {
+          bedrooms: number | null
           created_at: string
           current_value: number
           id: string
+          last_valuation_date: string | null
           location_area: string
           monthly_expenses: number | null
           monthly_rental_income: number | null
@@ -2642,12 +2644,16 @@ export type Database = {
           property_type: string
           purchase_date: string
           purchase_price: number
+          size_sqft: number | null
           updated_at: string
+          valuation_source: string | null
         }
         Insert: {
+          bedrooms?: number | null
           created_at?: string
           current_value: number
           id?: string
+          last_valuation_date?: string | null
           location_area: string
           monthly_expenses?: number | null
           monthly_rental_income?: number | null
@@ -2658,12 +2664,16 @@ export type Database = {
           property_type?: string
           purchase_date: string
           purchase_price: number
+          size_sqft?: number | null
           updated_at?: string
+          valuation_source?: string | null
         }
         Update: {
+          bedrooms?: number | null
           created_at?: string
           current_value?: number
           id?: string
+          last_valuation_date?: string | null
           location_area?: string
           monthly_expenses?: number | null
           monthly_rental_income?: number | null
@@ -2674,7 +2684,9 @@ export type Database = {
           property_type?: string
           purchase_date?: string
           purchase_price?: number
+          size_sqft?: number | null
           updated_at?: string
+          valuation_source?: string | null
         }
         Relationships: [
           {
@@ -2682,6 +2694,47 @@ export type Database = {
             columns: ["portfolio_id"]
             isOneToOne: false
             referencedRelation: "portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_property_valuations: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          estimated_value: number
+          id: string
+          notes: string | null
+          property_id: string
+          valuation_date: string
+          valuation_source: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          estimated_value: number
+          id?: string
+          notes?: string | null
+          property_id: string
+          valuation_date?: string
+          valuation_source?: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          estimated_value?: number
+          id?: string
+          notes?: string | null
+          property_id?: string
+          valuation_date?: string
+          valuation_source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_property_valuations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_properties"
             referencedColumns: ["id"]
           },
         ]
