@@ -47,7 +47,7 @@ export default function Portfolio() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-16 flex items-center justify-center">
+        <main className="flex-1 container mx-auto px-4 pt-28 md:pt-32 pb-16 flex items-center justify-center">
           <div className="max-w-md text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/10 flex items-center justify-center">
               <Lock className="h-10 w-10 text-gold" />
@@ -73,7 +73,7 @@ export default function Portfolio() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 pt-28 md:pt-32 pb-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
