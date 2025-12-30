@@ -331,20 +331,32 @@ export default function Dashboard() {
         >
           <h2 className="font-heading text-xl text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            {quickActions.map((action) => (
-              <a
+            {quickActions.map((action, index) => (
+              <motion.a
                 key={action.title}
                 href={action.href}
-                className="group p-4 sm:p-6 rounded-xl bg-card border border-border hover:border-gold/30 transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative p-4 sm:p-6 rounded-xl bg-card border border-border hover:border-gold/30 transition-all duration-300 overflow-hidden"
               >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${action.color} flex items-center justify-center mb-3 sm:mb-4`}>
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-gold/5 via-transparent to-transparent pointer-events-none" />
+                
+                <motion.div 
+                  className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${action.color} flex items-center justify-center mb-3 sm:mb-4`}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
                   <action.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <h3 className="font-heading text-base sm:text-lg text-foreground mb-1 group-hover:text-gold transition-colors">
+                </motion.div>
+                <h3 className="relative font-heading text-base sm:text-lg text-foreground mb-1 group-hover:text-gold transition-colors">
                   {action.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{action.description}</p>
-              </a>
+                <p className="relative text-xs sm:text-sm text-muted-foreground line-clamp-2">{action.description}</p>
+              </motion.a>
             ))}
           </div>
         </motion.div>
