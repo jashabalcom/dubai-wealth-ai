@@ -318,6 +318,12 @@ export function Navbar() {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem asChild>
+                        <Link to="/calendar" className="flex items-center gap-2 cursor-pointer">
+                          <Calendar className="h-4 w-4" />
+                          Calendar
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
                         <LogOut className="h-4 w-4" />
