@@ -152,7 +152,7 @@ export default function Academy() {
       {/* Filters */}
       <section className="py-8 border-b border-border bg-card/50">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="flex flex-col gap-4">
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -162,7 +162,12 @@ export default function Academy() {
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+          </div>
+        </div>
+        {/* Full-width scrollable filter buttons */}
+        <div className="overflow-x-auto scrollbar-hide mt-4">
+          <div className="container mx-auto px-4">
+            <div className="flex gap-2 w-max pb-2">
               {categories.map((category) => (
                 <Button
                   key={category}
