@@ -192,7 +192,7 @@ const colorClasses: Record<string, { bg: string; border: string; text: string; g
 
 export default function Tools() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead {...PAGE_SEO.tools} />
       <Navbar />
 
