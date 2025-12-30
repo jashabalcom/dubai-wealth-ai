@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Clock, Bed, MapPin, Heart, Building2, ArrowRight } from 'lucide-react';
+import { Clock, MapPin, Heart, Building2, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';

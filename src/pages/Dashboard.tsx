@@ -295,6 +295,7 @@ export default function Dashboard() {
           <Button
             onClick={() => navigate('/ai')}
             size="lg"
+            aria-label="Open AI Assistant"
             className="w-14 h-14 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white border-0 shadow-lg shadow-pink-500/25"
           >
             <Sparkles className="w-6 h-6" />
