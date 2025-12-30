@@ -7,6 +7,8 @@ import { Footer } from '@/components/layout/Footer';
 import { PropertyCard } from '@/components/properties/PropertyCard';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -85,13 +87,13 @@ export default function SavedProperties() {
       {/* Hero Section */}
       <section className="pt-32 pb-8 bg-gradient-to-b from-primary-dark to-background">
         <div className="container mx-auto px-4">
-          <Link
-            to="/properties"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Properties
-          </Link>
+          <Breadcrumbs
+            items={[
+              { label: 'Properties', href: '/properties' },
+              { label: 'Saved Properties' }
+            ]}
+            className="mb-6"
+          />
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -124,9 +126,10 @@ export default function SavedProperties() {
           ) : properties.length === 0 ? (
             <EmptyState
               icon={Heart}
-              title="No saved properties yet"
-              description="Save properties you're interested in to easily compare them later and track their details."
-              action={{ label: 'Browse Properties', href: '/properties' }}
+              title="Build your investment watchlist"
+              description="Save properties you're considering to compare them, track price changes, and receive alerts when similar opportunities arise."
+              action={{ label: 'Explore Properties', href: '/properties' }}
+              secondaryAction={{ label: 'View Neighborhoods', href: '/neighborhoods' }}
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -145,6 +148,7 @@ export default function SavedProperties() {
         </div>
       </section>
 
+      <ScrollToTopButton />
       <Footer />
     </div>
   );

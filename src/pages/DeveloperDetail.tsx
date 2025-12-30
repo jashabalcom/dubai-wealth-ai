@@ -2,6 +2,8 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeveloperHero } from '@/components/developers/DeveloperHero';
 import { DeveloperStats } from '@/components/developers/DeveloperStats';
@@ -79,14 +81,14 @@ export default function DeveloperDetail() {
       <Navbar />
 
       <div className="min-h-screen bg-background">
-        {/* Back Navigation */}
+        {/* Breadcrumb Navigation */}
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/developers">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Directory
-            </Link>
-          </Button>
+          <Breadcrumbs
+            items={[
+              { label: 'Developers', href: '/developers' },
+              { label: developer.name }
+            ]}
+          />
         </div>
 
         {/* Hero */}
@@ -162,6 +164,7 @@ export default function DeveloperDetail() {
         </div>
       </div>
 
+      <ScrollToTopButton />
       <Footer />
     </>
   );

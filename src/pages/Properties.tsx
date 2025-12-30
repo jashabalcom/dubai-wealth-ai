@@ -18,6 +18,7 @@ import { PropertyMap } from '@/components/properties/PropertyMap';
 import { RecentlyViewedSection } from '@/components/properties/RecentlyViewedSection';
 import { InfiniteScrollTrigger } from '@/components/properties/InfiniteScrollTrigger';
 import { PropertyDisclaimer } from '@/components/ui/disclaimers';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } from '@/lib/investmentScore';
 
 export default function Properties() {
@@ -306,6 +307,7 @@ export default function Properties() {
         />
       )}
 
+      <ScrollToTopButton />
       <Footer />
     </div>
   );

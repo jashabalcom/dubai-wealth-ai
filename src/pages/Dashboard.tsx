@@ -62,8 +62,57 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+      <div className="min-h-screen bg-background">
+        {/* Skeleton Header */}
+        <header className="border-b border-border bg-card">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-lg bg-muted animate-pulse" />
+              <div className="w-32 h-6 bg-muted rounded animate-pulse hidden sm:block" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-6 bg-muted rounded-full animate-pulse" />
+              <div className="w-24 h-9 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+        </header>
+        
+        {/* Skeleton Main Content */}
+        <main className="container mx-auto px-4 py-8">
+          {/* Welcome skeleton */}
+          <div className="mb-8">
+            <div className="h-10 w-64 bg-muted rounded animate-pulse mb-2" />
+            <div className="h-5 w-80 bg-muted rounded animate-pulse" />
+          </div>
+          
+          {/* Quick actions skeleton */}
+          <div className="mb-8">
+            <div className="h-6 w-32 bg-muted rounded animate-pulse mb-4" />
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="p-6 rounded-xl bg-card border border-border">
+                  <div className="w-12 h-12 rounded-xl bg-muted animate-pulse mb-4" />
+                  <div className="h-5 w-24 bg-muted rounded animate-pulse mb-2" />
+                  <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Widgets skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-6 rounded-xl bg-card border border-border min-h-[200px]">
+                <div className="h-5 w-32 bg-muted rounded animate-pulse mb-4" />
+                <div className="space-y-3">
+                  <div className="h-4 w-full bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-5/6 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-4/6 bg-muted rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
       </div>
     );
   }
