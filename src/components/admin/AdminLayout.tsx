@@ -30,6 +30,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'OKRs', href: '/admin/okrs', icon: Target },
   { label: 'Revenue', href: '/admin/revenue', icon: DollarSign },
   { label: 'Mortgage Leads', href: '/admin/mortgage-leads', icon: Building2 },
   { label: 'Mortgage Partners', href: '/admin/mortgage-partners', icon: Briefcase },
