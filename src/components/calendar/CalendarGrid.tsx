@@ -1,12 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useCalendarEventsByMonth, CalendarEvent } from "@/hooks/useCalendarEvents";
 import { useUserPropertyEvents, UserPropertyEvent } from "@/hooks/useUserPropertyEvents";
-import { CalendarEventDot, eventTypeColors } from "./CalendarEventDot";
+import { CalendarEventDot } from "./CalendarEventDot";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, parseISO, addMonths, subMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths } from "date-fns";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 
 interface CalendarGridProps {
   onSelectDate?: (date: Date, events: (CalendarEvent | UserPropertyEvent)[]) => void;
@@ -16,6 +16,7 @@ interface CalendarGridProps {
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export function CalendarGrid({ onSelectDate, selectedDate, showUserEvents = true, className }: CalendarGridProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -75,15 +76,15 @@ export function CalendarGrid({ onSelectDate, selectedDate, showUserEvents = true
     return map;
   }, [marketEvents, userEvents, showUserEvents]);
 
-  const goToPrevMonth = () => {
+  const goToPrevMonth = useCallback(() => {
     setDirection(-1);
-    setCurrentMonth(subMonths(currentMonth, 1));
-  };
+    setCurrentMonth(prev => subMonths(prev, 1));
+  }, []);
 
-  const goToNextMonth = () => {
+  const goToNextMonth = useCallback(() => {
     setDirection(1);
-    setCurrentMonth(addMonths(currentMonth, 1));
-  };
+    setCurrentMonth(prev => addMonths(prev, 1));
+  }, []);
 
   const goToToday = () => {
     setDirection(0);
@@ -96,36 +97,62 @@ export function CalendarGrid({ onSelectDate, selectedDate, showUserEvents = true
     onSelectDate?.(date, events);
   };
 
+  // Swipe gesture handler for mobile
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = 50;
+    if (info.offset.x > threshold) {
+      goToPrevMonth();
+    } else if (info.offset.x < -threshold) {
+      goToNextMonth();
+    }
+  }, [goToPrevMonth, goToNextMonth]);
+
   return (
     <div className={cn("space-y-4", className)}>
       {/* Header with navigation */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
-            <ChevronLeft className="w-4 h-4" />
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={goToPrevMonth}
+            className="h-10 w-10 sm:h-9 sm:w-9 touch-target"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-4 sm:h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={goToNextMonth}>
-            <ChevronRight className="w-4 h-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={goToNextMonth}
+            className="h-10 w-10 sm:h-9 sm:w-9 touch-target"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-4 sm:h-4" />
           </Button>
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-base sm:text-lg font-semibold ml-1 sm:ml-2">
             {format(currentMonth, 'MMMM yyyy')}
           </h2>
         </div>
-        <Button variant="outline" size="sm" onClick={goToToday}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={goToToday}
+          className="h-9 px-3 text-sm"
+        >
           Today
         </Button>
       </div>
 
-      {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1">
-        {WEEKDAYS.map((day) => (
+      {/* Weekday headers - shorter on mobile */}
+      <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
+        {WEEKDAYS.map((day, i) => (
           <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-            {day}
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden">{WEEKDAYS_SHORT[i]}</span>
           </div>
         ))}
       </div>
 
-      {/* Calendar grid */}
+      {/* Calendar grid with swipe support */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={`${year}-${month}`}
@@ -133,7 +160,11 @@ export function CalendarGrid({ onSelectDate, selectedDate, showUserEvents = true
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: direction * -20 }}
           transition={{ duration: 0.2 }}
-          className="grid grid-cols-7 gap-1"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.1}
+          onDragEnd={handleDragEnd}
+          className="grid grid-cols-7 gap-0.5 sm:gap-1 touch-action-pan-y"
         >
           {calendarDays.map((day, index) => {
             const dateKey = format(day, 'yyyy-MM-dd');
@@ -144,47 +175,57 @@ export function CalendarGrid({ onSelectDate, selectedDate, showUserEvents = true
             const hasHighImportance = dayEvents.some((e) => 'importance' in e && e.importance === 'high');
 
             return (
-              <button
+              <motion.button
                 key={index}
                 onClick={() => handleDateClick(day)}
+                whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "relative aspect-square p-1 rounded-lg transition-all duration-200",
-                  "hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20",
+                  "relative flex flex-col items-center justify-center rounded-lg transition-all duration-200",
+                  "min-h-[44px] sm:min-h-[52px] p-1",
+                  "hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  "active:bg-muted/80",
                   !isCurrentMonth && "opacity-40",
-                  isSelected && "bg-primary/10 ring-2 ring-primary",
-                  isTodayDate && !isSelected && "ring-1 ring-amber-500/50",
-                  hasHighImportance && "bg-amber-500/5"
+                  isSelected && "bg-primary/10 ring-2 ring-primary shadow-sm",
+                  isTodayDate && !isSelected && "ring-1 ring-amber-500/50 bg-amber-500/5",
+                  hasHighImportance && !isSelected && "bg-amber-500/10"
                 )}
               >
                 <span className={cn(
-                  "text-sm font-medium",
-                  isTodayDate && "text-amber-500",
-                  isSelected && "text-primary"
+                  "text-sm sm:text-base font-medium leading-none",
+                  isTodayDate && "text-amber-600 dark:text-amber-400 font-semibold",
+                  isSelected && "text-primary font-semibold"
                 )}>
                   {format(day, 'd')}
                 </span>
 
-                {/* Event dots */}
+                {/* Event dots - larger on mobile for visibility */}
                 {dayEvents.length > 0 && (
-                  <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-0.5">
+                  <div className="flex gap-0.5 mt-1">
                     {dayEvents.slice(0, 3).map((event, i) => (
                       <CalendarEventDot
                         key={i}
                         eventType={event.event_type}
                         importance={'importance' in event ? event.importance : undefined}
-                        className="w-1.5 h-1.5"
+                        className="w-1.5 h-1.5 sm:w-2 sm:h-2"
                       />
                     ))}
                     {dayEvents.length > 3 && (
-                      <span className="text-[8px] text-muted-foreground ml-0.5">+{dayEvents.length - 3}</span>
+                      <span className="text-[8px] sm:text-[10px] text-muted-foreground ml-0.5">
+                        +{dayEvents.length - 3}
+                      </span>
                     )}
                   </div>
                 )}
-              </button>
+              </motion.button>
             );
           })}
         </motion.div>
       </AnimatePresence>
+
+      {/* Swipe hint for mobile - only shown briefly */}
+      <p className="text-center text-xs text-muted-foreground sm:hidden animate-fade-in">
+        Swipe to change month
+      </p>
     </div>
   );
 }

@@ -511,59 +511,68 @@ export function Navbar() {
                 <CurrencyPill />
               </div>
               
-              <div className="flex flex-col gap-3 pt-3 border-t border-primary/20">
+              <div className="flex flex-col gap-2 pt-3 border-t border-primary/20">
                 {user ? (
                   <>
                     <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
-                        <User className="h-5 w-5 mr-2" />
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full min-h-[52px] active:scale-[0.98]">
+                        <User className="h-5 w-5 mr-3" />
                         My Profile
                       </Button>
                     </Link>
                     <Link to="/properties/saved" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
-                        <Heart className="h-5 w-5 mr-2" />
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full min-h-[52px] active:scale-[0.98]">
+                        <Heart className="h-5 w-5 mr-3" />
                         Saved Properties
                         {savedCount > 0 && (
-                          <Badge variant="default" className="ml-2 bg-gold text-primary-foreground text-xs">
+                          <Badge variant="default" className="ml-auto bg-gold text-primary-foreground text-xs">
                             {savedCount}
                           </Badge>
                         )}
                       </Button>
                     </Link>
-                    <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
-                        <Settings className="h-5 w-5 mr-2" />
-                        Settings
-                      </Button>
-                    </Link>
                     <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="hero" size="lg" className="w-full">
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full min-h-[52px] active:scale-[0.98]">
+                        <LayoutDashboard className="h-5 w-5 mr-3" />
                         Dashboard
                       </Button>
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="lg"
-                      className="text-destructive justify-start w-full"
-                      onClick={() => {
-                        handleSignOut();
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <LogOut className="h-5 w-5 mr-2" />
-                      Sign Out
-                    </Button>
+                    <Link to="/calendar" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full min-h-[52px] active:scale-[0.98]">
+                        <Calendar className="h-5 w-5 mr-3" />
+                        Calendar
+                      </Button>
+                    </Link>
+                    <Link to="/settings" onClick={() => setIsMobileMenuOpen(false)}>
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full min-h-[52px] active:scale-[0.98]">
+                        <Settings className="h-5 w-5 mr-3" />
+                        Settings
+                      </Button>
+                    </Link>
+                    <div className="pt-2">
+                      <Button
+                        variant="ghost"
+                        size="lg"
+                        className="text-destructive justify-start w-full min-h-[52px] active:scale-[0.98]"
+                        onClick={() => {
+                          handleSignOut();
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        <LogOut className="h-5 w-5 mr-3" />
+                        Sign Out
+                      </Button>
+                    </div>
                   </>
                 ) : (
                   <>
                     <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full">
+                      <Button variant="ghost" size="lg" className="text-secondary-foreground justify-start w-full min-h-[52px] active:scale-[0.98]">
                         Sign In
                       </Button>
                     </Link>
                     <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="hero" size="lg" className="w-full">
+                      <Button variant="hero" size="lg" className="w-full min-h-[52px] active:scale-[0.98]">
                         Get Started
                       </Button>
                     </Link>

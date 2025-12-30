@@ -248,6 +248,13 @@
     @apply active:scale-[0.97] active:shadow-none transition-all duration-100;
   }
 
+  /* Enhanced button feedback */
+  .btn-feedback {
+    @apply transition-all duration-150 ease-out;
+    @apply active:scale-[0.97] active:brightness-95;
+    @apply focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+  }
+
   /* Card hover lift effect */
   .card-hover-lift {
     @apply transition-all duration-300 ease-out;
@@ -255,6 +262,12 @@
   .card-hover-lift:hover {
     @apply -translate-y-2 shadow-2xl;
     box-shadow: 0 25px 50px -12px hsl(var(--gold) / 0.15);
+  }
+
+  /* Card press effect for touch */
+  .card-press {
+    @apply transition-transform duration-100;
+    @apply active:scale-[0.98];
   }
 
   /* Image zoom effect */
@@ -265,7 +278,7 @@
     @apply scale-110;
   }
 
-  /* Skeleton shimmer */
+  /* Skeleton shimmer - enhanced */
   .skeleton-shimmer {
     background: linear-gradient(
       90deg,
@@ -277,9 +290,46 @@
     animation: shimmer 1.5s ease-in-out infinite;
   }
 
+  /* Skeleton wave effect */
+  .skeleton-wave {
+    position: relative;
+    overflow: hidden;
+    background: hsl(var(--muted));
+  }
+  .skeleton-wave::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--muted-foreground) / 0.08) 50%,
+      transparent 100%
+    );
+    animation: wave 1.5s ease-in-out infinite;
+  }
+
   @keyframes shimmer {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+  }
+
+  @keyframes wave {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Touch action utilities */
+  .touch-action-pan-y {
+    touch-action: pan-y;
+  }
+  
+  .touch-action-pan-x {
+    touch-action: pan-x;
+  }
+
+  .touch-action-none {
+    touch-action: none;
   }
 
   /* Focus glow for inputs */
@@ -329,6 +379,67 @@
   @keyframes ring-pulse {
     0% { box-shadow: 0 0 0 0 hsl(var(--gold) / 0.4); }
     100% { box-shadow: 0 0 0 8px hsl(var(--gold) / 0); }
+  }
+
+  /* Success checkmark animation */
+  @keyframes success-check {
+    0% { stroke-dashoffset: 24; opacity: 0; }
+    50% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
+  }
+
+  .animate-success-check {
+    animation: success-check 0.4s ease-out forwards;
+  }
+
+  /* Bounce in animation for new items */
+  @keyframes bounce-in {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .animate-bounce-in {
+    animation: bounce-in 0.3s ease-out;
+  }
+
+  /* Slide up fade for toasts/notifications */
+  @keyframes slide-up-fade {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  .animate-slide-up-fade {
+    animation: slide-up-fade 0.25s ease-out;
+  }
+
+  /* Ripple effect for buttons */
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 0.5; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+
+  .btn-ripple {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-ripple::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, hsl(var(--gold) / 0.3) 0%, transparent 70%);
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  .btn-ripple:active::after {
+    animation: ripple 0.4s ease-out;
+  }
+
+  /* Focus visible ring with gold accent */
+  .focus-ring-gold:focus-visible {
+    @apply outline-none ring-2 ring-gold/40 ring-offset-2 ring-offset-background;
   }
 
   /* Mobile safe area utilities */
