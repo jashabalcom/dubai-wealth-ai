@@ -35,6 +35,8 @@ import { DualPrice } from '@/components/DualPrice';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 
 interface Property {
   id: string;
@@ -363,9 +365,12 @@ export default function PropertyDetail() {
       <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <Link to="/properties" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back to Properties
-            </Link>
+            <Breadcrumbs
+              items={[
+                { label: 'Properties', href: '/properties' },
+                { label: property.title }
+              ]}
+            />
             <div className="flex flex-wrap gap-2">
               {user && (
                 <Button variant="outline" size="sm" onClick={() => toggleSave(property.id)} className="min-h-[44px]">
@@ -837,6 +842,8 @@ export default function PropertyDetail() {
           onClose={() => setShowAIAnalysis(false)}
         />
       )}
+
+      <ScrollToTopButton />
     </div>
   );
 }

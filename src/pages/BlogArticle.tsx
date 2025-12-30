@@ -7,6 +7,8 @@ import { ShareButtons } from "@/components/blog/ShareButtons";
 import { ArticleCard, ArticleCardSkeleton } from "@/components/blog/ArticleCard";
 import { ArrowLeft, Clock, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { Badge } from "@/components/ui/badge";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -141,14 +143,14 @@ const BlogArticle = () => {
 
         <main className="pt-24 pb-16">
           <article className="container mx-auto px-4 max-w-4xl">
-            {/* Back Link */}
-            <Link
-              to="/blog"
-              className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Blog
-            </Link>
+            {/* Breadcrumbs */}
+            <Breadcrumbs
+              items={[
+                { label: 'Blog', href: '/blog' },
+                { label: article.title }
+              ]}
+              className="mb-6"
+            />
 
             {/* Header */}
             <header className="mb-8">
@@ -256,6 +258,7 @@ const BlogArticle = () => {
           </article>
         </main>
 
+        <ScrollToTopButton />
         <Footer />
       </div>
     </>

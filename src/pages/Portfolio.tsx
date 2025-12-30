@@ -96,12 +96,44 @@ export default function Portfolio() {
       
       <main className="flex-1 container mx-auto px-4 pt-28 md:pt-32 pb-8">
         {loading ? (
-          <div className="space-y-6">
-            <div className="h-48 bg-card border border-border rounded-2xl animate-pulse" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-8">
+            {/* Header skeleton */}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+              <div>
+                <div className="h-8 w-48 bg-muted rounded animate-pulse mb-2" />
+                <div className="h-10 w-64 bg-muted rounded animate-pulse" />
+              </div>
+              <div className="h-10 w-36 bg-muted rounded animate-pulse" />
+            </div>
+            
+            {/* Metrics skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-28 bg-card border border-border rounded-xl animate-pulse" />
+                <div key={i} className="p-4 rounded-xl bg-card border border-border">
+                  <div className="h-4 w-20 bg-muted rounded animate-pulse mb-2" />
+                  <div className="h-7 w-24 bg-muted rounded animate-pulse" />
+                </div>
               ))}
+            </div>
+            
+            {/* Chart skeleton */}
+            <div className="h-64 bg-card border border-border rounded-2xl animate-pulse" />
+            
+            {/* Properties skeleton */}
+            <div>
+              <div className="h-6 w-32 bg-muted rounded animate-pulse mb-4" />
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-card border border-border flex gap-4">
+                    <div className="w-24 h-24 rounded-lg bg-muted animate-pulse" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-5 w-48 bg-muted rounded animate-pulse" />
+                      <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                      <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -138,8 +170,9 @@ export default function Portfolio() {
                 <div className="bg-card border border-border rounded-xl">
                   <EmptyState
                     icon={Briefcase}
-                    title="Your portfolio is empty"
-                    description="Add your first property to start tracking your Dubai real estate investments."
+                    title="Start tracking your investments"
+                    description="Add your Dubai properties to monitor their performance, track value appreciation, and analyze your portfolio's cash flow in one place."
+                    action={{ label: 'Add Your First Property', onClick: () => {} }}
                   />
                 </div>
               ) : (
