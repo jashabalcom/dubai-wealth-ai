@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -86,7 +86,7 @@ const CheckoutForm = ({
         
         toast({
           title: "Welcome to Dubai Wealth Hub!",
-          description: `Your ${tierConfig.name} trial has started.`,
+          description: `Your ${tierConfig.name} membership is now active.`,
         });
 
         navigate(`/subscription-success?tier=${tier}`);
@@ -158,7 +158,7 @@ const CheckoutForm = ({
       <Button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className="w-full mt-6 h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+        className="w-full mt-6 h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground group"
       >
         {isProcessing ? (
           <>
@@ -167,13 +167,14 @@ const CheckoutForm = ({
           </>
         ) : (
           <>
-            {isUpgrade ? "Upgrade Now" : "Subscribe Now"} — {priceConfig.priceDisplay}{priceConfig.period}
+            Get Instant Access — {priceConfig.priceDisplay}
+            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </>
         )}
       </Button>
 
       <p className="text-xs text-muted-foreground text-center mt-4">
-        You will be charged {priceConfig.priceDisplay} {billingPeriod === 'annual' ? 'per year' : 'per month'}.
+        By subscribing, you agree to our Terms of Service and Privacy Policy.
       </p>
     </form>
   );
