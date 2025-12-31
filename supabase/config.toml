@@ -63,6 +63,9 @@ verify_jwt = false
 [functions.create-subscription-intent]
 verify_jwt = false
 
+[functions.complete-subscription]
+verify_jwt = false
+
 [functions.send-getting-started-email]
 verify_jwt = false
 
