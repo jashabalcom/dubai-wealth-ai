@@ -1,4 +1,4 @@
-import { Check, Crown, TrendingUp } from "lucide-react";
+import { Check, Crown, TrendingUp, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { STRIPE_TIERS, BillingPeriod } from "@/lib/stripe-config";
 
@@ -43,24 +43,29 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
       }`}>
         {/* Header */}
         <div className={`p-6 ${isElite ? "bg-primary/5" : "bg-muted/30"}`}>
-          <div className="flex items-center gap-3 mb-4">
-            {isElite ? (
-              <div className="p-2 rounded-lg bg-primary/20">
-                <Crown className="h-5 w-5 text-primary" />
-              </div>
-            ) : (
-              <div className="p-2 rounded-lg bg-muted">
-                <TrendingUp className="h-5 w-5 text-foreground" />
-              </div>
-            )}
-            <div>
-              <h3 className="font-semibold text-foreground">{tierConfig.name}</h3>
-              {isElite && (
-                <Badge variant="secondary" className="mt-1 bg-primary/20 text-primary border-0 text-xs">
-                  Most Popular
-                </Badge>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              {isElite ? (
+                <div className="p-2 rounded-lg bg-primary/20">
+                  <Crown className="h-5 w-5 text-primary" />
+                </div>
+              ) : (
+                <div className="p-2 rounded-lg bg-muted">
+                  <TrendingUp className="h-5 w-5 text-foreground" />
+                </div>
               )}
+              <div>
+                <h3 className="font-semibold text-foreground">{tierConfig.name}</h3>
+                {isElite && (
+                  <Badge variant="secondary" className="mt-1 bg-primary/20 text-primary border-0 text-xs">
+                    Most Popular
+                  </Badge>
+                )}
+              </div>
             </div>
+            <Badge variant="outline" className="text-xs">
+              Your Plan
+            </Badge>
           </div>
 
           {billingPeriod === 'annual' && 'monthlyEquivalent' in priceConfig ? (
@@ -72,7 +77,7 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
               <p className="text-xs text-muted-foreground mt-1">
                 Billed annually ({priceConfig.priceDisplay})
               </p>
-              <p className="text-xs font-medium text-emerald-600 mt-1">
+              <p className="text-xs font-medium text-emerald-500 mt-1">
                 {priceConfig.savingsDisplay}
               </p>
             </>
@@ -82,12 +87,6 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
               <span className="text-muted-foreground">{priceConfig.period}</span>
             </div>
           )}
-
-          {!isUpgrade && billingPeriod === 'monthly' && (
-            <p className="text-sm text-primary mt-2 font-medium">
-              14-day free trial included
-            </p>
-          )}
         </div>
 
         {/* Features */}
@@ -96,7 +95,7 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
           <ul className="space-y-3">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start gap-3">
-                <Check className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <Check className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                 <span className="text-sm text-foreground">{feature}</span>
               </li>
             ))}
@@ -113,6 +112,7 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
 
         {/* Order Summary */}
         <div className="p-6 border-t border-border">
+          <h4 className="text-sm font-medium text-foreground mb-3">Order Summary</h4>
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
@@ -120,27 +120,25 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
               </span>
               <span className="text-foreground">{priceConfig.priceDisplay}{priceConfig.period}</span>
             </div>
-            {!isUpgrade && billingPeriod === 'monthly' && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">14-day trial</span>
-                <span className="text-emerald-600 font-medium">Free</span>
-              </div>
-            )}
             <div className="pt-3 border-t border-border flex justify-between">
-              <span className="font-medium text-foreground">Due today</span>
-              <span className="font-bold text-foreground">
-                {isUpgrade || billingPeriod === 'annual' ? priceConfig.priceDisplay : "$0.00"}
-              </span>
+              <span className="font-medium text-foreground">Total</span>
+              <span className="font-bold text-foreground text-lg">{priceConfig.priceDisplay}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Guarantee */}
-      <div className="mt-4 text-center">
-        <p className="text-xs text-muted-foreground">
-          30-day money-back guarantee • Cancel anytime
-        </p>
+      <div className="mt-4 p-4 bg-card/50 border border-border rounded-xl">
+        <div className="flex items-start gap-3">
+          <Shield className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-foreground">30-Day Money-Back Guarantee</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Not satisfied? Get a full refund within 30 days, no questions asked.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
