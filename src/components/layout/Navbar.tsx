@@ -252,34 +252,37 @@ export function Navbar() {
               <CurrencyPill className={useDarkText ? "border-border" : "border-secondary-foreground/20"} />
               {user ? (
                 <>
-                  <Link 
-                    to="/properties/saved" 
-                    className={cn(
-                      "relative p-2 rounded-full hover:bg-muted/50 transition-colors",
-                      useDarkText ? "text-foreground" : "text-secondary-foreground",
-                      "hover:text-primary"
-                    )}
-                  >
-                    <Heart className="h-5 w-5" />
-                    <AnimatePresence>
-                      {savedCount > 0 && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1"
-                        >
-                          <Badge 
-                            variant="default" 
-                            className="h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
-                          >
-                            {savedCount > 9 ? '9+' : savedCount}
-                          </Badge>
-                        </motion.div>
+                  {/* Action icons group - tighter spacing */}
+                  <div className="flex items-center gap-2">
+                    <Link 
+                      to="/properties/saved" 
+                      className={cn(
+                        "relative p-2 rounded-full hover:bg-muted/50 transition-colors",
+                        useDarkText ? "text-foreground" : "text-secondary-foreground",
+                        "hover:text-primary"
                       )}
-                    </AnimatePresence>
-                  </Link>
-                  <NotificationCenter className={useDarkText ? "text-foreground" : "text-secondary-foreground"} />
+                    >
+                      <Heart className="h-5 w-5" />
+                      <AnimatePresence>
+                        {savedCount > 0 && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                            className="absolute -top-1 -right-1"
+                          >
+                            <Badge 
+                              variant="default" 
+                              className="h-4 min-w-[16px] px-1 text-[10px] bg-gold text-primary-foreground"
+                            >
+                              {savedCount > 9 ? '9+' : savedCount}
+                            </Badge>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </Link>
+                    <NotificationCenter className={useDarkText ? "text-foreground" : "text-secondary-foreground"} />
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button className="flex items-center gap-2 p-1 rounded-full hover:bg-muted/50 transition-all duration-200 hover:ring-2 hover:ring-gold/20">
