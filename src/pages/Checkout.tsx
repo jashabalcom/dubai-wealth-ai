@@ -263,19 +263,19 @@ const Checkout = () => {
                   <div className="mt-8 pt-6 border-t border-border">
                     <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-emerald-600" />
                         <span>256-bit SSL encryption</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-emerald-600" />
                         <span>Cancel anytime</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-emerald-600" />
                         <span>Instant access</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-emerald-600" />
                         <span>Secure payment</span>
                       </div>
                     </div>
