@@ -1,17 +1,17 @@
-// Stripe product and price configuration
-export const STRIPE_PUBLISHABLE_KEY = "pk_live_51LhLUlHDoJDchB5lnxVmeb2NMNCepgzaROqmc7Dh9sE8JUP7PUL13Koeidi8y4x0dpgjJkgqxflieihGfwPnpAa600TVkjPUWc";
+// Stripe product and price configuration - Dubai REI
+export const STRIPE_PUBLISHABLE_KEY = "pk_live_51Sd1LOHw4VrnO885zMga1jd8B6S2KKnx5EHj9or0EF2QrnIkN2BQztwDSUhOQlcOTxVykYYEORhNPNzJHYKYCvKA00TwrVgzBR";
 
 export const STRIPE_TIERS = {
   investor: {
-    product_id: "prod_TZ38QBXp8kGx7k",
+    product_id: "prod_ThxMtreIVfefZK",
     monthly: {
-      price_id: "price_1Sbv2KHVQx2jO318h20jYHWa",
+      price_id: "price_1SkXRkHw4VrnO885MoTLD6iC",
       price: 29,
       priceDisplay: "$29",
       period: "/month",
     },
     annual: {
-      price_id: "price_1ShQ9DHVQx2jO318EopokNIq",
+      price_id: "price_1SkXRwHw4VrnO885DWKPmskP",
       price: 290,
       priceDisplay: "$290",
       monthlyEquivalent: "$24",
@@ -22,15 +22,15 @@ export const STRIPE_TIERS = {
     name: "Dubai Investor",
   },
   elite: {
-    product_id: "prod_TZ38flxttNDJ5W",
+    product_id: "prod_ThxMsDNaQxY8bp",
     monthly: {
-      price_id: "price_1Sbv2UHVQx2jO318S54njLC4",
+      price_id: "price_1SkXS8Hw4VrnO885hyP39hIh",
       price: 97,
       priceDisplay: "$97",
       period: "/month",
     },
     annual: {
-      price_id: "price_1ShQ9OHVQx2jO318x9l7kYEV",
+      price_id: "price_1SkXSKHw4VrnO885KvdKUvGE",
       price: 970,
       priceDisplay: "$970",
       monthlyEquivalent: "$81",
@@ -41,15 +41,15 @@ export const STRIPE_TIERS = {
     name: "Dubai Elite",
   },
   private: {
-    product_id: "prod_TgMfiaX6U5k905",
+    product_id: "prod_ThxN30jXTwBfoE",
     monthly: {
-      price_id: "price_1SizvrHVQx2jO318FYaOxTqr",
+      price_id: "price_1SkXSWHw4VrnO885DzNEfjAu",
       price: 149,
       priceDisplay: "$149",
       period: "/month",
     },
     annual: {
-      price_id: "price_1SizwHHVQx2jO318PaFBNJmX",
+      price_id: "price_1SkXShHw4VrnO885j5BkoDu4",
       price: 1500,
       priceDisplay: "$1,500",
       monthlyEquivalent: "$125",
