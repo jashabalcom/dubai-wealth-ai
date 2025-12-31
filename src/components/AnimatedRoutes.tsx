@@ -34,6 +34,7 @@ const Pricing = lazy(() => import("@/pages/Pricing"));
 const SubscriptionSuccess = lazy(() => import("@/pages/SubscriptionSuccess"));
 const CheckoutRedirect = lazy(() => import("@/pages/CheckoutRedirect"));
 const Upgrade = lazy(() => import("@/pages/Upgrade"));
+const Funnel = lazy(() => import("@/pages/Funnel"));
 
 // Lazy loaded - Static/Legal pages
 const Disclaimer = lazy(() => import("@/pages/Disclaimer"));
@@ -231,6 +232,7 @@ export function AnimatedRoutes() {
         <Route path="/join-elite" element={<LazyPage><EliteFunnel /></LazyPage>} />
         <Route path="/checkout/:tier" element={<LazyPage><CheckoutRedirect /></LazyPage>} />
         <Route path="/upgrade" element={<LazyPage><Upgrade /></LazyPage>} />
+        <Route path="/funnel/:funnelType" element={<LazyPage><Funnel /></LazyPage>} />
         <Route path="/subscription-success" element={<LazyPage><SubscriptionSuccess /></LazyPage>} />
         
         {/* Admin Routes (lazy loaded) */}
