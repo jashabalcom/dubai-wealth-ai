@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-
+import jashaPhoto from "@/assets/jasha-balcom.jpg";
 const careerTimeline = [
   {
     year: "2024",
@@ -104,8 +104,12 @@ export default function Team() {
               <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
                 {/* Photo & Quick Info */}
                 <div className="lg:col-span-2 space-y-6">
-                  <div className="aspect-square max-w-sm mx-auto lg:max-w-none bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-2xl">
-                    <span className="text-8xl font-bold text-white">JB</span>
+                  <div className="aspect-square max-w-sm mx-auto lg:max-w-none rounded-2xl overflow-hidden shadow-2xl">
+                    <img 
+                      src={jashaPhoto} 
+                      alt="Jasha Balcom - Founder & CEO of Dubai Wealth Hub"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   
                   <div className="text-center lg:text-left space-y-4">

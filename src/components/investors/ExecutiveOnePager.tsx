@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Building2, GraduationCap, Calculator, Brain, TrendingUp, Users, Mail, Linkedin, Download } from "lucide-react";
 import { useRef } from "react";
+import jashaPhoto from "@/assets/jasha-balcom.jpg";
 
 export const ExecutiveOnePager = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -162,9 +163,11 @@ export const ExecutiveOnePager = () => {
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-gradient-to-br from-primary/10 to-accent/10 border border-border rounded-xl p-5">
             <div className="flex items-center gap-4 mb-3">
-              <div className="w-14 h-14 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
-                <span className="text-xl font-bold text-white">JB</span>
-              </div>
+              <img 
+                src={jashaPhoto} 
+                alt="Jasha Balcom"
+                className="w-14 h-14 rounded-xl object-cover"
+              />
               <div>
                 <p className="font-bold">Jasha Balcom</p>
                 <p className="text-xs text-muted-foreground">Founder & CEO</p>

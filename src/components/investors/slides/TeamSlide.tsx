@@ -1,6 +1,7 @@
 import { PitchDeckSlide } from "../PitchDeckSlide";
 import { Globe, TrendingUp, Trophy, Building2, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import jashaPhoto from "@/assets/jasha-balcom.jpg";
 
 export const TeamSlide = () => (
   <PitchDeckSlide className="p-8 md:p-12">
@@ -16,9 +17,11 @@ export const TeamSlide = () => (
       <div className="bg-gradient-to-br from-primary/10 via-card to-accent/10 border border-border rounded-2xl p-6 md:p-8">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-shrink-0">
-            <div className="w-28 h-28 md:w-36 md:h-36 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-4xl md:text-5xl font-bold text-white">JB</span>
-            </div>
+            <img 
+              src={jashaPhoto} 
+              alt="Jasha Balcom - Founder & CEO"
+              className="w-28 h-28 md:w-36 md:h-36 rounded-2xl object-cover shadow-lg"
+            />
           </div>
           
           <div className="flex-1 space-y-4">
