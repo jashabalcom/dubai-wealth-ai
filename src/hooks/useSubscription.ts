@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { STRIPE_TIERS, SubscriptionTier, BillingPeriod } from '@/lib/stripe-config';
@@ -19,6 +20,7 @@ export interface FunnelOptions {
 export function useSubscription() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const checkSubscription = useCallback(async (): Promise<SubscriptionStatus | null> => {
     try {
@@ -36,60 +38,29 @@ export function useSubscription() {
     }
   }, []);
 
-  const startCheckout = useCallback(async (
+  const startCheckout = useCallback((
     tier: 'investor' | 'elite' | 'private', 
     billingPeriod: BillingPeriod = 'monthly',
     funnelOptions?: FunnelOptions
   ) => {
-    setLoading(true);
-    
-    try {
-      const tierConfig = STRIPE_TIERS[tier];
-      const priceConfig = billingPeriod === 'annual' ? tierConfig.annual : tierConfig.monthly;
-      
-      // Private tier uses contact flow instead of direct checkout
-      if (tier === 'private') {
-        window.location.href = '/contact?subject=Private+Membership';
-        setLoading(false);
-        return;
-      }
-      
-      const body: Record<string, any> = { 
-        priceId: priceConfig.price_id,
-        tier: tier,
-        billingPeriod: billingPeriod,
-      };
-      
-      // Add funnel options if provided
-      if (funnelOptions?.source) {
-        body.trialSource = funnelOptions.source;
-        if (funnelOptions.trialDays) {
-          body.trialDays = funnelOptions.trialDays;
-        }
-      }
-      
-      const { data, error } = await supabase.functions.invoke('create-checkout', { body });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to start checkout';
-      toast({
-        title: "Checkout Error",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    // Private tier uses contact flow instead of direct checkout
+    if (tier === 'private') {
+      navigate('/contact?subject=Private+Membership');
+      return;
     }
-  }, [toast]);
+    
+    // Build query params for embedded checkout
+    const params = new URLSearchParams({ billing: billingPeriod });
+    if (funnelOptions?.source) {
+      params.set('source', funnelOptions.source);
+    }
+    if (funnelOptions?.trialDays) {
+      params.set('trial', String(funnelOptions.trialDays));
+    }
+    
+    // Navigate to embedded checkout page
+    navigate(`/checkout/${tier}?${params.toString()}`);
+  }, [navigate]);
 
   const openCustomerPortal = useCallback(async () => {
     setLoading(true);
