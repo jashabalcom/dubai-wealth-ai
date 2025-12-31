@@ -230,22 +230,54 @@ serve(async (req) => {
       // For immediate charges (upgrades or non-trial), use payment intent from invoice
       const invoice = subscription.latest_invoice as Stripe.Invoice;
       
-      // Handle both string and object payment_intent
-      if (typeof invoice.payment_intent === 'string') {
-        // Payment intent is an ID string, need to fetch it
-        const paymentIntent = await stripe.paymentIntents.retrieve(invoice.payment_intent);
-        if (paymentIntent?.client_secret) {
-          clientSecret = paymentIntent.client_secret;
-          intentType = 'payment';
-          logStep("Fetched payment intent by ID", { paymentIntentId: paymentIntent.id });
+      logStep("Invoice details", { 
+        invoiceId: invoice.id,
+        paymentIntentType: typeof invoice.payment_intent,
+        paymentIntentValue: invoice.payment_intent 
+      });
+      
+      // Handle payment_intent - it can be string, object, or null
+      if (invoice.payment_intent) {
+        if (typeof invoice.payment_intent === 'string') {
+          // Payment intent is an ID string, need to fetch it
+          const paymentIntent = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+          if (paymentIntent?.client_secret) {
+            clientSecret = paymentIntent.client_secret;
+            intentType = 'payment';
+            logStep("Fetched payment intent by ID", { paymentIntentId: paymentIntent.id });
+          }
+        } else {
+          // Payment intent is already expanded as an object
+          const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+          if (paymentIntent?.client_secret) {
+            clientSecret = paymentIntent.client_secret;
+            intentType = 'payment';
+            logStep("Using expanded payment intent", { paymentIntentId: paymentIntent.id });
+          }
         }
-      } else if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
-        // Payment intent is already expanded
-        const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
-        if (paymentIntent?.client_secret) {
-          clientSecret = paymentIntent.client_secret;
-          intentType = 'payment';
-          logStep("Using expanded payment intent", { paymentIntentId: paymentIntent.id });
+      } else {
+        // payment_intent is null - need to fetch the invoice with expansion
+        logStep("Payment intent not on invoice, fetching invoice separately");
+        const fullInvoice = await stripe.invoices.retrieve(invoice.id, {
+          expand: ['payment_intent'],
+        });
+        
+        if (fullInvoice.payment_intent) {
+          if (typeof fullInvoice.payment_intent === 'string') {
+            const paymentIntent = await stripe.paymentIntents.retrieve(fullInvoice.payment_intent);
+            if (paymentIntent?.client_secret) {
+              clientSecret = paymentIntent.client_secret;
+              intentType = 'payment';
+              logStep("Fetched payment intent from refetched invoice", { paymentIntentId: paymentIntent.id });
+            }
+          } else {
+            const paymentIntent = fullInvoice.payment_intent as Stripe.PaymentIntent;
+            if (paymentIntent?.client_secret) {
+              clientSecret = paymentIntent.client_secret;
+              intentType = 'payment';
+              logStep("Using payment intent from refetched invoice", { paymentIntentId: paymentIntent.id });
+            }
+          }
         }
       }
     }
@@ -255,9 +287,9 @@ serve(async (req) => {
         subscriptionStatus: subscription.status,
         pendingSetupIntent: !!subscription.pending_setup_intent,
         latestInvoice: !!subscription.latest_invoice,
-        latestInvoicePaymentIntent: subscription.latest_invoice ? typeof (subscription.latest_invoice as any).payment_intent : null
+        latestInvoiceId: subscription.latest_invoice ? (subscription.latest_invoice as Stripe.Invoice).id : null
       });
-      throw new Error("Failed to get payment intent client secret");
+      throw new Error("Failed to get payment intent client secret. Please try again.");
     }
 
     logStep("Returning client secret", { intentType, subscriptionId: subscription.id, trialDays, billingPeriod });
