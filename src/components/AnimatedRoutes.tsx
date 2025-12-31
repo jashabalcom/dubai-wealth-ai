@@ -113,6 +113,8 @@ const AdminInvestorMetrics = lazy(() => import("@/pages/admin/AdminInvestorMetri
 // Lazy loaded - Public investor page
 const Investors = lazy(() => import("@/pages/Investors"));
 const PitchDeck = lazy(() => import("@/pages/PitchDeck"));
+const Team = lazy(() => import("@/pages/Team"));
+const OnePager = lazy(() => import("@/pages/OnePager"));
 
 // Lazy loaded pages - Agent Portal (only agents use these)
 const AgentPortalLanding = lazy(() => import("@/pages/agent-portal/AgentPortalLanding"));
@@ -258,6 +260,8 @@ export function AnimatedRoutes() {
         {/* Public Investor Page */}
         <Route path="/investors" element={<LazyPage><Investors /></LazyPage>} />
         <Route path="/pitch-deck" element={<PitchDeck />} />
+        <Route path="/team" element={<LazyPage><Team /></LazyPage>} />
+        <Route path="/one-pager" element={<LazyPage><OnePager /></LazyPage>} />
         
         <Route path="/disclaimer" element={<LazyPage><Disclaimer /></LazyPage>} />
         <Route path="/terms" element={<LazyPage><TermsOfService /></LazyPage>} />
