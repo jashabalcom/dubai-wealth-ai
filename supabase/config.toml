@@ -113,3 +113,6 @@ verify_jwt = false
 
 [functions.process-drip-queue]
 verify_jwt = false
+
+[functions.investor-metrics]
+verify_jwt = false
