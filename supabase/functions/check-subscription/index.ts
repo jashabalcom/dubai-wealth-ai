@@ -12,10 +12,23 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-// Product to tier mapping
-const PRODUCT_TIER_MAP: Record<string, 'investor' | 'elite'> = {
+// Dubai REI Product to tier mapping (correct product IDs)
+const PRODUCT_TIER_MAP: Record<string, 'investor' | 'elite' | 'private'> = {
+  // Dubai REI Products
+  "prod_ThxMtreIVfefZK": "investor",
+  "prod_ThxMsDNaQxY8bp": "elite",
+  "prod_ThxN30jXTwBfoE": "private",
+  // Legacy products (keep for backwards compatibility)
   "prod_TZ38QBXp8kGx7k": "investor",
   "prod_TZ38flxttNDJ5W": "elite",
+};
+
+// Tier hierarchy: higher number = higher access
+const TIER_LEVELS: Record<string, number> = {
+  free: 0,
+  investor: 1,
+  elite: 2,
+  private: 3,
 };
 
 serve(async (req) => {
@@ -94,10 +107,11 @@ serve(async (req) => {
     );
     
     const hasActiveSub = validSubscriptions.length > 0;
-    let tier: 'free' | 'investor' | 'elite' = 'free';
+    let tier: 'free' | 'investor' | 'elite' | 'private' = 'free';
     let subscriptionEnd = null;
     let isTrialing = false;
     let trialEnd = null;
+    let highestTierLevel = 0;
 
     if (hasActiveSub) {
       // Find the highest tier subscription
@@ -105,23 +119,20 @@ serve(async (req) => {
         const productId = subscription.items.data[0].price.product as string;
         const subTier = PRODUCT_TIER_MAP[productId];
         
-        if (subTier === 'elite') {
-          tier = 'elite';
-          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-          isTrialing = subscription.status === 'trialing';
-          if (subscription.trial_end) {
-            trialEnd = new Date(subscription.trial_end * 1000).toISOString();
-          }
-          break;
-        } else if (subTier === 'investor') {
-          if (tier === 'free') {
-            tier = 'investor';
+        if (subTier) {
+          const subTierLevel = TIER_LEVELS[subTier] || 0;
+          
+          if (subTierLevel > highestTierLevel) {
+            highestTierLevel = subTierLevel;
+            tier = subTier;
             subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
             isTrialing = subscription.status === 'trialing';
             if (subscription.trial_end) {
               trialEnd = new Date(subscription.trial_end * 1000).toISOString();
             }
           }
+        } else {
+          logStep("Unknown product ID", { productId });
         }
       }
       logStep("Active/trialing subscription found", { tier, subscriptionEnd, isTrialing, trialEnd });
