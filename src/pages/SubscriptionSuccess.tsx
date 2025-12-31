@@ -12,7 +12,7 @@ export default function SubscriptionSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const tier = searchParams.get('tier') as 'investor' | 'elite' | null;
+  const tier = searchParams.get('tier') as 'investor' | 'elite' | 'private' | null;
   const { checkSubscription } = useSubscription();
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
@@ -31,7 +31,8 @@ export default function SubscriptionSuccess() {
         if (!hasTracked.current && tier) {
           hasTracked.current = true;
           // Use a lower value as fallback since we don't have exact price here
-          trackSubscription(tier, 'monthly', tier === 'elite' ? 149 : 49, false);
+          const fallbackPrice = tier === 'private' ? 149 : tier === 'elite' ? 97 : 29;
+          trackSubscription(tier, 'monthly', fallbackPrice, false);
         }
       }
       setVerifying(false);
@@ -69,8 +70,8 @@ export default function SubscriptionSuccess() {
                 </>
               ) : verified ? (
                 <>
-                  <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle className="w-10 h-10 text-green-500" />
+                  <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-10 h-10 text-emerald-400" />
                   </div>
                   <h1 className="text-3xl font-serif text-foreground mb-4">
                     Welcome to the Club!
