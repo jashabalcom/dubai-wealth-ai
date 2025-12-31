@@ -158,7 +158,7 @@ const Funnel = () => {
                   <ul className="space-y-2">
                     {config.bonuses.map((bonus, index) => (
                       <li key={index} className="flex items-center gap-2">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <Check className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         <span>{bonus}</span>
                       </li>
                     ))}
@@ -180,15 +180,15 @@ const Funnel = () => {
               {/* Trust Signals */}
               <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Check className="w-4 h-4 text-green-500" />
+                  <Check className="w-4 h-4 text-emerald-600" />
                   Cancel anytime
                 </span>
                 <span className="flex items-center gap-1">
-                  <Check className="w-4 h-4 text-green-500" />
+                  <Check className="w-4 h-4 text-emerald-600" />
                   No charge during trial
                 </span>
                 <span className="flex items-center gap-1">
-                  <Check className="w-4 h-4 text-green-500" />
+                  <Check className="w-4 h-4 text-emerald-600" />
                   Full access
                 </span>
               </div>

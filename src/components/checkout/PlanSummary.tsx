@@ -72,7 +72,7 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
               <p className="text-xs text-muted-foreground mt-1">
                 Billed annually ({priceConfig.priceDisplay})
               </p>
-              <p className="text-xs font-medium text-green-400 mt-1">
+              <p className="text-xs font-medium text-emerald-600 mt-1">
                 {priceConfig.savingsDisplay}
               </p>
             </>
@@ -96,7 +96,7 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
           <ul className="space-y-3">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start gap-3">
-                <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <Check className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                 <span className="text-sm text-foreground">{feature}</span>
               </li>
             ))}
@@ -123,7 +123,7 @@ const PlanSummary = ({ tier, billingPeriod = 'monthly', isUpgrade, userEmail }: 
             {!isUpgrade && billingPeriod === 'monthly' && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">14-day trial</span>
-                <span className="text-green-500 font-medium">Free</span>
+                <span className="text-emerald-600 font-medium">Free</span>
               </div>
             )}
             <div className="pt-3 border-t border-border flex justify-between">

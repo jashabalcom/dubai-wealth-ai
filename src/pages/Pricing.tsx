@@ -179,7 +179,7 @@ export default function Pricing() {
                 }`}
               >
                 Annual
-                <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-semibold">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-600/20 text-emerald-600 text-xs font-semibold">
                   2 Months Free
                 </span>
               </button>
@@ -200,7 +200,15 @@ export default function Pricing() {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   className={`relative ${tier.highlighted ? "lg:-mt-4 lg:mb-4" : ""}`}
                 >
-                  {tier.badge && (
+                  {/* Show tier badge OR "Your Plan" badge, not both to avoid overlap */}
+                  {isCurrentPlan(tier.id) ? (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-600 text-white text-xs uppercase tracking-[0.1em] font-sans">
+                        <Check size={12} />
+                        Your Plan
+                      </span>
+                    </div>
+                  ) : tier.badge && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
                       <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs uppercase tracking-[0.1em] font-sans ${
                         isPrivate 
@@ -209,15 +217,6 @@ export default function Pricing() {
                       }`}>
                         {getTierIcon(tier.id)}
                         {tier.badge}
-                      </span>
-                    </div>
-                  )}
-
-                  {isCurrentPlan(tier.id) && (
-                    <div className="absolute -top-4 right-4 z-10">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium border border-green-500/30">
-                        <Crown size={12} />
-                        Your Plan
                       </span>
                     </div>
                   )}
@@ -244,7 +243,7 @@ export default function Pricing() {
                       {'billedAs' in priceInfo && (
                         <div className="mt-2 space-y-1">
                           <p className="text-xs text-muted-foreground">{priceInfo.billedAs} ({priceInfo.fullPrice})</p>
-                          <p className="text-xs font-medium text-green-400">Save {priceInfo.savings}/year</p>
+                          <p className="text-xs font-medium text-emerald-600">Save {priceInfo.savings}/year</p>
                         </div>
                       )}
                       <p className="text-muted-foreground text-xs mt-3 line-clamp-2">{tier.shortDescription || tier.description}</p>
@@ -366,7 +365,7 @@ export default function Pricing() {
                           <div className="text-sm text-foreground/80">{item.feature}</div>
                           <div className="flex justify-center">
                             {item.free ? (
-                              <Check className="w-5 h-5 text-green-500" />
+                              <Check className="w-5 h-5 text-emerald-600" />
                             ) : (
                               <X className="w-5 h-5 text-muted-foreground/30" />
                             )}
