@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
+import { supabase } from "@/integrations/supabase/client";
 import { STRIPE_TIERS, BillingPeriod } from "@/lib/stripe-config";
 import { trackSubscription, trackTrialStart } from "@/lib/analytics";
 
@@ -12,11 +13,24 @@ interface CheckoutFormProps {
   tier: "investor" | "elite";
   billingPeriod?: BillingPeriod;
   isUpgrade: boolean;
-  subscriptionId: string;
+  subscriptionId?: string;
   intentType?: 'setup' | 'payment';
+  // New props for SetupIntent flow
+  setupIntentId?: string;
+  customerId?: string;
+  priceId?: string;
 }
 
-const CheckoutForm = ({ tier, billingPeriod = 'monthly', isUpgrade, subscriptionId, intentType = 'payment' }: CheckoutFormProps) => {
+const CheckoutForm = ({ 
+  tier, 
+  billingPeriod = 'monthly', 
+  isUpgrade, 
+  subscriptionId, 
+  intentType = 'setup',
+  setupIntentId,
+  customerId,
+  priceId,
+}: CheckoutFormProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const navigate = useNavigate();
@@ -42,69 +56,72 @@ const CheckoutForm = ({ tier, billingPeriod = 'monthly', isUpgrade, subscription
     try {
       const successUrl = `${window.location.origin}/subscription-success?tier=${tier}`;
 
-      // For trial subscriptions, use confirmSetup; for immediate charges, use confirmPayment
-      if (intentType === 'setup') {
-        // Setup Intent - collecting payment method for trial (no immediate charge)
-        const { error } = await stripe.confirmSetup({
-          elements,
-          confirmParams: {
-            return_url: successUrl,
-          },
-          redirect: "if_required",
+      // Always use confirmSetup since we're using SetupIntent for all flows now
+      const { error, setupIntent } = await stripe.confirmSetup({
+        elements,
+        confirmParams: {
+          return_url: successUrl,
+        },
+        redirect: "if_required",
+      });
+
+      if (error) {
+        setErrorMessage(error.message || "Setup failed. Please try again.");
+        toast({
+          title: "Setup Failed",
+          description: error.message || "An error occurred during setup.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Setup succeeded - now we need to complete the subscription
+      // For trial subscriptions, the subscription is already created
+      // For non-trial, we need to call complete-subscription
+      
+      if (subscriptionId) {
+        // Trial flow - subscription already exists, just need to refresh status
+        await checkSubscription();
+        trackTrialStart(tier, billingPeriod);
+        
+        toast({
+          title: "Welcome to Dubai Wealth Hub!",
+          description: `Your ${tierConfig.name} trial has started.`,
         });
 
-        if (error) {
-          setErrorMessage(error.message || "Setup failed. Please try again.");
-          toast({
-            title: "Setup Failed",
-            description: error.message || "An error occurred during setup.",
-            variant: "destructive",
-          });
-        } else {
-          // Setup succeeded - trial started
-          await checkSubscription();
-          
-          // Track trial start conversion
-          trackTrialStart(tier, billingPeriod);
-          
-          toast({
-            title: "Welcome to Dubai Wealth Hub!",
-            description: `Your ${tierConfig.name} trial has started. You won't be charged for 14 days.`,
-          });
+        navigate(`/subscription-success?tier=${tier}`);
+      } else if (setupIntentId && customerId && priceId) {
+        // Non-trial flow - need to create the subscription now
+        const { data, error: fnError } = await supabase.functions.invoke(
+          "complete-subscription",
+          {
+            body: { 
+              setupIntentId, 
+              tier, 
+              billingPeriod, 
+              priceId, 
+              customerId 
+            },
+          }
+        );
 
-          navigate(`/subscription-success?tier=${tier}`);
+        if (fnError || data?.error) {
+          throw new Error(data?.error || fnError?.message || "Failed to complete subscription");
         }
+
+        await checkSubscription();
+        trackSubscription(tier, billingPeriod, priceConfig.price, isUpgrade);
+        
+        toast({
+          title: "Welcome to Dubai Wealth Hub!",
+          description: `Your ${tierConfig.name} membership is now active.`,
+        });
+
+        navigate(`/subscription-success?tier=${tier}`);
       } else {
-        // Payment Intent - immediate charge (upgrades or non-trial)
-        const { error, paymentIntent } = await stripe.confirmPayment({
-          elements,
-          confirmParams: {
-            return_url: successUrl,
-          },
-          redirect: "if_required",
-        });
-
-        if (error) {
-          setErrorMessage(error.message || "Payment failed. Please try again.");
-          toast({
-            title: "Payment Failed",
-            description: error.message || "An error occurred during payment.",
-            variant: "destructive",
-          });
-        } else if (paymentIntent && paymentIntent.status === "succeeded") {
-          // Refresh subscription status
-          await checkSubscription();
-          
-          // Track subscription purchase conversion
-          trackSubscription(tier, billingPeriod, priceConfig.price, isUpgrade);
-          
-          toast({
-            title: "Welcome to Dubai Wealth Hub!",
-            description: `Your ${tierConfig.name} membership is now active.`,
-          });
-
-          navigate(`/subscription-success?tier=${tier}`);
-        }
+        // Fallback - just check subscription and navigate
+        await checkSubscription();
+        navigate(`/subscription-success?tier=${tier}`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred";
@@ -150,16 +167,14 @@ const CheckoutForm = ({ tier, billingPeriod = 'monthly', isUpgrade, subscription
           </>
         ) : (
           <>
-            {isUpgrade ? "Upgrade Now" : billingPeriod === 'annual' ? "Subscribe Now" : "Start Free Trial"} — {priceConfig.priceDisplay}{priceConfig.period}
+            {isUpgrade ? "Upgrade Now" : "Subscribe Now"} — {priceConfig.priceDisplay}{priceConfig.period}
           </>
         )}
       </Button>
 
-      {!isUpgrade && billingPeriod === 'monthly' && (
-        <p className="text-xs text-muted-foreground text-center mt-4">
-          Your 14-day free trial starts today. You won't be charged until {new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
-        </p>
-      )}
+      <p className="text-xs text-muted-foreground text-center mt-4">
+        You will be charged {priceConfig.priceDisplay} {billingPeriod === 'annual' ? 'per year' : 'per month'}.
+      </p>
     </form>
   );
 };

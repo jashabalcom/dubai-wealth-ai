@@ -26,7 +26,10 @@ const Checkout = () => {
 
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
-  const [intentType, setIntentType] = useState<'setup' | 'payment'>('payment');
+  const [setupIntentId, setSetupIntentId] = useState<string | null>(null);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [priceId, setPriceId] = useState<string | null>(null);
+  const [intentType, setIntentType] = useState<'setup' | 'payment'>('setup');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,8 +88,11 @@ const Checkout = () => {
       if (data.error) throw new Error(data.error);
 
       setClientSecret(data.clientSecret);
-      setSubscriptionId(data.subscriptionId);
-      setIntentType(data.intentType || 'payment');
+      setSubscriptionId(data.subscriptionId || null);
+      setSetupIntentId(data.setupIntentId || null);
+      setCustomerId(data.customerId || null);
+      setPriceId(data.priceId || null);
+      setIntentType(data.intentType || 'setup');
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to initialize checkout";
       setError(message);
@@ -238,8 +244,7 @@ const Checkout = () => {
                 {isUpgrade ? "Upgrade to" : "Join"} {tierConfig.name}
               </h1>
               <p className="text-muted-foreground max-w-lg mx-auto">
-                Complete your payment details below to {isUpgrade ? "upgrade" : "start"} your membership
-                {!isUpgrade && billingPeriod === 'monthly' && " with a 14-day free trial"}.
+                Complete your payment details below to {isUpgrade ? "upgrade" : "activate"} your membership.
               </p>
             </div>
 
@@ -261,8 +266,11 @@ const Checkout = () => {
                       tier={validTier as "investor" | "elite"}
                       billingPeriod={billingPeriod}
                       isUpgrade={isUpgrade}
-                      subscriptionId={subscriptionId!}
+                      subscriptionId={subscriptionId || undefined}
                       intentType={intentType}
+                      setupIntentId={setupIntentId || undefined}
+                      customerId={customerId || undefined}
+                      priceId={priceId || undefined}
                     />
                   </Elements>
 

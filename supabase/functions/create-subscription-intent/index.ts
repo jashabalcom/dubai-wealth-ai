@@ -187,125 +187,96 @@ serve(async (req) => {
     
     logStep("Trial decision", { hasTrial, trialDays, hadExistingSubscription: hasExistingSubscription, existingTier, trialSource });
 
-    // Create subscription - for trials, we use pending_setup_intent; for immediate charges, payment_intent
-    // NOTE: We remove payment_method_types to allow Stripe to automatically enable all payment methods
-    // including Apple Pay, Google Pay, and Link based on customer's device/browser
-    const subscription = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: priceId }],
-      payment_behavior: "default_incomplete",
-      payment_settings: { 
-        save_default_payment_method: "on_subscription",
-        // Removed payment_method_types to allow all automatic payment methods
-      },
-      expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
-      trial_period_days: hasTrial && trialDays > 0 ? trialDays : undefined,
-      metadata: {
-        tier,
-        billing_period: billingPeriod,
-        supabase_user_id: user.id,
-        upgraded_from: existingTier || undefined,
-        trial_source: trialSource || undefined,
-      },
-    });
+    // NEW APPROACH: For non-trial subscriptions, create a SetupIntent first
+    // This allows us to collect the payment method BEFORE creating the subscription
+    // which solves the "PaymentIntent is null" problem with default_incomplete
+    
+    if (hasTrial && trialDays > 0) {
+      // TRIAL FLOW: Create subscription with trial, use pending_setup_intent
+      logStep("Creating trial subscription with pending_setup_intent");
+      
+      const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: priceId }],
+        payment_behavior: "default_incomplete",
+        payment_settings: { 
+          save_default_payment_method: "on_subscription",
+        },
+        expand: ["pending_setup_intent"],
+        trial_period_days: trialDays,
+        metadata: {
+          tier,
+          billing_period: billingPeriod,
+          supabase_user_id: user.id,
+          upgraded_from: existingTier || undefined,
+          trial_source: trialSource || undefined,
+        },
+      });
 
-    logStep("Created subscription", { 
-      subscriptionId: subscription.id, 
-      status: subscription.status,
-      hasPendingSetupIntent: !!subscription.pending_setup_intent,
-      hasLatestInvoice: !!subscription.latest_invoice,
-      trialDays
-    });
-
-    let clientSecret: string | null = null;
-    let intentType: 'setup' | 'payment' = 'payment';
-
-    // For trial subscriptions, Stripe creates a pending_setup_intent to collect payment method
-    if (subscription.pending_setup_intent) {
       const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent;
-      clientSecret = setupIntent.client_secret;
-      intentType = 'setup';
-      logStep("Using setup intent for trial", { setupIntentId: setupIntent.id });
-    } else if (subscription.latest_invoice) {
-      // For immediate charges (upgrades or non-trial), use payment intent from invoice
-      const invoice = subscription.latest_invoice as Stripe.Invoice;
-      
-      logStep("Invoice details", { 
-        invoiceId: invoice.id,
-        paymentIntentType: typeof invoice.payment_intent,
-        paymentIntentValue: invoice.payment_intent 
-      });
-      
-      // Handle payment_intent - it can be string, object, or null
-      if (invoice.payment_intent) {
-        if (typeof invoice.payment_intent === 'string') {
-          // Payment intent is an ID string, need to fetch it
-          const paymentIntent = await stripe.paymentIntents.retrieve(invoice.payment_intent);
-          if (paymentIntent?.client_secret) {
-            clientSecret = paymentIntent.client_secret;
-            intentType = 'payment';
-            logStep("Fetched payment intent by ID", { paymentIntentId: paymentIntent.id });
-          }
-        } else {
-          // Payment intent is already expanded as an object
-          const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
-          if (paymentIntent?.client_secret) {
-            clientSecret = paymentIntent.client_secret;
-            intentType = 'payment';
-            logStep("Using expanded payment intent", { paymentIntentId: paymentIntent.id });
-          }
-        }
-      } else {
-        // payment_intent is null - need to fetch the invoice with expansion
-        logStep("Payment intent not on invoice, fetching invoice separately");
-        const fullInvoice = await stripe.invoices.retrieve(invoice.id, {
-          expand: ['payment_intent'],
-        });
-        
-        if (fullInvoice.payment_intent) {
-          if (typeof fullInvoice.payment_intent === 'string') {
-            const paymentIntent = await stripe.paymentIntents.retrieve(fullInvoice.payment_intent);
-            if (paymentIntent?.client_secret) {
-              clientSecret = paymentIntent.client_secret;
-              intentType = 'payment';
-              logStep("Fetched payment intent from refetched invoice", { paymentIntentId: paymentIntent.id });
-            }
-          } else {
-            const paymentIntent = fullInvoice.payment_intent as Stripe.PaymentIntent;
-            if (paymentIntent?.client_secret) {
-              clientSecret = paymentIntent.client_secret;
-              intentType = 'payment';
-              logStep("Using payment intent from refetched invoice", { paymentIntentId: paymentIntent.id });
-            }
-          }
-        }
+      if (!setupIntent?.client_secret) {
+        throw new Error("Failed to create setup intent for trial subscription");
       }
-    }
 
-    if (!clientSecret) {
-      logStep("ERROR: No client secret obtained", { 
-        subscriptionStatus: subscription.status,
-        pendingSetupIntent: !!subscription.pending_setup_intent,
-        latestInvoice: !!subscription.latest_invoice,
-        latestInvoiceId: subscription.latest_invoice ? (subscription.latest_invoice as Stripe.Invoice).id : null
+      logStep("Trial subscription created", { 
+        subscriptionId: subscription.id, 
+        setupIntentId: setupIntent.id,
+        trialDays 
       });
-      throw new Error("Failed to get payment intent client secret. Please try again.");
+
+      return new Response(JSON.stringify({
+        clientSecret: setupIntent.client_secret,
+        subscriptionId: subscription.id,
+        tierName: TIER_NAMES[tier],
+        trialDays,
+        intentType: 'setup',
+        upgradedFrom: existingTier,
+        billingPeriod,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } else {
+      // NON-TRIAL FLOW: Create a SetupIntent first, subscription created after payment method is collected
+      logStep("Creating SetupIntent for non-trial subscription");
+      
+      const setupIntent = await stripe.setupIntents.create({
+        customer: customerId,
+        automatic_payment_methods: { enabled: true },
+        metadata: {
+          tier,
+          billing_period: billingPeriod,
+          supabase_user_id: user.id,
+          upgraded_from: existingTier || undefined,
+          price_id: priceId,
+        },
+      });
+
+      if (!setupIntent.client_secret) {
+        throw new Error("Failed to create setup intent");
+      }
+
+      logStep("SetupIntent created for non-trial", { 
+        setupIntentId: setupIntent.id,
+        customerId 
+      });
+
+      return new Response(JSON.stringify({
+        clientSecret: setupIntent.client_secret,
+        setupIntentId: setupIntent.id,
+        customerId,
+        tierName: TIER_NAMES[tier],
+        trialDays: 0,
+        intentType: 'setup',
+        upgradedFrom: existingTier,
+        billingPeriod,
+        tier,
+        priceId,
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
-
-    logStep("Returning client secret", { intentType, subscriptionId: subscription.id, trialDays, billingPeriod });
-
-    return new Response(JSON.stringify({
-      clientSecret,
-      subscriptionId: subscription.id,
-      tierName: TIER_NAMES[tier],
-      trialDays: hasTrial ? trialDays : 0,
-      intentType,
-      upgradedFrom: existingTier,
-      billingPeriod,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
