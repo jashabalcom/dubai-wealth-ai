@@ -12,18 +12,33 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-SUBSCRIPTION-INTENT] ${step}${detailsStr}`);
 };
 
-// Dubai REI Price ID mapping - monthly prices only for subscription intent
-const TIER_PRICES: Record<string, string> = {
-  investor: "price_1SkXRkHw4VrnO885MoTLD6iC",
-  elite: "price_1SkXS8Hw4VrnO885hyP39hIh",
-  private: "price_1SkXSWHw4VrnO885DzNEfjAu",
+// Dubai REI Price ID mapping - includes both monthly AND annual prices
+const TIER_PRICES: Record<string, { monthly: string; annual: string }> = {
+  investor: {
+    monthly: "price_1SkXRkHw4VrnO885MoTLD6iC",
+    annual: "price_1SkXRwHw4VrnO885DWKPmskP",
+  },
+  elite: {
+    monthly: "price_1SkXS8Hw4VrnO885hyP39hIh",
+    annual: "price_1SkXSKHw4VrnO885KvdKUvGE",
+  },
+  private: {
+    monthly: "price_1SkXSWHw4VrnO885DzNEfjAu",
+    annual: "price_1SkXShHw4VrnO885j5BkoDu4",
+  },
 };
 
 // Reverse lookup: price ID to tier
 const PRICE_TO_TIER: Record<string, string> = {
+  // Investor
   "price_1SkXRkHw4VrnO885MoTLD6iC": "investor",
+  "price_1SkXRwHw4VrnO885DWKPmskP": "investor",
+  // Elite
   "price_1SkXS8Hw4VrnO885hyP39hIh": "elite",
+  "price_1SkXSKHw4VrnO885KvdKUvGE": "elite",
+  // Private
   "price_1SkXSWHw4VrnO885DzNEfjAu": "private",
+  "price_1SkXShHw4VrnO885j5BkoDu4": "private",
 };
 
 const TIER_NAMES: Record<string, string> = {
@@ -74,11 +89,14 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { tier, isUpgrade: explicitUpgrade, trialSource, trialDays: customTrialDays } = await req.json();
+    const { tier, billingPeriod = 'monthly', isUpgrade: explicitUpgrade, trialSource, trialDays: customTrialDays } = await req.json();
     if (!tier || !TIER_PRICES[tier]) {
       throw new Error(`Invalid tier: ${tier}`);
     }
-    logStep("Processing tier", { tier, explicitUpgrade, trialSource, customTrialDays });
+    
+    // Get the correct price ID based on billing period
+    const priceId = TIER_PRICES[tier][billingPeriod === 'annual' ? 'annual' : 'monthly'];
+    logStep("Processing tier", { tier, billingPeriod, priceId, explicitUpgrade, trialSource, customTrialDays });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -170,18 +188,21 @@ serve(async (req) => {
     logStep("Trial decision", { hasTrial, trialDays, hadExistingSubscription: hasExistingSubscription, existingTier, trialSource });
 
     // Create subscription - for trials, we use pending_setup_intent; for immediate charges, payment_intent
+    // NOTE: We remove payment_method_types to allow Stripe to automatically enable all payment methods
+    // including Apple Pay, Google Pay, and Link based on customer's device/browser
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
-      items: [{ price: TIER_PRICES[tier] }],
+      items: [{ price: priceId }],
       payment_behavior: "default_incomplete",
       payment_settings: { 
         save_default_payment_method: "on_subscription",
-        payment_method_types: ['card'],
+        // Removed payment_method_types to allow all automatic payment methods
       },
       expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
       trial_period_days: hasTrial && trialDays > 0 ? trialDays : undefined,
       metadata: {
         tier,
+        billing_period: billingPeriod,
         supabase_user_id: user.id,
         upgraded_from: existingTier || undefined,
         trial_source: trialSource || undefined,
@@ -206,13 +227,26 @@ serve(async (req) => {
       intentType = 'setup';
       logStep("Using setup intent for trial", { setupIntentId: setupIntent.id });
     } else if (subscription.latest_invoice) {
-      // For immediate charges (upgrades), use payment intent from invoice
+      // For immediate charges (upgrades or non-trial), use payment intent from invoice
       const invoice = subscription.latest_invoice as Stripe.Invoice;
-      const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
-      if (paymentIntent?.client_secret) {
-        clientSecret = paymentIntent.client_secret;
-        intentType = 'payment';
-        logStep("Using payment intent", { paymentIntentId: paymentIntent.id });
+      
+      // Handle both string and object payment_intent
+      if (typeof invoice.payment_intent === 'string') {
+        // Payment intent is an ID string, need to fetch it
+        const paymentIntent = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+        if (paymentIntent?.client_secret) {
+          clientSecret = paymentIntent.client_secret;
+          intentType = 'payment';
+          logStep("Fetched payment intent by ID", { paymentIntentId: paymentIntent.id });
+        }
+      } else if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
+        // Payment intent is already expanded
+        const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+        if (paymentIntent?.client_secret) {
+          clientSecret = paymentIntent.client_secret;
+          intentType = 'payment';
+          logStep("Using expanded payment intent", { paymentIntentId: paymentIntent.id });
+        }
       }
     }
 
@@ -220,12 +254,13 @@ serve(async (req) => {
       logStep("ERROR: No client secret obtained", { 
         subscriptionStatus: subscription.status,
         pendingSetupIntent: !!subscription.pending_setup_intent,
-        latestInvoice: !!subscription.latest_invoice 
+        latestInvoice: !!subscription.latest_invoice,
+        latestInvoicePaymentIntent: subscription.latest_invoice ? typeof (subscription.latest_invoice as any).payment_intent : null
       });
       throw new Error("Failed to get payment intent client secret");
     }
 
-    logStep("Returning client secret", { intentType, subscriptionId: subscription.id, trialDays });
+    logStep("Returning client secret", { intentType, subscriptionId: subscription.id, trialDays, billingPeriod });
 
     return new Response(JSON.stringify({
       clientSecret,
@@ -234,6 +269,7 @@ serve(async (req) => {
       trialDays: hasTrial ? trialDays : 0,
       intentType,
       upgradedFrom: existingTier,
+      billingPeriod,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
