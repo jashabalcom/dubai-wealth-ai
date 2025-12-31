@@ -18,11 +18,128 @@ const logStep = (step: string, details?: unknown) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Map Stripe price IDs to membership tiers
-const PRICE_TO_TIER: Record<string, 'investor' | 'elite'> = {
-  'price_1RVxhnKSaqiJptMK97zzpD1y': 'investor',
-  'price_1RVxhxKSaqiJptMKcWAPF2BM': 'elite',
+// Map Stripe price IDs to membership tiers - Dubai REI products
+const PRICE_TO_TIER: Record<string, { tier: 'investor' | 'elite' | 'private'; period: 'monthly' | 'annual'; amount: number }> = {
+  // Investor tier
+  'price_1SkXRkHw4VrnO885MoTLD6iC': { tier: 'investor', period: 'monthly', amount: 29 },
+  'price_1SkXRwHw4VrnO885DWKPmskP': { tier: 'investor', period: 'annual', amount: 290 },
+  // Elite tier
+  'price_1SkXS8Hw4VrnO885hyP39hIh': { tier: 'elite', period: 'monthly', amount: 97 },
+  'price_1SkXSKHw4VrnO885KvdKUvGE': { tier: 'elite', period: 'annual', amount: 970 },
+  // Private tier
+  'price_1SkXSWHw4VrnO885DzNEfjAu': { tier: 'private', period: 'monthly', amount: 149 },
+  'price_1SkXShHw4VrnO885j5BkoDu4': { tier: 'private', period: 'annual', amount: 1500 },
 };
+
+// Helper to send admin notification
+async function sendAdminNotification(type: 'new_subscription' | 'cancellation' | 'payment_failed', details: {
+  email: string;
+  name?: string;
+  tier?: string;
+  amount?: number;
+}) {
+  const adminEmail = Deno.env.get("ADMIN_INQUIRY_EMAIL");
+  const resendKey = Deno.env.get("RESEND_API_KEY");
+  
+  if (!adminEmail || !resendKey) {
+    logStep("Admin notification skipped - missing config", { adminEmail: !!adminEmail, resendKey: !!resendKey });
+    return;
+  }
+
+  let subject = '';
+  let body = '';
+  
+  switch (type) {
+    case 'new_subscription':
+      subject = `🎉 New Subscriber: ${details.tier} - ${details.email}`;
+      body = `
+        <h2>New Subscription!</h2>
+        <p><strong>Email:</strong> ${details.email}</p>
+        <p><strong>Name:</strong> ${details.name || 'Not provided'}</p>
+        <p><strong>Tier:</strong> ${details.tier}</p>
+        <p><strong>Amount:</strong> $${details.amount}</p>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+      `;
+      break;
+    case 'cancellation':
+      subject = `⚠️ Cancellation: ${details.tier} - ${details.email}`;
+      body = `
+        <h2>Subscription Cancelled</h2>
+        <p><strong>Email:</strong> ${details.email}</p>
+        <p><strong>Name:</strong> ${details.name || 'Not provided'}</p>
+        <p><strong>Previous Tier:</strong> ${details.tier}</p>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+      `;
+      break;
+    case 'payment_failed':
+      subject = `🚨 Payment Failed: ${details.email}`;
+      body = `
+        <h2>Payment Failed</h2>
+        <p><strong>Email:</strong> ${details.email}</p>
+        <p><strong>Name:</strong> ${details.name || 'Not provided'}</p>
+        <p><strong>Tier:</strong> ${details.tier}</p>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+      `;
+      break;
+  }
+
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendKey}`,
+      },
+      body: JSON.stringify({
+        from: "Dubai Wealth Hub <notifications@dubairealestateinvestor.com>",
+        to: [adminEmail],
+        subject,
+        html: body,
+      }),
+    });
+    
+    if (res.ok) {
+      logStep("Admin notification sent", { type, email: details.email });
+    } else {
+      const err = await res.text();
+      logStep("Admin notification failed", { error: err });
+    }
+  } catch (error) {
+    logStep("Admin notification error", { error: String(error) });
+  }
+}
+
+// Helper to send subscription confirmation email
+async function sendConfirmationEmail(profile: { email: string; full_name?: string }, tierInfo: { tier: string; amount: number; period: string }, nextBillingDate: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  
+  if (!supabaseUrl || !anonKey || !profile.email) return;
+
+  const amountDisplay = tierInfo.period === 'annual' 
+    ? `$${tierInfo.amount}/year` 
+    : `$${tierInfo.amount}/month`;
+
+  try {
+    await fetch(`${supabaseUrl}/functions/v1/send-subscription-confirmed-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({
+        email: profile.email,
+        name: profile.full_name || "Member",
+        tier: tierInfo.tier,
+        amount: amountDisplay,
+        nextBillingDate,
+      }),
+    });
+    logStep("Confirmation email sent", { email: profile.email });
+  } catch (error) {
+    logStep("Confirmation email error", { error: String(error) });
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -40,7 +157,7 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
 
     if (!signature || !endpointSecret) {
-      logStep("Missing signature or endpoint secret");
+      logStep("Missing signature or endpoint secret", { hasSignature: !!signature, hasSecret: !!endpointSecret });
       return new Response(JSON.stringify({ error: "Missing signature" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -76,23 +193,54 @@ serve(async (req) => {
 
         if (profile) {
           const priceId = subscription.items.data[0]?.price?.id;
-          const tier = priceId ? PRICE_TO_TIER[priceId] || 'investor' : 'investor';
+          const tierInfo = priceId ? PRICE_TO_TIER[priceId] : null;
+          const tier = tierInfo?.tier || 'investor';
 
           let membershipStatus: 'active' | 'trialing' | 'past_due' | 'cancelled' = 'active';
           if (subscription.status === 'trialing') membershipStatus = 'trialing';
           else if (subscription.status === 'past_due') membershipStatus = 'past_due';
           else if (subscription.status === 'canceled' || subscription.status === 'unpaid') membershipStatus = 'cancelled';
 
+          const renewsAt = new Date(subscription.current_period_end * 1000).toISOString();
+
           await supabase
             .from("profiles")
             .update({
               membership_tier: tier,
               membership_status: membershipStatus,
-              membership_renews_at: new Date(subscription.current_period_end * 1000).toISOString(),
+              membership_renews_at: renewsAt,
             })
             .eq("id", profile.id);
 
-          logStep("Profile updated", { userId: profile.id, tier, status: membershipStatus });
+          logStep("Profile updated", { userId: profile.id, tier, status: membershipStatus, priceId });
+
+          // Send confirmation email for new subscriptions or when status becomes active
+          if (event.type === "customer.subscription.created" || 
+              (event.type === "customer.subscription.updated" && subscription.status === 'active')) {
+            const nextBillingDate = new Date(subscription.current_period_end * 1000).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            
+            if (tierInfo && profile.email) {
+              await sendConfirmationEmail(
+                { email: profile.email, full_name: profile.full_name },
+                { tier: tierInfo.tier, amount: tierInfo.amount, period: tierInfo.period },
+                nextBillingDate
+              );
+            }
+          }
+
+          // Send admin notification for new subscriptions
+          if (event.type === "customer.subscription.created" && tierInfo && profile.email) {
+            await sendAdminNotification('new_subscription', {
+              email: profile.email,
+              name: profile.full_name,
+              tier: tierInfo.tier,
+              amount: tierInfo.amount,
+            });
+          }
         }
         break;
       }
@@ -105,11 +253,13 @@ serve(async (req) => {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("id")
+          .select("id, email, full_name, membership_tier")
           .eq("stripe_customer_id", customerId)
           .maybeSingle();
 
         if (profile) {
+          const previousTier = profile.membership_tier;
+          
           await supabase
             .from("profiles")
             .update({
@@ -120,6 +270,15 @@ serve(async (req) => {
             .eq("id", profile.id);
 
           logStep("Profile downgraded", { userId: profile.id });
+
+          // Send admin notification for cancellation
+          if (profile.email) {
+            await sendAdminNotification('cancellation', {
+              email: profile.email,
+              name: profile.full_name,
+              tier: previousTier,
+            });
+          }
         }
         break;
       }
@@ -144,9 +303,10 @@ serve(async (req) => {
               .eq("id", profile.id);
 
             if (profile.email) {
-              const tier = profile.membership_tier as 'investor' | 'elite';
-              const amount = tier === 'elite' ? '$97' : '$29';
+              const tier = profile.membership_tier as 'investor' | 'elite' | 'private';
+              const amount = tier === 'private' ? '$149' : tier === 'elite' ? '$97' : '$29';
 
+              // Send user notification
               await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-payment-failed-email`, {
                 method: "POST",
                 headers: {
@@ -161,6 +321,13 @@ serve(async (req) => {
                 }),
               });
               logStep("Payment failed email sent", { email: profile.email });
+
+              // Send admin notification
+              await sendAdminNotification('payment_failed', {
+                email: profile.email,
+                name: profile.full_name,
+                tier,
+              });
             }
           }
         }

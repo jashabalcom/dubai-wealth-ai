@@ -10,18 +10,23 @@ const corsHeaders = {
 interface SubscriptionConfirmedRequest {
   email: string;
   name: string;
-  tier: "investor" | "elite";
+  tier: "investor" | "elite" | "private";
   amount: string;
   nextBillingDate: string;
   siteUrl?: string;
 }
 
 const getEmailHtml = (name: string, tier: string, amount: string, nextBillingDate: string, siteUrl: string) => {
+  const isPrivate = tier === "private";
   const isElite = tier === "elite";
-  const tierName = isElite ? "Dubai Elite" : "Dubai Investor";
+  const tierName = isPrivate ? "Dubai Private" : isElite ? "Dubai Elite" : "Dubai Investor";
   
-  const eliteLink = isElite ? `
+  const premiumLinks = (isElite || isPrivate) ? `
     <p style="color: #EAE8E3; font-size: 15px; margin: 0 0 12px 0;">🌟 <a href="${siteUrl}/golden-visa" style="color: #CBB89E; text-decoration: underline;">Golden Visa Wizard</a></p>
+  ` : "";
+  
+  const privateLinks = isPrivate ? `
+    <p style="color: #EAE8E3; font-size: 15px; margin: 0 0 12px 0;">👤 <a href="${siteUrl}/concierge" style="color: #CBB89E; text-decoration: underline;">Private Concierge</a></p>
   ` : "";
 
   return `
@@ -48,7 +53,7 @@ const getEmailHtml = (name: string, tier: string, amount: string, nextBillingDat
     <h1 style="color: #FFFFFF; font-size: 28px; font-weight: 700; text-align: center; margin: 0 0 16px 0;">Welcome to ${tierName}, ${name}!</h1>
     
     <p style="color: #EAE8E3; font-size: 16px; line-height: 1.6; text-align: center; margin: 0 0 32px 0;">
-      Thank you for your subscription. You now have full access to all ${isElite ? "Elite" : "Investor"} features.
+      Thank you for your subscription. You now have full access to all ${isPrivate ? "Private" : isElite ? "Elite" : "Investor"} features.
     </p>
     
     <!-- Receipt Card -->
@@ -73,7 +78,8 @@ const getEmailHtml = (name: string, tier: string, amount: string, nextBillingDat
       <p style="color: #EAE8E3; font-size: 15px; margin: 0 0 12px 0;">🧮 <a href="${siteUrl}/tools" style="color: #CBB89E; text-decoration: underline;">Investment Calculators</a></p>
       <p style="color: #EAE8E3; font-size: 15px; margin: 0 0 12px 0;">🏠 <a href="${siteUrl}/properties" style="color: #CBB89E; text-decoration: underline;">Browse Properties</a></p>
       <p style="color: #EAE8E3; font-size: 15px; margin: 0 0 12px 0;">💬 <a href="${siteUrl}/community" style="color: #CBB89E; text-decoration: underline;">Join the Community</a></p>
-      ${eliteLink}
+      ${premiumLinks}
+      ${privateLinks}
     </div>
     
     <!-- CTA -->
