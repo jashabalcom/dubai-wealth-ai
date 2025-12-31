@@ -12,32 +12,48 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-// Price ID mapping - monthly and annual
+// Dubai REI Price ID mapping - monthly and annual
 const TIER_PRICES: Record<string, { monthly: string; annual: string }> = {
   investor: {
-    monthly: "price_1Sbv2KHVQx2jO318h20jYHWa",
-    annual: "price_1ShQ9DHVQx2jO318EopokNIq",
+    monthly: "price_1SkXRkHw4VrnO885MoTLD6iC",
+    annual: "price_1SkXRwHw4VrnO885DWKPmskP",
   },
   elite: {
-    monthly: "price_1Sbv2UHVQx2jO318S54njLC4",
-    annual: "price_1ShQ9OHVQx2jO318x9l7kYEV",
+    monthly: "price_1SkXS8Hw4VrnO885hyP39hIh",
+    annual: "price_1SkXSKHw4VrnO885KvdKUvGE",
+  },
+  private: {
+    monthly: "price_1SkXSWHw4VrnO885DzNEfjAu",
+    annual: "price_1SkXShHw4VrnO885j5BkoDu4",
   },
 };
 
 // All valid price IDs for lookup
 const ALL_PRICE_IDS = [
-  "price_1Sbv2KHVQx2jO318h20jYHWa", // investor monthly
-  "price_1ShQ9DHVQx2jO318EopokNIq", // investor annual
-  "price_1Sbv2UHVQx2jO318S54njLC4", // elite monthly
-  "price_1ShQ9OHVQx2jO318x9l7kYEV", // elite annual
+  "price_1SkXRkHw4VrnO885MoTLD6iC", // investor monthly
+  "price_1SkXRwHw4VrnO885DWKPmskP", // investor annual
+  "price_1SkXS8Hw4VrnO885hyP39hIh", // elite monthly
+  "price_1SkXSKHw4VrnO885KvdKUvGE", // elite annual
+  "price_1SkXSWHw4VrnO885DzNEfjAu", // private monthly
+  "price_1SkXShHw4VrnO885j5BkoDu4", // private annual
 ];
 
 // Reverse lookup: price ID to tier
 const PRICE_TO_TIER: Record<string, string> = {
-  "price_1Sbv2KHVQx2jO318h20jYHWa": "investor",
-  "price_1ShQ9DHVQx2jO318EopokNIq": "investor",
-  "price_1Sbv2UHVQx2jO318S54njLC4": "elite",
-  "price_1ShQ9OHVQx2jO318x9l7kYEV": "elite",
+  "price_1SkXRkHw4VrnO885MoTLD6iC": "investor",
+  "price_1SkXRwHw4VrnO885DWKPmskP": "investor",
+  "price_1SkXS8Hw4VrnO885hyP39hIh": "elite",
+  "price_1SkXSKHw4VrnO885KvdKUvGE": "elite",
+  "price_1SkXSWHw4VrnO885DzNEfjAu": "private",
+  "price_1SkXShHw4VrnO885j5BkoDu4": "private",
+};
+
+// Default trial days per source (can be overridden by frontend)
+const DEFAULT_TRIAL_DAYS: Record<string, number> = {
+  'webinar': 7,
+  'lead-magnet': 14,
+  'partner': 30,
+  'special-offer': 14,
 };
 
 // Helper to get current tier from subscription
@@ -63,8 +79,8 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     
-    const { priceId, tier, billingPeriod = 'monthly', trialSource } = await req.json();
-    logStep("Received request", { priceId, tier, billingPeriod, trialSource });
+    const { priceId, tier, billingPeriod = 'monthly', trialSource, trialDays: customTrialDays } = await req.json();
+    logStep("Received request", { priceId, tier, billingPeriod, trialSource, customTrialDays });
 
     // Validate tier
     if (!tier || !TIER_PRICES[tier]) {
@@ -170,10 +186,21 @@ serve(async (req) => {
     
     // Trial decision: Only apply trial if trialSource is provided (webinar, lead-magnet, partner, etc.)
     // Direct checkout from pricing page = no trial (trialSource will be undefined)
-    const validTrialSources = ['webinar', 'lead-magnet', 'partner', 'special-offer'];
+    const validTrialSources = Object.keys(DEFAULT_TRIAL_DAYS);
     const isValidTrialSource = trialSource && validTrialSources.includes(trialSource);
     const hasTrial = !hasExistingSubscription && billingPeriod === 'monthly' && isValidTrialSource;
-    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier, billingPeriod, trialSource, isValidTrialSource });
+    
+    // Determine trial days: custom value from frontend (if valid) or default for source
+    let trialDays = 0;
+    if (hasTrial && trialSource) {
+      if (customTrialDays && typeof customTrialDays === 'number' && customTrialDays >= 1 && customTrialDays <= 30) {
+        trialDays = customTrialDays;
+      } else {
+        trialDays = DEFAULT_TRIAL_DAYS[trialSource] || 14;
+      }
+    }
+    
+    logStep("Trial decision", { hasTrial, trialDays, hadExistingSubscription: hasExistingSubscription, existingTier, billingPeriod, trialSource, isValidTrialSource });
 
     // Create checkout session with smart trial handling
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
@@ -192,20 +219,22 @@ serve(async (req) => {
         tier: tier,
         billing_period: billingPeriod,
         upgraded_from: existingTier || '',
+        trial_source: trialSource || '',
       },
     };
 
     // Add trial period only for new monthly subscribers (not upgrades, not annual)
-    if (hasTrial) {
+    if (hasTrial && trialDays > 0) {
       sessionConfig.subscription_data = {
-        trial_period_days: 14,
+        trial_period_days: trialDays,
         metadata: {
           tier,
           billing_period: billingPeriod,
           supabase_user_id: user.id,
+          trial_source: trialSource || '',
         },
       };
-      logStep("Adding 14-day trial period");
+      logStep(`Adding ${trialDays}-day trial period from source: ${trialSource}`);
     } else {
       sessionConfig.subscription_data = {
         metadata: {
@@ -224,6 +253,7 @@ serve(async (req) => {
       sessionId: session.id, 
       url: session.url,
       hasTrial,
+      trialDays,
       upgradedFrom: existingTier,
       billingPeriod
     });

@@ -11,6 +11,11 @@ interface SubscriptionStatus {
   trial_end: string | null;
 }
 
+export interface FunnelOptions {
+  source: string;
+  trialDays?: number;
+}
+
 export function useSubscription() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -34,7 +39,7 @@ export function useSubscription() {
   const startCheckout = useCallback(async (
     tier: 'investor' | 'elite' | 'private', 
     billingPeriod: BillingPeriod = 'monthly',
-    trialSource?: string // Only pass this from special funnels (webinar, lead-magnet, partner, special-offer)
+    funnelOptions?: FunnelOptions
   ) => {
     setLoading(true);
     
@@ -49,14 +54,21 @@ export function useSubscription() {
         return;
       }
       
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { 
-          priceId: priceConfig.price_id,
-          tier: tier,
-          billingPeriod: billingPeriod,
-          ...(trialSource && { trialSource }) // Only include if provided (funnel-exclusive)
+      const body: Record<string, any> = { 
+        priceId: priceConfig.price_id,
+        tier: tier,
+        billingPeriod: billingPeriod,
+      };
+      
+      // Add funnel options if provided
+      if (funnelOptions?.source) {
+        body.trialSource = funnelOptions.source;
+        if (funnelOptions.trialDays) {
+          body.trialDays = funnelOptions.trialDays;
         }
-      });
+      }
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', { body });
 
       if (error) {
         throw new Error(error.message);

@@ -12,21 +12,32 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-SUBSCRIPTION-INTENT] ${step}${detailsStr}`);
 };
 
-// Price ID mapping
+// Dubai REI Price ID mapping - monthly prices only for subscription intent
 const TIER_PRICES: Record<string, string> = {
-  investor: "price_1Sbv2KHVQx2jO318h20jYHWa",
-  elite: "price_1Sbv2UHVQx2jO318S54njLC4",
+  investor: "price_1SkXRkHw4VrnO885MoTLD6iC",
+  elite: "price_1SkXS8Hw4VrnO885hyP39hIh",
+  private: "price_1SkXSWHw4VrnO885DzNEfjAu",
 };
 
 // Reverse lookup: price ID to tier
 const PRICE_TO_TIER: Record<string, string> = {
-  "price_1Sbv2KHVQx2jO318h20jYHWa": "investor",
-  "price_1Sbv2UHVQx2jO318S54njLC4": "elite",
+  "price_1SkXRkHw4VrnO885MoTLD6iC": "investor",
+  "price_1SkXS8Hw4VrnO885hyP39hIh": "elite",
+  "price_1SkXSWHw4VrnO885DzNEfjAu": "private",
 };
 
 const TIER_NAMES: Record<string, string> = {
   investor: "Dubai Investor",
   elite: "Dubai Elite Investor",
+  private: "Dubai Private",
+};
+
+// Default trial days per source
+const DEFAULT_TRIAL_DAYS: Record<string, number> = {
+  'webinar': 7,
+  'lead-magnet': 14,
+  'partner': 30,
+  'special-offer': 14,
 };
 
 // Helper to get current tier from subscription
@@ -63,11 +74,11 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { tier, isUpgrade: explicitUpgrade } = await req.json();
+    const { tier, isUpgrade: explicitUpgrade, trialSource, trialDays: customTrialDays } = await req.json();
     if (!tier || !TIER_PRICES[tier]) {
       throw new Error(`Invalid tier: ${tier}`);
     }
-    logStep("Processing tier", { tier, explicitUpgrade });
+    logStep("Processing tier", { tier, explicitUpgrade, trialSource, customTrialDays });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
@@ -141,9 +152,22 @@ serve(async (req) => {
         .eq('id', user.id);
     }
 
-    // Trial decision: no trial for upgrades (when they had an existing subscription)
-    const hasTrial = !hasExistingSubscription;
-    logStep("Trial decision", { hasTrial, hadExistingSubscription: hasExistingSubscription, existingTier });
+    // Trial decision: Only apply trial if trialSource is provided and no existing subscription
+    const validTrialSources = Object.keys(DEFAULT_TRIAL_DAYS);
+    const isValidTrialSource = trialSource && validTrialSources.includes(trialSource);
+    const hasTrial = !hasExistingSubscription && isValidTrialSource;
+    
+    // Determine trial days
+    let trialDays = 0;
+    if (hasTrial && trialSource) {
+      if (customTrialDays && typeof customTrialDays === 'number' && customTrialDays >= 1 && customTrialDays <= 30) {
+        trialDays = customTrialDays;
+      } else {
+        trialDays = DEFAULT_TRIAL_DAYS[trialSource] || 14;
+      }
+    }
+    
+    logStep("Trial decision", { hasTrial, trialDays, hadExistingSubscription: hasExistingSubscription, existingTier, trialSource });
 
     // Create subscription - for trials, we use pending_setup_intent; for immediate charges, payment_intent
     const subscription = await stripe.subscriptions.create({
@@ -155,11 +179,12 @@ serve(async (req) => {
         payment_method_types: ['card'],
       },
       expand: ["pending_setup_intent", "latest_invoice.payment_intent"],
-      trial_period_days: hasTrial ? 14 : undefined,
+      trial_period_days: hasTrial && trialDays > 0 ? trialDays : undefined,
       metadata: {
         tier,
         supabase_user_id: user.id,
         upgraded_from: existingTier || undefined,
+        trial_source: trialSource || undefined,
       },
     });
 
@@ -167,7 +192,8 @@ serve(async (req) => {
       subscriptionId: subscription.id, 
       status: subscription.status,
       hasPendingSetupIntent: !!subscription.pending_setup_intent,
-      hasLatestInvoice: !!subscription.latest_invoice 
+      hasLatestInvoice: !!subscription.latest_invoice,
+      trialDays
     });
 
     let clientSecret: string | null = null;
@@ -199,13 +225,13 @@ serve(async (req) => {
       throw new Error("Failed to get payment intent client secret");
     }
 
-    logStep("Returning client secret", { intentType, subscriptionId: subscription.id });
+    logStep("Returning client secret", { intentType, subscriptionId: subscription.id, trialDays });
 
     return new Response(JSON.stringify({
       clientSecret,
       subscriptionId: subscription.id,
       tierName: TIER_NAMES[tier],
-      trialDays: hasTrial ? 14 : 0,
+      trialDays: hasTrial ? trialDays : 0,
       intentType,
       upgradedFrom: existingTier,
     }), {
