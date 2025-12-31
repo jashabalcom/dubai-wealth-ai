@@ -15,8 +15,8 @@ export const TeamSlide = () => (
       
       {/* Founder Spotlight */}
       <div className="bg-gradient-to-br from-primary/10 via-card to-accent/10 border border-border rounded-2xl p-6 md:p-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="flex-shrink-0">
+        <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
+          <div className="flex-shrink-0 mx-auto md:mx-0">
             <img 
               src={jashaPhoto} 
               alt="Jasha Balcom - Founder & CEO"
