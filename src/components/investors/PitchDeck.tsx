@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Download, Home } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2, Minimize2, Home } from "lucide-react";
 import { TitleSlide } from "./slides/TitleSlide";
 import { ProblemSlide } from "./slides/ProblemSlide";
 import { SolutionSlide } from "./slides/SolutionSlide";
@@ -16,6 +16,8 @@ import { FinancialsSlide } from "./slides/FinancialsSlide";
 import { TeamSlide } from "./slides/TeamSlide";
 import { UseOfFundsSlide } from "./slides/UseOfFundsSlide";
 import { AskSlide } from "./slides/AskSlide";
+import { AppStoreSlide } from "./slides/AppStoreSlide";
+import { SimplePDFExport } from "./PitchDeckPDFExport";
 
 const slides = [
   { id: 1, title: "Title", component: TitleSlide },
@@ -29,9 +31,10 @@ const slides = [
   { id: 9, title: "Competition", component: CompetitionSlide },
   { id: 10, title: "Go-to-Market", component: GTMSlide },
   { id: 11, title: "Financials", component: FinancialsSlide },
-  { id: 12, title: "Team", component: TeamSlide },
-  { id: 13, title: "Use of Funds", component: UseOfFundsSlide },
-  { id: 14, title: "The Ask", component: AskSlide }
+  { id: 12, title: "App Distribution", component: AppStoreSlide },
+  { id: 13, title: "Team", component: TeamSlide },
+  { id: 14, title: "Use of Funds", component: UseOfFundsSlide },
+  { id: 15, title: "The Ask", component: AskSlide }
 ];
 
 export const PitchDeck = () => {
@@ -102,10 +105,7 @@ export const PitchDeck = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Download className="h-4 w-4" />
-            Export PDF
-          </Button>
+          <SimplePDFExport />
           <Button variant="ghost" size="icon" onClick={toggleFullscreen}>
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
