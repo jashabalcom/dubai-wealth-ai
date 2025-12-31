@@ -130,7 +130,7 @@ export const PitchDeck = () => {
       </div>
 
       {/* Slide Content */}
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 relative overflow-hidden" data-pitch-deck-content>
         <AnimatePresence mode="wait">
           <CurrentSlideComponent key={currentSlide} />
         </AnimatePresence>
