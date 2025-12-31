@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface NeighborhoodTierGateProps {
   children: ReactNode;
-  requiredTier: 'investor' | 'elite';
+  requiredTier: 'investor' | 'elite' | 'private';
   feature: string;
   previewCount?: number;
   currentCount?: number;

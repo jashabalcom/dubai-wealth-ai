@@ -4,8 +4,11 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredTier?: 'free' | 'investor' | 'elite';
+  requiredTier?: 'free' | 'investor' | 'elite' | 'private';
 }
+
+// Tier hierarchy: higher number = higher access level
+const TIER_ORDER = { free: 0, investor: 1, elite: 2, private: 3 } as const;
 
 export function ProtectedRoute({ children, requiredTier }: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth();
@@ -36,9 +39,8 @@ export function ProtectedRoute({ children, requiredTier }: ProtectedRouteProps) 
 
   // Check membership tier if required
   if (requiredTier && profile) {
-    const tierOrder = { free: 0, investor: 1, elite: 2 };
-    const userTierLevel = tierOrder[profile.membership_tier] || 0;
-    const requiredTierLevel = tierOrder[requiredTier] || 0;
+    const userTierLevel = TIER_ORDER[profile.membership_tier as keyof typeof TIER_ORDER] ?? 0;
+    const requiredTierLevel = TIER_ORDER[requiredTier] ?? 0;
 
     if (userTierLevel < requiredTierLevel) {
       return <Navigate to="/upgrade" replace />;
