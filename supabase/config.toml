@@ -152,3 +152,6 @@ verify_jwt = false
 
 [functions.record-affiliate-payout]
 verify_jwt = false
+
+[functions.check-data-freshness]
+verify_jwt = false
