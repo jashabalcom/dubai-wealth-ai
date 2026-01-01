@@ -36,6 +36,7 @@ const navItems = [
   { label: 'Mortgage Partners', href: '/admin/mortgage-partners', icon: Briefcase },
   { label: 'Marketing', href: '/admin/marketing', icon: Target },
   { label: 'News', href: '/admin/news', icon: Newspaper },
+  { label: 'Daily Digest', href: '/admin/digest', icon: Newspaper },
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Courses', href: '/admin/courses', icon: GraduationCap },
   { label: 'Properties', href: '/admin/properties', icon: Building2 },

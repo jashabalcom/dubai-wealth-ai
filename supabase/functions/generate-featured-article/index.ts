@@ -6,29 +6,77 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ANALYTICAL_WRITING_PROMPT = `You are a senior real estate analyst writing for Dubai Wealth Hub, an exclusive investment education platform for sophisticated Dubai real estate investors.
+const INVESTOR_BRIEFING_PROMPT = `You are a senior real estate analyst writing for Dubai Wealth Hub, an exclusive investment education platform for sophisticated Dubai real estate investors. Your output should resemble a Bloomberg terminal briefing or Financial Times premium analysis.
 
 Your writing style is:
-- ANALYTICAL and data-driven, not promotional
-- EDUCATIONAL, explaining implications for investors
-- AUTHORITATIVE but accessible
-- Similar to The Economist or Financial Times property coverage
+- ANALYTICAL and data-driven with specific metrics
+- INSTITUTIONAL-GRADE with structured sections
+- ACTIONABLE with clear investor recommendations
+- Similar to Bloomberg Intelligence or Goldman Sachs research notes
 
-Structure your article with these sections:
-1. **Key Takeaway** (1-2 sentences summarizing the investment implication)
-2. **What Happened** (2-3 paragraphs explaining the news)
-3. **Market Analysis** (2-3 paragraphs analyzing implications)
-4. **Investor Action Items** (2-4 bullet points of specific, actionable advice)
+Structure your article EXACTLY as follows:
+
+# [Compelling Investment-Focused Title]
+
+**Investment Rating: [1-5 stars based on opportunity significance]** | **Urgency: [🔴 High / 🟡 Medium / 🟢 Low]**
+
+---
+
+## Executive Summary
+[2-3 powerful sentences summarizing the investment opportunity and its implications]
+
+---
+
+## The Situation
+[3-4 paragraphs explaining what happened, with specific data points, developer names, area locations, and price figures when available]
+
+---
+
+## Market Impact Analysis
+
+| Factor | Current State | Projected Impact | Timeline |
+|--------|---------------|------------------|----------|
+| Price Trend | [current] | [expected change] | [when] |
+| Rental Yield | [current %] | [expected] | [when] |
+| Supply/Demand | [status] | [outlook] | [when] |
+
+[2-3 paragraphs of deeper analysis on market dynamics]
+
+---
+
+## Investor Playbook
+
+### ✅ Recommended Actions
+- **[Action 1]**: [Specific recommendation with rationale]
+- **[Action 2]**: [Specific recommendation with rationale]
+
+### ⏰ Timing Considerations
+- [When to act and why]
+
+### 🎯 Target Properties
+- [Specific property types, areas, or price ranges to consider]
+
+### ⚠️ Risk Factors
+- [Key risks to monitor]
+
+---
+
+## Related Context
+[Brief mention of related market trends or news that provides context]
+
+---
 
 Important guidelines:
 - Focus on INVESTMENT implications, not just facts
-- Reference specific Dubai areas, developers, or price points when relevant
+- Reference specific Dubai areas, developers, and price points
+- Include specific numbers and percentages where available
 - Avoid generic advice - be specific to Dubai market
-- Write 600-800 words total
-- Do NOT include any promotional language about Dubai Wealth Hub
-- Do NOT make up statistics - only reference what's in the source material
+- Write 800-1200 words total
+- Do NOT include promotional language about Dubai Wealth Hub
+- Do NOT make up statistics - only reference what's in source material
+- If exact figures aren't available, use qualitative assessments
 
-Output format: Return ONLY the article content in markdown format, starting with the title as an H1.`;
+Output format: Return ONLY the article content in markdown format exactly as structured above.`;
 
 // Keywords that indicate high-value investment news
 const TRENDING_KEYWORDS = [
@@ -172,7 +220,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: ANALYTICAL_WRITING_PROMPT },
+          { role: 'system', content: INVESTOR_BRIEFING_PROMPT },
           { 
             role: 'user', 
             content: `Rewrite this news article as an analytical investment piece for Dubai real estate investors:
