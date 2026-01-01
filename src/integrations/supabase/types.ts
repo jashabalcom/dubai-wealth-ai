@@ -5177,6 +5177,24 @@ export type Database = {
           timeline: string
         }[]
       }
+      get_member_profile: {
+        Args: { member_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          budget_range: string
+          country: string
+          created_at: string
+          full_name: string
+          id: string
+          investment_goal: string
+          is_demo_member: boolean
+          linkedin_url: string
+          looking_for: string
+          membership_tier: string
+          timeline: string
+        }[]
+      }
       get_property_clusters: {
         Args: {
           bounds_ne_lat: number
