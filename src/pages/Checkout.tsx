@@ -12,6 +12,8 @@ import CheckoutForm from "@/components/checkout/CheckoutForm";
 import PlanSummary from "@/components/checkout/PlanSummary";
 import { SEOHead } from "@/components/SEOHead";
 import { STRIPE_TIERS, STRIPE_PUBLISHABLE_KEY, BillingPeriod } from "@/lib/stripe-config";
+import stripeSlate from "@/assets/stripe-slate.png";
+import amexLogo from "@/assets/amex.png";
 
 const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 
@@ -338,19 +340,16 @@ const Checkout = () => {
                     
                     {/* Stripe Trust Badge & Payment Methods */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
-                      <div className="flex items-center gap-2.5 text-muted-foreground">
+                      <div className="flex items-center gap-2 text-muted-foreground">
                         <Lock className="h-3.5 w-3.5" />
                         <span className="text-xs">Powered by</span>
-                        {/* Official Stripe Slate Logo */}
-                        <svg className="h-4 w-auto" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M5 12.2c0-.6.5-.9 1.3-.9 1.2 0 2.7.4 3.9 1v-3.7c-1.3-.5-2.6-.8-3.9-.8-3.2 0-5.3 1.7-5.3 4.5 0 4.4 6 3.7 6 5.6 0 .7-.6.9-1.5.9-1.3 0-3-.5-4.3-1.3v3.8c1.5.6 2.9.9 4.3.9 3.2 0 5.5-1.6 5.5-4.5 0-4.7-6-3.9-6-5.7zm13.4-5.8l-2.4.5v13.2c0 2.4 1.8 4.2 4.2 4.2.7 0 1.2-.1 1.5-.2v-3c-.3.1-1.5.5-1.5-1.5V8.8h1.5V5.4h-1.5V3.2l-1.8.2v3zm8.1 1.9l-.1-1.9h-3.3v14.4h3.8v-9.7c.9-1.2 2.4-1 2.9-.8V5.4c-.5-.2-2.4-.5-3.3 1zm4.3-1.9h3.8v14.4h-3.8zm0-5.3l3.8-.8v3.3l-3.8.8v-3.3zm9 3.4c-1.4 0-2.4.7-2.9 1.1l-.2-.9h-3.3v18.7l3.8-.8v-4.5c.5.4 1.4.9 2.7.9 2.7 0 5.2-2.2 5.2-6.9 0-4.4-2.5-6.8-5.3-6.8zm-.9 10.4c-.9 0-1.4-.3-1.8-.7v-5.7c.4-.5 1-.8 1.8-.8 1.4 0 2.3 1.5 2.3 3.6s-.9 3.6-2.3 3.6zm14 .4c-1.6 0-2.3-.8-2.4-2h7.5c0-.2 0-1-.1-1.4-.3-2.9-1.9-5.4-5.4-5.4-3.3 0-5.7 2.7-5.7 6.9 0 4.6 2.4 6.8 5.8 6.8 1.7 0 3-.4 4-1.1v-3c-1 .6-2.1.9-3.3.9zm-.2-6.1c1.1 0 1.6.9 1.6 2h-3.5c.1-1.3.8-2 1.9-2z" fill="#0A2540"/>
-                        </svg>
+                        <img src={stripeSlate} alt="Stripe" className="h-4 w-auto" />
                       </div>
                       
                       {/* Payment Method Icons */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
                         {/* Visa */}
-                        <div className="bg-white rounded px-2 py-1">
+                        <div className="bg-white rounded px-2 py-1 h-6 flex items-center">
                           <svg className="h-4 w-auto" viewBox="0 0 50 16" fill="none">
                             <path d="M19.13 15.3H15.56L17.88 0.69H21.44L19.13 15.3Z" fill="#00579F"/>
                             <path d="M34.07 1.02C33.35 0.73 32.22 0.42 30.82 0.42C27.29 0.42 24.83 2.25 24.81 4.86C24.79 6.79 26.62 7.87 28.01 8.52C29.44 9.19 29.93 9.62 29.93 10.21C29.92 11.1 28.83 11.52 27.81 11.52C26.39 11.52 25.64 11.31 24.47 10.81L24.01 10.59L23.51 13.71C24.38 14.1 25.99 14.44 27.67 14.46C31.41 14.46 33.82 12.65 33.85 9.85C33.87 8.33 32.9 7.18 30.81 6.23C29.53 5.6 28.76 5.18 28.76 4.54C28.77 3.97 29.41 3.37 30.8 3.37C31.96 3.35 32.82 3.64 33.48 3.93L33.81 4.09L34.07 1.02Z" fill="#00579F"/>
@@ -360,31 +359,25 @@ const Checkout = () => {
                           </svg>
                         </div>
                         {/* Mastercard */}
-                        <div className="bg-white rounded px-2 py-1">
+                        <div className="bg-white rounded px-2 py-1 h-6 flex items-center">
                           <svg className="h-4 w-auto" viewBox="0 0 32 20" fill="none">
                             <circle cx="10" cy="10" r="10" fill="#EB001B"/>
                             <circle cx="22" cy="10" r="10" fill="#F79E1B"/>
                             <path fillRule="evenodd" clipRule="evenodd" d="M16 17.3C18.2 15.5 19.6 12.9 19.6 10C19.6 7.1 18.2 4.5 16 2.7C13.8 4.5 12.4 7.1 12.4 10C12.4 12.9 13.8 15.5 16 17.3Z" fill="#FF5F00"/>
                           </svg>
                         </div>
-                        {/* Amex */}
-                        <div className="bg-[#006FCF] rounded px-1.5 py-1 flex items-center justify-center">
-                          <svg className="h-4 w-8" viewBox="0 0 40 16" fill="none">
-                            <rect width="40" height="16" fill="#006FCF"/>
-                            <path d="M4 11.5L6.5 4.5H9L11.5 11.5H9.3L8.8 10H6.7L6.2 11.5H4ZM7.75 5.8L7 8.5H8.5L7.75 5.8Z" fill="white"/>
-                            <path d="M12 4.5H14.5L16 7.5L17.5 4.5H20V11.5H18V7L16 11.5H14L12 7V11.5H12V4.5Z" fill="white"/>
-                            <path d="M21.5 4.5H27V6H23.5V7.3H26.8V8.7H23.5V10H27V11.5H21.5V4.5Z" fill="white"/>
-                            <path d="M28 4.5H31L32.5 6.5L34 4.5H37L34 8L37 11.5H34L32.5 9.5L31 11.5H28L31 8L28 4.5Z" fill="white"/>
-                          </svg>
+                        {/* Amex - Official Logo */}
+                        <div className="rounded h-6 flex items-center overflow-hidden">
+                          <img src={amexLogo} alt="American Express" className="h-6 w-auto object-contain" />
                         </div>
                         {/* Apple Pay */}
-                        <div className="bg-black rounded px-2 py-1 flex items-center justify-center">
+                        <div className="bg-black rounded px-2 py-1 h-6 flex items-center justify-center">
                           <svg className="h-4 w-auto" viewBox="0 0 43 18" fill="white">
                             <path d="M7.854 3.182c.527-.677.886-1.607.79-2.537-.768.032-1.696.512-2.245 1.156-.492.565-.922 1.479-.805 2.35.853.065 1.729-.437 2.26-1.119m.78 1.172c-1.244-.073-2.305.707-2.896.707-.593 0-1.505-.67-2.481-.652-1.276.02-2.458.743-3.116 1.882-1.331 2.307-.342 5.722.955 7.595.633.927 1.389 1.954 2.384 1.918.953-.038 1.316-.618 2.466-.618 1.152 0 1.478.618 2.486.599 1.028-.018 1.675-.927 2.308-1.864.719-1.053 1.016-2.07 1.034-2.124-.023-.01-1.98-.762-2-3.02-.018-1.89 1.542-2.798 1.614-2.853-.88-1.304-2.252-1.451-2.74-1.486m8.135-2.447v12.96h2.017V10.52h2.79c2.548 0 4.34-1.752 4.34-4.31 0-2.557-1.759-4.303-4.27-4.303h-4.877zm2.017 1.679h2.328c1.75 0 2.75.93 2.75 2.63 0 1.7-.999 2.64-2.759 2.64h-2.32V3.586zm11.917 11.408c1.268 0 2.443-.643 2.979-1.66h.04v1.533h1.867V8.432c0-1.875-1.498-3.084-3.802-3.084-2.132 0-3.722 1.227-3.782 2.913h1.816c.15-.804.901-1.332 1.894-1.332 1.226 0 1.914.573 1.914 1.628v.714l-2.503.151c-2.327.14-3.587 1.096-3.587 2.76 0 1.68 1.302 2.812 3.164 2.812zm.539-1.52c-1.067 0-1.746-.513-1.746-1.298 0-.81.652-1.28 1.897-1.355l2.23-.143v.73c0 1.205-1.02 2.066-2.381 2.066zm6.394 5.067c1.966 0 2.89-.752 3.698-3.032l3.546-9.931h-2.06l-2.38 7.643h-.04l-2.38-7.643h-2.112l3.418 9.464-.185.577c-.309.975-.81 1.353-1.705 1.353-.16 0-.468-.017-.595-.035v1.552c.118.035.619.052.795.052z"/>
                           </svg>
                         </div>
                         {/* Google Pay */}
-                        <div className="bg-white rounded px-2 py-1 flex items-center justify-center">
+                        <div className="bg-white rounded px-2 py-1 h-6 flex items-center justify-center">
                           <svg className="h-4 w-auto" viewBox="0 0 41 17" fill="none">
                             <path d="M19.526 2.635v4.083h2.518c.6 0 1.096-.202 1.488-.605.403-.402.605-.882.605-1.437 0-.544-.202-1.018-.605-1.422-.392-.413-.888-.62-1.488-.62h-2.518zm0 5.52v4.736h-1.504V1.198h3.99c1.013 0 1.873.337 2.582 1.012.72.675 1.08 1.497 1.08 2.466 0 .991-.36 1.819-1.08 2.482-.697.665-1.559.997-2.583.997h-2.485z" fill="#5F6368"/>
                             <path d="M27.194 10.442c0 .392.166.718.499.98.332.26.722.391 1.168.391.633 0 1.196-.234 1.692-.701.497-.469.744-1.019.744-1.65-.469-.37-1.123-.555-1.962-.555-.61 0-1.12.148-1.528.442-.409.294-.613.652-.613 1.093m1.946-5.815c1.112 0 1.989.297 2.633.89.642.594.964 1.408.964 2.442v4.932h-1.439v-1.11h-.065c-.622.914-1.45 1.372-2.486 1.372-.882 0-1.621-.262-2.215-.784-.594-.523-.891-1.176-.891-1.96 0-.828.313-1.486.94-1.976s1.463-.735 2.51-.735c.892 0 1.629.163 2.206.49v-.344c0-.522-.207-.966-.621-1.33a2.132 2.132 0 00-1.455-.547c-.84 0-1.504.353-1.995 1.062l-1.324-.834c.731-1.045 1.822-1.568 3.238-1.568" fill="#5F6368"/>
