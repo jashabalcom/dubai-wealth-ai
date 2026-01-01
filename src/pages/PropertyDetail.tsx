@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedProperties } from '@/hooks/useSavedProperties';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { usePropertyViewLimit } from '@/hooks/usePropertyViewLimit';
 import { PropertyGallery } from '@/components/properties/PropertyGallery';
 import { SimilarProperties } from '@/components/properties/SimilarProperties';
 import { PropertyInquiryForm } from '@/components/properties/PropertyInquiryForm';
@@ -33,6 +34,7 @@ import { NeighborhoodWidget } from '@/components/properties/NeighborhoodWidget';
 import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
 import { DualPrice } from '@/components/DualPrice';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { ViewLimitDialog } from '@/components/properties/ViewLimitDialog';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -149,6 +151,20 @@ export default function PropertyDetail() {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+  const [showViewLimitDialog, setShowViewLimitDialog] = useState(false);
+  
+  const { viewCount, canViewProperty, trackView } = usePropertyViewLimit();
+
+  // Check view limit and track views for anonymous users
+  useEffect(() => {
+    if (property && !user) {
+      if (!canViewProperty(property.id)) {
+        setShowViewLimitDialog(true);
+      } else {
+        trackView(property.id);
+      }
+    }
+  }, [property?.id, user]);
 
   // Track recently viewed
   useEffect(() => {
@@ -850,6 +866,12 @@ export default function PropertyDetail() {
       )}
 
       <ScrollToTopButton />
+      
+      <ViewLimitDialog 
+        open={showViewLimitDialog} 
+        onOpenChange={setShowViewLimitDialog}
+        viewedCount={viewCount}
+      />
     </div>
   );
 }
