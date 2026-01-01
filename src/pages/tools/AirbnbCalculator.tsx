@@ -550,7 +550,14 @@ export default function AirbnbCalculator() {
                   midRevenue={midRevenue}
                   lowRevenue={lowRevenue}
                   totalExpenses={totalExpenses}
-                  expenseItems={expenseItems}
+                  netAnnualIncome={netAnnualIncome}
+                  grossRevenue={grossRevenue}
+                  platformFees={platformFees}
+                  managementFees={managementFees}
+                  annualUtilities={annualUtilities}
+                  annualMaintenance={annualMaintenance}
+                  serviceCharges={annualServiceCharges}
+                  licenseFee={annualLicensing}
                   formatAED={formatAED}
                 />
               )}

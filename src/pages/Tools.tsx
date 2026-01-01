@@ -55,7 +55,8 @@ const residentialTools = [
     icon: Home,
     color: 'blue',
     href: '/tools/mortgage',
-    freeUses: 2,
+    freeUses: 0, // Completely free
+    isFree: true,
   },
   {
     id: 'rent-vs-buy',
@@ -64,7 +65,8 @@ const residentialTools = [
     icon: Building2,
     color: 'purple',
     href: '/tools/rent-vs-buy',
-    freeUses: 2,
+    freeUses: 0, // Completely free
+    isFree: true,
   },
   {
     id: 'airbnb',
@@ -82,7 +84,8 @@ const residentialTools = [
     icon: ArrowLeftRight,
     color: 'pink',
     href: '/tools/str-vs-ltr',
-    freeUses: 2,
+    freeUses: 0,
+    eliteOnly: true,
   },
   {
     id: 'total-cost',
@@ -141,7 +144,8 @@ const commercialTools = [
     icon: FileSpreadsheet,
     color: 'slate',
     href: '/tools/lease-analyzer',
-    freeUses: 2,
+    freeUses: 0,
+    eliteOnly: true,
   },
   {
     id: 'free-zone',
@@ -288,7 +292,18 @@ export default function Tools() {
                                 Featured
                               </Badge>
                             )}
-                            {tool.freeUses > 0 && (
+                            {'isFree' in tool && tool.isFree && (
+                              <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/30">
+                                Free
+                              </Badge>
+                            )}
+                            {'eliteOnly' in tool && tool.eliteOnly && (
+                              <Badge className="text-xs bg-gold/10 text-gold border-gold/30">
+                                <Lock className="w-3 h-3 mr-1" />
+                                Elite+
+                              </Badge>
+                            )}
+                            {tool.freeUses > 0 && !('isFree' in tool) && !('eliteOnly' in tool) && (
                               <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
                                 {tool.freeUses} Free Uses
                               </Badge>
@@ -402,7 +417,13 @@ export default function Tools() {
                               <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
                                 Commercial
                               </Badge>
-                              {tool.freeUses > 0 && (
+                              {'eliteOnly' in tool && tool.eliteOnly && (
+                                <Badge className="text-xs bg-gold/10 text-gold border-gold/30">
+                                  <Lock className="w-3 h-3 mr-1" />
+                                  Elite+
+                                </Badge>
+                              )}
+                              {tool.freeUses > 0 && !('eliteOnly' in tool) && (
                                 <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
                                   {tool.freeUses} Free Uses
                                 </Badge>
