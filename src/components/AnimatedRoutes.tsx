@@ -175,7 +175,7 @@ export function AnimatedRoutes() {
         {/* Properties - Public browse, saved requires auth */}
         <Route path="/properties" element={<LazyPage><Properties /></LazyPage>} />
         <Route path="/properties/:slug" element={<LazyPage><PropertyDetail /></LazyPage>} />
-        <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><LazyPage><SavedProperties /></LazyPage></ProtectedRoute>} />
+        <Route path="/properties/saved" element={<ProtectedRoute><LazyPage><SavedProperties /></LazyPage></ProtectedRoute>} />
         
         {/* Developers & Projects - Public browse */}
         <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />
