@@ -28,7 +28,7 @@ interface MetricsDashboardProps {
 interface DisplayMetric {
   label: string;
   value: string;
-  change?: number;
+  change?: string | number;
   icon: LucideIcon;
 }
 
