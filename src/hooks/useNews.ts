@@ -32,6 +32,13 @@ export interface NewsArticle {
   tags?: string[] | null;
   is_featured_digest?: boolean | null;
   digest_date?: string | null;
+  // Enhanced Bloomberg-style fields
+  quick_take?: string | null;
+  opportunity_score?: number | null;
+  risk_level?: string | null;
+  time_sensitivity?: string | null;
+  contrarian_view?: string | null;
+  historical_context?: string | null;
 }
 
 export function useNews(category: NewsCategory = 'all') {
