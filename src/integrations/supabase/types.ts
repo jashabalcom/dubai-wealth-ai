@@ -861,6 +861,80 @@ export type Database = {
         }
         Relationships: []
       }
+      area_market_data: {
+        Row: {
+          area_name: string
+          area_slug: string
+          avg_price_sqft: number | null
+          avg_property_price: number | null
+          avg_yield: number | null
+          chiller_monthly: number | null
+          confidence_level: Database["public"]["Enums"]["data_confidence_level"]
+          created_at: string
+          expires_at: string | null
+          has_district_cooling: boolean | null
+          id: string
+          is_active: boolean | null
+          price_trend_percent: number | null
+          service_charge_sqft: number | null
+          source_id: string | null
+          total_transactions_ytd: number | null
+          updated_at: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          area_name: string
+          area_slug: string
+          avg_price_sqft?: number | null
+          avg_property_price?: number | null
+          avg_yield?: number | null
+          chiller_monthly?: number | null
+          confidence_level?: Database["public"]["Enums"]["data_confidence_level"]
+          created_at?: string
+          expires_at?: string | null
+          has_district_cooling?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          price_trend_percent?: number | null
+          service_charge_sqft?: number | null
+          source_id?: string | null
+          total_transactions_ytd?: number | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          area_name?: string
+          area_slug?: string
+          avg_price_sqft?: number | null
+          avg_property_price?: number | null
+          avg_yield?: number | null
+          chiller_monthly?: number | null
+          confidence_level?: Database["public"]["Enums"]["data_confidence_level"]
+          created_at?: string
+          expires_at?: string | null
+          has_district_cooling?: boolean | null
+          id?: string
+          is_active?: boolean | null
+          price_trend_percent?: number | null
+          service_charge_sqft?: number | null
+          source_id?: string | null
+          total_transactions_ytd?: number | null
+          updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "area_market_data_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       area_market_stats: {
         Row: {
           apartment_avg_price: number | null
@@ -1924,6 +1998,101 @@ export type Database = {
         }
         Relationships: []
       }
+      data_sources: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          credibility_score: number | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          notes: string | null
+          source_type: Database["public"]["Enums"]["data_source_type"]
+          update_frequency: string | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          credibility_score?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          notes?: string | null
+          source_type?: Database["public"]["Enums"]["data_source_type"]
+          update_frequency?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          credibility_score?: number | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          notes?: string | null
+          source_type?: Database["public"]["Enums"]["data_source_type"]
+          update_frequency?: string | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      data_verification_logs: {
+        Row: {
+          action: string
+          changed_fields: string[] | null
+          created_at: string
+          data_registry_id: string
+          id: string
+          new_value: Json | null
+          notes: string | null
+          old_value: Json | null
+          source_document_url: string | null
+          verification_method: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: string[] | null
+          created_at?: string
+          data_registry_id: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          old_value?: Json | null
+          source_document_url?: string | null
+          verification_method?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: string[] | null
+          created_at?: string
+          data_registry_id?: string
+          id?: string
+          new_value?: Json | null
+          notes?: string | null
+          old_value?: Json | null
+          source_document_url?: string | null
+          verification_method?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_verification_logs_data_registry_id_fkey"
+            columns: ["data_registry_id"]
+            isOneToOne: false
+            referencedRelation: "dubai_data_registry"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demo_members: {
         Row: {
           avatar_url: string | null
@@ -2199,6 +2368,83 @@ export type Database = {
           sender_public_key?: string | null
         }
         Relationships: []
+      }
+      dubai_data_registry: {
+        Row: {
+          confidence_level: Database["public"]["Enums"]["data_confidence_level"]
+          created_at: string
+          data_category: Database["public"]["Enums"]["data_category"]
+          data_key: string
+          description: string | null
+          display_name: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          is_critical: boolean | null
+          source_id: string | null
+          source_name: string | null
+          source_url: string | null
+          unit: string | null
+          update_frequency: string | null
+          updated_at: string
+          value_json: Json
+          verified_at: string | null
+          verified_by: string | null
+          version: number | null
+        }
+        Insert: {
+          confidence_level?: Database["public"]["Enums"]["data_confidence_level"]
+          created_at?: string
+          data_category: Database["public"]["Enums"]["data_category"]
+          data_key: string
+          description?: string | null
+          display_name: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_critical?: boolean | null
+          source_id?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          unit?: string | null
+          update_frequency?: string | null
+          updated_at?: string
+          value_json: Json
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number | null
+        }
+        Update: {
+          confidence_level?: Database["public"]["Enums"]["data_confidence_level"]
+          created_at?: string
+          data_category?: Database["public"]["Enums"]["data_category"]
+          data_key?: string
+          description?: string | null
+          display_name?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_critical?: boolean | null
+          source_id?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          unit?: string | null
+          update_frequency?: string | null
+          updated_at?: string
+          value_json?: Json
+          verified_at?: string | null
+          verified_by?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dubai_data_registry_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_drip_queue: {
         Row: {
@@ -5656,6 +5902,29 @@ export type Database = {
       app_role: "admin" | "moderator" | "user"
       channel_visibility: "all_members" | "elite_only"
       commission_status: "pending" | "approved" | "paid" | "voided"
+      data_category:
+        | "dld_fees"
+        | "mortgage_fees"
+        | "service_charges"
+        | "chiller_fees"
+        | "golden_visa"
+        | "area_benchmarks"
+        | "exit_costs"
+        | "rental_costs"
+        | "str_costs"
+        | "developer_data"
+      data_confidence_level:
+        | "official"
+        | "verified"
+        | "industry"
+        | "estimated"
+        | "unverified"
+      data_source_type:
+        | "government"
+        | "regulatory"
+        | "industry"
+        | "aggregated"
+        | "manual"
       membership_status: "active" | "canceled" | "trial" | "expired"
       membership_tier: "free" | "investor" | "elite" | "private"
       payout_status: "pending" | "processing" | "completed" | "failed"
@@ -5807,6 +6076,32 @@ export const Constants = {
       app_role: ["admin", "moderator", "user"],
       channel_visibility: ["all_members", "elite_only"],
       commission_status: ["pending", "approved", "paid", "voided"],
+      data_category: [
+        "dld_fees",
+        "mortgage_fees",
+        "service_charges",
+        "chiller_fees",
+        "golden_visa",
+        "area_benchmarks",
+        "exit_costs",
+        "rental_costs",
+        "str_costs",
+        "developer_data",
+      ],
+      data_confidence_level: [
+        "official",
+        "verified",
+        "industry",
+        "estimated",
+        "unverified",
+      ],
+      data_source_type: [
+        "government",
+        "regulatory",
+        "industry",
+        "aggregated",
+        "manual",
+      ],
       membership_status: ["active", "canceled", "trial", "expired"],
       membership_tier: ["free", "investor", "elite", "private"],
       payout_status: ["pending", "processing", "completed", "failed"],
