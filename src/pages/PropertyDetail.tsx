@@ -811,7 +811,13 @@ export default function PropertyDetail() {
                 />
               )}
 
-              <PropertyInquiryForm propertyTitle={property.title} propertyId={property.id} />
+              <PropertyInquiryForm 
+                propertyTitle={property.title} 
+                propertyId={property.id}
+                propertyArea={property.location_area}
+                propertyPrice={property.price_aed}
+                propertySlug={property.slug}
+              />
               
               {/* Lead Magnet for non-logged-in users */}
               <PropertyLeadMagnet 
