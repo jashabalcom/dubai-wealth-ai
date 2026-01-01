@@ -39,6 +39,7 @@ const getFooterLinks = (t: (key: string) => string) => ({
       { label: t('footer.about'), href: "/about" },
       { label: t('footer.contact'), href: "/contact" },
       { label: t('footer.forAgents'), href: "/agent-portal" },
+      { label: t('footer.becomeAffiliate'), href: "/affiliate" },
       { label: t('footer.careers'), href: "#" },
       { label: t('footer.partners'), href: "#" },
     ],
