@@ -131,3 +131,15 @@ verify_jwt = false
 
 [functions.export-user-data]
 verify_jwt = false
+
+[functions.track-affiliate-click]
+verify_jwt = false
+
+[functions.create-affiliate-connect-account]
+verify_jwt = false
+
+[functions.process-commissions]
+verify_jwt = false
+
+[functions.process-affiliate-payouts]
+verify_jwt = false
