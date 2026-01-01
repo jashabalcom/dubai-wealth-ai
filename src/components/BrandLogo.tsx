@@ -11,25 +11,25 @@ interface BrandLogoProps {
 
 const sizeClasses = {
   sm: {
-    line1: "text-xs sm:text-sm lg:text-base",
-    line2: "text-[8px] sm:text-[9px] lg:text-[10px]",
-    tagline: "text-[7px] md:text-[8px]",
-    accentLine: "w-6 sm:w-8 md:w-10",
+    line1: "text-[0.6rem] sm:text-[0.65rem] tracking-[0.35em] sm:tracking-[0.4em]",
+    line2: "text-[0.45rem] sm:text-[0.5rem] tracking-[0.25em] sm:tracking-[0.35em]",
+    accentLine: "w-6 sm:w-8",
+    tagline: "text-[7px] sm:text-[8px] tracking-[0.15em] sm:tracking-[0.2em]",
     gap: "gap-0",
   },
   md: {
-    line1: "text-base sm:text-lg lg:text-xl",
-    line2: "text-[9px] sm:text-[10px] lg:text-[11px]",
-    tagline: "text-[8px] md:text-[9px]",
-    accentLine: "w-8 sm:w-10 md:w-12",
-    gap: "gap-0",
+    line1: "text-xs sm:text-sm tracking-[0.4em] sm:tracking-[0.5em]",
+    line2: "text-[0.5rem] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em]",
+    accentLine: "w-10 sm:w-12",
+    tagline: "text-[8px] sm:text-[9px] tracking-[0.15em] sm:tracking-[0.2em]",
+    gap: "gap-0.5",
   },
   lg: {
-    line1: "text-lg sm:text-xl lg:text-2xl",
-    line2: "text-[10px] sm:text-[11px] lg:text-[13px]",
-    tagline: "text-[9px] md:text-[10px]",
-    accentLine: "w-10 sm:w-12 md:w-16",
-    gap: "gap-0.5",
+    line1: "text-sm sm:text-base tracking-[0.5em]",
+    line2: "text-xs sm:text-sm tracking-[0.4em]",
+    accentLine: "w-12 sm:w-16",
+    tagline: "text-[9px] sm:text-[10px] tracking-[0.2em]",
+    gap: "gap-0.5 sm:gap-1",
   },
 };
 
@@ -86,11 +86,11 @@ export function BrandLogo({
         />
       )}
 
-      {/* Tagline */}
+      {/* Tagline - hidden on smallest screens to prevent overlap */}
       {showTagline && (
         <span
           className={cn(
-            "uppercase tracking-[0.2em] text-primary font-sans mt-0.5",
+            "uppercase tracking-[0.2em] text-primary font-sans mt-1.5 hidden sm:block",
             sizes.tagline
           )}
         >
