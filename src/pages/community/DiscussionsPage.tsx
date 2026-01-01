@@ -9,9 +9,10 @@ import { CommunityInfoCard } from '@/components/community/CommunityInfoCard';
 import { PageTransition } from '@/components/community/PageTransition';
 import { ReadOnlyBadge } from '@/components/freemium/ReadOnlyBadge';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { SidebarCard } from '@/components/community/SidebarCard';
 import { useCommunity } from '@/hooks/useCommunity';
 import { useProfile } from '@/hooks/useProfile';
-import { useQueryClient } from '@tanstack/react-query';
+import { COMMUNITY_LAYOUT } from '@/lib/designTokens';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -71,148 +72,145 @@ export default function DiscussionsPage() {
         <ReadOnlyBadge message="Upgrade to post, comment, and engage with the community" />
       )}
       
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className={COMMUNITY_LAYOUT.grid.container}>
         {/* Left Sidebar - Channel List (Desktop only) */}
         <motion.aside
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.4 }}
-          className="hidden lg:block lg:col-span-3"
+          className={`hidden lg:block ${COMMUNITY_LAYOUT.grid.leftSidebar}`}
         >
-          <div className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-4 sticky top-28 shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-b from-gold/5 to-transparent rounded-2xl pointer-events-none" />
-            <div className="relative z-10">
-              {channelsLoading ? (
-                <div className="space-y-2">
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-10 bg-muted/50 rounded-lg animate-pulse"
-                      style={{ animationDelay: `${i * 100}ms` }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <ChannelList
+          <SidebarCard>
+            {channelsLoading ? (
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-10 bg-muted/50 rounded-lg animate-pulse"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <ChannelList
+                channels={channels}
+                selectedChannelId={selectedChannelId}
+                onSelectChannel={setSelectedChannelId}
+              />
+            )}
+          </SidebarCard>
+        </motion.aside>
+
+        {/* Main Content - Posts */}
+        <div className={`${COMMUNITY_LAYOUT.grid.mainContent} ${COMMUNITY_LAYOUT.spacing.content}`}>
+          <PullToRefresh onRefresh={handleRefresh} disabled={postsLoading}>
+            {/* Mobile Category Filter Pills */}
+            <div className="lg:hidden">
+              {!channelsLoading && (
+                <CategoryFilterPills
                   channels={channels}
                   selectedChannelId={selectedChannelId}
                   onSelectChannel={setSelectedChannelId}
                 />
               )}
             </div>
-          </div>
-        </motion.aside>
 
-        {/* Main Content - Posts */}
-        <div className="lg:col-span-6 space-y-5">
-          <PullToRefresh onRefresh={handleRefresh} disabled={postsLoading}>
-          {/* Mobile Category Filter Pills */}
-          <div className="lg:hidden">
-            {!channelsLoading && (
-              <CategoryFilterPills
-                channels={channels}
-                selectedChannelId={selectedChannelId}
-                onSelectChannel={setSelectedChannelId}
-              />
+            {/* Channel Header (Desktop) */}
+            {selectedChannel && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="hidden lg:flex items-center gap-3 bg-card/80 backdrop-blur-xl border border-border/40 rounded-2xl p-4"
+              >
+                <div className="p-2 rounded-lg bg-gold/10">
+                  <Hash className="h-5 w-5 text-gold" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-serif font-semibold">{selectedChannel.name}</h2>
+                  {selectedChannel.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {selectedChannel.description}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
             )}
-          </div>
 
-          {/* Channel Header (Desktop) */}
-          {selectedChannel && (
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="hidden lg:flex items-center gap-3 bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4"
-            >
-              <div className="p-2 rounded-lg bg-gold/10">
-                <Hash className="h-5 w-5 text-gold" />
-              </div>
-              <div>
-                <h2 className="text-lg font-serif font-semibold">{selectedChannel.name}</h2>
-                {selectedChannel.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedChannel.description}
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          )}
+            {/* Inline Post Composer */}
+            <InlinePostComposer
+              onSubmit={(title, content, images, postType, videoUrl, pollData, gifUrl, mentionedUserIds) => 
+                createPost.mutate({ title, content, images, postType, videoUrl, pollData, gifUrl, mentionedUserIds })
+              }
+              isSubmitting={createPost.isPending}
+              canPost={canParticipate}
+            />
 
-          {/* Inline Post Composer */}
-          <InlinePostComposer
-            onSubmit={(title, content, images, postType, videoUrl, pollData, gifUrl, mentionedUserIds) => 
-              createPost.mutate({ title, content, images, postType, videoUrl, pollData, gifUrl, mentionedUserIds })
-            }
-            isSubmitting={createPost.isPending}
-            canPost={canParticipate}
-          />
-
-          {/* Posts */}
-          {postsLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="bg-card border border-border/50 rounded-2xl p-5 animate-pulse"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-11 w-11 bg-muted/50 rounded-full" />
+            {/* Posts */}
+            {postsLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-card/90 border border-border/40 rounded-3xl p-5 animate-pulse"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-11 w-11 bg-muted/50 rounded-full" />
+                      <div className="space-y-2">
+                        <div className="h-4 w-28 bg-muted/50 rounded" />
+                        <div className="h-3 w-20 bg-muted/50 rounded" />
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <div className="h-4 w-28 bg-muted/50 rounded" />
-                      <div className="h-3 w-20 bg-muted/50 rounded" />
+                      <div className="h-5 w-3/4 bg-muted/50 rounded" />
+                      <div className="h-4 w-full bg-muted/50 rounded" />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="h-5 w-3/4 bg-muted/50 rounded" />
-                    <div className="h-4 w-full bg-muted/50 rounded" />
+                ))}
+              </div>
+            ) : sortedPosts.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`text-center py-12 ${COMMUNITY_LAYOUT.card.base} ${COMMUNITY_LAYOUT.card.padding}`}
+              >
+                <div className="relative inline-block mb-5">
+                  <div className="absolute inset-0 bg-gold/20 rounded-full blur-xl" />
+                  <div className="relative p-4 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20">
+                    <MessageSquarePlus className="h-8 w-8 text-gold" />
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : sortedPosts.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-12 bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl"
-            >
-              <div className="relative inline-block mb-5">
-                <div className="absolute inset-0 bg-gold/20 rounded-full blur-xl" />
-                <div className="relative p-4 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20">
-                  <MessageSquarePlus className="h-8 w-8 text-gold" />
-                </div>
-              </div>
-              <h3 className="text-lg font-serif font-semibold mb-2">No posts yet</h3>
-              <p className="text-muted-foreground mb-5 max-w-sm mx-auto text-sm">
-                Be the first to start a conversation in this channel!
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="space-y-4"
-            >
-              {sortedPosts.map((post) => (
-                <motion.div key={post.id} variants={itemVariants}>
-                  <PostCard
-                    post={post}
-                    onLike={(postId, hasLiked) => toggleLike.mutate({ postId, hasLiked })}
-                    onComment={(postId, content) => addComment.mutate({ postId, content })}
-                    getComments={getPostComments}
-                    canInteract={canParticipate}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
+                <h3 className="text-lg font-serif font-semibold mb-2">No posts yet</h3>
+                <p className="text-muted-foreground mb-5 max-w-sm mx-auto text-sm">
+                  Be the first to start a conversation in this channel!
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="space-y-4"
+              >
+                {sortedPosts.map((post) => (
+                  <motion.div key={post.id} variants={itemVariants}>
+                    <PostCard
+                      post={post}
+                      onLike={(postId, hasLiked) => toggleLike.mutate({ postId, hasLiked })}
+                      onComment={(postId, content) => addComment.mutate({ postId, content })}
+                      getComments={getPostComments}
+                      canInteract={canParticipate}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
           </PullToRefresh>
         </div>
 
         {/* Right Sidebar - Community Info (Desktop only) */}
-        <aside className="hidden lg:block lg:col-span-3">
-          <div className="sticky top-28">
+        <aside className={`hidden lg:block ${COMMUNITY_LAYOUT.grid.rightSidebar}`}>
+          <div className={COMMUNITY_LAYOUT.sidebar.sticky}>
             <CommunityInfoCard />
           </div>
         </aside>
