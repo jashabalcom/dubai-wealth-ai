@@ -1848,45 +1848,72 @@ export type Database = {
       }
       daily_market_digests: {
         Row: {
+          analyst_notes: string | null
           area_highlights: Json | null
+          avg_price_sqft: number | null
+          confidence_score: number | null
           created_at: string | null
+          data_sources: string[] | null
           digest_date: string
           executive_summary: string
+          generated_at: string | null
           headline: string
           id: string
+          investment_action: string | null
           is_published: boolean | null
           key_metrics: Json | null
+          key_takeaways: string[] | null
           market_sentiment: string | null
           sector_highlights: Json | null
+          top_areas: Json | null
           top_article_ids: string[] | null
+          transaction_volume: number | null
           updated_at: string | null
         }
         Insert: {
+          analyst_notes?: string | null
           area_highlights?: Json | null
+          avg_price_sqft?: number | null
+          confidence_score?: number | null
           created_at?: string | null
+          data_sources?: string[] | null
           digest_date: string
           executive_summary: string
+          generated_at?: string | null
           headline: string
           id?: string
+          investment_action?: string | null
           is_published?: boolean | null
           key_metrics?: Json | null
+          key_takeaways?: string[] | null
           market_sentiment?: string | null
           sector_highlights?: Json | null
+          top_areas?: Json | null
           top_article_ids?: string[] | null
+          transaction_volume?: number | null
           updated_at?: string | null
         }
         Update: {
+          analyst_notes?: string | null
           area_highlights?: Json | null
+          avg_price_sqft?: number | null
+          confidence_score?: number | null
           created_at?: string | null
+          data_sources?: string[] | null
           digest_date?: string
           executive_summary?: string
+          generated_at?: string | null
           headline?: string
           id?: string
+          investment_action?: string | null
           is_published?: boolean | null
           key_metrics?: Json | null
+          key_takeaways?: string[] | null
           market_sentiment?: string | null
           sector_highlights?: Json | null
+          top_areas?: Json | null
           top_article_ids?: string[] | null
+          transaction_volume?: number | null
           updated_at?: string | null
         }
         Relationships: []
