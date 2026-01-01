@@ -33,9 +33,9 @@ export function MemberCard({ member, index = 0 }: MemberCardProps) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
       whileHover={{ y: -4 }}
       className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 hover:shadow-xl hover:shadow-gold/5 hover:border-gold/20 transition-all duration-300"
     >

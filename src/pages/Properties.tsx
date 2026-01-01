@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Building2, Heart, Users, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { VirtualGrid } from '@/components/ui/virtual-grid';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
@@ -16,7 +17,6 @@ import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
 import { PropertyMap } from '@/components/properties/PropertyMap';
 import { RecentlyViewedSection } from '@/components/properties/RecentlyViewedSection';
-import { InfiniteScrollTrigger } from '@/components/properties/InfiniteScrollTrigger';
 import { PropertyDisclaimer } from '@/components/ui/disclaimers';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
@@ -275,32 +275,27 @@ export default function Properties() {
           ) : viewMode === 'map' ? (
             <PropertyMap properties={filteredProperties} />
           ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProperties.map((property, index) => (
-                  <PropertyCard
-                    key={property.id}
-                    property={property}
-                    index={index}
-                    isSaved={isSaved(property.id)}
-                    onToggleSave={() => toggleSave(property.id)}
-                    onCompare={() => toggleCompare(property.id)}
-                    isComparing={compareIds.includes(property.id)}
-                    showCompareButton
-                    isAuthenticated={!!user}
-                  />
-                ))}
-              </div>
-              
-              {/* Infinite scroll trigger */}
-              <InfiniteScrollTrigger
-                onLoadMore={loadMore}
-                hasMore={hasMore}
-                isLoading={isLoadingMore}
-                totalCount={totalCount}
-                loadedCount={filteredProperties.length}
-              />
-            </>
+            <VirtualGrid
+              items={filteredProperties}
+              renderItem={(property, index) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  index={index}
+                  isSaved={isSaved(property.id)}
+                  onToggleSave={() => toggleSave(property.id)}
+                  onCompare={() => toggleCompare(property.id)}
+                  isComparing={compareIds.includes(property.id)}
+                  showCompareButton
+                  isAuthenticated={!!user}
+                />
+              )}
+              estimatedItemHeight={420}
+              gap={24}
+              onLoadMore={loadMore}
+              hasMore={hasMore}
+              isLoading={isLoadingMore}
+            />
           )}
         </div>
       </section>
