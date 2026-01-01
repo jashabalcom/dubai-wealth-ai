@@ -191,6 +191,7 @@ export default function EventRoom() {
                 displayName={displayName}
                 email={profile?.email}
                 avatarUrl={avatarUrl}
+                isHost={isHost}
                 onReadyToClose={handleMeetingEnd}
               />
             </AnimatePresence>
