@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { Lock, Crown, ArrowRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { normalizeUrgencyLevel } from '@/lib/urgency';
 
 // Bloomberg-style components
 import { BloombergBriefing } from '@/components/briefing/BloombergBriefing';
@@ -186,19 +187,19 @@ const DailyBriefing = () => {
     );
   }
 
-  // Transform articles for IntelligenceCard format
-  const intelligenceArticles = digestArticles.map((article) => ({
+  // Transform articles for IntelligenceCard format with safe urgency normalization
+  const intelligenceArticles = (digestArticles || []).map((article) => ({
     id: article.id,
-    title: article.title,
-    excerpt: article.excerpt,
-    quickTake: article.quick_take,
-    imageUrl: article.image_url,
+    title: article.title || '',
+    excerpt: article.excerpt || '',
+    quickTake: article.quick_take || '',
+    imageUrl: article.image_url || '',
     investmentRating: article.investment_rating || 3,
-    urgencyLevel: article.urgency_level as 'normal' | 'important' | 'urgent',
-    affectedAreas: article.affected_areas || [],
+    urgencyLevel: normalizeUrgencyLevel(article.urgency_level),
+    affectedAreas: Array.isArray(article.affected_areas) ? article.affected_areas : [],
     readingTimeMinutes: article.reading_time_minutes || 3,
     isVerified: article.verification_status === 'verified',
-    sourceUrl: article.source_url,
+    sourceUrl: article.source_url || '',
   }));
 
   return (

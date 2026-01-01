@@ -55,8 +55,9 @@ export function IntelligenceCard({
   sourceUrl,
   className
 }: IntelligenceCardProps) {
-  const urgency = urgencyConfig[urgencyLevel];
-  const UrgencyIcon = urgency.badge?.icon;
+  // Defensive: fallback to 'normal' config if urgencyLevel is unexpected
+  const urgency = urgencyConfig[urgencyLevel] ?? urgencyConfig.normal;
+  const UrgencyIcon = urgency?.badge?.icon;
 
   return (
     <article className={cn(
