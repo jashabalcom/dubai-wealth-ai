@@ -76,17 +76,45 @@ interface LiveTickerProps {
 }
 
 export function LiveTicker({ items, className }: LiveTickerProps) {
+  const renderTickerItems = () => (
+    <>
+      {items.map((item, i) => (
+        <React.Fragment key={item.label}>
+          {i > 0 && <div className="w-px h-5 bg-border flex-shrink-0" />}
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">{item.label}</span>
+            <span className="text-base font-semibold text-foreground tabular-nums whitespace-nowrap">
+              {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
+            </span>
+            {item.change !== undefined && (
+              <span className={cn(
+                "text-sm font-medium tabular-nums flex items-center gap-0.5",
+                item.change > 0 ? "text-emerald-500" : item.change < 0 ? "text-rose-500" : "text-muted-foreground"
+              )}>
+                {item.change > 0 ? <ArrowUpRight className="w-4 h-4" /> : item.change < 0 ? <ArrowDownRight className="w-4 h-4" /> : null}
+                {item.change > 0 ? "+" : ""}{item.change.toFixed(1)}%
+              </span>
+            )}
+          </div>
+        </React.Fragment>
+      ))}
+      {/* Separator between loops */}
+      <div className="w-px h-5 bg-primary/30 flex-shrink-0" />
+    </>
+  );
+
   return (
     <div className={cn(
-      "relative flex items-center gap-8 overflow-x-auto scrollbar-hide py-4 px-4 sm:px-6",
+      "relative flex items-center overflow-hidden py-4",
       "bg-secondary/50 backdrop-blur-sm border-y border-border/30",
       className
     )}>
-      {/* Fade gradients for scroll indication */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-secondary/80 to-transparent pointer-events-none z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-secondary/80 to-transparent pointer-events-none z-10" />
+      {/* Fade gradients for visual polish */}
+      <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-secondary/90 to-transparent pointer-events-none z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-secondary/90 to-transparent pointer-events-none z-10" />
       
-      <div className="flex items-center gap-2 flex-shrink-0 pl-2">
+      {/* Live indicator - fixed position */}
+      <div className="flex items-center gap-2 flex-shrink-0 pl-4 pr-4 z-20 bg-secondary/80 backdrop-blur-sm">
         <span className="relative flex h-2.5 w-2.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
@@ -94,27 +122,13 @@ export function LiveTicker({ items, className }: LiveTickerProps) {
         <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Live</span>
       </div>
       
-      <div className="flex items-center gap-8 overflow-x-auto scrollbar-hide pr-8">
-        {items.map((item, i) => (
-          <React.Fragment key={item.label}>
-            {i > 0 && <div className="w-px h-5 bg-border flex-shrink-0" />}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">{item.label}</span>
-              <span className="text-base font-semibold text-foreground tabular-nums whitespace-nowrap">
-                {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
-              </span>
-              {item.change !== undefined && (
-                <span className={cn(
-                  "text-sm font-medium tabular-nums flex items-center gap-0.5",
-                  item.change > 0 ? "text-emerald-500" : item.change < 0 ? "text-rose-500" : "text-muted-foreground"
-                )}>
-                  {item.change > 0 ? <ArrowUpRight className="w-4 h-4" /> : item.change < 0 ? <ArrowDownRight className="w-4 h-4" /> : null}
-                  {item.change > 0 ? "+" : ""}{item.change.toFixed(1)}%
-                </span>
-              )}
-            </div>
-          </React.Fragment>
-        ))}
+      {/* Animated ticker - duplicated for seamless loop */}
+      <div 
+        className="flex items-center gap-8 animate-ticker-scroll hover:[animation-play-state:paused]"
+        style={{ willChange: 'transform' }}
+      >
+        {renderTickerItems()}
+        {renderTickerItems()}
       </div>
     </div>
   );

@@ -152,6 +152,10 @@ export default {
           "50%": { transform: "scale(0.97)" },
           "100%": { transform: "scale(1)" },
         },
+        "ticker-scroll": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -171,6 +175,7 @@ export default {
         "shimmer-gold": "shimmer-gold 2s ease-in-out infinite",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
         "press": "press 0.15s ease-out",
+        "ticker-scroll": "ticker-scroll 40s linear infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
