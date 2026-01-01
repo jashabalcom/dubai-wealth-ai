@@ -5120,6 +5120,7 @@ export type Database = {
           total_members: number
         }[]
       }
+      get_directory_filter_options: { Args: never; Returns: Json }
       get_directory_members: {
         Args: never
         Returns: {
@@ -5134,6 +5135,31 @@ export type Database = {
           looking_for: string
           membership_tier: Database["public"]["Enums"]["membership_tier"]
           timeline: string
+        }[]
+      }
+      get_directory_members_paginated: {
+        Args: {
+          p_country?: string
+          p_investment_goal?: string
+          p_limit?: number
+          p_membership_tier?: string
+          p_offset?: number
+          p_search?: string
+          p_sort_by?: string
+        }
+        Returns: {
+          avatar_url: string
+          bio: string
+          budget_range: string
+          country: string
+          created_at: string
+          full_name: string
+          id: string
+          investment_goal: string
+          looking_for: string
+          membership_tier: string
+          timeline: string
+          total_count: number
         }[]
       }
       get_directory_members_safe: {

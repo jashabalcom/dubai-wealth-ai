@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface DirectoryMember {
@@ -25,7 +25,28 @@ export interface DirectoryFilters {
   timeline: string | null;
 }
 
+interface FilterOptions {
+  countries: string[];
+  investmentGoals: string[];
+  budgetRanges: string[];
+  timelines: string[];
+}
+
 type SortOption = 'newest' | 'alphabetical';
+
+const PAGE_SIZE = 20;
+
+// Debounce hook for search
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export function useMemberDirectory() {
   const [filters, setFilters] = useState<DirectoryFilters>({
@@ -38,81 +59,87 @@ export function useMemberDirectory() {
   });
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
-  // Fetch all directory-visible members using secure function
-  const { data: members = [], isLoading: membersLoading, refetch: refetchMembers } = useQuery({
-    queryKey: ['directory-members'],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_directory_members');
+  // Debounce search to avoid too many API calls
+  const debouncedSearch = useDebounce(filters.search, 300);
 
+  // Fetch filter options separately (cached)
+  const { data: filterOptions = { countries: [], investmentGoals: [], budgetRanges: [], timelines: [] } } = useQuery({
+    queryKey: ['directory-filter-options'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_directory_filter_options');
       if (error) throw error;
-      return (data || []) as DirectoryMember[];
+      const result = data as unknown as FilterOptions;
+      return result || { countries: [], investmentGoals: [], budgetRanges: [], timelines: [] };
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Extract unique filter values
-  const filterOptions = useMemo(() => {
-    const countries = [...new Set(members.map(m => m.country).filter(Boolean))] as string[];
-    const investmentGoals = [...new Set(members.map(m => m.investment_goal).filter(Boolean))] as string[];
-    const budgetRanges = [...new Set(members.map(m => m.budget_range).filter(Boolean))] as string[];
-    const timelines = [...new Set(members.map(m => m.timeline).filter(Boolean))] as string[];
+  // Infinite query for paginated members
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: membersLoading,
+    refetch: refetchMembers,
+  } = useInfiniteQuery({
+    queryKey: ['directory-members-paginated', debouncedSearch, filters.country, filters.membershipTier, filters.investmentGoal, sortBy],
+    queryFn: async ({ pageParam = 0 }) => {
+      const { data, error } = await supabase.rpc('get_directory_members_paginated', {
+        p_limit: PAGE_SIZE,
+        p_offset: pageParam,
+        p_search: debouncedSearch || null,
+        p_country: filters.country,
+        p_membership_tier: filters.membershipTier,
+        p_investment_goal: filters.investmentGoal,
+        p_sort_by: sortBy,
+      });
 
-    return { countries, investmentGoals, budgetRanges, timelines };
-  }, [members]);
+      if (error) throw error;
+      
+      const members = (data || []) as (DirectoryMember & { total_count: number })[];
+      const totalCount = members[0]?.total_count || 0;
 
-  // Filter and sort members
+      return {
+        members: members.map(({ total_count, ...member }) => member as DirectoryMember),
+        totalCount,
+        nextOffset: pageParam + PAGE_SIZE,
+        hasMore: pageParam + PAGE_SIZE < totalCount,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextOffset : undefined,
+    initialPageParam: 0,
+  });
+
+  // Flatten all pages into single array
+  const members = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.members);
+  }, [data]);
+
+  // Get total count from first page
+  const totalCount = data?.pages[0]?.totalCount || 0;
+
+  // Client-side filtering for budget/timeline (not in DB query for simplicity)
   const filteredMembers = useMemo(() => {
     let result = [...members];
 
-    // Search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      result = result.filter(m =>
-        m.full_name?.toLowerCase().includes(searchLower) ||
-        m.bio?.toLowerCase().includes(searchLower) ||
-        m.looking_for?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Country filter
-    if (filters.country) {
-      result = result.filter(m => m.country === filters.country);
-    }
-
-    // Membership tier filter
-    if (filters.membershipTier) {
-      result = result.filter(m => m.membership_tier === filters.membershipTier);
-    }
-
-    // Investment goal filter
-    if (filters.investmentGoal) {
-      result = result.filter(m => m.investment_goal === filters.investmentGoal);
-    }
-
-    // Budget range filter
     if (filters.budgetRange) {
       result = result.filter(m => m.budget_range === filters.budgetRange);
     }
 
-    // Timeline filter
     if (filters.timeline) {
       result = result.filter(m => m.timeline === filters.timeline);
     }
 
-    // Sort
-    if (sortBy === 'alphabetical') {
-      result.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
-    } else {
-      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    }
-
     return result;
-  }, [members, filters, sortBy]);
+  }, [members, filters.budgetRange, filters.timeline]);
 
-  const updateFilter = <K extends keyof DirectoryFilters>(key: K, value: DirectoryFilters[K]) => {
+  const updateFilter = useCallback(<K extends keyof DirectoryFilters>(key: K, value: DirectoryFilters[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       search: '',
       country: null,
@@ -121,13 +148,20 @@ export function useMemberDirectory() {
       budgetRange: null,
       timeline: null,
     });
-  };
+  }, []);
 
   const hasActiveFilters = Object.values(filters).some(v => v !== null && v !== '');
 
+  // Load more function for infinite scroll
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
   return {
     members: filteredMembers,
-    totalCount: members.length,
+    totalCount,
     membersLoading,
     filters,
     updateFilter,
@@ -137,5 +171,9 @@ export function useMemberDirectory() {
     sortBy,
     setSortBy,
     refetchMembers,
+    // Infinite scroll props
+    loadMore,
+    hasNextPage: hasNextPage || false,
+    isFetchingNextPage,
   };
 }
