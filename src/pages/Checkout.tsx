@@ -164,6 +164,28 @@ const Checkout = () => {
       ".TabIcon--selected": {
         fill: "#0A0F1D",
       },
+      ".PickerItem": {
+        color: "#FFFFFF",
+        backgroundColor: "#0D1321",
+      },
+      ".PickerItem:hover": {
+        backgroundColor: "rgba(255, 255, 255, 0.08)",
+      },
+      ".PickerItem--selected": {
+        color: "#FFFFFF",
+        backgroundColor: "rgba(203, 184, 158, 0.15)",
+      },
+      ".DropdownItem": {
+        color: "#FFFFFF",
+        backgroundColor: "#0D1321",
+      },
+      ".DropdownItem:hover": {
+        backgroundColor: "rgba(255, 255, 255, 0.08)",
+      },
+      ".DropdownItem--selected": {
+        color: "#FFFFFF",
+        backgroundColor: "rgba(203, 184, 158, 0.15)",
+      },
     },
   };
 
