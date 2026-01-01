@@ -3,8 +3,12 @@ import { Helmet } from 'react-helmet';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useDigestByDate, useLatestDigest } from '@/hooks/useDailyDigest';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
+import { Lock, Crown, ArrowRight, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 // Bloomberg-style components
 import { BloombergBriefing } from '@/components/briefing/BloombergBriefing';
@@ -16,6 +20,11 @@ import { AreaHighlights } from '@/components/briefing/AreaHighlights';
 import { FeaturedIntelligence } from '@/components/briefing/IntelligenceCard';
 import { BriefingFooter } from '@/components/briefing/BriefingFooter';
 import { EmptyBriefing } from '@/components/briefing/EmptyBriefing';
+
+// Date picker for Elite users
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
 
 // Loading skeleton
 import { Skeleton } from '@/components/ui/skeleton';
@@ -63,10 +72,58 @@ function BriefingSkeleton() {
   );
 }
 
+// Locked Content Overlay Component
+function LockedContent({ title, tier }: { title: string; tier: 'investor' | 'elite' }) {
+  const upgradeLink = tier === 'investor' ? '/pricing' : '/upgrade';
+  const tierLabel = tier === 'investor' ? 'Investor' : 'Elite';
+  
+  return (
+    <div className="relative rounded-xl overflow-hidden">
+      {/* Blurred placeholder */}
+      <div className="blur-sm opacity-50 pointer-events-none">
+        <div className="h-64 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl flex items-center justify-center">
+          <span className="text-muted-foreground">{title}</span>
+        </div>
+      </div>
+      
+      {/* Lock overlay */}
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 rounded-xl border border-border">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <Lock className="w-6 h-6 text-primary" />
+        </div>
+        <div className="text-center px-4">
+          <h4 className="font-semibold text-foreground mb-1">{tierLabel}+ Feature</h4>
+          <p className="text-sm text-muted-foreground mb-4">
+            Upgrade to {tierLabel} to unlock {title.toLowerCase()}
+          </p>
+          <Button asChild size="sm">
+            <Link to={upgradeLink}>
+              <Crown className="w-4 h-4 mr-2" />
+              Upgrade Now
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const DailyBriefing = () => {
   const { date } = useParams<{ date?: string }>();
   const [digestArticles, setDigestArticles] = useState<any[]>([]);
   const [isLoadingArticles, setIsLoadingArticles] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    date ? new Date(date) : undefined
+  );
+  const { user, profile } = useAuth();
+  
+  // Determine user tier
+  const membershipTier = profile?.membership_tier || 'free';
+  const isFreeTier = !user || membershipTier === 'free';
+  const isInvestorTier = membershipTier === 'investor';
+  const isEliteTier = membershipTier === 'elite' || membershipTier === 'private';
+  const hasFullAccess = !isFreeTier; // Investor+ gets full access
+  const hasHistoricalAccess = isEliteTier; // Only Elite gets historical access
 
   // Use specific date or latest
   const { digest: specificDigest, isLoading: isLoadingSpecific } = useDigestByDate(date || '');
@@ -165,47 +222,97 @@ const DailyBriefing = () => {
           <BloombergBriefing 
             date={digest.digest_date}
             generatedAt={digest.generated_at || digest.created_at}
+            hasHistoricalAccess={hasHistoricalAccess}
+            selectedDate={selectedDate}
+            onDateChange={(newDate) => {
+              setSelectedDate(newDate);
+              if (newDate) {
+                window.location.href = `/briefing/${format(newDate, 'yyyy-MM-dd')}`;
+              }
+            }}
           >
-            {/* Market Ticker */}
+            {/* Market Ticker - Always visible */}
             <MarketTicker
               transactionVolume={digest.transaction_volume || undefined}
               avgPriceSqft={digest.avg_price_sqft || undefined}
               sentiment={digest.market_sentiment || undefined}
             />
 
-            {/* Executive Summary */}
+            {/* Executive Summary - Always visible (preview for free users) */}
             <ExecutiveSummary
               headline={digest.headline}
               summary={digest.executive_summary}
               sentiment={digest.market_sentiment || 'neutral'}
               investmentAction={digest.investment_action || 'watch'}
               confidenceScore={digest.confidence_score || 3}
-              keyTakeaways={digest.key_takeaways || []}
+              keyTakeaways={hasFullAccess ? (digest.key_takeaways || []) : []}
             />
 
-            {/* Metrics Dashboard */}
-            <MetricsDashboard
-              keyMetrics={digest.key_metrics}
-              transactionVolume={digest.transaction_volume || undefined}
-              avgPriceSqft={digest.avg_price_sqft || undefined}
-            />
+            {/* Free tier upgrade CTA */}
+            {isFreeTier && (
+              <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-6 text-center">
+                <Crown className="w-10 h-10 text-primary mx-auto mb-3" />
+                <h3 className="font-heading text-xl font-bold text-foreground mb-2">
+                  Unlock Full Market Intelligence
+                </h3>
+                <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
+                  Upgrade to Investor to access comprehensive metrics, sector analysis, area insights, and featured intelligence articles.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button asChild size="lg">
+                    <Link to="/pricing">
+                      <Crown className="w-4 h-4 mr-2" />
+                      Upgrade to Investor
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg">
+                    <Link to="/auth">
+                      Sign In
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Metrics Dashboard - Locked for free users */}
+            {hasFullAccess ? (
+              <MetricsDashboard
+                keyMetrics={digest.key_metrics}
+                transactionVolume={digest.transaction_volume || undefined}
+                avgPriceSqft={digest.avg_price_sqft || undefined}
+              />
+            ) : (
+              <LockedContent title="Key Metrics Dashboard" tier="investor" />
+            )}
 
             {/* Two Column Layout for Sectors & Areas */}
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Sector Analysis */}
-              <SectorAnalysis
-                sectorHighlights={digest.sector_highlights}
-              />
+              {hasFullAccess ? (
+                <SectorAnalysis
+                  sectorHighlights={digest.sector_highlights}
+                />
+              ) : (
+                <LockedContent title="Sector Analysis" tier="investor" />
+              )}
 
               {/* Area Highlights */}
-              <AreaHighlights
-                areaHighlights={digest.top_areas.length > 0 ? digest.top_areas : digest.area_highlights}
-              />
+              {hasFullAccess ? (
+                <AreaHighlights
+                  areaHighlights={digest.top_areas.length > 0 ? digest.top_areas : digest.area_highlights}
+                />
+              ) : (
+                <LockedContent title="Area Highlights" tier="investor" />
+              )}
             </div>
 
             {/* Featured Intelligence */}
-            {intelligenceArticles.length > 0 && (
+            {hasFullAccess && intelligenceArticles.length > 0 && (
               <FeaturedIntelligence articles={intelligenceArticles} />
+            )}
+            
+            {!hasFullAccess && (
+              <LockedContent title="Featured Intelligence Articles" tier="investor" />
             )}
 
             {/* Footer with Sources & Methodology */}

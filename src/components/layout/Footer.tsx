@@ -26,6 +26,7 @@ const getFooterLinks = (t: (key: string) => string) => ({
   resources: {
     title: t('footer.resources'),
     links: [
+      { label: "Daily Briefing", href: "/briefing" },
       { label: t('footer.marketReports'), href: "#" },
       { label: t('footer.offPlanGuide'), href: "#" },
       { label: t('footer.goldenVisaWizard'), href: "/golden-visa" },

@@ -235,15 +235,20 @@ export function DailyDigest({ digest, compact = false }: DailyDigestProps) {
       </div>
 
       {/* Footer CTA */}
-      <div className="p-6 border-t border-border bg-muted/30">
+      <div className="p-6 border-t border-border bg-gradient-to-r from-primary/5 to-gold/5">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            {digest.top_article_ids?.length || 0} articles analyzed for this briefing
-          </p>
-          <Button asChild variant="outline" size="sm">
+          <div>
+            <p className="text-sm text-foreground font-medium">
+              {digest.top_article_ids?.length || 0} articles analyzed
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Get the full Bloomberg-style briefing with metrics & sector analysis
+            </p>
+          </div>
+          <Button asChild size="default" className="gap-2">
             <Link to={`/briefing/${digest.digest_date}`}>
               View Full Briefing
-              <ArrowRight className="w-4 h-4 ml-2" />
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </Button>
         </div>
