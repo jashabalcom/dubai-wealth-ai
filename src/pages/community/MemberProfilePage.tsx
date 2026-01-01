@@ -197,7 +197,7 @@ const MemberProfilePage = () => {
                     </>
                   )}
 
-                  {member.linkedin_url && (
+                  {member.linkedin_url ? (
                     <>
                       <Separator className="my-4" />
                       <Button variant="outline" size="sm" asChild>
@@ -206,6 +206,14 @@ const MemberProfilePage = () => {
                           View LinkedIn Profile
                         </a>
                       </Button>
+                    </>
+                  ) : !isOwnProfile && !member.is_demo_member && (
+                    <>
+                      <Separator className="my-4" />
+                      <p className="text-sm text-muted-foreground italic flex items-center gap-2">
+                        <Linkedin className="w-4 h-4" />
+                        Connect to see LinkedIn profile
+                      </p>
                     </>
                   )}
                 </CardContent>
@@ -229,12 +237,20 @@ const MemberProfilePage = () => {
                     </div>
                   )}
 
-                  {member.budget_range && (
+                  {member.budget_range ? (
                     <div className="flex items-start gap-3">
                       <DollarSign className="w-5 h-5 text-primary mt-0.5" />
                       <div>
                         <p className="text-sm font-medium">Budget</p>
                         <p className="text-sm text-muted-foreground">{member.budget_range}</p>
+                      </div>
+                    </div>
+                  ) : !isOwnProfile && !member.is_demo_member && (
+                    <div className="flex items-start gap-3">
+                      <DollarSign className="w-5 h-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Budget</p>
+                        <p className="text-xs text-muted-foreground italic">Connect to view</p>
                       </div>
                     </div>
                   )}

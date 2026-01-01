@@ -373,12 +373,17 @@ export default function Profile() {
                   )}
                 </div>
                 
-                {/* Directory Visibility Toggle */}
+                {/* Privacy Settings */}
                 {isOwnProfile && (
-                  <div className="mt-4 pt-4 border-t border-border/30">
+                  <div className="mt-4 pt-4 border-t border-border/30 space-y-4">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Privacy Settings
+                    </h4>
+                    
+                    {/* Directory Visibility Toggle */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {(profile as any).is_visible_in_directory !== false ? (
+                        {profile.is_visible_in_directory !== false ? (
                           <Eye className="h-4 w-4 text-gold" />
                         ) : (
                           <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -389,13 +394,50 @@ export default function Profile() {
                       </div>
                       <Switch
                         id="directory-visibility"
-                        checked={(profile as any).is_visible_in_directory !== false}
+                        checked={profile.is_visible_in_directory !== false}
                         onCheckedChange={handleToggleDirectoryVisibility}
                         disabled={updateProfile.isPending}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Let other members find and connect with you
+                    
+                    {/* LinkedIn Public Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Linkedin className="h-4 w-4 text-muted-foreground" />
+                        <Label htmlFor="linkedin-public" className="text-sm cursor-pointer">
+                          Show LinkedIn publicly
+                        </Label>
+                      </div>
+                      <Switch
+                        id="linkedin-public"
+                        checked={profile.show_linkedin_public === true}
+                        onCheckedChange={(checked) => {
+                          updateProfile.mutate({ show_linkedin_public: checked } as any);
+                        }}
+                        disabled={updateProfile.isPending}
+                      />
+                    </div>
+                    
+                    {/* Budget Public Toggle */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-muted-foreground" />
+                        <Label htmlFor="budget-public" className="text-sm cursor-pointer">
+                          Show budget publicly
+                        </Label>
+                      </div>
+                      <Switch
+                        id="budget-public"
+                        checked={profile.show_budget_public === true}
+                        onCheckedChange={(checked) => {
+                          updateProfile.mutate({ show_budget_public: checked } as any);
+                        }}
+                        disabled={updateProfile.isPending}
+                      />
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      By default, LinkedIn and budget are only visible to connected members
                     </p>
                   </div>
                 )}

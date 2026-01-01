@@ -21,6 +21,9 @@ export interface Profile {
   membership_renews_at?: string | null;
   created_at: string;
   updated_at?: string;
+  is_visible_in_directory?: boolean;
+  show_linkedin_public?: boolean;
+  show_budget_public?: boolean;
 }
 
 export interface UserPost {
