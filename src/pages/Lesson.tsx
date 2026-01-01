@@ -211,37 +211,6 @@ export default function Lesson() {
 
   if (!course || !lesson) return null;
 
-  // Show upgrade prompt for locked lessons
-  if (accessDenied) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md text-center"
-        >
-          <div className="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-8 h-8 text-gold" />
-          </div>
-          <h1 className="font-heading text-2xl text-foreground mb-4">
-            Premium Content
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            This lesson is available to Dubai Investor and Elite members. Upgrade your membership to unlock the full academy.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button variant="outline" onClick={() => navigate(`/academy/${courseSlug}`)}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Course
-            </Button>
-            <Button variant="gold" onClick={() => navigate('/upgrade')}>
-              Upgrade Membership
-            </Button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   const prevLesson = getPrevLesson();
   const nextLesson = getNextLesson();
@@ -305,6 +274,30 @@ export default function Lesson() {
               const lessonProgress = lessonProgressMap.get(l.id);
               const isLessonCompleted = lessonProgress?.is_completed || false;
               const watchPercent = lessonProgress?.watch_progress_percent || 0;
+              const isLessonLocked = !canAccessLesson(l);
+
+              // Locked lesson - clickable to upgrade
+              if (isLessonLocked) {
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => navigate('/pricing')}
+                    className={`w-full flex items-center gap-3 p-4 border-b border-border transition-colors hover:bg-gold/5 text-left ${
+                      isActive ? 'bg-gold/10 border-l-2 border-l-gold' : ''
+                    }`}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+                      <Lock className="w-4 h-4 text-gold" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-muted-foreground truncate">
+                        {l.title}
+                      </p>
+                      <span className="text-xs text-gold">Investor+</span>
+                    </div>
+                  </button>
+                );
+              }
 
               return (
                 <Link
@@ -395,12 +388,14 @@ export default function Lesson() {
           >
             {/* Video Player */}
             <VideoPlayer 
-              url={lesson.video_url} 
+              url={accessDenied ? null : lesson.video_url} 
               title={lesson.title}
               lessonId={lesson.id}
               initialPosition={progress?.last_position_seconds || 0}
               onProgress={handleVideoProgress}
               onComplete={handleVideoComplete}
+              isLocked={accessDenied}
+              onUpgradeClick={() => navigate('/pricing')}
             />
 
             {/* Lesson Content */}

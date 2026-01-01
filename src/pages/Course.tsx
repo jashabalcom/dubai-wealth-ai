@@ -313,25 +313,28 @@ export default function Course() {
                       </div>
                     </Link>
                   ) : (
-                    <div className="flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border opacity-60">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                        <Lock className="w-5 h-5 text-muted-foreground" />
+                    <button
+                      onClick={() => navigate('/pricing')}
+                      className="w-full flex items-center gap-4 p-4 rounded-xl bg-card/50 border border-border hover:border-gold/30 hover:bg-card transition-all duration-300 cursor-pointer group text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+                        <Lock className="w-5 h-5 text-gold" />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground truncate">
+                        <h3 className="font-medium text-foreground truncate group-hover:text-gold transition-colors">
                           {lesson.title}
                         </h3>
                         <p className="text-sm text-muted-foreground truncate">
-                          {lesson.description}
+                          Unlock with Investor membership
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                        <span>{lesson.duration_minutes}min</span>
-                        <Lock className="w-5 h-5" />
+                      <div className="flex items-center gap-3 text-sm">
+                        <span className="text-muted-foreground">{lesson.duration_minutes}min</span>
+                        <span className="text-gold text-xs font-medium">Upgrade</span>
                       </div>
-                    </div>
+                    </button>
                   )}
                 </motion.div>
               );

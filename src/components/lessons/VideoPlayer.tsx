@@ -8,6 +8,8 @@ interface VideoPlayerProps {
   initialPosition?: number;
   onProgress?: (positionSeconds: number, durationSeconds: number) => void;
   onComplete?: () => void;
+  isLocked?: boolean;
+  onUpgradeClick?: () => void;
 }
 
 export function VideoPlayer({ 
@@ -17,7 +19,15 @@ export function VideoPlayer({
   initialPosition = 0,
   onProgress,
   onComplete,
+  isLocked = false,
+  onUpgradeClick,
 }: VideoPlayerProps) {
+  // If locked, show the locked overlay instead of video
+  if (isLocked) {
+    const { LockedVideoOverlay } = require('./LockedVideoOverlay');
+    return <LockedVideoOverlay lessonTitle={title} onUpgradeClick={onUpgradeClick} />;
+  }
+
   if (!url) {
     return (
       <div className="aspect-video bg-secondary relative">
