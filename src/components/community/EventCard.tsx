@@ -9,6 +9,7 @@ import { CommunityEvent } from '@/hooks/useCommunityEvents';
 import { useProfile } from '@/hooks/useProfile';
 import { useNavigate } from 'react-router-dom';
 import { VideoPlayer } from '@/components/lessons/VideoPlayer';
+import { hasEventEnded, isEventActive, isEventUpcoming, getEventEndTime } from '@/lib/eventUtils';
 
 interface EventCardProps {
   event: CommunityEvent;
@@ -23,9 +24,11 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
   const [showRecordingModal, setShowRecordingModal] = useState(false);
   
   const eventDate = new Date(event.event_date);
-  const isPast = eventDate < new Date();
-  const isUpcoming = eventDate > new Date() && eventDate < new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const isLive = event.is_live;
+  const endTime = getEventEndTime(eventDate, event.duration_minutes);
+  const eventEnded = hasEventEnded(eventDate, event.duration_minutes);
+  const eventActive = isEventActive(eventDate, event.duration_minutes);
+  const startingSoon = isEventUpcoming(eventDate) && eventDate < new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const isLive = event.is_live || eventActive;
   
   const tier = profile?.membership_tier || 'free';
   
@@ -76,7 +79,7 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
         className={`group bg-card border rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl ${
           isLive ? 'border-red-500 shadow-lg shadow-red-500/20 hover:shadow-red-500/30' :
           event.visibility === 'elite_only' ? 'border-gold/30 hover:border-gold/50 hover:shadow-gold/10' : 'border-border/50 hover:border-gold/30 hover:shadow-gold/10'
-        } ${isPast && !hasRecording && !isLive ? 'opacity-60' : ''}`}
+        } ${eventEnded && !hasRecording && !isLive ? 'opacity-60' : ''}`}
       >
         {/* Cover Image */}
         {event.cover_image_url && (
@@ -144,7 +147,7 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
                     </Badge>
                   </motion.div>
                 )}
-                {isUpcoming && !isLive && (
+                {startingSoon && !isLive && (
                   <Badge className="bg-green-500/20 text-green-500 text-xs animate-pulse-soft">
                     Starting Soon
                   </Badge>
@@ -184,7 +187,7 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
             <div className="flex items-center gap-2 text-sm text-muted-foreground transition-colors group-hover:text-foreground">
               <Clock className="h-4 w-4 text-gold" />
               <span>
-                {format(eventDate, 'h:mm a')} · {event.duration_minutes} min
+                {format(eventDate, 'h:mm a')} - {format(endTime, 'h:mm a')} ({event.duration_minutes} min)
               </span>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -225,7 +228,7 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
                   Join Live Now
                 </Button>
               )
-            ) : isPast ? (
+            ) : eventEnded ? (
               hasRecording ? (
                 canAccessRecording ? (
                   <Button
