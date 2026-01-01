@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Grid3X3, List, SortAsc } from 'lucide-react';
 import { MemberCard } from '@/components/community/MemberCard';
-import { DirectoryFilters } from '@/components/community/DirectoryFilters';
+import { DirectoryFilters, MobileFilterBar } from '@/components/community/DirectoryFilters';
 import { CommunityPageHeader } from '@/components/community/CommunityPageHeader';
 import { SidebarCard } from '@/components/community/SidebarCard';
 import { QuickStats } from '@/components/community/QuickStats';
@@ -46,7 +46,7 @@ export default function MembersPage() {
 
   const ViewToggle = (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/50">
+      <div className="hidden sm:flex items-center gap-1 p-1 bg-muted/30 rounded-lg border border-border/40">
         <Button
           variant="ghost"
           size="sm"
@@ -72,7 +72,7 @@ export default function MembersPage() {
       </div>
 
       <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'newest' | 'alphabetical')}>
-        <SelectTrigger className="w-[130px] bg-muted/30 border-border/50">
+        <SelectTrigger className="hidden lg:flex w-[130px] bg-muted/30 border-border/40">
           <SortAsc className="h-4 w-4 mr-2" />
           <SelectValue />
         </SelectTrigger>
@@ -96,14 +96,25 @@ export default function MembersPage() {
             actions={ViewToggle}
           />
 
+          {/* Mobile Filter Bar - Sticky */}
+          <MobileFilterBar
+            filters={filters}
+            filterOptions={filterOptions}
+            onFilterChange={updateFilter}
+            onClearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+            sortBy={sortBy}
+            onSortChange={(v) => setSortBy(v as 'newest' | 'alphabetical')}
+          />
+
           {/* 12-Column Grid Layout */}
           <div className={COMMUNITY_LAYOUT.grid.container}>
-            {/* Left Sidebar - Filters */}
+            {/* Left Sidebar - Filters (Desktop only) */}
             <motion.aside
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4 }}
-              className={COMMUNITY_LAYOUT.grid.leftSidebar}
+              className={cn(COMMUNITY_LAYOUT.grid.leftSidebar, 'hidden lg:block')}
             >
               <SidebarCard>
                 <DirectoryFilters
@@ -117,7 +128,7 @@ export default function MembersPage() {
             </motion.aside>
 
             {/* Main Content - Members Grid */}
-            <div className={COMMUNITY_LAYOUT.grid.mainContent}>
+            <div className={cn(COMMUNITY_LAYOUT.grid.mainContent, 'lg:col-span-6 col-span-full')}>
               {membersLoading ? (
                 <div className={COMMUNITY_LAYOUT.memberGrid.container}>
                   {[...Array(6)].map((_, i) => (
@@ -126,7 +137,7 @@ export default function MembersPage() {
                       className={cn(COMMUNITY_LAYOUT.card.base, COMMUNITY_LAYOUT.card.padding, 'animate-pulse')}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="h-14 w-14 bg-muted/50 rounded-full shrink-0" />
+                        <div className="h-16 w-16 bg-muted/50 rounded-full shrink-0" />
                         <div className="flex-1 min-w-0 space-y-2">
                           <div className="h-5 w-28 bg-muted/50 rounded" />
                           <div className="h-4 w-20 bg-muted/50 rounded" />
@@ -140,7 +151,7 @@ export default function MembersPage() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className={cn(COMMUNITY_LAYOUT.card.base, 'text-center py-12')}
+                  className={cn(COMMUNITY_LAYOUT.card.base, COMMUNITY_LAYOUT.card.padding, 'text-center py-12')}
                 >
                   <Users className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-serif font-semibold mb-2">No members found</h3>
@@ -150,14 +161,14 @@ export default function MembersPage() {
                       : 'No members have made their profiles visible yet.'}
                   </p>
                   {hasActiveFilters && (
-                    <Button variant="outline" onClick={clearFilters}>
+                    <Button variant="outline" onClick={clearFilters} className="border-border/40">
                       Clear Filters
                     </Button>
                   )}
                 </motion.div>
               ) : (
                 <>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-muted-foreground mb-4 hidden lg:block">
                     Showing {members.length} of {totalCount} members
                   </p>
                   <div className={viewMode === 'grid' ? COMMUNITY_LAYOUT.memberGrid.container : COMMUNITY_LAYOUT.memberGrid.list}>
@@ -174,7 +185,7 @@ export default function MembersPage() {
               )}
             </div>
 
-            {/* Right Sidebar - Quick Stats */}
+            {/* Right Sidebar - Quick Stats (Desktop only) */}
             <motion.aside
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
