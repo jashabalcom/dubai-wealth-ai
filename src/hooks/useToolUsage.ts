@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 
-const FREE_TOOL_LIMIT = 3;
+const FREE_TOOL_LIMIT = 2;
 
 export type ToolName = 'roi' | 'mortgage' | 'rent-vs-buy' | 'airbnb' | 'str-vs-ltr' | 'total-cost' | 'cap-rate' | 'dscr' | 'commercial-lease' | 'free-zone' | 'offplan';
 
@@ -23,7 +23,7 @@ export function useToolUsage(toolName: ToolName): UseToolUsageReturn {
   const [usageCount, setUsageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isUnlimited = profile?.membership_tier === 'investor' || profile?.membership_tier === 'elite';
+  const isUnlimited = profile?.membership_tier === 'investor' || profile?.membership_tier === 'elite' || profile?.membership_tier === 'private';
 
   useEffect(() => {
     async function fetchUsage() {

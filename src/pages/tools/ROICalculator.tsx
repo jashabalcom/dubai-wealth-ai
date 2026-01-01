@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, TrendingUp, DollarSign, Percent } from 'lucide-react';
+import { ArrowLeft, TrendingUp, DollarSign, Percent, Lock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -20,6 +20,8 @@ import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
+import { LockedResultValue } from '@/components/freemium/LockedResultValue';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
@@ -165,7 +167,7 @@ export default function ROICalculator() {
         <div className="container mx-auto px-4">
           {/* Usage Limit Banner for Free Users */}
           {!isUnlimited && !usageLoading && (
-            <UsageLimitBanner remaining={remainingUses} total={3} type="tool" toolName="ROI Calculator" />
+            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="ROI Calculator" />
           )}
           <Link
             to="/tools"
@@ -338,41 +340,67 @@ export default function ROICalculator() {
               className="space-y-6"
             >
               {/* Key Metrics */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20">
-                <h2 className="font-heading text-xl text-foreground mb-6">Key Returns</h2>
-                
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">Total ROI</p>
-                    <p className="font-heading text-3xl text-emerald-400">{totalROI.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">Over {inputs.holdingPeriod} years</p>
+              <HardPaywall
+                isLocked={hasReachedLimit}
+                feature="Key Returns Analysis"
+                requiredTier="investor"
+                teaserMessage="Upgrade to unlock your ROI analysis, yield calculations, and AI-powered investment insights."
+              >
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20">
+                  <h2 className="font-heading text-xl text-foreground mb-6">Key Returns</h2>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <LockedResultValue
+                        label="Total ROI"
+                        isLocked={hasReachedLimit}
+                        value={`${totalROI.toFixed(1)}%`}
+                        valueClassName="font-heading text-3xl text-emerald-400"
+                      />
+                      <p className="text-xs text-muted-foreground">Over {inputs.holdingPeriod} years</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <LockedResultValue
+                        label="Annualized ROI"
+                        isLocked={hasReachedLimit}
+                        value={`${annualizedROI.toFixed(1)}%`}
+                        valueClassName="font-heading text-3xl text-emerald-400"
+                      />
+                      <p className="text-xs text-muted-foreground">Per year</p>
+                    </div>
                   </div>
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">Annualized ROI</p>
-                    <p className="font-heading text-3xl text-emerald-400">{annualizedROI.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">Per year</p>
-                  </div>
-                </div>
 
-                <CalculatorAIAnalysis
-                  calculatorType="roi"
-                  inputs={inputs}
-                  results={{
-                    grossYield,
-                    netYield,
-                    cashOnCash,
-                    totalROI,
-                    annualizedROI,
-                    totalInitialInvestment,
-                    netRentalIncome,
-                    capitalGain,
-                    futureValue,
-                    totalReturn,
-                  }}
-                  area={inputs.selectedArea}
-                  buttonText="Get AI Analysis"
-                />
-              </div>
+                  {!hasReachedLimit && isUnlimited && (
+                    <CalculatorAIAnalysis
+                      calculatorType="roi"
+                      inputs={inputs}
+                      results={{
+                        grossYield,
+                        netYield,
+                        cashOnCash,
+                        totalROI,
+                        annualizedROI,
+                        totalInitialInvestment,
+                        netRentalIncome,
+                        capitalGain,
+                        futureValue,
+                        totalReturn,
+                      }}
+                      area={inputs.selectedArea}
+                      buttonText="Get AI Analysis"
+                    />
+                  )}
+                  
+                  {!isUnlimited && !hasReachedLimit && (
+                    <ContextualUpgradePrompt
+                      feature="AI Investment Analysis"
+                      description="Get personalized AI insights on your investment with Dubai Investor membership."
+                      requiredTier="investor"
+                      variant="banner"
+                    />
+                  )}
+                </div>
+              </HardPaywall>
 
               {/* Yield Analysis */}
               <div className="p-6 rounded-2xl bg-card border border-border">
@@ -384,21 +412,42 @@ export default function ROICalculator() {
                       <Percent className="w-4 h-4" />
                       Gross Rental Yield
                     </span>
-                    <span className="font-heading text-lg text-foreground">{grossYield.toFixed(2)}%</span>
+                    {hasReachedLimit ? (
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <span className="font-heading text-lg opacity-50">---</span>
+                        <Lock className="w-4 h-4" />
+                      </span>
+                    ) : (
+                      <span className="font-heading text-lg text-foreground">{grossYield.toFixed(2)}%</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                     <span className="text-muted-foreground flex items-center gap-2">
                       <Percent className="w-4 h-4" />
                       Net Rental Yield
                     </span>
-                    <span className="font-heading text-lg text-foreground">{netYield.toFixed(2)}%</span>
+                    {hasReachedLimit ? (
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <span className="font-heading text-lg opacity-50">---</span>
+                        <Lock className="w-4 h-4" />
+                      </span>
+                    ) : (
+                      <span className="font-heading text-lg text-foreground">{netYield.toFixed(2)}%</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                     <span className="text-muted-foreground flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       Cash on Cash Return
                     </span>
-                    <span className="font-heading text-lg text-foreground">{cashOnCash.toFixed(2)}%</span>
+                    {hasReachedLimit ? (
+                      <span className="flex items-center gap-2 text-muted-foreground">
+                        <span className="font-heading text-lg opacity-50">---</span>
+                        <Lock className="w-4 h-4" />
+                      </span>
+                    ) : (
+                      <span className="font-heading text-lg text-foreground">{cashOnCash.toFixed(2)}%</span>
+                    )}
                   </div>
                 </div>
               </div>
