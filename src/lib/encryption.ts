@@ -152,10 +152,14 @@ export async function encryptMessage(
   const encoder = new TextEncoder();
   const plaintextBuffer = encoder.encode(plaintext);
 
+  // Create a copy of the nonce as ArrayBuffer to satisfy TypeScript
+  const nonceArrayBuffer = new ArrayBuffer(nonce.byteLength);
+  new Uint8Array(nonceArrayBuffer).set(nonce);
+  
   const ciphertextBuffer = await window.crypto.subtle.encrypt(
     {
       name: ALGORITHM,
-      iv: nonce,
+      iv: nonceArrayBuffer,
     },
     sharedKey,
     plaintextBuffer
@@ -169,7 +173,7 @@ export async function encryptMessage(
 
   return {
     ciphertext: arrayBufferToBase64(ciphertextBuffer),
-    nonce: arrayBufferToBase64(nonce),
+    nonce: arrayBufferToBase64(nonceArrayBuffer),
     ephemeralPublicKey: arrayBufferToBase64(ephemeralPublicKeyBuffer),
   };
 }
