@@ -32,6 +32,7 @@ export default function EventRoom() {
     isLoading,
     error,
     roomState,
+    isHost,
     generateRoomName,
     joinMeeting,
     leaveMeeting,
@@ -86,6 +87,7 @@ export default function EventRoom() {
         event={event}
         userDisplayName={displayName}
         userAvatarUrl={avatarUrl}
+        isHost={isHost}
         onJoin={joinMeeting}
         onBack={handleBack}
       />

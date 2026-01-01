@@ -141,6 +141,8 @@ export function EmbeddedMeetingRoom({
             iframeRef.style.width = '100%';
             iframeRef.style.border = 'none';
             iframeRef.style.borderRadius = '0.75rem';
+            // Add permissions for camera/mic access
+            iframeRef.setAttribute('allow', 'camera; microphone; autoplay; fullscreen; display-capture');
           }
         }}
         onApiReady={handleApiReady}

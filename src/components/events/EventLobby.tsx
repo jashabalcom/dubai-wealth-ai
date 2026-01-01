@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { format, formatDistanceToNow, isPast, isFuture, differenceInSeconds } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Users, Mic, MicOff, Video, VideoOff, ArrowLeft, Loader2 } from 'lucide-react';
+import { Calendar, Clock, Users, Mic, MicOff, Video, VideoOff, ArrowLeft, Loader2, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,11 +12,12 @@ interface EventLobbyProps {
   event: CommunityEvent;
   userDisplayName: string;
   userAvatarUrl?: string;
+  isHost?: boolean;
   onJoin: () => void;
   onBack: () => void;
 }
 
-export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBack }: EventLobbyProps) {
+export function EventLobby({ event, userDisplayName, userAvatarUrl, isHost = false, onJoin, onBack }: EventLobbyProps) {
   const [isMuted, setIsMuted] = useState(true);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [countdown, setCountdown] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
   // Camera preview state
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isLoadingCamera, setIsLoadingCamera] = useState(false);
 
@@ -63,7 +65,7 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
     return () => clearInterval(interval);
   }, [eventDate]);
 
-  // Camera preview effect
+  // Camera preview effect - request stream
   useEffect(() => {
     const startCamera = async () => {
       if (isVideoOff) {
@@ -71,7 +73,14 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
+          setPreviewStream(null);
         }
+        return;
+      }
+
+      // Check for secure context
+      if (!window.isSecureContext) {
+        setCameraError('Camera requires HTTPS. Please use a secure connection.');
         return;
       }
 
@@ -85,10 +94,7 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
         });
         
         streamRef.current = mediaStream;
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
+        setPreviewStream(mediaStream);
       } catch (err) {
         console.error('Camera access error:', err);
         if (err instanceof Error) {
@@ -115,16 +121,26 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
     };
   }, [isVideoOff]);
 
+  // Attach stream to video element after it's mounted
+  useEffect(() => {
+    if (videoRef.current && previewStream) {
+      videoRef.current.srcObject = previewStream;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [previewStream]);
+
   const handleJoin = () => {
     // Stop camera stream before joining (Jitsi will request its own)
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
+      setPreviewStream(null);
     }
     onJoin();
   };
 
   const retryCamera = () => {
+    setCameraError(null);
     setIsVideoOff(true);
     setTimeout(() => setIsVideoOff(false), 100);
   };
@@ -168,21 +184,29 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
         >
           {/* Event header */}
           <div className="text-center space-y-4">
-            {isLive && (
-              <motion.div
-                initial={{ scale: 0.9 }}
-                animate={{ scale: [0.9, 1.1, 0.9] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                <Badge className="bg-red-500 text-white gap-1.5 px-4 py-1.5 text-sm">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-                  </span>
-                  LIVE NOW
+            <div className="flex items-center justify-center gap-3">
+              {isHost && (
+                <Badge className="bg-gold/20 text-gold border border-gold/30 gap-1.5 px-3 py-1">
+                  <Crown className="h-3.5 w-3.5" />
+                  Host
                 </Badge>
-              </motion.div>
-            )}
+              )}
+              {isLive && (
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: [0.9, 1.1, 0.9] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <Badge className="bg-red-500 text-white gap-1.5 px-4 py-1.5 text-sm">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                    </span>
+                    LIVE NOW
+                  </Badge>
+                </motion.div>
+              )}
+            </div>
             
             <h1 className="font-serif text-3xl md:text-4xl text-pearl">
               {event.title}
@@ -270,6 +294,15 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
             </div>
           </div>
 
+          {/* Host info message */}
+          {isHost && (
+            <div className="text-center bg-gold/10 border border-gold/20 rounded-xl p-4">
+              <p className="text-pearl/80 text-sm">
+                You are the organizer. Joining will start the room and give you host controls.
+              </p>
+            </div>
+          )}
+
           {/* Countdown or Join button */}
           <div className="text-center space-y-4">
             {countdown && !canJoin ? (
@@ -285,7 +318,7 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
                   onClick={handleJoin}
                   className="bg-gold hover:bg-gold/90 text-secondary px-12 py-6 text-lg font-medium shimmer-button-gold"
                 >
-                  Join Now
+                  {isHost ? 'Start Meeting' : 'Join Now'}
                 </Button>
               </div>
             ) : (
@@ -294,7 +327,7 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, onJoin, onBa
                 onClick={handleJoin}
                 className="bg-gold hover:bg-gold/90 text-secondary px-12 py-6 text-lg font-medium shimmer-button-gold"
               >
-                {isLive ? 'Join Live Event' : 'Enter Meeting Room'}
+                {isHost ? 'Start Meeting' : isLive ? 'Join Live Event' : 'Enter Meeting Room'}
               </Button>
             )}
           </div>
