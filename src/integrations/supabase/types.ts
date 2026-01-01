@@ -301,6 +301,7 @@ export type Database = {
       }
       affiliate_payouts: {
         Row: {
+          admin_notes: string | null
           affiliate_id: string
           amount: number
           commission_count: number
@@ -308,13 +309,17 @@ export type Database = {
           currency: string
           failure_reason: string | null
           id: string
+          payout_method: string | null
+          paypal_transaction_id: string | null
           processed_at: string | null
+          processed_by: string | null
           status: Database["public"]["Enums"]["payout_status"]
           stripe_payout_id: string | null
           stripe_transfer_id: string | null
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           affiliate_id: string
           amount: number
           commission_count?: number
@@ -322,13 +327,17 @@ export type Database = {
           currency?: string
           failure_reason?: string | null
           id?: string
+          payout_method?: string | null
+          paypal_transaction_id?: string | null
           processed_at?: string | null
+          processed_by?: string | null
           status?: Database["public"]["Enums"]["payout_status"]
           stripe_payout_id?: string | null
           stripe_transfer_id?: string | null
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           affiliate_id?: string
           amount?: number
           commission_count?: number
@@ -336,7 +345,10 @@ export type Database = {
           currency?: string
           failure_reason?: string | null
           id?: string
+          payout_method?: string | null
+          paypal_transaction_id?: string | null
           processed_at?: string | null
+          processed_by?: string | null
           status?: Database["public"]["Enums"]["payout_status"]
           stripe_payout_id?: string | null
           stripe_transfer_id?: string | null
@@ -387,10 +399,13 @@ export type Database = {
           application_notes: string | null
           approved_at: string | null
           approved_by: string | null
+          bank_details: Json | null
           commission_rate: number | null
           created_at: string
           id: string
+          paypal_email: string | null
           pending_earnings: number | null
+          preferred_payout_method: string | null
           referral_code: string
           status: Database["public"]["Enums"]["affiliate_status"]
           stripe_connect_id: string | null
@@ -409,10 +424,13 @@ export type Database = {
           application_notes?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          bank_details?: Json | null
           commission_rate?: number | null
           created_at?: string
           id?: string
+          paypal_email?: string | null
           pending_earnings?: number | null
+          preferred_payout_method?: string | null
           referral_code: string
           status?: Database["public"]["Enums"]["affiliate_status"]
           stripe_connect_id?: string | null
@@ -431,10 +449,13 @@ export type Database = {
           application_notes?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          bank_details?: Json | null
           commission_rate?: number | null
           created_at?: string
           id?: string
+          paypal_email?: string | null
           pending_earnings?: number | null
+          preferred_payout_method?: string | null
           referral_code?: string
           status?: Database["public"]["Enums"]["affiliate_status"]
           stripe_connect_id?: string | null
