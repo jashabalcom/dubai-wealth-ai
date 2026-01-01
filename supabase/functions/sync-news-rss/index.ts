@@ -299,8 +299,8 @@ async function generateInvestorAnalysis(title: string, content: string, lovableK
   }
 }
 
-// Parse RSS XML to extract articles
-async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: string[]): Promise<any[]> {
+// Parse RSS XML to extract articles (supports RSS 2.0 and Atom)
+async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: string[]): Promise<{ articles: any[]; error: string | null }> {
   try {
     console.log(`[${sourceName}] Fetching from ${feedUrl}`);
     const startTime = Date.now();
@@ -308,7 +308,7 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: s
     const response = await fetch(feedUrl, {
       headers: { 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+        'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*'
       }
     });
     
@@ -316,66 +316,102 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: s
     console.log(`[${sourceName}] Response: ${response.status} in ${responseTime}ms`);
     
     if (!response.ok) {
-      console.error(`[${sourceName}] FAILED: HTTP ${response.status} ${response.statusText}`);
-      return [];
+      const errorMsg = `HTTP ${response.status} ${response.statusText}`;
+      console.error(`[${sourceName}] FAILED: ${errorMsg}`);
+      return { articles: [], error: errorMsg };
     }
 
     const xml = await response.text();
     console.log(`[${sourceName}] XML length: ${xml.length} chars`);
+    
+    if (xml.length < 100) {
+      return { articles: [], error: 'Empty or invalid feed response' };
+    }
+    
     const articles: any[] = [];
 
-    // Simple XML parsing for RSS items
-    const itemMatches = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    // Detect feed type and parse accordingly
+    const isAtom = xml.includes('<feed') && xml.includes('xmlns="http://www.w3.org/2005/Atom"');
+    
+    let itemMatches: string[] = [];
+    
+    if (isAtom) {
+      // Atom feed: <entry> tags
+      console.log(`[${sourceName}] Detected Atom feed format`);
+      itemMatches = xml.match(/<entry>([\s\S]*?)<\/entry>/g) || [];
+    } else {
+      // RSS 2.0: <item> tags
+      console.log(`[${sourceName}] Detected RSS 2.0 feed format`);
+      itemMatches = xml.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    }
+    
     console.log(`[${sourceName}] Found ${itemMatches.length} items in feed`);
     
+    if (itemMatches.length === 0) {
+      return { articles: [], error: 'No items found in feed' };
+    }
+    
     for (const itemXml of itemMatches.slice(0, 20)) { // Limit to 20 per feed
-      // Extract title (handle CDATA)
-      const titleMatch = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/s) || 
-                         itemXml.match(/<title>(.*?)<\/title>/s);
-      const title = titleMatch?.[1] || '';
-      
-      // Extract link
-      const link = itemXml.match(/<link>(.*?)<\/link>/)?.[1]?.trim() || '';
-      
-      // Extract description (handle CDATA)
-      const descMatch = itemXml.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) ||
-                        itemXml.match(/<description>([\s\S]*?)<\/description>/);
-      const description = descMatch?.[1] || '';
-      
-      // Extract content:encoded if available (often has more content)
-      const contentMatch = itemXml.match(/<content:encoded><!\[CDATA\[([\s\S]*?)\]\]><\/content:encoded>/);
-      const fullContent = contentMatch?.[1] || description;
-      
-      // Extract pubDate
-      const pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
-      
-      // Extract image from multiple sources
+      let title = '';
+      let link = '';
+      let description = '';
+      let fullContent = '';
+      let pubDate = '';
       let imageUrl = null;
-      // Try media:content
+      
+      if (isAtom) {
+        // Atom parsing
+        const titleMatch = itemXml.match(/<title[^>]*>([\s\S]*?)<\/title>/);
+        title = titleMatch?.[1]?.replace(/<!\[CDATA\[(.*?)\]\]>/s, '$1') || '';
+        
+        // Link can be href attribute
+        const linkMatch = itemXml.match(/<link[^>]*href="([^"]+)"/) || 
+                          itemXml.match(/<link[^>]*>([^<]+)<\/link>/);
+        link = linkMatch?.[1]?.trim() || '';
+        
+        const summaryMatch = itemXml.match(/<summary[^>]*>([\s\S]*?)<\/summary>/) ||
+                             itemXml.match(/<content[^>]*>([\s\S]*?)<\/content>/);
+        description = summaryMatch?.[1]?.replace(/<!\[CDATA\[(.*?)\]\]>/s, '$1') || '';
+        
+        const dateMatch = itemXml.match(/<updated>(.*?)<\/updated>/) ||
+                          itemXml.match(/<published>(.*?)<\/published>/);
+        pubDate = dateMatch?.[1] || '';
+      } else {
+        // RSS 2.0 parsing
+        const titleMatch = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/s) || 
+                           itemXml.match(/<title>(.*?)<\/title>/s);
+        title = titleMatch?.[1] || '';
+        
+        link = itemXml.match(/<link>(.*?)<\/link>/)?.[1]?.trim() || '';
+        
+        const descMatch = itemXml.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) ||
+                          itemXml.match(/<description>([\s\S]*?)<\/description>/);
+        description = descMatch?.[1] || '';
+        
+        const contentMatch = itemXml.match(/<content:encoded><!\[CDATA\[([\s\S]*?)\]\]><\/content:encoded>/);
+        fullContent = contentMatch?.[1] || description;
+        
+        pubDate = itemXml.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || '';
+      }
+      
+      // Extract images from multiple sources
       const mediaMatch = itemXml.match(/<media:content[^>]*url="([^"]+)"/);
       if (mediaMatch) imageUrl = mediaMatch[1];
-      // Try enclosure
+      
       if (!imageUrl) {
         const enclosureMatch = itemXml.match(/<enclosure[^>]*url="([^"]+)"[^>]*type="image/);
         if (enclosureMatch) imageUrl = enclosureMatch[1];
       }
-      // Try media:thumbnail
       if (!imageUrl) {
         const thumbMatch = itemXml.match(/<media:thumbnail[^>]*url="([^"]+)"/);
         if (thumbMatch) imageUrl = thumbMatch[1];
       }
-      // Try to extract from description/content HTML
       if (!imageUrl) {
-        const imgMatch = fullContent.match(/<img[^>]*src="([^"]+)"/);
+        const imgMatch = (fullContent || description).match(/<img[^>]*src="([^"]+)"/);
         if (imgMatch) imageUrl = imgMatch[1];
       }
-      // Try srcset pattern
-      if (!imageUrl) {
-        const srcsetMatch = fullContent.match(/srcset="([^"\s]+)/);
-        if (srcsetMatch) imageUrl = srcsetMatch[1];
-      }
 
-      // Clean up title and description with HTML entity decoding
+      // Clean up title and description
       const cleanTitle = decodeHtmlEntities(title.replace(/<[^>]*>/g, ''));
       const cleanDescription = decodeHtmlEntities(description.replace(/<[^>]*>/g, '')).slice(0, 400);
 
@@ -383,16 +419,16 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: s
         continue;
       }
 
-      // Filter by keywords - combine feed keywords with global Dubai keywords
+      // Filter by keywords
       const content = `${cleanTitle} ${cleanDescription}`.toLowerCase();
       const allKeywords = [...new Set([...feedKeywords, ...DUBAI_KEYWORDS])];
       const matchedKeywords = allKeywords.filter(kw => content.includes(kw.toLowerCase()));
-      const isRelevant = matchedKeywords.length >= 1; // At least 1 keyword match
+      const isRelevant = matchedKeywords.length >= 1;
 
       if (isRelevant) {
-        console.log(`[${sourceName}] Matched article: "${cleanTitle.slice(0, 50)}..." (${matchedKeywords.length} keywords: ${matchedKeywords.slice(0, 3).join(', ')})`);
+        console.log(`[${sourceName}] Matched: "${cleanTitle.slice(0, 50)}..." (${matchedKeywords.length} keywords)`);
         
-        // Determine category based on content
+        // Determine category
         let category = 'market_trends';
         const contentLower = content.toLowerCase();
         if (contentLower.includes('golden visa') || contentLower.includes('residency') || contentLower.includes('visa')) {
@@ -419,10 +455,11 @@ async function parseRSSFeed(feedUrl: string, sourceName: string, feedKeywords: s
     }
 
     console.log(`[${sourceName}] Total relevant articles: ${articles.length}`);
-    return articles;
+    return { articles, error: null };
   } catch (error) {
-    console.error(`[${sourceName}] Error parsing feed:`, error);
-    return [];
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[${sourceName}] Error parsing feed:`, errorMsg);
+    return { articles: [], error: errorMsg };
   }
 }
 
@@ -493,8 +530,44 @@ serve(async (req) => {
 
     for (const feed of RSS_FEEDS) {
       let feedSynced = 0;
+      let feedError: string | null = null;
+      
       console.log(`Fetching ${feed.name}...`);
-      const articles = await parseRSSFeed(feed.url, feed.name, feed.keywords);
+      const { articles, error: parseError } = await parseRSSFeed(feed.url, feed.name, feed.keywords);
+      
+      if (parseError) {
+        feedError = parseError;
+        errors.push(`${feed.name}: ${parseError}`);
+        console.error(`[${feed.name}] Parse error: ${parseError}`);
+        
+        // Update source with error in database
+        if (feed.id) {
+          const { data: currentSource } = await supabase
+            .from('news_sources')
+            .select('error_count')
+            .eq('id', feed.id)
+            .single();
+          
+          const newErrorCount = (currentSource?.error_count || 0) + 1;
+          
+          await supabase
+            .from('news_sources')
+            .update({
+              last_synced_at: new Date().toISOString(),
+              error_count: newErrorCount,
+              last_error: parseError,
+              // Auto-disable after 5 consecutive failures
+              is_active: newErrorCount < 5,
+            })
+            .eq('id', feed.id);
+            
+          if (newErrorCount >= 5) {
+            console.warn(`[${feed.name}] Auto-disabled after ${newErrorCount} consecutive failures`);
+          }
+        }
+        continue;
+      }
+      
       console.log(`Found ${articles.length} relevant articles from ${feed.name}`);
 
       for (const article of articles) {
@@ -517,13 +590,6 @@ serve(async (req) => {
             const scraped = await scrapeArticle(article.source_url, firecrawlKey);
             
             if (scraped) {
-              // Image fallback chain:
-              // 1. RSS feed image (already set)
-              // 2. OG image from Firecrawl
-              // 3. First image from markdown content
-              // 4. Screenshot from Firecrawl (base64 - would need storage, skip for now)
-              // 5. Category-specific placeholder
-              
               if (!finalImageUrl && scraped.imageUrl) {
                 finalImageUrl = scraped.imageUrl;
                 console.log(`[Image] Using OG image from scrape`);
@@ -539,7 +605,7 @@ serve(async (req) => {
               
               // Generate enhanced AI investor analysis
               if (scraped.content && scraped.content.length > 100) {
-                await delay(300); // Small delay between AI calls
+                await delay(300);
                 enrichedContent = await generateInvestorAnalysis(article.title, scraped.content, lovableKey);
                 if (enrichedContent) {
                   totalEnriched++;
@@ -572,11 +638,10 @@ serve(async (req) => {
             .insert({
               ...article,
               image_url: finalImageUrl,
-              content: enrichedContent, // Enhanced AI investor analysis
+              content: enrichedContent,
               article_type: 'headline',
               status: 'published',
               reading_time_minutes: readingTime,
-              // New Bloomberg-style fields
               investment_rating: investmentRating,
               urgency_level: urgencyLevel,
               affected_areas: affectedAreas.length > 0 ? affectedAreas : null,
@@ -592,20 +657,27 @@ serve(async (req) => {
           } else {
             totalSynced++;
             feedSynced++;
-            console.log(`[Saved] ${article.title.slice(0, 50)}... (${wordCount} words, image: ${finalImageUrl ? 'yes' : 'no'})`);
+            console.log(`[Saved] ${article.title.slice(0, 50)}... (${wordCount} words)`);
           }
         } else {
           totalSkipped++;
         }
       }
 
-      // Update source stats in database if it has an ID
-      if (feed.id) {
+      // Update source stats on success
+      if (feed.id && !feedError) {
+        // Get current count and add to it
+        const { data: currentSource } = await supabase
+          .from('news_sources')
+          .select('articles_synced')
+          .eq('id', feed.id)
+          .single();
+          
         await supabase
           .from('news_sources')
           .update({
             last_synced_at: new Date().toISOString(),
-            articles_synced: feedSynced,
+            articles_synced: (currentSource?.articles_synced || 0) + feedSynced,
             error_count: 0,
             last_error: null,
           })
