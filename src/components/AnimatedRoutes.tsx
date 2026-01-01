@@ -177,10 +177,10 @@ export function AnimatedRoutes() {
         <Route path="/properties/:slug" element={<LazyPage><PropertyDetail /></LazyPage>} />
         <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><LazyPage><SavedProperties /></LazyPage></ProtectedRoute>} />
         
-        {/* Developers & Projects - Free to browse listing, detail pages require Investor tier */}
+        {/* Developers & Projects - Public browse */}
         <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />
-        <Route path="/developers/:slug" element={<ProtectedRoute requiredTier="investor"><LazyPage><DeveloperDetail /></LazyPage></ProtectedRoute>} />
-        <Route path="/projects/:slug" element={<ProtectedRoute requiredTier="investor"><LazyPage><ProjectDetail /></LazyPage></ProtectedRoute>} />
+        <Route path="/developers/:slug" element={<LazyPage><DeveloperDetail /></LazyPage>} />
+        <Route path="/projects/:slug" element={<LazyPage><ProjectDetail /></LazyPage>} />
         
         {/* Neighborhoods - Public browse */}
         <Route path="/neighborhoods" element={<LazyPage><Neighborhoods /></LazyPage>} />
