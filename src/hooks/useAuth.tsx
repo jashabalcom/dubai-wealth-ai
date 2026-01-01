@@ -147,10 +147,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    // Enqueue welcome email sequence if signup was successful
+    // Handle successful signup
     if (!error && data.user) {
       // Track sign-up conversion
       trackSignUp('email');
+      
+      // Check for affiliate referral cookie and create referral record
+      const referralCode = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('affiliate_ref='))
+        ?.split('=')[1];
+      
+      if (referralCode) {
+        try {
+          // Get the affiliate by referral code
+          const { data: affiliate } = await supabase
+            .rpc('get_affiliate_by_code', { code: referralCode });
+          
+          if (affiliate && affiliate.length > 0) {
+            // Create referral record - qualification_date is 60 days from now
+            const qualificationDate = new Date();
+            qualificationDate.setDate(qualificationDate.getDate() + 60);
+            
+            await supabase.from('referrals').insert([{
+              affiliate_id: affiliate[0].id,
+              referred_user_id: data.user.id,
+              status: 'pending' as const,
+              qualification_date: qualificationDate.toISOString(),
+            }]);
+            console.log('Referral created for affiliate:', referralCode);
+          }
+        } catch (refError) {
+          console.error('Failed to create referral:', refError);
+          // Don't fail signup if referral creation fails
+        }
+      }
       
       try {
         // Enqueue the full drip campaign sequence
