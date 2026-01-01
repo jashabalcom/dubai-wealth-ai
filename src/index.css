@@ -243,6 +243,116 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
+  /* === LUXURY SHIMMER BUTTONS === */
+  .shimmer-button-gold {
+    @apply bg-gradient-to-r from-primary via-gold-light to-primary text-secondary;
+    background-size: 200% 100%;
+  }
+  .shimmer-button-gold:hover {
+    animation: shimmer-bg 2s ease-in-out infinite;
+    box-shadow: 0 0 30px -5px hsl(var(--gold) / 0.5);
+  }
+
+  .shimmer-button-dark {
+    @apply bg-secondary text-secondary-foreground border border-primary/20;
+  }
+  .shimmer-button-dark:hover {
+    @apply border-primary/50;
+    box-shadow: 0 0 20px -5px hsl(var(--gold) / 0.3);
+  }
+
+  .shimmer-button-outline {
+    @apply bg-transparent border-2 border-primary text-primary;
+  }
+  .shimmer-button-outline:hover {
+    @apply bg-primary/10;
+  }
+
+  .shimmer-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(0 0% 100% / 0.15) 50%,
+      transparent 100%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.5s ease-out;
+  }
+  .shimmer-button-gold:hover .shimmer-overlay,
+  .shimmer-button-dark:hover .shimmer-overlay {
+    transform: translateX(100%);
+  }
+
+  @keyframes shimmer-bg {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* === PREMIUM BADGE SHIMMER === */
+  .shimmer-badge {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-badge::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(0 0% 100% / 0.3) 50%,
+      transparent 100%
+    );
+    animation: badge-shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes badge-shimmer {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+  }
+
+  /* === GLASSMORPHISM === */
+  .glass {
+    @apply backdrop-blur-md bg-card/70 border border-border/50;
+  }
+  .glass-dark {
+    @apply backdrop-blur-md bg-secondary/80 border border-border/30;
+  }
+  .glass-gold {
+    @apply backdrop-blur-md bg-primary/10 border border-primary/30;
+  }
+
+  /* === TEXT GRADIENTS === */
+  .text-gradient-gold-animated {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(90deg, hsl(35 25% 70%), hsl(40 35% 55%), hsl(35 25% 70%));
+    background-size: 200% 100%;
+    animation: text-shimmer 3s ease-in-out infinite;
+  }
+
+  @keyframes text-shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* === LUXURY SHADOWS === */
+  .shadow-luxury {
+    box-shadow: 
+      0 4px 6px -1px hsl(var(--gold) / 0.1),
+      0 10px 20px -5px hsl(var(--gold) / 0.15),
+      0 20px 40px -10px hsl(220 40% 8% / 0.2);
+  }
+
+  .shadow-glow-gold {
+    box-shadow: 0 0 40px -10px hsl(var(--gold) / 0.4);
+  }
+
+  .shadow-inner-gold {
+    box-shadow: inset 0 1px 2px hsl(var(--gold) / 0.1);
+  }
+
   /* Button micro-interactions */
   .btn-press {
     @apply active:scale-[0.97] active:shadow-none transition-all duration-100;
@@ -260,7 +370,7 @@
     @apply transition-all duration-300 ease-out;
   }
   .card-hover-lift:hover {
-    @apply -translate-y-2 shadow-2xl;
+    @apply -translate-y-2;
     box-shadow: 0 25px 50px -12px hsl(var(--gold) / 0.15);
   }
 
