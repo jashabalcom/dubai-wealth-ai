@@ -251,7 +251,7 @@ const Checkout = () => {
         title="Checkout | Dubai Wealth Hub"
         description="Complete your subscription to Dubai Wealth Hub"
       />
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background overflow-x-hidden">
         {/* Header */}
         <div className="border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -289,7 +289,7 @@ const Checkout = () => {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12 w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -309,7 +309,7 @@ const Checkout = () => {
             <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
               {/* Checkout Form */}
               <div className="lg:col-span-3 order-2 lg:order-1">
-                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/20">
+                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-4 sm:p-6 md:p-8 shadow-xl shadow-black/20">
                   {/* Subtle gradient border effect */}
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
                   
@@ -341,38 +341,38 @@ const Checkout = () => {
 
                   {/* Trust Indicators */}
                   <div className="mt-8 pt-6 border-t border-border">
-                    <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground mb-6">
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                        <span>256-bit SSL encryption</span>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground mb-6">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
+                        <span>256-bit SSL</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
                         <span>Cancel anytime</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
                         <span>Instant access</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                        <span>PCI DSS compliant</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-500 flex-shrink-0" />
+                        <span>PCI compliant</span>
                       </div>
                     </div>
                     
                     {/* Stripe Trust Badge & Payment Methods */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Lock className="h-3.5 w-3.5" />
-                        <span className="text-xs">Powered by</span>
-                        <img src={stripeSlate} alt="Stripe" className="h-4 w-auto" />
+                    <div className="flex flex-col items-center gap-3 sm:gap-4 pt-4 border-t border-border/50">
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
+                        <Lock className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                        <span className="text-[10px] sm:text-xs whitespace-nowrap">Powered by</span>
+                        <img src={stripeSlate} alt="Stripe" className="h-3 sm:h-4 w-auto" />
                       </div>
                       
                       {/* Payment Method Icons */}
-                      <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
+                      <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                         {/* Visa */}
-                        <div className="bg-white rounded px-2 py-1 h-6 flex items-center">
-                          <svg className="h-4 w-auto" viewBox="0 0 50 16" fill="none">
+                        <div className="bg-white rounded px-1.5 py-0.5 sm:px-2 sm:py-1 h-5 sm:h-6 flex items-center">
+                          <svg className="h-3 sm:h-4 w-auto" viewBox="0 0 50 16" fill="none">
                             <path d="M19.13 15.3H15.56L17.88 0.69H21.44L19.13 15.3Z" fill="#00579F"/>
                             <path d="M34.07 1.02C33.35 0.73 32.22 0.42 30.82 0.42C27.29 0.42 24.83 2.25 24.81 4.86C24.79 6.79 26.62 7.87 28.01 8.52C29.44 9.19 29.93 9.62 29.93 10.21C29.92 11.1 28.83 11.52 27.81 11.52C26.39 11.52 25.64 11.31 24.47 10.81L24.01 10.59L23.51 13.71C24.38 14.1 25.99 14.44 27.67 14.46C31.41 14.46 33.82 12.65 33.85 9.85C33.87 8.33 32.9 7.18 30.81 6.23C29.53 5.6 28.76 5.18 28.76 4.54C28.77 3.97 29.41 3.37 30.8 3.37C31.96 3.35 32.82 3.64 33.48 3.93L33.81 4.09L34.07 1.02Z" fill="#00579F"/>
                             <path d="M39.15 9.97C39.45 9.15 40.61 6.07 40.61 6.07C40.59 6.1 40.91 5.24 41.1 4.71L41.36 5.93C41.36 5.93 42.06 9.27 42.21 9.97H39.15ZM43.69 0.69H40.93C40.09 0.69 39.45 0.94 39.07 1.8L33.79 15.3H37.53L38.29 13.08H42.84C42.96 13.57 43.36 15.3 43.36 15.3H46.68L43.69 0.69Z" fill="#00579F"/>
@@ -381,26 +381,26 @@ const Checkout = () => {
                           </svg>
                         </div>
                         {/* Mastercard */}
-                        <div className="bg-white rounded px-2 py-1 h-6 flex items-center">
-                          <svg className="h-4 w-auto" viewBox="0 0 32 20" fill="none">
+                        <div className="bg-white rounded px-1.5 py-0.5 sm:px-2 sm:py-1 h-5 sm:h-6 flex items-center">
+                          <svg className="h-3 sm:h-4 w-auto" viewBox="0 0 32 20" fill="none">
                             <circle cx="10" cy="10" r="10" fill="#EB001B"/>
                             <circle cx="22" cy="10" r="10" fill="#F79E1B"/>
                             <path fillRule="evenodd" clipRule="evenodd" d="M16 17.3C18.2 15.5 19.6 12.9 19.6 10C19.6 7.1 18.2 4.5 16 2.7C13.8 4.5 12.4 7.1 12.4 10C12.4 12.9 13.8 15.5 16 17.3Z" fill="#FF5F00"/>
                           </svg>
                         </div>
                         {/* Amex - Official Logo */}
-                        <div className="rounded h-6 flex items-center overflow-hidden">
-                          <img src={amexLogo} alt="American Express" className="h-6 w-auto object-contain" />
+                        <div className="rounded h-5 sm:h-6 flex items-center overflow-hidden">
+                          <img src={amexLogo} alt="American Express" className="h-5 sm:h-6 w-auto object-contain" />
                         </div>
                         {/* Apple Pay */}
-                        <div className="bg-black rounded px-2 py-1 h-6 flex items-center justify-center">
-                          <svg className="h-4 w-auto" viewBox="0 0 43 18" fill="white">
+                        <div className="bg-black rounded px-1.5 py-0.5 sm:px-2 sm:py-1 h-5 sm:h-6 flex items-center justify-center">
+                          <svg className="h-3 sm:h-4 w-auto" viewBox="0 0 43 18" fill="white">
                             <path d="M7.854 3.182c.527-.677.886-1.607.79-2.537-.768.032-1.696.512-2.245 1.156-.492.565-.922 1.479-.805 2.35.853.065 1.729-.437 2.26-1.119m.78 1.172c-1.244-.073-2.305.707-2.896.707-.593 0-1.505-.67-2.481-.652-1.276.02-2.458.743-3.116 1.882-1.331 2.307-.342 5.722.955 7.595.633.927 1.389 1.954 2.384 1.918.953-.038 1.316-.618 2.466-.618 1.152 0 1.478.618 2.486.599 1.028-.018 1.675-.927 2.308-1.864.719-1.053 1.016-2.07 1.034-2.124-.023-.01-1.98-.762-2-3.02-.018-1.89 1.542-2.798 1.614-2.853-.88-1.304-2.252-1.451-2.74-1.486m8.135-2.447v12.96h2.017V10.52h2.79c2.548 0 4.34-1.752 4.34-4.31 0-2.557-1.759-4.303-4.27-4.303h-4.877zm2.017 1.679h2.328c1.75 0 2.75.93 2.75 2.63 0 1.7-.999 2.64-2.759 2.64h-2.32V3.586zm11.917 11.408c1.268 0 2.443-.643 2.979-1.66h.04v1.533h1.867V8.432c0-1.875-1.498-3.084-3.802-3.084-2.132 0-3.722 1.227-3.782 2.913h1.816c.15-.804.901-1.332 1.894-1.332 1.226 0 1.914.573 1.914 1.628v.714l-2.503.151c-2.327.14-3.587 1.096-3.587 2.76 0 1.68 1.302 2.812 3.164 2.812zm.539-1.52c-1.067 0-1.746-.513-1.746-1.298 0-.81.652-1.28 1.897-1.355l2.23-.143v.73c0 1.205-1.02 2.066-2.381 2.066zm6.394 5.067c1.966 0 2.89-.752 3.698-3.032l3.546-9.931h-2.06l-2.38 7.643h-.04l-2.38-7.643h-2.112l3.418 9.464-.185.577c-.309.975-.81 1.353-1.705 1.353-.16 0-.468-.017-.595-.035v1.552c.118.035.619.052.795.052z"/>
                           </svg>
                         </div>
                         {/* Google Pay */}
-                        <div className="bg-white rounded px-2 py-1 h-6 flex items-center justify-center">
-                          <svg className="h-4 w-auto" viewBox="0 0 41 17" fill="none">
+                        <div className="bg-white rounded px-1.5 py-0.5 sm:px-2 sm:py-1 h-5 sm:h-6 flex items-center justify-center">
+                          <svg className="h-3 sm:h-4 w-auto" viewBox="0 0 41 17" fill="none">
                             <path d="M19.526 2.635v4.083h2.518c.6 0 1.096-.202 1.488-.605.403-.402.605-.882.605-1.437 0-.544-.202-1.018-.605-1.422-.392-.413-.888-.62-1.488-.62h-2.518zm0 5.52v4.736h-1.504V1.198h3.99c1.013 0 1.873.337 2.582 1.012.72.675 1.08 1.497 1.08 2.466 0 .991-.36 1.819-1.08 2.482-.697.665-1.559.997-2.583.997h-2.485z" fill="#5F6368"/>
                             <path d="M27.194 10.442c0 .392.166.718.499.98.332.26.722.391 1.168.391.633 0 1.196-.234 1.692-.701.497-.469.744-1.019.744-1.65-.469-.37-1.123-.555-1.962-.555-.61 0-1.12.148-1.528.442-.409.294-.613.652-.613 1.093m1.946-5.815c1.112 0 1.989.297 2.633.89.642.594.964 1.408.964 2.442v4.932h-1.439v-1.11h-.065c-.622.914-1.45 1.372-2.486 1.372-.882 0-1.621-.262-2.215-.784-.594-.523-.891-1.176-.891-1.96 0-.828.313-1.486.94-1.976s1.463-.735 2.51-.735c.892 0 1.629.163 2.206.49v-.344c0-.522-.207-.966-.621-1.33a2.132 2.132 0 00-1.455-.547c-.84 0-1.504.353-1.995 1.062l-1.324-.834c.731-1.045 1.822-1.568 3.238-1.568" fill="#5F6368"/>
                             <path d="M40.993 4.889l-5.02 11.53H34.42l1.864-4.034-3.302-7.496h1.635l2.387 5.749h.032l2.322-5.75h1.635z" fill="#5F6368"/>
