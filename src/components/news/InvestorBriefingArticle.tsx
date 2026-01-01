@@ -10,17 +10,22 @@ import {
   Bookmark,
   Share2,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  Lightbulb
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NewsArticle } from '@/hooks/useNews';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useToast } from '@/hooks/use-toast';
+import { QuickTakeBox } from './QuickTakeBox';
+import { RiskOpportunityGauge } from './RiskOpportunityGauge';
+import { OriginalSourceLink } from './OriginalSourceLink';
 
 interface InvestorBriefingArticleProps {
   article: NewsArticle;
@@ -39,20 +44,109 @@ const VERIFICATION_CONFIG = {
   flagged: { label: 'Flagged', color: 'text-red-500', icon: AlertCircle },
 };
 
+// Extract Quick-Take from markdown content
+function extractQuickTake(content: string | null): string | null {
+  if (!content) return null;
+  const match = content.match(/## Quick-Take\s*\n+([\s\S]*?)(?=\n## |$)/);
+  if (match) {
+    return match[1].trim().replace(/^["']|["']$/g, '');
+  }
+  return null;
+}
+
+// Extract Contrarian View from markdown content
+function extractContrarianView(content: string | null): string | null {
+  if (!content) return null;
+  const match = content.match(/## Contrarian View\s*\n+([\s\S]*?)(?=\n## |$)/);
+  if (match) {
+    return match[1].trim();
+  }
+  return null;
+}
+
+// Extract Risk/Opportunity Assessment from markdown content
+function extractRiskAssessment(content: string | null): { 
+  opportunityScore?: number; 
+  riskLevel?: 'low' | 'medium' | 'high';
+  timeSensitivity?: 'immediate' | '2_weeks' | '1_month' | 'evergreen';
+} {
+  if (!content) return {};
+  
+  const result: ReturnType<typeof extractRiskAssessment> = {};
+  
+  // Extract Opportunity Score
+  const scoreMatch = content.match(/\*\*Opportunity Score\*\*:\s*\[?(\d+)\]?/i);
+  if (scoreMatch) {
+    const score = parseInt(scoreMatch[1]);
+    if (score >= 1 && score <= 10) result.opportunityScore = score;
+  }
+  
+  // Extract Risk Level
+  const riskMatch = content.match(/\*\*Risk Level\*\*:\s*\[?(Low|Medium|High)\]?/i);
+  if (riskMatch) {
+    result.riskLevel = riskMatch[1].toLowerCase() as 'low' | 'medium' | 'high';
+  }
+  
+  // Extract Time Sensitivity
+  const timeMatch = content.match(/\*\*Time Sensitivity\*\*:\s*\[?(Immediate|2 Weeks?|1 Month?|Evergreen)\]?/i);
+  if (timeMatch) {
+    const timeValue = timeMatch[1].toLowerCase();
+    if (timeValue === 'immediate') result.timeSensitivity = 'immediate';
+    else if (timeValue.includes('week')) result.timeSensitivity = '2_weeks';
+    else if (timeValue.includes('month')) result.timeSensitivity = '1_month';
+    else if (timeValue === 'evergreen') result.timeSensitivity = 'evergreen';
+  }
+  
+  return result;
+}
+
+// Remove extracted sections from content for cleaner rendering
+function getCleanedContent(content: string | null): string {
+  if (!content) return '';
+  
+  // Remove Quick-Take section (it's displayed separately)
+  let cleaned = content.replace(/## Quick-Take\s*\n+[\s\S]*?(?=\n## |$)/, '');
+  
+  // Remove Risk/Opportunity Assessment section (displayed as gauge)
+  cleaned = cleaned.replace(/## Risk\/Opportunity Assessment\s*\n+[\s\S]*?(?=\n## |$)/, '');
+  
+  return cleaned.trim();
+}
+
 export function InvestorBriefingArticle({ article }: InvestorBriefingArticleProps) {
   const { toast } = useToast();
   const [isSaved, setIsSaved] = useState(false);
+  const [isContrarianOpen, setIsContrarianOpen] = useState(false);
+
+  // Extract structured data from content
+  const quickTake = useMemo(() => 
+    article.quick_take || extractQuickTake(article.content), 
+    [article.quick_take, article.content]
+  );
+  
+  const contrarianView = useMemo(() => 
+    article.contrarian_view || extractContrarianView(article.content), 
+    [article.contrarian_view, article.content]
+  );
+  
+  const riskAssessment = useMemo(() => ({
+    opportunityScore: article.opportunity_score || extractRiskAssessment(article.content).opportunityScore,
+    riskLevel: (article.risk_level as 'low' | 'medium' | 'high') || extractRiskAssessment(article.content).riskLevel,
+    timeSensitivity: (article.time_sensitivity as 'immediate' | '2_weeks' | '1_month' | 'evergreen') || extractRiskAssessment(article.content).timeSensitivity,
+  }), [article.opportunity_score, article.risk_level, article.time_sensitivity, article.content]);
+
+  const cleanedContent = useMemo(() => getCleanedContent(article.content), [article.content]);
 
   // Extract table of contents from markdown headings
   const tableOfContents = useMemo(() => {
-    if (!article.content) return [];
+    if (!cleanedContent) return [];
     const headingRegex = /^##\s+(.+)$/gm;
-    const matches = [...article.content.matchAll(headingRegex)];
+    const matches = [...cleanedContent.matchAll(headingRegex)];
     return matches.map(match => ({
       title: match[1].replace(/[*_]/g, ''),
       id: match[1].toLowerCase().replace(/[^a-z0-9]+/g, '-'),
     }));
-  }, [article.content]);
+  }, [cleanedContent]);
 
   const urgency = article.urgency_level || 'normal';
   const verification = article.verification_status || 'unverified';
@@ -87,6 +181,14 @@ export function InvestorBriefingArticle({ article }: InvestorBriefingArticleProp
         <article className="space-y-8">
           {/* Header */}
           <header className="space-y-4">
+            {/* AI Analysis Badge */}
+            <div className="flex items-center gap-2">
+              <Badge className="bg-gradient-to-r from-gold/80 to-gold text-background font-semibold">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                AI Investment Analysis
+              </Badge>
+            </div>
+
             {/* Meta badges */}
             <div className="flex flex-wrap items-center gap-2">
               {article.briefing_type && (
@@ -168,6 +270,20 @@ export function InvestorBriefingArticle({ article }: InvestorBriefingArticleProp
 
           <Separator />
 
+          {/* Quick-Take Box - Most prominent */}
+          {quickTake && (
+            <QuickTakeBox quickTake={quickTake} />
+          )}
+
+          {/* Risk/Opportunity Gauge */}
+          {(riskAssessment.opportunityScore || riskAssessment.riskLevel || riskAssessment.timeSensitivity) && (
+            <RiskOpportunityGauge 
+              opportunityScore={riskAssessment.opportunityScore}
+              riskLevel={riskAssessment.riskLevel}
+              timeSensitivity={riskAssessment.timeSensitivity}
+            />
+          )}
+
           {/* Affected Areas */}
           {article.affected_areas && article.affected_areas.length > 0 && (
             <Card className="bg-muted/50 border-gold/20">
@@ -248,9 +364,41 @@ export function InvestorBriefingArticle({ article }: InvestorBriefingArticleProp
                 ),
               }}
             >
-              {article.content || article.excerpt || ''}
+              {cleanedContent || article.excerpt || ''}
             </ReactMarkdown>
           </div>
+
+          {/* Contrarian View - Collapsible */}
+          {contrarianView && (
+            <Collapsible open={isContrarianOpen} onOpenChange={setIsContrarianOpen}>
+              <Card className="bg-amber-500/5 border-amber-500/20">
+                <CollapsibleTrigger asChild>
+                  <CardContent className="p-4 cursor-pointer hover:bg-amber-500/10 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Lightbulb className="h-5 w-5 text-amber-500" />
+                        <div>
+                          <h3 className="text-sm font-semibold text-amber-500">Contrarian View</h3>
+                          <p className="text-xs text-muted-foreground">Alternative perspective to consider</p>
+                        </div>
+                      </div>
+                      <ChevronRight className={`h-5 w-5 text-amber-500 transition-transform ${isContrarianOpen ? 'rotate-90' : ''}`} />
+                    </div>
+                  </CardContent>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-4 px-4">
+                    <Separator className="mb-4" />
+                    <div className="prose-luxury prose-sm max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {contrarianView}
+                      </ReactMarkdown>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
 
           {/* Verification Notes */}
           {article.verification_notes && (
@@ -265,6 +413,14 @@ export function InvestorBriefingArticle({ article }: InvestorBriefingArticleProp
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Original Source Link - Always at bottom */}
+          {article.source_url && (
+            <OriginalSourceLink 
+              sourceUrl={article.source_url}
+              sourceName={article.source_name || 'Original Source'}
+            />
           )}
         </article>
 

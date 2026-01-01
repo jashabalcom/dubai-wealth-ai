@@ -2607,22 +2607,28 @@ export type Database = {
           briefing_type: string | null
           category: string | null
           content: string | null
+          contrarian_view: string | null
           created_at: string
           digest_date: string | null
           excerpt: string | null
+          historical_context: string | null
           id: string
           image_url: string | null
           investment_rating: number | null
           is_featured_digest: boolean | null
           key_metrics: Json | null
+          opportunity_score: number | null
           published_at: string | null
+          quick_take: string | null
           reading_time_minutes: number | null
           related_articles: string[] | null
+          risk_level: string | null
           source_hash: string | null
           source_name: string
           source_url: string
           status: string
           tags: string[] | null
+          time_sensitivity: string | null
           title: string
           updated_at: string
           urgency_level: string | null
@@ -2637,22 +2643,28 @@ export type Database = {
           briefing_type?: string | null
           category?: string | null
           content?: string | null
+          contrarian_view?: string | null
           created_at?: string
           digest_date?: string | null
           excerpt?: string | null
+          historical_context?: string | null
           id?: string
           image_url?: string | null
           investment_rating?: number | null
           is_featured_digest?: boolean | null
           key_metrics?: Json | null
+          opportunity_score?: number | null
           published_at?: string | null
+          quick_take?: string | null
           reading_time_minutes?: number | null
           related_articles?: string[] | null
+          risk_level?: string | null
           source_hash?: string | null
           source_name: string
           source_url: string
           status?: string
           tags?: string[] | null
+          time_sensitivity?: string | null
           title: string
           updated_at?: string
           urgency_level?: string | null
@@ -2667,22 +2679,28 @@ export type Database = {
           briefing_type?: string | null
           category?: string | null
           content?: string | null
+          contrarian_view?: string | null
           created_at?: string
           digest_date?: string | null
           excerpt?: string | null
+          historical_context?: string | null
           id?: string
           image_url?: string | null
           investment_rating?: number | null
           is_featured_digest?: boolean | null
           key_metrics?: Json | null
+          opportunity_score?: number | null
           published_at?: string | null
+          quick_take?: string | null
           reading_time_minutes?: number | null
           related_articles?: string[] | null
+          risk_level?: string | null
           source_hash?: string | null
           source_name?: string
           source_url?: string
           status?: string
           tags?: string[] | null
+          time_sensitivity?: string | null
           title?: string
           updated_at?: string
           urgency_level?: string | null
