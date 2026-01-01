@@ -6,35 +6,37 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 font-sans active:scale-[0.97] active:transition-transform active:duration-75 select-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 font-sans select-none",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:brightness-95",
+          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:scale-[0.97] active:transition-all active:duration-75",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md active:brightness-95",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md active:scale-[0.97] active:transition-all active:duration-75",
         outline:
-          "border border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:bg-primary/90",
+          "border border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:scale-[0.97] active:transition-all active:duration-75",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-sm uppercase tracking-[0.1em] active:brightness-95",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-sm uppercase tracking-[0.1em] active:scale-[0.97] active:transition-all active:duration-75",
         ghost: 
-          "hover:bg-accent hover:text-accent-foreground rounded-md active:bg-accent/80",
+          "hover:bg-accent hover:text-accent-foreground rounded-md active:bg-accent/80 active:scale-[0.97] active:transition-all active:duration-75",
         link: 
           "text-primary underline-offset-4 hover:underline active:scale-100",
         gold:
-          "bg-gradient-to-r from-primary to-gold-light text-secondary hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:brightness-95",
+          "relative overflow-hidden bg-gradient-to-r from-primary to-gold-light text-secondary hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:scale-[0.97] active:transition-all active:duration-75 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700",
         hero:
-          "bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.15em] border border-primary/20 focus-visible:ring-gold/50 active:brightness-95",
+          "relative overflow-hidden bg-primary text-primary-foreground hover:shadow-gold hover:scale-[1.02] rounded-sm uppercase tracking-[0.15em] border border-primary/20 focus-visible:ring-gold/50 active:scale-[0.97] active:transition-all active:duration-75 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700",
         "hero-outline":
-          "bg-transparent border border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/50 rounded-sm uppercase tracking-[0.15em] active:bg-secondary-foreground/15",
+          "bg-transparent border border-secondary-foreground/30 text-secondary-foreground hover:bg-secondary-foreground/10 hover:border-secondary-foreground/50 rounded-sm uppercase tracking-[0.15em] active:bg-secondary-foreground/15 active:scale-[0.97] active:transition-all active:duration-75",
         nav:
           "bg-transparent text-foreground hover:text-primary transition-colors uppercase tracking-[0.1em] text-xs active:scale-100",
         private:
-          "border-2 border-primary bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:brightness-95",
-        // New success variant for completed actions
+          "border-2 border-primary bg-primary/5 text-primary hover:bg-primary hover:text-primary-foreground rounded-sm uppercase tracking-[0.1em] focus-visible:ring-gold/50 active:scale-[0.97] active:transition-all active:duration-75",
         success:
-          "bg-emerald-500 text-white hover:bg-emerald-600 rounded-sm uppercase tracking-[0.1em] active:brightness-95",
+          "bg-emerald-500 text-white hover:bg-emerald-600 rounded-sm uppercase tracking-[0.1em] active:scale-[0.97] active:transition-all active:duration-75",
+        // New premium variant
+        premium:
+          "relative overflow-hidden bg-gradient-to-br from-secondary via-secondary to-navy-light text-secondary-foreground border border-primary/30 hover:border-primary/60 hover:shadow-glow-gold rounded-sm uppercase tracking-[0.12em] active:scale-[0.97] active:transition-all active:duration-75 before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-primary/10 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-1000",
       },
       size: {
         default: "h-12 px-6 sm:px-8 py-3",
@@ -43,8 +45,8 @@ const buttonVariants = cva(
         xl: "h-16 px-10 sm:px-12 py-5 text-base",
         icon: "h-10 w-10",
         "icon-sm": "h-9 w-9",
-        "icon-lg": "h-12 w-12", // 48px - ideal touch target
-        touch: "h-12 min-w-[48px] px-6 sm:px-8", // Touch-friendly size (48px height)
+        "icon-lg": "h-12 w-12",
+        touch: "h-12 min-w-[48px] px-6 sm:px-8",
       },
     },
     defaultVariants: {

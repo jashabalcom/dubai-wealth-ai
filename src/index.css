@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Premium Font Stack: Playfair Display (editorial serif) + DM Sans (modern geometric sans) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* iOS Safe Area CSS Variables */
 :root {
@@ -125,27 +126,48 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    @apply font-semibold tracking-tight;
+    font-family: 'Playfair Display', Georgia, serif;
+    @apply font-semibold;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
   }
 
-  /* Responsive typography scale */
+  /* Responsive typography scale - refined */
   h1 {
-    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
   }
 
   h2 {
-    @apply text-xl sm:text-2xl md:text-3xl;
+    @apply text-2xl sm:text-3xl md:text-4xl;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
   }
 
   h3 {
+    @apply text-xl sm:text-2xl md:text-3xl;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  h4 {
     @apply text-lg sm:text-xl md:text-2xl;
+    letter-spacing: -0.015em;
+  }
+
+  /* Monospace for data/numbers */
+  .font-mono, [data-mono], .tabular-nums {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-feature-settings: "tnum" 1, "cv01" 1;
   }
 }
 
@@ -236,11 +258,21 @@
 
 @layer utilities {
   .font-serif {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 
   .font-sans {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  /* Tabular numbers for data */
+  .tabular-nums {
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
   }
 
   /* === LUXURY SHIMMER BUTTONS === */
