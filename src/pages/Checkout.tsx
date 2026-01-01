@@ -110,36 +110,57 @@ const Checkout = () => {
     theme: "night" as const,
     variables: {
       colorPrimary: "#CBB89E",
-      colorBackground: "#0A0F1D",
+      colorBackground: "#0D1321",
       colorText: "#FFFFFF",
-      colorDanger: "#ef4444",
+      colorTextSecondary: "#9CA3AF",
+      colorDanger: "#EF4444",
       fontFamily: "Inter, system-ui, sans-serif",
       borderRadius: "12px",
-      spacingUnit: "4px",
+      spacingUnit: "5px",
     },
     rules: {
       ".Input": {
-        backgroundColor: "hsl(222, 47%, 11%)",
-        border: "1px solid hsl(217, 33%, 17%)",
-        boxShadow: "none",
+        backgroundColor: "rgba(255, 255, 255, 0.04)",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        boxShadow: "inset 0 1px 2px rgba(0, 0, 0, 0.3)",
+        padding: "14px 16px",
+        transition: "all 0.2s ease",
+      },
+      ".Input:hover": {
+        backgroundColor: "rgba(255, 255, 255, 0.06)",
+        border: "1px solid rgba(255, 255, 255, 0.15)",
       },
       ".Input:focus": {
         border: "1px solid #CBB89E",
-        boxShadow: "0 0 0 1px #CBB89E",
+        boxShadow: "0 0 0 3px rgba(203, 184, 158, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.2)",
       },
       ".Label": {
-        color: "hsl(215, 20%, 65%)",
-        fontSize: "14px",
+        color: "#9CA3AF",
+        fontSize: "13px",
         fontWeight: "500",
+        marginBottom: "8px",
       },
       ".Tab": {
-        backgroundColor: "hsl(222, 47%, 11%)",
-        border: "1px solid hsl(217, 33%, 17%)",
+        backgroundColor: "rgba(255, 255, 255, 0.04)",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRadius: "10px",
+        padding: "12px 16px",
+        transition: "all 0.2s ease",
+      },
+      ".Tab:hover": {
+        backgroundColor: "rgba(255, 255, 255, 0.08)",
+        border: "1px solid rgba(255, 255, 255, 0.15)",
       },
       ".Tab--selected": {
         backgroundColor: "#CBB89E",
         borderColor: "#CBB89E",
         color: "#0A0F1D",
+      },
+      ".TabIcon": {
+        fill: "#9CA3AF",
+      },
+      ".TabIcon--selected": {
+        fill: "#0A0F1D",
       },
     },
   };
@@ -264,30 +285,35 @@ const Checkout = () => {
             <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
               {/* Checkout Form */}
               <div className="lg:col-span-3 order-2 lg:order-1">
-                <div className="bg-card border border-border rounded-2xl p-6 md:p-8">
-                  <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-primary" />
-                    Payment Details
-                  </h2>
+                <div className="relative bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 md:p-8 shadow-xl shadow-black/20">
+                  {/* Subtle gradient border effect */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/5 to-transparent pointer-events-none" />
                   
-                  <Elements
-                    stripe={stripePromise}
-                    options={{
-                      clientSecret,
-                      appearance,
-                    }}
-                  >
-                    <CheckoutForm
-                      tier={validTier as "investor" | "elite"}
-                      billingPeriod={billingPeriod}
-                      isUpgrade={isUpgrade}
-                      subscriptionId={subscriptionId || undefined}
-                      intentType={intentType}
-                      setupIntentId={setupIntentId || undefined}
-                      customerId={customerId || undefined}
-                      priceId={priceId || undefined}
-                    />
-                  </Elements>
+                  <div className="relative">
+                    <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      Payment Details
+                    </h2>
+                    
+                    <Elements
+                      stripe={stripePromise}
+                      options={{
+                        clientSecret,
+                        appearance,
+                      }}
+                    >
+                      <CheckoutForm
+                        tier={validTier as "investor" | "elite"}
+                        billingPeriod={billingPeriod}
+                        isUpgrade={isUpgrade}
+                        subscriptionId={subscriptionId || undefined}
+                        intentType={intentType}
+                        setupIntentId={setupIntentId || undefined}
+                        customerId={customerId || undefined}
+                        priceId={priceId || undefined}
+                      />
+                    </Elements>
+                  </div>
 
                   {/* Trust Indicators */}
                   <div className="mt-8 pt-6 border-t border-border">
@@ -312,12 +338,12 @@ const Checkout = () => {
                     
                     {/* Stripe Trust Badge & Payment Methods */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="flex items-center gap-2.5 text-muted-foreground">
                         <Lock className="h-3.5 w-3.5" />
                         <span className="text-xs">Powered by</span>
-                        {/* Stripe Logo */}
-                        <svg className="h-6 w-auto" viewBox="0 0 60 25" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8.312 8.872c0-.986.82-1.363 2.188-1.363 1.958 0 4.425.594 6.383 1.65V4.074c-2.138-.844-4.25-1.181-6.383-1.181-5.22 0-8.687 2.722-8.687 7.269 0 7.088 9.755 5.956 9.755 9.013 0 1.168-1.014 1.545-2.432 1.545-2.102 0-4.792-.863-6.92-2.02v5.166c2.359 1.013 4.742 1.444 6.92 1.444 5.347 0 9.021-2.648 9.021-7.256-.019-7.651-9.845-6.287-9.845-9.182zM25.087 1.08l-4.544.968v18.637h4.544V1.08zM30.9 4.262l-.289 1.581h-3.157v14.842h4.524V9.254c1.069-1.394 2.878-1.138 3.442-.938V4.262c-.584-.22-2.717-.625-4.52 1.581zM40.129 4.262l-4.506 1.581v14.842h4.506V4.262zM40.129.156l-4.506.968v2.138l4.506-.968V.156zM48.428 19.792c1.4 0 2.415-.287 3.271-.712V15.94c-.856.443-1.82.712-3.048.712-1.808 0-3.053-1.006-3.053-3.176v-.044c0-1.89 1.207-3.176 3.053-3.176 1.171 0 2.154.268 3.048.712V6.824c-.837-.405-1.871-.712-3.271-.712-4.357 0-7.388 3.32-7.388 7.551v.044c0 4.399 3.106 7.508 7.388 7.508v-.044-.38zM60 13.62v.045c0 4.08-2.816 7.551-7.157 7.551-4.342 0-7.233-3.515-7.233-7.596v-.044c0-4.08 2.816-7.552 7.158-7.552 4.341 0 7.232 3.516 7.232 7.596zm-4.342.044c0-2.138-1.227-3.845-2.893-3.845-1.665 0-2.854 1.664-2.854 3.8v.045c0 2.138 1.227 3.845 2.892 3.845 1.666 0 2.855-1.664 2.855-3.8v-.045z"/>
+                        {/* Official Stripe Blurple Logo */}
+                        <svg className="h-5 w-auto" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a10.9 10.9 0 01-4.56 1c-4.01 0-6.83-2.5-6.83-7.48-.02-4.19 2.5-7.5 6.35-7.5 3.89 0 5.88 3.24 5.88 7.08 0 .61-.04 1.43-.08 1.98h-.01zm-5.86-5.8c-1.3 0-2.12 1.01-2.25 2.58h4.48c-.05-1.56-.8-2.57-2.24-2.57l.01-.01zm-9.77 12.1h4.14V5.57h-4.14v15.01zm-4.3-10.95c1.3.58 2.14 1.4 2.14 3.1v7.85h-4.14v-6.97c0-.97-.4-1.47-1.27-1.47-.94 0-1.6.64-1.6 1.66v6.78h-4.13v-6.97c0-.97-.4-1.47-1.27-1.47-.94 0-1.6.64-1.6 1.66v6.78h-4.16v-11.9h3.98v1.54c.72-1.14 1.87-1.8 3.41-1.8 1.5 0 2.68.69 3.28 1.85.88-1.2 2.06-1.85 3.6-1.85 1.02 0 1.92.32 2.68.85l.08.05v.31zm-19.24 5.06c0-1.28-.72-2.09-1.85-2.09-1.12 0-1.9.81-1.9 2.1 0 1.27.78 2.08 1.9 2.08 1.13 0 1.85-.8 1.85-2.09zm4.06 5.89h-3.98v-1.26a4.37 4.37 0 01-3.7 1.53c-3.27 0-5.6-2.68-5.6-6.16s2.33-6.17 5.6-6.17c1.4 0 2.6.46 3.54 1.33V5.57h4.14v14.99v.02zm-17.87 0h4.14V9.06h-4.14v11.52zm2.08-13.1c-1.3 0-2.35-1.02-2.35-2.29s1.05-2.3 2.35-2.3 2.34 1.03 2.34 2.3c0 1.27-1.05 2.3-2.34 2.3zM5.9 17.12c-.9 0-1.68-.26-2.26-.75V9.07h4.14v11.5H3.66V19.4c-.67 1.18-1.87 1.82-3.57 1.82-2.97 0-5.09-2.37-5.09-5.87v-6.28h4.14v5.88c0 1.03.5 1.7 1.38 1.7s1.38-.67 1.38-1.7z" fill="#635BFF"/>
                         </svg>
                       </div>
                       

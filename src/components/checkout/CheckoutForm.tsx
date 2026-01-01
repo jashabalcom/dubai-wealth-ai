@@ -158,18 +158,18 @@ const CheckoutForm = ({
       <Button
         type="submit"
         disabled={!stripe || !elements || isProcessing}
-        className="w-full mt-6 h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground group"
+        className="w-full mt-6 h-14 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 text-primary-foreground group shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.99] transition-all duration-200"
       >
         {isProcessing ? (
-          <>
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Processing...
-          </>
+          <span className="flex items-center">
+            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            <span className="animate-pulse">Processing payment...</span>
+          </span>
         ) : (
-          <>
+          <span className="flex items-center">
             Get Instant Access — {priceConfig.priceDisplay}
-            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </>
+            <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </span>
         )}
       </Button>
 
