@@ -72,11 +72,14 @@ export function useEventRoom(eventId: string) {
     setRoomState(prev => ({ ...prev, isVideoOff: !prev.isVideoOff }));
   };
 
+  const isHost = Boolean(user?.id && event?.created_by && user.id === event.created_by);
+
   return {
     event,
     isLoading,
     error,
     roomState,
+    isHost,
     generateRoomName,
     joinMeeting,
     leaveMeeting,
