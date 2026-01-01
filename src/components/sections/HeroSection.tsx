@@ -112,7 +112,7 @@ export function HeroSection() {
 
       {/* Content with subtle parallax */}
       <motion.div 
-        className="relative z-10 container-luxury text-center pt-32 pb-24 md:pt-40 md:pb-32 will-change-transform"
+        className="relative z-10 container-luxury text-center pt-36 pb-24 md:pt-44 md:pb-32 will-change-transform"
         style={{ y: reduceMotion ? 0 : contentY }}
       >
         <div className="max-w-5xl mx-auto">
