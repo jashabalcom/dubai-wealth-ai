@@ -28,8 +28,8 @@ function decodeHtmlEntities(text: string): string {
     .trim();
 }
 
-// RSS Feed sources focused on Dubai real estate - VERIFIED WORKING as of Dec 2024
-const RSS_FEEDS = [
+// Default RSS feeds (fallback if database is empty)
+const DEFAULT_RSS_FEEDS = [
   {
     name: 'Arabian Business Real Estate',
     url: 'https://www.arabianbusiness.com/industries/real-estate/feed',
@@ -441,10 +441,50 @@ serve(async (req) => {
     const lovableKey = Deno.env.get('LOVABLE_API_KEY');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Parse request body for optional sourceId filter
+    let sourceIdFilter: string | null = null;
+    try {
+      const body = await req.json();
+      sourceIdFilter = body?.sourceId || null;
+    } catch {
+      // No body or invalid JSON - that's fine
+    }
+
     console.log('Starting enhanced RSS sync with Firecrawl + AI investor analysis...');
     console.log(`Firecrawl key: ${firecrawlKey ? 'configured' : 'missing'}`);
     console.log(`Lovable AI key: ${lovableKey ? 'configured' : 'missing'}`);
+    console.log(`Source filter: ${sourceIdFilter || 'all'}`);
     
+    // Fetch RSS sources from database
+    let query = supabase
+      .from('news_sources')
+      .select('*')
+      .eq('feed_type', 'rss')
+      .eq('is_active', true)
+      .order('tier', { ascending: true });
+
+    if (sourceIdFilter) {
+      query = query.eq('id', sourceIdFilter);
+    }
+
+    const { data: dbSources, error: sourcesError } = await query;
+
+    if (sourcesError) {
+      console.error('Failed to fetch sources from database:', sourcesError);
+    }
+
+    // Use database sources if available, otherwise fallback to defaults
+    const RSS_FEEDS = dbSources && dbSources.length > 0 
+      ? dbSources.map(s => ({ 
+          id: s.id,
+          name: s.name, 
+          url: s.url, 
+          keywords: s.keywords || [] 
+        }))
+      : DEFAULT_RSS_FEEDS.map(s => ({ ...s, id: null }));
+
+    console.log(`Using ${RSS_FEEDS.length} RSS sources`);
+
     let totalSynced = 0;
     let totalSkipped = 0;
     let totalEnriched = 0;
@@ -452,6 +492,7 @@ serve(async (req) => {
     const errors: string[] = [];
 
     for (const feed of RSS_FEEDS) {
+      let feedSynced = 0;
       console.log(`Fetching ${feed.name}...`);
       const articles = await parseRSSFeed(feed.url, feed.name, feed.keywords);
       console.log(`Found ${articles.length} relevant articles from ${feed.name}`);
@@ -550,11 +591,25 @@ serve(async (req) => {
             errors.push(error.message);
           } else {
             totalSynced++;
+            feedSynced++;
             console.log(`[Saved] ${article.title.slice(0, 50)}... (${wordCount} words, image: ${finalImageUrl ? 'yes' : 'no'})`);
           }
         } else {
           totalSkipped++;
         }
+      }
+
+      // Update source stats in database if it has an ID
+      if (feed.id) {
+        await supabase
+          .from('news_sources')
+          .update({
+            last_synced_at: new Date().toISOString(),
+            articles_synced: feedSynced,
+            error_count: 0,
+            last_error: null,
+          })
+          .eq('id', feed.id);
       }
     }
 
