@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Building2, TrendingUp, Percent, DollarSign, Info, BadgeCheck, AlertTriangle, Calculator } from 'lucide-react';
+import { ArrowLeft, Building2, TrendingUp, Percent, DollarSign, Info, BadgeCheck, AlertTriangle, Calculator, Lock } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -12,6 +12,8 @@ import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
+import { LockedResultValue } from '@/components/freemium/LockedResultValue';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -153,7 +155,7 @@ export default function CapRateCalculator() {
       <section className="pt-32 pb-8">
         <div className="container mx-auto px-4">
           {!isUnlimited && !usageLoading && (
-            <UsageLimitBanner remaining={remainingUses} total={3} type="tool" toolName="Cap Rate Calculator" />
+            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Cap Rate Calculator" />
           )}
           <Link
             to="/tools"
@@ -403,64 +405,89 @@ export default function CapRateCalculator() {
               className="space-y-6"
             >
               {/* Key Metrics */}
-              <div className={`p-6 rounded-2xl border ${ratingBgs[capRateRating]}`}>
-                <h2 className="font-heading text-xl text-foreground mb-6">Key Metrics</h2>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm text-muted-foreground">Cap Rate</p>
-                      {capRateRating === 'excellent' && <BadgeCheck className="w-4 h-4 text-emerald-400" />}
-                      {capRateRating === 'poor' && <AlertTriangle className="w-4 h-4 text-red-400" />}
+              <HardPaywall
+                isLocked={hasReachedLimit}
+                feature="Cap Rate Analysis"
+                requiredTier="investor"
+                teaserMessage="Upgrade to unlock your cap rate analysis, NOI calculations, and market comparisons."
+              >
+                <div className={`p-6 rounded-2xl border ${ratingBgs[capRateRating]}`}>
+                  <h2 className="font-heading text-xl text-foreground mb-6">Key Metrics</h2>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm text-muted-foreground">Cap Rate</p>
+                        {!hasReachedLimit && capRateRating === 'excellent' && <BadgeCheck className="w-4 h-4 text-emerald-400" />}
+                        {!hasReachedLimit && capRateRating === 'poor' && <AlertTriangle className="w-4 h-4 text-red-400" />}
+                      </div>
+                      <LockedResultValue
+                        label=""
+                        isLocked={hasReachedLimit}
+                        value={`${capRate.toFixed(2)}%`}
+                        valueClassName={`font-heading text-3xl ${ratingColors[capRateRating]}`}
+                      />
+                      {!hasReachedLimit && (
+                        <p className="text-xs text-muted-foreground capitalize">{capRateRating} for {propertyTypeLabels[inputs.propertyType]}</p>
+                      )}
                     </div>
-                    <p className={`font-heading text-3xl ${ratingColors[capRateRating]}`}>{capRate.toFixed(2)}%</p>
-                    <p className="text-xs text-muted-foreground capitalize">{capRateRating} for {propertyTypeLabels[inputs.propertyType]}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">NOI (Annual)</p>
-                    <p className="font-heading text-3xl text-foreground">{formatAED(noi)}</p>
-                    <p className="text-xs text-muted-foreground">Net Operating Income</p>
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <LockedResultValue
+                        label="NOI (Annual)"
+                        isLocked={hasReachedLimit}
+                        value={formatAED(noi)}
+                        valueClassName="font-heading text-3xl text-foreground"
+                      />
+                      {!hasReachedLimit && (
+                        <p className="text-xs text-muted-foreground">Net Operating Income</p>
+                      )}
+                    </div>
                   </div>
                 </div>
+              </HardPaywall>
 
-                {/* Market Comparison */}
-                <div className="p-4 rounded-xl bg-card/50 mb-4">
-                  <p className="text-sm font-medium text-foreground mb-3">Market Comparison</p>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Your Cap Rate</span>
-                      <span className={ratingColors[capRateRating]}>{capRate.toFixed(2)}%</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Market Average</span>
-                      <span className="text-foreground">{benchmark.typicalCapRate.avg}%</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Market Range</span>
-                      <span className="text-foreground">{benchmark.typicalCapRate.min}% - {benchmark.typicalCapRate.max}%</span>
+              {/* Market Comparison - Also lock when limit reached */}
+              {!hasReachedLimit && (
+                <div className={`p-6 rounded-2xl border ${ratingBgs[capRateRating]}`}>
+                  {/* Market Comparison */}
+                  <div className="p-4 rounded-xl bg-card/50 mb-4">
+                    <p className="text-sm font-medium text-foreground mb-3">Market Comparison</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Your Cap Rate</span>
+                        <span className={ratingColors[capRateRating]}>{capRate.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Market Average</span>
+                        <span className="text-foreground">{benchmark.typicalCapRate.avg}%</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Market Range</span>
+                        <span className="text-foreground">{benchmark.typicalCapRate.min}% - {benchmark.typicalCapRate.max}%</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="p-3 rounded-lg bg-slate-500/10 text-sm">
-                  {capRate > benchmark.typicalCapRate.avg ? (
-                    <p className="text-emerald-400">✓ Above market average cap rate - potentially good value</p>
-                  ) : capRate >= benchmark.typicalCapRate.min ? (
-                    <p className="text-amber-400">→ Within typical market range</p>
-                  ) : (
-                    <p className="text-red-400">⚠ Below typical cap rates for this property type</p>
-                  )}
-                </div>
+                  <div className="p-3 rounded-lg bg-slate-500/10 text-sm">
+                    {capRate > benchmark.typicalCapRate.avg ? (
+                      <p className="text-emerald-400">✓ Above market average cap rate - potentially good value</p>
+                    ) : capRate >= benchmark.typicalCapRate.min ? (
+                      <p className="text-amber-400">→ Within typical market range</p>
+                    ) : (
+                      <p className="text-red-400">⚠ Below typical cap rates for this property type</p>
+                    )}
+                  </div>
 
-                {/* DSCR Calculator Link */}
-                <Link
-                  to={`/tools/dscr?noi=${Math.round(noi)}&price=${inputs.purchasePrice}`}
-                  className="flex items-center justify-center gap-2 p-3 mt-4 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
-                >
-                  <Calculator className="w-4 h-4" />
-                  <span className="text-sm font-medium">Calculate Financing with DSCR Calculator →</span>
-                </Link>
-              </div>
+                  {/* DSCR Calculator Link */}
+                  <Link
+                    to={`/tools/dscr?noi=${Math.round(noi)}&price=${inputs.purchasePrice}`}
+                    className="flex items-center justify-center gap-2 p-3 mt-4 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors"
+                  >
+                    <Calculator className="w-4 h-4" />
+                    <span className="text-sm font-medium">Calculate Financing with DSCR Calculator →</span>
+                  </Link>
+                </div>
+              )}
 
               {/* Income Analysis */}
               <div className="p-6 rounded-2xl bg-card border border-border">
