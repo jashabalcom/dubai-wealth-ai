@@ -114,6 +114,7 @@ const AdminOKRs = lazy(() => import("@/pages/admin/AdminOKRs"));
 const AdminInvestorMetrics = lazy(() => import("@/pages/admin/AdminInvestorMetrics"));
 const AdminDigest = lazy(() => import("@/pages/admin/AdminDigest"));
 const AdminNewsSources = lazy(() => import("@/pages/admin/AdminNewsSources"));
+const AdminAffiliates = lazy(() => import("@/pages/admin/AdminAffiliates"));
 
 // Lazy loaded - Public investor page
 const Investors = lazy(() => import("@/pages/Investors"));
@@ -267,6 +268,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/calendar-events" element={<LazyPage><AdminCalendarEvents /></LazyPage>} />
         <Route path="/admin/okrs" element={<LazyPage><AdminOKRs /></LazyPage>} />
         <Route path="/admin/investor-metrics" element={<LazyPage><AdminInvestorMetrics /></LazyPage>} />
+        <Route path="/admin/affiliates" element={<LazyPage><AdminAffiliates /></LazyPage>} />
         
         {/* Public Investor Page */}
         <Route path="/investors" element={<LazyPage><Investors /></LazyPage>} />
