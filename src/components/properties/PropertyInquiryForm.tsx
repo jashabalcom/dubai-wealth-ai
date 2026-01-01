@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { trackPropertyInquiry } from '@/lib/analytics';
+import { AuthPromptDialog } from './AuthPromptDialog';
 
 const inquirySchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -27,15 +28,20 @@ interface PropertyInquiryFormProps {
   propertyId: string;
   propertyArea?: string;
   propertyPrice?: number;
+  propertySlug?: string;
 }
 
-export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, propertyPrice }: PropertyInquiryFormProps) {
+const PENDING_INQUIRY_KEY = 'pending_inquiry_data';
+const PENDING_INQUIRY_SLUG_KEY = 'pending_inquiry_property_slug';
+
+export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, propertyPrice, propertySlug }: PropertyInquiryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [inquiryType, setInquiryType] = useState<'viewing' | 'enquiry'>('enquiry');
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const { user, profile } = useAuth();
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<InquiryFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, getValues, trigger } = useForm<InquiryFormData>({
     resolver: zodResolver(inquirySchema),
     defaultValues: {
       name: profile?.full_name || '',
@@ -45,7 +51,52 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
     },
   });
 
-  const onSubmit = async (data: InquiryFormData) => {
+  // Restore pending inquiry data if user just logged in
+  useEffect(() => {
+    if (user) {
+      const pendingData = localStorage.getItem(PENDING_INQUIRY_KEY);
+      const pendingSlug = localStorage.getItem(PENDING_INQUIRY_SLUG_KEY);
+      
+      if (pendingData && pendingSlug === propertySlug) {
+        try {
+          const data = JSON.parse(pendingData);
+          reset({
+            name: data.name || profile?.full_name || '',
+            email: data.email || profile?.email || user?.email || '',
+            phone: data.phone || '',
+            message: data.message || '',
+          });
+          if (data.inquiryType) {
+            setInquiryType(data.inquiryType);
+          }
+          // Clear pending data
+          localStorage.removeItem(PENDING_INQUIRY_KEY);
+          localStorage.removeItem(PENDING_INQUIRY_SLUG_KEY);
+          
+          toast({
+            title: 'Your inquiry is ready!',
+            description: 'Click submit to send your inquiry.',
+          });
+        } catch (e) {
+          console.error('Error restoring inquiry data:', e);
+        }
+      }
+    }
+  }, [user, propertySlug, reset, profile]);
+
+  const handleFormSubmit = async (data: InquiryFormData) => {
+    // If user is not logged in, save data and show auth prompt
+    if (!user) {
+      localStorage.setItem(PENDING_INQUIRY_KEY, JSON.stringify({
+        ...data,
+        inquiryType,
+      }));
+      localStorage.setItem(PENDING_INQUIRY_SLUG_KEY, propertySlug || propertyId);
+      setShowAuthPrompt(true);
+      return;
+    }
+
+    // User is logged in, proceed with submission
     setIsSubmitting(true);
     
     try {
@@ -91,6 +142,14 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const onSubmitClick = async () => {
+    // Validate form first before showing auth prompt
+    const isValid = await trigger();
+    if (isValid) {
+      handleSubmit(handleFormSubmit)();
     }
   };
 
@@ -143,7 +202,7 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit(handleFormSubmit)}
             className="space-y-4"
           >
             <div>
@@ -231,6 +290,12 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
           </motion.form>
         )}
       </AnimatePresence>
+
+      <AuthPromptDialog
+        open={showAuthPrompt}
+        onOpenChange={setShowAuthPrompt}
+        propertyTitle={propertyTitle}
+      />
     </div>
   );
 }

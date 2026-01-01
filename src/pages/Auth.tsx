@@ -143,6 +143,7 @@ export default function Auth() {
           }
         } else {
           const pendingTier = localStorage.getItem('pending_checkout_tier');
+          const pendingInquirySlug = localStorage.getItem('pending_inquiry_property_slug');
           
           if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
             localStorage.removeItem('pending_checkout_tier');
@@ -151,6 +152,12 @@ export default function Auth() {
               description: 'Continuing to checkout...',
             });
             startCheckout(pendingTier as 'investor' | 'elite');
+          } else if (pendingInquirySlug) {
+            toast({
+              title: 'Welcome back!',
+              description: 'Complete your property inquiry.',
+            });
+            navigate(`/properties/${pendingInquirySlug}`);
           } else {
             toast({
               title: 'Welcome back!',
@@ -177,6 +184,7 @@ export default function Auth() {
           }
         } else {
           const pendingTier = localStorage.getItem('pending_checkout_tier');
+          const pendingInquirySlug = localStorage.getItem('pending_inquiry_property_slug');
           
           if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
             localStorage.removeItem('pending_checkout_tier');
@@ -185,6 +193,12 @@ export default function Auth() {
               description: 'Continuing to checkout...',
             });
             startCheckout(pendingTier as 'investor' | 'elite');
+          } else if (pendingInquirySlug) {
+            toast({
+              title: 'Welcome to Dubai Wealth Hub!',
+              description: 'Complete your property inquiry.',
+            });
+            navigate(`/properties/${pendingInquirySlug}`);
           } else {
             toast({
               title: 'Welcome to Dubai Wealth Hub!',
