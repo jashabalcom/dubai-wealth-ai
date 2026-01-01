@@ -42,6 +42,32 @@ export interface DailyDigest {
   analyst_notes: string | null;
 }
 
+// Helper to map DB data to DailyDigest interface
+function mapDigestData(data: any): DailyDigest {
+  return {
+    id: data.id,
+    digest_date: data.digest_date,
+    headline: data.headline,
+    executive_summary: data.executive_summary,
+    market_sentiment: data.market_sentiment || 'neutral',
+    key_metrics: Array.isArray(data.key_metrics) ? data.key_metrics : [],
+    sector_highlights: Array.isArray(data.sector_highlights) ? data.sector_highlights : [],
+    area_highlights: Array.isArray(data.area_highlights) ? data.area_highlights : [],
+    top_article_ids: data.top_article_ids || [],
+    is_published: data.is_published,
+    created_at: data.created_at,
+    investment_action: data.investment_action || 'watch',
+    confidence_score: data.confidence_score || 3,
+    data_sources: data.data_sources || [],
+    key_takeaways: data.key_takeaways || [],
+    top_areas: Array.isArray(data.top_areas) ? data.top_areas : [],
+    transaction_volume: data.transaction_volume,
+    avg_price_sqft: data.avg_price_sqft,
+    generated_at: data.generated_at,
+    analyst_notes: data.analyst_notes,
+  };
+}
+
 export function useLatestDigest() {
   const [digest, setDigest] = useState<DailyDigest | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -185,7 +185,7 @@ const DailyBriefing = () => {
 
             {/* Metrics Dashboard */}
             <MetricsDashboard
-              keyMetrics={digest.key_metrics || []}
+              keyMetrics={digest.key_metrics}
               transactionVolume={digest.transaction_volume || undefined}
               avgPriceSqft={digest.avg_price_sqft || undefined}
             />
@@ -194,15 +194,12 @@ const DailyBriefing = () => {
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Sector Analysis */}
               <SectorAnalysis
-                sectorHighlights={digest.sector_highlights?.map(s => ({
-                  ...s,
-                  sentiment: s.sentiment as 'positive' | 'negative' | 'neutral'
-                })) || []}
+                sectorHighlights={digest.sector_highlights}
               />
 
               {/* Area Highlights */}
               <AreaHighlights
-                areaHighlights={digest.top_areas || digest.area_highlights || []}
+                areaHighlights={digest.top_areas.length > 0 ? digest.top_areas : digest.area_highlights}
               />
             </div>
 
