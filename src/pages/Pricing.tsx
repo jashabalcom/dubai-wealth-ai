@@ -162,24 +162,28 @@ export default function Pricing() {
             <div className="inline-flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border">
               <button
                 onClick={() => setBillingPeriod('monthly')}
-                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 ${
                   billingPeriod === 'monthly'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingPeriod('annual')}
-                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                   billingPeriod === 'annual'
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary text-primary-foreground shadow-md ring-2 ring-primary/30'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
                 Annual
-                <span className="px-2 py-0.5 rounded-full bg-emerald-600/20 text-emerald-600 text-xs font-semibold">
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                  billingPeriod === 'annual'
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-emerald-600/20 text-emerald-600'
+                }`}>
                   2 Months Free
                 </span>
               </button>
