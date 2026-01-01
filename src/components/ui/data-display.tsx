@@ -78,33 +78,37 @@ interface LiveTickerProps {
 export function LiveTicker({ items, className }: LiveTickerProps) {
   return (
     <div className={cn(
-      "flex items-center gap-6 overflow-x-auto scrollbar-hide py-3 px-4",
+      "relative flex items-center gap-8 overflow-x-auto scrollbar-hide py-4 px-4 sm:px-6",
       "bg-secondary/50 backdrop-blur-sm border-y border-border/30",
       className
     )}>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <span className="relative flex h-2 w-2">
+      {/* Fade gradients for scroll indication */}
+      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-secondary/80 to-transparent pointer-events-none z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-secondary/80 to-transparent pointer-events-none z-10" />
+      
+      <div className="flex items-center gap-2 flex-shrink-0 pl-2">
+        <span className="relative flex h-2.5 w-2.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
         </span>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Live</span>
+        <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Live</span>
       </div>
       
-      <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+      <div className="flex items-center gap-8 overflow-x-auto scrollbar-hide pr-8">
         {items.map((item, i) => (
           <React.Fragment key={item.label}>
-            {i > 0 && <div className="w-px h-4 bg-border/50 flex-shrink-0" />}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">{item.label}</span>
-              <span className="text-sm font-medium text-foreground tabular-nums whitespace-nowrap">
+            {i > 0 && <div className="w-px h-5 bg-border flex-shrink-0" />}
+            <div className="flex items-center gap-2.5 flex-shrink-0">
+              <span className="text-sm text-muted-foreground whitespace-nowrap">{item.label}</span>
+              <span className="text-base font-semibold text-foreground tabular-nums whitespace-nowrap">
                 {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
               </span>
               {item.change !== undefined && (
                 <span className={cn(
-                  "text-xs tabular-nums flex items-center",
+                  "text-sm font-medium tabular-nums flex items-center gap-0.5",
                   item.change > 0 ? "text-emerald-500" : item.change < 0 ? "text-rose-500" : "text-muted-foreground"
                 )}>
-                  {item.change > 0 ? <ArrowUpRight className="w-3 h-3" /> : item.change < 0 ? <ArrowDownRight className="w-3 h-3" /> : null}
+                  {item.change > 0 ? <ArrowUpRight className="w-4 h-4" /> : item.change < 0 ? <ArrowDownRight className="w-4 h-4" /> : null}
                   {item.change > 0 ? "+" : ""}{item.change.toFixed(1)}%
                 </span>
               )}
@@ -284,25 +288,25 @@ interface StatCardProps {
 export function StatCard({ label, value, change, changeLabel, icon, className }: StatCardProps) {
   return (
     <div className={cn(
-      "p-4 sm:p-5 rounded-xl bg-card border border-border/50",
-      "hover:border-primary/30 transition-colors duration-300",
+      "p-4 sm:p-5 rounded-xl bg-card border border-border/50 min-h-[120px] sm:min-h-[140px]",
+      "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300",
       className
     )}>
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs uppercase tracking-[0.1em] text-muted-foreground font-medium">
+        <p className="text-xs sm:text-sm uppercase tracking-[0.1em] text-muted-foreground font-medium leading-tight">
           {label}
         </p>
         {icon && (
-          <div className="text-primary/60">
+          <div className="text-primary/60 flex-shrink-0">
             {icon}
           </div>
         )}
       </div>
-      <p className="text-2xl sm:text-3xl font-serif font-semibold text-foreground tabular-nums">
+      <p className="text-xl sm:text-2xl md:text-3xl font-serif font-semibold text-foreground tabular-nums leading-none">
         {typeof value === "number" ? value.toLocaleString() : value}
       </p>
       {change !== undefined && (
-        <div className="flex items-center gap-2 mt-2">
+        <div className="flex items-center gap-2 mt-3">
           <PercentageChange value={change} size="sm" />
           {changeLabel && (
             <span className="text-xs text-muted-foreground">{changeLabel}</span>

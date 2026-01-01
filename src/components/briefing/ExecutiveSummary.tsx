@@ -110,78 +110,81 @@ export function ExecutiveSummary({
         'bg-gradient-to-r from-slate-500 to-slate-400'
       )} />
 
-      <div className="relative p-5 sm:p-8">
-        {/* Header Row */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+      <div className="relative p-5 sm:p-8 lg:p-10">
+        {/* Header Row - Stack on mobile, row on desktop */}
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8">
           {/* Sentiment Badge */}
           <div className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm font-medium",
+            "inline-flex items-center gap-2 px-3 py-2 rounded-full border text-sm font-medium w-fit",
             sentimentInfo.className
           )}>
             <SentimentIcon className="w-4 h-4" />
             <span>{sentimentInfo.label}</span>
           </div>
 
-          {/* Action & Confidence */}
-          <div className="flex items-center gap-3">
+          {/* Action & Confidence - Stack on smaller screens */}
+          <div className="flex flex-wrap items-center gap-3">
             {/* Investment Action Badge */}
             <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded font-mono text-xs font-bold uppercase tracking-wider",
+              "flex items-center gap-1.5 px-4 py-2 rounded font-mono text-sm font-bold uppercase tracking-wider",
               actionInfo.className
             )}>
-              <ActionIcon className="w-3.5 h-3.5" />
+              <ActionIcon className="w-4 h-4" />
               <span>{actionInfo.label}</span>
             </div>
 
-            {/* Confidence Indicator */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {/* Confidence Indicator with label */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+              <span className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
                 Confidence
               </span>
-              <div className="flex gap-0.5">
+              <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((level) => (
                   <div
                     key={level}
                     className={cn(
-                      "w-2 h-4 rounded-sm transition-colors",
+                      "w-2.5 h-5 rounded-sm transition-colors",
                       level <= confidenceScore 
                         ? "bg-primary" 
-                        : "bg-muted"
+                        : "bg-muted-foreground/20"
                     )}
                   />
                 ))}
               </div>
+              <span className="text-xs font-mono text-foreground font-medium">
+                {confidenceScore}/5
+              </span>
             </div>
           </div>
         </div>
 
         {/* Headline */}
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-foreground leading-tight mb-4">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-foreground leading-[1.2] mb-4 sm:mb-6">
           {headline}
         </h2>
 
         {/* Lead Paragraph */}
-        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-6">
+        <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed sm:leading-[1.8] mb-6 sm:mb-8">
           {summary}
         </p>
 
         {/* Key Takeaways */}
         {keyTakeaways.length > 0 && (
-          <div className="pt-6 border-t border-border/50">
-            <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-semibold mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-3.5 h-3.5" />
+          <div className="pt-6 sm:pt-8 border-t border-border/50">
+            <h3 className="text-xs sm:text-sm uppercase tracking-widest text-muted-foreground font-semibold mb-4 sm:mb-5 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
               Key Takeaways
             </h3>
-            <ol className="space-y-2">
+            <ol className="space-y-3 sm:space-y-4">
               {keyTakeaways.slice(0, 4).map((takeaway, index) => (
                 <li 
                   key={index}
-                  className="flex items-start gap-3 text-sm text-foreground"
+                  className="flex items-start gap-3 sm:gap-4 text-sm sm:text-base text-foreground group"
                 >
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">
+                  <span className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/20 text-primary text-xs sm:text-sm font-bold flex items-center justify-center border border-primary/30 group-hover:bg-primary/30 transition-colors">
                     {index + 1}
                   </span>
-                  <span className="leading-relaxed">{takeaway}</span>
+                  <span className="leading-relaxed sm:leading-[1.7] pt-0.5">{takeaway}</span>
                 </li>
               ))}
             </ol>

@@ -11,25 +11,25 @@ interface BrandLogoProps {
 
 const sizeClasses = {
   sm: {
-    line1: "text-sm md:text-base",
-    line2: "text-[9px] md:text-[10px]",
+    line1: "text-xs sm:text-sm lg:text-base",
+    line2: "text-[8px] sm:text-[9px] lg:text-[10px]",
     tagline: "text-[7px] md:text-[8px]",
-    accentLine: "w-8 md:w-10",
-    gap: "gap-0.5",
+    accentLine: "w-6 sm:w-8 md:w-10",
+    gap: "gap-0",
   },
   md: {
-    line1: "text-lg md:text-xl",
-    line2: "text-[10px] md:text-[11px]",
+    line1: "text-base sm:text-lg lg:text-xl",
+    line2: "text-[9px] sm:text-[10px] lg:text-[11px]",
     tagline: "text-[8px] md:text-[9px]",
-    accentLine: "w-10 md:w-12",
-    gap: "gap-0.5",
+    accentLine: "w-8 sm:w-10 md:w-12",
+    gap: "gap-0",
   },
   lg: {
-    line1: "text-xl md:text-2xl",
-    line2: "text-[11px] md:text-[13px]",
+    line1: "text-lg sm:text-xl lg:text-2xl",
+    line2: "text-[10px] sm:text-[11px] lg:text-[13px]",
     tagline: "text-[9px] md:text-[10px]",
-    accentLine: "w-12 md:w-16",
-    gap: "gap-1",
+    accentLine: "w-10 sm:w-12 md:w-16",
+    gap: "gap-0.5",
   },
 };
 
@@ -53,7 +53,7 @@ export function BrandLogo({
       transition={{ duration: 0.2 }}
     >
       {/* Main Brand Name - Stacked */}
-      <div className="flex flex-col items-start leading-none">
+      <div className="flex flex-col items-start leading-[1.1]">
         <span
           className={cn(
             "font-serif font-semibold tracking-wide uppercase",
@@ -66,7 +66,7 @@ export function BrandLogo({
         </span>
         <span
           className={cn(
-            "font-serif font-medium tracking-[0.15em] uppercase",
+            "font-serif font-medium tracking-[0.12em] sm:tracking-[0.15em] uppercase whitespace-nowrap",
             sizes.line2,
             textColorClass,
             "transition-colors duration-300 group-hover:text-primary"
