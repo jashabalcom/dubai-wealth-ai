@@ -65,16 +65,16 @@ export function BloombergBriefing({
       {/* Terminal-Style Header Bar */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-secondary/95 backdrop-blur-sm">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center justify-between h-16 sm:h-18">
             {/* Left: Branding */}
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded bg-primary/10 border border-primary/20">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded bg-primary/10 border border-primary/20">
                 <Radio className="w-3 h-3 text-primary animate-pulse" />
-                <span className="text-[10px] uppercase tracking-widest text-primary font-mono font-medium">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-primary font-mono font-medium">
                   Live
                 </span>
               </div>
-              <div>
+              <div className="hidden sm:block">
                 <h1 className="text-sm sm:text-base font-semibold text-foreground tracking-tight">
                   Dubai Market Intelligence
                 </h1>
@@ -85,18 +85,18 @@ export function BloombergBriefing({
             </div>
 
             {/* Center: Date & Time + Historical Access */}
-            <div className="hidden md:flex items-center gap-6 text-xs text-muted-foreground">
+            <div className="hidden lg:flex items-center gap-6 text-xs text-muted-foreground">
               {hasHistoricalAccess ? (
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-8 px-3 text-muted-foreground hover:text-foreground gap-2"
+                      className="h-9 px-3 text-muted-foreground hover:text-foreground gap-2"
                     >
-                      <CalendarDays className="w-3.5 h-3.5" />
-                      <span className="font-mono">{formattedDate}</span>
-                      <Badge variant="outline" className="ml-1 h-4 px-1.5 text-[9px] border-primary/30 text-primary">
+                      <CalendarDays className="w-4 h-4" />
+                      <span className="font-mono text-sm">{formattedDate}</span>
+                      <Badge variant="outline" className="ml-1 h-5 px-2 text-[10px] border-primary/30 text-primary">
                         Elite
                       </Badge>
                     </Button>
@@ -114,22 +114,22 @@ export function BloombergBriefing({
                 </Popover>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span className="font-mono">{formattedDate}</span>
+                  <Calendar className="w-4 h-4" />
+                  <span className="font-mono text-sm">{formattedDate}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5" />
-                <span className="font-mono">As of {generatedTime} GST</span>
+                <Clock className="w-4 h-4" />
+                <span className="font-mono text-sm">As of {generatedTime} GST</span>
               </div>
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="hidden sm:flex h-8 px-2 text-muted-foreground hover:text-foreground"
+                className="hidden sm:flex h-9 w-9 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                 onClick={handleShare}
               >
                 <Share2 className="w-4 h-4" />
@@ -137,7 +137,7 @@ export function BloombergBriefing({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="hidden sm:flex h-8 px-2 text-muted-foreground hover:text-foreground"
+                className="hidden sm:flex h-9 w-9 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                 onClick={handlePrint}
               >
                 <Printer className="w-4 h-4" />
@@ -145,7 +145,7 @@ export function BloombergBriefing({
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                className="h-9 w-9 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
               >
                 <Bookmark className="w-4 h-4" />
               </Button>
@@ -155,21 +155,48 @@ export function BloombergBriefing({
       </header>
 
       {/* Mobile Date Display */}
-      <div className="md:hidden border-b border-border/30 bg-muted/30 py-2">
-        <div className="container mx-auto px-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-3 h-3" />
-            <span className="font-mono">{shortDate}</span>
+      <div className="lg:hidden border-b border-border/30 bg-muted/30 py-3">
+        <div className="container mx-auto px-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="font-mono text-sm text-foreground">{shortDate}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3 h-3" />
-            <span className="font-mono">{generatedTime} GST</span>
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="font-mono text-sm text-foreground">{generatedTime} GST</span>
           </div>
+          {hasHistoricalAccess && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-3 gap-2 text-xs border-primary/30"
+                >
+                  <CalendarDays className="w-3.5 h-3.5" />
+                  <span>View History</span>
+                  <Badge variant="default" className="ml-0.5 h-4 px-1.5 text-[9px] bg-primary/20 text-primary">
+                    Elite
+                  </Badge>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="center">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={onDateChange}
+                  disabled={(d) => d > new Date()}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 
       {/* Content */}
-      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8 sm:space-y-10">
         {children}
       </main>
     </div>

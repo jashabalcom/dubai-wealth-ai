@@ -80,26 +80,33 @@ function LockedContent({ title, tier }: { title: string; tier: 'investor' | 'eli
   
   return (
     <div className="relative rounded-xl overflow-hidden">
-      {/* Blurred placeholder */}
+      {/* Blurred placeholder with diagonal stripes pattern */}
       <div className="blur-sm opacity-50 pointer-events-none">
-        <div className="h-64 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl flex items-center justify-center">
-          <span className="text-muted-foreground">{title}</span>
+        <div className="h-64 sm:h-72 bg-gradient-to-br from-muted/50 to-muted/30 rounded-xl flex items-center justify-center relative overflow-hidden">
+          {/* Subtle diagonal stripe pattern */}
+          <div 
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px)'
+            }}
+          />
+          <span className="text-muted-foreground text-lg">{title}</span>
         </div>
       </div>
       
       {/* Lock overlay */}
-      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 rounded-xl border border-border">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <Lock className="w-6 h-6 text-primary" />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 sm:gap-5 rounded-xl border border-border p-6">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/10 flex items-center justify-center ring-4 ring-primary/20 animate-pulse">
+          <Lock className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
         </div>
         <div className="text-center px-4">
-          <h4 className="font-semibold text-foreground mb-1">{tierLabel}+ Feature</h4>
-          <p className="text-sm text-muted-foreground mb-4">
+          <h4 className="font-semibold text-lg sm:text-xl text-foreground mb-2">{tierLabel}+ Feature</h4>
+          <p className="text-sm sm:text-base text-muted-foreground mb-5 max-w-sm">
             Upgrade to {tierLabel} to unlock {title.toLowerCase()}
           </p>
-          <Button asChild size="sm">
+          <Button asChild size="lg" className="min-h-[48px] px-6">
             <Link to={upgradeLink}>
-              <Crown className="w-4 h-4 mr-2" />
+              <Crown className="w-5 h-5 mr-2" />
               Upgrade Now
             </Link>
           </Button>
@@ -251,26 +258,33 @@ const DailyBriefing = () => {
 
             {/* Free tier upgrade CTA */}
             {isFreeTier && (
-              <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-6 text-center">
-                <Crown className="w-10 h-10 text-primary mx-auto mb-3" />
-                <h3 className="font-heading text-xl font-bold text-foreground mb-2">
-                  Unlock Full Market Intelligence
-                </h3>
-                <p className="text-muted-foreground mb-4 max-w-lg mx-auto">
-                  Upgrade to Investor to access comprehensive metrics, sector analysis, area insights, and featured intelligence articles.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Button asChild size="lg">
-                    <Link to="/pricing">
-                      <Crown className="w-4 h-4 mr-2" />
-                      Upgrade to Investor
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link to="/auth">
-                      Sign In
-                    </Link>
-                  </Button>
+              <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 p-6 sm:p-8 lg:p-10 text-center relative overflow-hidden">
+                {/* Subtle glow effect */}
+                <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
+                
+                <div className="relative z-10">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 ring-4 ring-primary/10">
+                    <Crown className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+                  </div>
+                  <h3 className="font-heading text-xl sm:text-2xl font-bold text-foreground mb-3">
+                    Unlock Full Market Intelligence
+                  </h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6 max-w-lg mx-auto leading-relaxed">
+                    Upgrade to Investor to access comprehensive metrics, sector analysis, area insights, and featured intelligence articles.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+                    <Button asChild size="lg" className="w-full sm:w-auto min-h-[52px] px-8 text-base">
+                      <Link to="/pricing">
+                        <Crown className="w-5 h-5 mr-2" />
+                        Upgrade to Investor
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg" className="w-full sm:w-auto min-h-[52px] px-8 text-base">
+                      <Link to="/auth">
+                        Sign In
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
