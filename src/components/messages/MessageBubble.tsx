@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
-import { SmilePlus } from 'lucide-react';
+import { SmilePlus, Lock, ShieldCheck } from 'lucide-react';
 import { ReactionPicker } from './ReactionPicker';
 import { MessageReactions } from './MessageReactions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ReactionGroup } from '@/hooks/useMessageReactions';
 
 interface MessageBubbleProps {
@@ -11,6 +12,8 @@ interface MessageBubbleProps {
   timestamp: string;
   isSender: boolean;
   isRead?: boolean;
+  isEncrypted?: boolean;
+  isDecrypting?: boolean;
   reactions?: ReactionGroup[];
   onReact?: (messageId: string, emoji: string) => void;
 }
@@ -21,6 +24,8 @@ export function MessageBubble({
   timestamp, 
   isSender, 
   isRead,
+  isEncrypted = true,
+  isDecrypting = false,
   reactions = [],
   onReact,
 }: MessageBubbleProps) {
@@ -83,8 +88,27 @@ export function MessageBubble({
                 : 'bg-muted text-foreground rounded-bl-md'
             }`}
           >
-            <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+            {isDecrypting ? (
+              <p className="text-sm text-muted-foreground/50 italic">Decrypting...</p>
+            ) : (
+              <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+            )}
             <div className={`flex items-center gap-1.5 mt-1 ${isSender ? 'justify-end' : 'justify-start'}`}>
+              {isEncrypted && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Lock className={`h-3 w-3 ${isSender ? 'text-primary-foreground/60' : 'text-muted-foreground/60'}`} />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      <div className="flex items-center gap-1">
+                        <ShieldCheck className="h-3 w-3 text-green-500" />
+                        End-to-end encrypted
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               <span className={`text-xs ${isSender ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
                 {formatTime(timestamp)}
               </span>

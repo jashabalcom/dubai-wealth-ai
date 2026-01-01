@@ -161,9 +161,8 @@ export function ProgressiveImage({
           decoding={priority ? 'sync' : 'async'}
           onLoad={handleLoad}
           onError={handleError}
-          objectFitClasses[objectFit]
-        )}
-      />
+          className={cn('w-full h-full', objectFitClasses[objectFit])}
+        />
       </motion.div>
     </div>
   );
