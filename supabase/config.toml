@@ -125,3 +125,9 @@ verify_jwt = false
 
 [functions.scrape-news-sources]
 verify_jwt = false
+
+[functions.generate-sitemap]
+verify_jwt = false
+
+[functions.export-user-data]
+verify_jwt = false

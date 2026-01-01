@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_assignments: {
+        Row: {
+          created_at: string | null
+          experiment_id: string | null
+          id: string
+          session_id: string | null
+          user_id: string | null
+          variant: string
+        }
+        Insert: {
+          created_at?: string | null
+          experiment_id?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          variant: string
+        }
+        Update: {
+          created_at?: string | null
+          experiment_id?: string | null
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_assignments_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "ab_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_events: {
+        Row: {
+          assignment_id: string | null
+          created_at: string | null
+          event_data: Json | null
+          event_name: string
+          experiment_id: string | null
+          id: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string | null
+          event_data?: Json | null
+          event_name: string
+          experiment_id?: string | null
+          id?: string
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string | null
+          event_data?: Json | null
+          event_name?: string
+          experiment_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_events_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "ab_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_events_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "ab_experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_experiments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          start_date: string | null
+          updated_at: string | null
+          variants: Json
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_date?: string | null
+          updated_at?: string | null
+          variants?: Json
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_date?: string | null
+          updated_at?: string | null
+          variants?: Json
+        }
+        Relationships: []
+      }
       admin_activity_log: {
         Row: {
           activity_type: string
@@ -331,6 +444,45 @@ export type Database = {
         }
         Relationships: []
       }
+      area_benchmarks: {
+        Row: {
+          area_name: string
+          avg_price_sqft: number
+          avg_yield: number
+          created_at: string | null
+          data_as_of: string
+          data_source: string
+          id: string
+          is_verified: boolean | null
+          source_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          area_name: string
+          avg_price_sqft: number
+          avg_yield: number
+          created_at?: string | null
+          data_as_of?: string
+          data_source?: string
+          id?: string
+          is_verified?: boolean | null
+          source_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          area_name?: string
+          avg_price_sqft?: number
+          avg_yield?: number
+          created_at?: string | null
+          data_as_of?: string
+          data_source?: string
+          id?: string
+          is_verified?: boolean | null
+          source_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       area_market_stats: {
         Row: {
           apartment_avg_price: number | null
@@ -339,6 +491,7 @@ export type Database = {
           avg_price_sqft: number | null
           avg_price_sqm: number | null
           created_at: string
+          data_source: string | null
           id: string
           max_price_sqm: number | null
           median_price_sqm: number | null
@@ -352,6 +505,7 @@ export type Database = {
           qoq_price_change: number | null
           ready_avg_price: number | null
           ready_count: number | null
+          source_url: string | null
           total_sales_value: number | null
           total_transactions: number | null
           townhouse_avg_price: number | null
@@ -368,6 +522,7 @@ export type Database = {
           avg_price_sqft?: number | null
           avg_price_sqm?: number | null
           created_at?: string
+          data_source?: string | null
           id?: string
           max_price_sqm?: number | null
           median_price_sqm?: number | null
@@ -381,6 +536,7 @@ export type Database = {
           qoq_price_change?: number | null
           ready_avg_price?: number | null
           ready_count?: number | null
+          source_url?: string | null
           total_sales_value?: number | null
           total_transactions?: number | null
           townhouse_avg_price?: number | null
@@ -397,6 +553,7 @@ export type Database = {
           avg_price_sqft?: number | null
           avg_price_sqm?: number | null
           created_at?: string
+          data_source?: string | null
           id?: string
           max_price_sqm?: number | null
           median_price_sqm?: number | null
@@ -410,6 +567,7 @@ export type Database = {
           qoq_price_change?: number | null
           ready_avg_price?: number | null
           ready_count?: number | null
+          source_url?: string | null
           total_sales_value?: number | null
           total_transactions?: number | null
           townhouse_avg_price?: number | null
@@ -1671,6 +1829,45 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          enabled_for_roles: Database["public"]["Enums"]["app_role"][] | null
+          enabled_for_users: string[] | null
+          id: string
+          is_enabled: boolean | null
+          metadata: Json | null
+          name: string
+          percentage_rollout: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          enabled_for_roles?: Database["public"]["Enums"]["app_role"][] | null
+          enabled_for_users?: string[] | null
+          id?: string
+          is_enabled?: boolean | null
+          metadata?: Json | null
+          name: string
+          percentage_rollout?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          enabled_for_roles?: Database["public"]["Enums"]["app_role"][] | null
+          enabled_for_users?: string[] | null
+          id?: string
+          is_enabled?: boolean | null
+          metadata?: Json | null
+          name?: string
+          percentage_rollout?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
