@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const PAGE_SIZE = 24;
+const GUEST_RESULT_LIMIT = 12; // Limit for non-logged-in users
 
 export interface PropertyFilters {
   search?: string;
@@ -48,6 +49,10 @@ interface Cursor {
   secondarySortValue?: string;
 }
 
+interface UsePropertiesOptions {
+  isAuthenticated?: boolean;
+}
+
 interface UsePropertiesReturn {
   properties: Property[];
   isLoading: boolean;
@@ -58,9 +63,13 @@ interface UsePropertiesReturn {
   refresh: () => void;
   propertyCounts: Record<string, number>;
   developerCounts: Record<string, number>;
+  isGuestLimited: boolean;
 }
 
-export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
+export function useProperties(filters: PropertyFilters, options: UsePropertiesOptions = {}): UsePropertiesReturn {
+  const { isAuthenticated = true } = options;
+  const effectivePageSize = isAuthenticated ? PAGE_SIZE : GUEST_RESULT_LIMIT;
+  
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -186,8 +195,8 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
     // Always add id as final sort for stable cursor pagination
     query = query.order('id', { ascending: true });
     
-    // Limit results
-    query = query.limit(PAGE_SIZE);
+    // Limit results - use guest limit if not authenticated
+    query = query.limit(effectivePageSize);
 
     return query;
   }, [getSortConfig]);
@@ -242,7 +251,8 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
         setProperties(prev => [...prev, ...mappedData]);
       }
 
-      setHasMore(mappedData.length === PAGE_SIZE);
+      // For guests, disable load more after first batch
+      setHasMore(isAuthenticated && mappedData.length === effectivePageSize);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -319,5 +329,6 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
     refresh,
     propertyCounts,
     developerCounts,
+    isGuestLimited: !isAuthenticated && totalCount > GUEST_RESULT_LIMIT,
   };
 }

@@ -82,7 +82,8 @@ export default function Properties() {
     loadMore,
     propertyCounts,
     developerCounts,
-  } = useProperties(filters);
+    isGuestLimited,
+  } = useProperties(filters, { isAuthenticated: !!user });
 
   // Client-side filters that require complex calculation (score, below market value)
   const filteredProperties = useMemo(() => {
@@ -296,6 +297,25 @@ export default function Properties() {
               hasMore={hasMore}
               isLoading={isLoadingMore}
             />
+          )}
+          
+          {/* Guest limit banner */}
+          {isGuestLimited && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-8 p-6 rounded-xl bg-primary/10 border border-primary/20 text-center"
+            >
+              <h3 className="font-heading text-lg font-semibold text-foreground mb-2">
+                Sign up to see all {totalCount} properties
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                Create a free account to browse unlimited listings and save your favorites
+              </p>
+              <Button asChild>
+                <Link to="/auth?mode=signup">Create Free Account</Link>
+              </Button>
+            </motion.div>
           )}
         </div>
       </section>
