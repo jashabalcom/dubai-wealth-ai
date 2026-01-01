@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Building2, Calendar, Percent, DollarSign, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, Percent, DollarSign, CheckCircle, Lock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -17,6 +17,7 @@ import { useToolUsage } from '@/hooks/useToolUsage';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
 import { OffPlanCharts } from '@/components/tools/OffPlanCharts';
 import { cn } from '@/lib/utils';
 
@@ -98,8 +99,9 @@ function formatAED(amount: number): string {
 
 export default function OffPlanCalculator() {
   const { formatPrice } = useCurrency();
-  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, isLoading: usageLoading } = useToolUsage('offplan');
+  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, canUse, isLoading: usageLoading } = useToolUsage('offplan');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasTracked, setHasTracked] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(PAYMENT_PLANS[0]);
   const [isCustom, setIsCustom] = useState(false);
 
@@ -115,6 +117,22 @@ export default function OffPlanCalculator() {
     // Booking details
     bookingDeposit: 10, // Part of duringConstruction
   });
+
+  useEffect(() => {
+    async function track() {
+      if (!hasTracked && canUse) {
+        const success = await trackUsage();
+        if (!success && !isUnlimited) {
+          setShowUpgradeModal(true);
+        }
+        setHasTracked(true);
+      } else if (!canUse && !hasTracked) {
+        setShowUpgradeModal(true);
+        setHasTracked(true);
+      }
+    }
+    track();
+  }, [hasTracked, canUse, trackUsage, isUnlimited]);
 
   const handleChange = (field: string, value: number) => {
     setInputs(prev => ({ ...prev, [field]: value }));
@@ -272,7 +290,7 @@ export default function OffPlanCalculator() {
       <section className="pt-32 pb-8">
         <div className="container mx-auto px-4">
           {!isUnlimited && !usageLoading && (
-            <UsageLimitBanner remaining={remainingUses} total={3} type="tool" toolName="Off-Plan Calculator" />
+            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Off-Plan Calculator" />
           )}
           <Link
             to="/tools"
@@ -445,15 +463,17 @@ export default function OffPlanCalculator() {
               )}
 
               {/* Charts */}
-              <OffPlanCharts
-                timeline={calculations.timeline}
-                planBreakdown={{
-                  duringConstruction: activePlan.duringConstruction,
-                  onHandover: activePlan.onHandover,
-                  postHandover: activePlan.postHandover,
-                }}
-                formatAED={formatAED}
-              />
+              {(!hasReachedLimit || isUnlimited) && (
+                <OffPlanCharts
+                  timeline={calculations.timeline}
+                  planBreakdown={{
+                    duringConstruction: activePlan.duringConstruction,
+                    onHandover: activePlan.onHandover,
+                    postHandover: activePlan.postHandover,
+                  }}
+                  formatAED={formatAED}
+                />
+              )}
             </motion.div>
 
             {/* Results */}
@@ -464,193 +484,168 @@ export default function OffPlanCalculator() {
               className="space-y-6"
             >
               {/* Key Metrics */}
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-transparent border border-violet-500/20">
-                <h2 className="font-heading text-xl text-foreground mb-6">Payment Summary</h2>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">Monthly During Construction</p>
-                    <p className="font-heading text-2xl text-violet-400">
-                      {formatAED(calculations.monthlyDuringConstruction)}
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">Booking Payment</p>
-                    <p className="font-heading text-2xl text-foreground">
-                      {formatAED(calculations.bookingAmount)}
-                    </p>
-                  </div>
-                </div>
-
-                {calculations.monthlyPostHandover > 0 && (
-                  <div className="p-4 rounded-xl bg-card/50 mb-4">
-                    <p className="text-sm text-muted-foreground mb-1">Monthly Post-Handover</p>
-                    <p className="font-heading text-2xl text-violet-400">
-                      {formatAED(calculations.monthlyPostHandover)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      For {activePlan.postHandoverMonths} months after handover
-                    </p>
-                  </div>
-                )}
-
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="w-5 h-5 text-emerald-400" />
-                    <p className="text-sm text-muted-foreground">Estimated Equity at Handover</p>
-                  </div>
-                  <p className="font-heading text-3xl text-emerald-400">
-                    {formatAED(calculations.equityAtHandover)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Based on {inputs.expectedAppreciation}% appreciation
-                  </p>
-                </div>
-              </div>
-
-              {/* Payment Timeline */}
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Payment Breakdown</h2>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
-                    <span className="text-muted-foreground flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      During Construction ({activePlan.duringConstruction}%)
-                    </span>
-                    <span className="font-heading text-lg text-foreground">
-                      {formatAED(calculations.duringConstructionAmount)}
-                    </span>
-                  </div>
+              <HardPaywall
+                requiredTier="investor"
+                feature="Payment Summary"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+                teaserMessage="Upgrade to see full payment breakdown, fees, and ROI projections"
+              >
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-transparent border border-violet-500/20">
+                  <h2 className="font-heading text-xl text-foreground mb-6">Payment Summary</h2>
                   
-                  {calculations.onHandoverAmount > 0 && (
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="text-muted-foreground flex items-center gap-2">
-                        <Building2 className="w-4 h-4" />
-                        On Handover ({activePlan.onHandover}%)
-                      </span>
-                      <span className="font-heading text-lg text-foreground">
-                        {formatAED(calculations.onHandoverAmount)}
-                      </span>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                        <DollarSign className="w-4 h-4" />
+                        <span className="text-sm">Property Price</span>
+                      </div>
+                      <p className="font-heading text-2xl text-foreground">{formatAED(inputs.propertyPrice)}</p>
                     </div>
-                  )}
-                  
-                  {calculations.postHandoverAmount > 0 && (
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="text-muted-foreground flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        Post-Handover ({activePlan.postHandover}%)
-                      </span>
-                      <span className="font-heading text-lg text-foreground">
-                        {formatAED(calculations.postHandoverAmount)}
-                      </span>
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                        <Percent className="w-4 h-4" />
+                        <span className="text-sm">Total Fees</span>
+                      </div>
+                      <p className="font-heading text-2xl text-foreground">{formatAED(calculations.totalFees)}</p>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Payment Phase Breakdown */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-card/30">
+                      <span className="text-sm text-muted-foreground">Booking Deposit ({inputs.bookingDeposit}%)</span>
+                      <span className="font-medium">{formatAED(calculations.bookingAmount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-card/30">
+                      <span className="text-sm text-muted-foreground">During Construction ({activePlan.duringConstruction - inputs.bookingDeposit}%)</span>
+                      <span className="font-medium">{formatAED(calculations.remainingConstruction)}</span>
+                    </div>
+                    {activePlan.onHandover > 0 && (
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-card/30">
+                        <span className="text-sm text-muted-foreground">On Handover ({activePlan.onHandover}%)</span>
+                        <span className="font-medium">{formatAED(calculations.onHandoverAmount)}</span>
+                      </div>
+                    )}
+                    {activePlan.postHandover > 0 && (
+                      <div className="flex justify-between items-center p-3 rounded-lg bg-card/30">
+                        <span className="text-sm text-muted-foreground">Post-Handover ({activePlan.postHandover}%)</span>
+                        <span className="font-medium">{formatAED(calculations.postHandoverAmount)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-violet-500/20">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-foreground">Grand Total</span>
+                      <span className="font-heading text-2xl text-violet-400">{formatAED(calculations.grandTotal)}</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </HardPaywall>
+
+              {/* Monthly Payments */}
+              <HardPaywall
+                requiredTier="investor"
+                feature="Monthly Payments"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <h2 className="font-heading text-xl text-foreground mb-6">Monthly Payments</h2>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-violet-500/10">
+                      <p className="text-sm text-muted-foreground mb-1">During Construction</p>
+                      <p className="font-heading text-xl text-foreground">{formatAED(calculations.monthlyDuringConstruction)}</p>
+                      <p className="text-xs text-muted-foreground">per month</p>
+                    </div>
+                    {calculations.monthlyPostHandover > 0 && (
+                      <div className="p-4 rounded-xl bg-violet-500/10">
+                        <p className="text-sm text-muted-foreground mb-1">Post-Handover</p>
+                        <p className="font-heading text-xl text-foreground">{formatAED(calculations.monthlyPostHandover)}</p>
+                        <p className="text-xs text-muted-foreground">per month</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </HardPaywall>
 
               {/* Fees Breakdown */}
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Fees & Costs</h2>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <span className="text-foreground">Oqood Fee (4%)</span>
-                      <p className="text-xs text-muted-foreground">Paid at booking</p>
-                    </div>
-                    <span className="font-heading text-lg text-foreground">
-                      {formatAED(calculations.oqoodFee)}
-                    </span>
-                  </div>
+              <HardPaywall
+                requiredTier="investor"
+                feature="Fee Breakdown"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <h2 className="font-heading text-xl text-foreground mb-6">Fees Breakdown</h2>
                   
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <span className="text-foreground">Admin Fees</span>
-                      <p className="text-xs text-muted-foreground">DLD + Developer</p>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Oqood Fee (4%)</span>
+                      <span className="font-medium">{formatAED(calculations.oqoodFee)}</span>
                     </div>
-                    <span className="font-heading text-lg text-foreground">
-                      {formatAED(calculations.adminFee)}
-                    </span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Admin Fees</span>
+                      <span className="font-medium">{formatAED(calculations.adminFee)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">DLD at Handover (4%)</span>
+                      <span className="font-medium">{formatAED(calculations.dldAtHandover)}</span>
+                    </div>
+                    <div className="pt-3 border-t border-border flex justify-between items-center">
+                      <span className="font-medium">Total Fees</span>
+                      <span className="font-heading text-lg text-gold">{formatAED(calculations.totalFees)}</span>
+                    </div>
                   </div>
+                </div>
+              </HardPaywall>
+
+              {/* Appreciation */}
+              <HardPaywall
+                requiredTier="investor"
+                feature="ROI Projection"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20">
+                  <h2 className="font-heading text-xl text-foreground mb-4">Expected Returns</h2>
                   
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div>
-                      <span className="text-foreground">DLD Registration (4%)</span>
-                      <p className="text-xs text-muted-foreground">Paid at handover</p>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Property Value at Handover</span>
+                      <span className="font-medium text-emerald-400">{formatAED(calculations.appreciatedValue)}</span>
                     </div>
-                    <span className="font-heading text-lg text-foreground">
-                      {formatAED(calculations.dldAtHandover)}
-                    </span>
-                  </div>
-
-                  <div className="border-t border-border pt-3 mt-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-foreground font-medium">Total Fees</span>
-                      <span className="font-heading text-xl text-foreground">
-                        {formatAED(calculations.totalFees)}
-                      </span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Equity at Handover</span>
+                      <span className="font-medium text-emerald-400">{formatAED(calculations.equityAtHandover)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Paid by Handover</span>
+                      <span className="font-medium">{formatAED(calculations.paidByHandover)}</span>
+                    </div>
+                    <div className="pt-3 border-t border-emerald-500/20">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-foreground">Paper Profit</span>
+                        <span className="font-heading text-xl text-emerald-400">
+                          {formatAED(calculations.appreciatedValue - calculations.paidByHandover)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </HardPaywall>
 
-              {/* Grand Total */}
-              <div className="p-6 rounded-2xl bg-secondary border border-border">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-secondary-foreground">Property Price</span>
-                  <span className="font-heading text-lg text-secondary-foreground">
-                    {formatAED(inputs.propertyPrice)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-secondary-foreground">Total Fees</span>
-                  <span className="font-heading text-lg text-secondary-foreground">
-                    + {formatAED(calculations.totalFees)}
-                  </span>
-                </div>
-                <div className="border-t border-border/50 pt-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-secondary-foreground font-medium">Grand Total</span>
-                    <span className="font-heading text-2xl text-gold">
-                      {formatAED(calculations.grandTotal)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pro Tips */}
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h3 className="font-heading text-lg text-foreground mb-4">Off-Plan Tips</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>Post-handover plans reduce upfront cash but may have higher total cost</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>Oqood (4%) is required for off-plan registration with DLD</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>Consider construction delays when planning your cash flow</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 mt-0.5 flex-shrink-0" />
-                    <span>You can often sell (assign) before handover if prices appreciate</span>
-                  </li>
-                </ul>
-              </div>
+              {!isUnlimited && hasReachedLimit && (
+                <ContextualUpgradePrompt
+                  feature="Unlimited Calculator Access"
+                  description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+                  className="mt-8"
+                />
+              )}
             </motion.div>
           </div>
-
-          {!isUnlimited && hasReachedLimit && (
-            <ContextualUpgradePrompt
-              feature="Unlimited Calculator Access"
-              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
-              className="mt-8"
-            />
-          )}
         </div>
       </section>
 

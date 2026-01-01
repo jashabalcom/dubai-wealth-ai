@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowLeftRight, Building, Calendar, TrendingUp, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowLeftRight, Building, Calendar, TrendingUp, AlertTriangle, CheckCircle2, Lock } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -13,6 +13,9 @@ import { DEFAULT_SHORT_TERM_COSTS, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealE
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { Badge } from '@/components/ui/badge';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
+import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
 import { useAuth } from '@/hooks/useAuth';
 import { useToolUsage } from '@/hooks/useToolUsage';
 import { 
@@ -35,7 +38,9 @@ function formatAED(amount: number): string {
 
 export default function StrVsLtrCalculator() {
   const { formatPrice } = useCurrency();
-  const { hasReachedLimit, isUnlimited } = useToolUsage('str-vs-ltr');
+  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, canUse, isLoading: usageLoading } = useToolUsage('str-vs-ltr');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasTracked, setHasTracked] = useState(false);
   const [activePreset, setActivePreset] = useState<string>();
 
   const [inputs, setInputs] = useState({
@@ -57,6 +62,22 @@ export default function StrVsLtrCalculator() {
     maintenancePercent: 1.5,
     insuranceAnnual: 2000,
   });
+
+  useEffect(() => {
+    async function track() {
+      if (!hasTracked && canUse) {
+        const success = await trackUsage();
+        if (!success && !isUnlimited) {
+          setShowUpgradeModal(true);
+        }
+        setHasTracked(true);
+      } else if (!canUse && !hasTracked) {
+        setShowUpgradeModal(true);
+        setHasTracked(true);
+      }
+    }
+    track();
+  }, [hasTracked, canUse, trackUsage, isUnlimited]);
 
   // Market data integration
   const { data: marketData } = useAirbnbMarketData({
@@ -203,8 +224,18 @@ export default function StrVsLtrCalculator() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        feature="tools"
+        toolName="STR vs LTR Calculator"
+      />
+
       <section className="pt-32 pb-8">
         <div className="container mx-auto px-4">
+          {!isUnlimited && !usageLoading && (
+            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="STR vs LTR Calculator" />
+          )}
           <Link to="/tools" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" /> Back to Tools
           </Link>
@@ -280,239 +311,196 @@ export default function StrVsLtrCalculator() {
             {/* Middle & Right Columns - Results */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="lg:col-span-2 space-y-6">
               {/* Winner Banner */}
-              <div className={`p-6 rounded-2xl border ${
-                calculations.comparison.winner === 'str' 
-                  ? 'bg-gradient-to-r from-orange-500/10 to-orange-500/5 border-orange-500/20' 
-                  : 'bg-gradient-to-r from-blue-500/10 to-blue-500/5 border-blue-500/20'
-              }`}>
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className={`w-8 h-8 ${calculations.comparison.winner === 'str' ? 'text-orange-400' : 'text-blue-400'}`} />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Better Return</p>
-                      <p className="font-heading text-2xl text-foreground">
-                        {calculations.comparison.winner === 'str' ? 'Short-Term Rental' : 'Long-Term Rental'}
+              <HardPaywall
+                requiredTier="investor"
+                feature="STR vs LTR Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+                teaserMessage="Upgrade to see the full comparison and recommendations"
+              >
+                <div className={`p-6 rounded-2xl border ${
+                  calculations.comparison.winner === 'str' 
+                    ? 'bg-gradient-to-r from-orange-500/10 to-orange-500/5 border-orange-500/20' 
+                    : 'bg-gradient-to-r from-blue-500/10 to-blue-500/5 border-blue-500/20'
+                }`}>
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className={`w-8 h-8 ${calculations.comparison.winner === 'str' ? 'text-orange-400' : 'text-blue-400'}`} />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Better Return</p>
+                        <p className="font-heading text-2xl text-foreground">
+                          {calculations.comparison.winner === 'str' ? 'Short-Term Rental' : 'Long-Term Rental'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Yield Advantage</p>
+                      <p className={`font-heading text-3xl ${calculations.comparison.winner === 'str' ? 'text-orange-400' : 'text-blue-400'}`}>
+                        +{Math.abs(calculations.comparison.yieldDifference).toFixed(1)}%
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Yield Advantage</p>
-                    <p className={`font-heading text-3xl ${calculations.comparison.winner === 'str' ? 'text-orange-400' : 'text-blue-400'}`}>
-                      +{Math.abs(calculations.comparison.yieldDifference).toFixed(1)}%
-                    </p>
-                  </div>
                 </div>
-              </div>
+              </HardPaywall>
 
               {/* Side by Side Comparison Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* STR Card */}
-                <div className="p-6 rounded-2xl bg-card border border-orange-500/20 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-orange-400" />
-                      <h3 className="font-heading text-lg text-foreground">Short-Term</h3>
-                    </div>
-                    <Badge variant="secondary" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
-                      {calculations.str.nightsBooked.toFixed(0)} nights/yr
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Gross Revenue</span>
-                      <span className="font-medium text-emerald-400">{formatAED(calculations.str.grossRevenue)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Total Expenses</span>
-                      <span className="font-medium text-red-400">-{formatAED(calculations.str.totalExpenses)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm pt-2 border-t border-border">
-                      <span className="font-medium">Net Income</span>
-                      <span className="font-heading text-lg text-foreground">{formatAED(calculations.str.netIncome)}</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-orange-500/10">
-                      <p className="text-xs text-muted-foreground">Net Yield</p>
-                      <p className="font-heading text-xl text-orange-400">{calculations.str.netYield.toFixed(1)}%</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/30">
-                      <p className="text-xs text-muted-foreground">Gross Yield</p>
-                      <p className="font-heading text-xl text-foreground">{calculations.str.grossYield.toFixed(1)}%</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* LTR Card */}
-                <div className="p-6 rounded-2xl bg-card border border-blue-500/20 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-5 h-5 text-blue-400" />
-                      <h3 className="font-heading text-lg text-foreground">Long-Term</h3>
-                    </div>
-                    <Badge variant="secondary" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
-                      {inputs.ltrVacancy}% vacancy
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Gross Revenue</span>
-                      <span className="font-medium text-emerald-400">{formatAED(calculations.ltr.grossRevenue)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Total Expenses</span>
-                      <span className="font-medium text-red-400">-{formatAED(calculations.ltr.totalExpenses)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm pt-2 border-t border-border">
-                      <span className="font-medium">Net Income</span>
-                      <span className="font-heading text-lg text-foreground">{formatAED(calculations.ltr.netIncome)}</span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-blue-500/10">
-                      <p className="text-xs text-muted-foreground">Net Yield</p>
-                      <p className="font-heading text-xl text-blue-400">{calculations.ltr.netYield.toFixed(1)}%</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-muted/30">
-                      <p className="text-xs text-muted-foreground">Gross Yield</p>
-                      <p className="font-heading text-xl text-foreground">{calculations.ltr.grossYield.toFixed(1)}%</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Break-Even Analysis */}
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-5 h-5 text-gold" />
-                  <h3 className="font-heading text-lg text-foreground">Break-Even Analysis</h3>
-                </div>
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
-                  <div>
-                    <p className="text-sm text-muted-foreground">STR Break-Even Occupancy</p>
-                    <p className="text-xs text-muted-foreground mt-1">Occupancy needed for STR to match LTR net income</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-heading text-3xl text-foreground">{calculations.comparison.breakEvenOccupancy.toFixed(0)}%</p>
-                    {calculations.comparison.breakEvenOccupancy <= inputs.strOccupancy ? (
-                      <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 mt-1">
-                        Currently exceeding
+              <HardPaywall
+                requiredTier="investor"
+                feature="Detailed Comparison"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* STR Card */}
+                  <div className="p-6 rounded-2xl bg-card border border-orange-500/20 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-orange-400" />
+                        <h3 className="font-heading text-lg text-foreground">Short-Term</h3>
+                      </div>
+                      <Badge variant="secondary" className="bg-orange-500/10 text-orange-400 border-orange-500/20">
+                        {calculations.str.nightsBooked.toFixed(0)} nights/yr
                       </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="bg-amber-500/10 text-amber-400 border-amber-500/20 mt-1">
-                        Need {(calculations.comparison.breakEvenOccupancy - inputs.strOccupancy).toFixed(0)}% more
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Gross Revenue</span>
+                        <span className="font-medium text-emerald-400">{formatAED(calculations.str.grossRevenue)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Total Expenses</span>
+                        <span className="font-medium text-red-400">-{formatAED(calculations.str.totalExpenses)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-2 border-t border-border">
+                        <span className="font-medium">Net Income</span>
+                        <span className="font-heading text-lg text-foreground">{formatAED(calculations.str.netIncome)}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-lg bg-orange-500/10">
+                        <p className="text-xs text-muted-foreground">Net Yield</p>
+                        <p className="font-heading text-xl text-orange-400">{calculations.str.netYield.toFixed(1)}%</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="text-xs text-muted-foreground">Gross Yield</p>
+                        <p className="font-heading text-xl text-foreground">{calculations.str.grossYield.toFixed(1)}%</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* LTR Card */}
+                  <div className="p-6 rounded-2xl bg-card border border-blue-500/20 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building className="w-5 h-5 text-blue-400" />
+                        <h3 className="font-heading text-lg text-foreground">Long-Term</h3>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                        {100 - inputs.ltrVacancy}% occupancy
                       </Badge>
-                    )}
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Gross Revenue</span>
+                        <span className="font-medium text-emerald-400">{formatAED(calculations.ltr.grossRevenue)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Total Expenses</span>
+                        <span className="font-medium text-red-400">-{formatAED(calculations.ltr.totalExpenses)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm pt-2 border-t border-border">
+                        <span className="font-medium">Net Income</span>
+                        <span className="font-heading text-lg text-foreground">{formatAED(calculations.ltr.netIncome)}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <div className="p-3 rounded-lg bg-blue-500/10">
+                        <p className="text-xs text-muted-foreground">Net Yield</p>
+                        <p className="font-heading text-xl text-blue-400">{calculations.ltr.netYield.toFixed(1)}%</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-muted/30">
+                        <p className="text-xs text-muted-foreground">Gross Yield</p>
+                        <p className="font-heading text-xl text-foreground">{calculations.ltr.grossYield.toFixed(1)}%</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </HardPaywall>
 
               {/* Charts */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Yield Comparison Bar Chart */}
+              {(!hasReachedLimit || isUnlimited) && (
+                <>
+                  {/* Income Comparison Chart */}
+                  <div className="p-6 rounded-2xl bg-card border border-border">
+                    <h3 className="font-heading text-lg text-foreground mb-4">Income Comparison</h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={incomeComparisonData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                          <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}K`} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
+                          <Tooltip 
+                            formatter={(value: number) => formatAED(Math.abs(value))}
+                            contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                          />
+                          <Legend />
+                          <Bar dataKey="STR" fill={CHART_COLORS.str} radius={[4, 4, 0, 0]} />
+                          <Bar dataKey="LTR" fill={CHART_COLORS.ltr} radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Radar Chart */}
+                  <div className="p-6 rounded-2xl bg-card border border-border">
+                    <h3 className="font-heading text-lg text-foreground mb-4">Strategy Comparison</h3>
+                    <div className="h-72">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={radarData}>
+                          <PolarGrid stroke="hsl(var(--border))" />
+                          <PolarAngleAxis dataKey="metric" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                          <PolarRadiusAxis angle={90} domain={[0, 15]} tick={{ fontSize: 10 }} />
+                          <Radar name="STR" dataKey="STR" stroke={CHART_COLORS.str} fill={CHART_COLORS.str} fillOpacity={0.3} />
+                          <Radar name="LTR" dataKey="LTR" stroke={CHART_COLORS.ltr} fill={CHART_COLORS.ltr} fillOpacity={0.3} />
+                          <Legend />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Break-even Analysis */}
+              <HardPaywall
+                requiredTier="investor"
+                feature="Break-even Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
                 <div className="p-6 rounded-2xl bg-card border border-border">
-                  <h3 className="font-heading text-lg text-foreground mb-4">Yield Comparison</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={yieldComparisonData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" domain={[0, 'auto']} tickFormatter={(v) => `${v}%`} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={80} />
-                      <Tooltip 
-                        formatter={(value: number) => [`${value.toFixed(1)}%`, '']}
-                        contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
-                      />
-                      <Bar dataKey="STR" fill={CHART_COLORS.str} name="Short-Term" radius={[0, 4, 4, 0]} />
-                      <Bar dataKey="LTR" fill={CHART_COLORS.ltr} name="Long-Term" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <h3 className="font-heading text-lg text-foreground mb-4">Break-Even Analysis</h3>
+                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+                    <AlertTriangle className="w-8 h-8 text-gold flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-foreground">STR Break-Even Occupancy</p>
+                      <p className="text-sm text-muted-foreground">
+                        You need at least <span className="font-semibold text-gold">{calculations.comparison.breakEvenOccupancy.toFixed(0)}%</span> occupancy 
+                        for STR to match LTR returns at your current nightly rate.
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              </HardPaywall>
 
-                {/* Radar Comparison */}
-                <div className="p-6 rounded-2xl bg-card border border-border">
-                  <h3 className="font-heading text-lg text-foreground mb-4">Strategy Comparison</h3>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <RadarChart data={radarData}>
-                      <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="metric" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
-                      <PolarRadiusAxis tick={false} axisLine={false} />
-                      <Radar name="STR" dataKey="STR" stroke={CHART_COLORS.str} fill={CHART_COLORS.str} fillOpacity={0.3} />
-                      <Radar name="LTR" dataKey="LTR" stroke={CHART_COLORS.ltr} fill={CHART_COLORS.ltr} fillOpacity={0.3} />
-                      <Legend />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Considerations */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 to-transparent border border-orange-500/20">
-                  <h3 className="font-heading text-lg text-foreground mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-orange-400" />
-                    STR Considerations
-                  </h3>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Higher income potential with good occupancy</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Flexibility to use property yourself</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Requires active management or fees</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Income varies seasonally</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Licensing & DTCM permits required</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20">
-                  <h3 className="font-heading text-lg text-foreground mb-4 flex items-center gap-2">
-                    <Building className="w-5 h-5 text-blue-400" />
-                    LTR Considerations
-                  </h3>
-                  <ul className="space-y-2 text-sm">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Predictable, stable income stream</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Minimal management required</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Tenant pays utilities</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Lower income ceiling</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-                      <span className="text-muted-foreground">Less flexibility (locked in lease)</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
+              {!isUnlimited && hasReachedLimit && (
+                <ContextualUpgradePrompt
+                  feature="Unlimited Calculator Access"
+                  description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+                  className="mt-8"
+                />
+              )}
             </motion.div>
           </div>
-
-          {!isUnlimited && hasReachedLimit && (
-            <ContextualUpgradePrompt
-              feature="Unlimited Calculator Access"
-              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
-              className="mt-8"
-            />
-          )}
         </div>
       </section>
 

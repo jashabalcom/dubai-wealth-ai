@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Wallet, 
@@ -13,7 +13,8 @@ import {
   PiggyBank,
   BarChart3,
   Info,
-  Download
+  Download,
+  Lock
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -44,8 +45,13 @@ import {
 } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
+import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useToolUsage } from '@/hooks/useToolUsage';
+import { useProfile } from '@/hooks/useProfile';
 
 type UsageType = 'personal' | 'long-term' | 'short-term';
 
@@ -65,8 +71,15 @@ const currencySymbols: Record<string, string> = {
 export default function TotalCostCalculator() {
   const { convert, formatPrice, selectedCurrency } = useCurrency();
   const { toast } = useToast();
-  const { hasReachedLimit, isUnlimited } = useToolUsage('total-cost');
+  const navigate = useNavigate();
+  const { profile } = useProfile();
+  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, canUse, isLoading: usageLoading } = useToolUsage('total-cost');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasTracked, setHasTracked] = useState(false);
   const [activePreset, setActivePreset] = useState<string>('');
+
+  // Check if user can export PDF (Elite+ only)
+  const canExportPDF = profile?.membership_tier === 'elite' || profile?.membership_tier === 'private';
 
   // Property Details
   const [purchasePrice, setPurchasePrice] = useState(2000000);
@@ -91,6 +104,22 @@ export default function TotalCostCalculator() {
   const [appreciationRate, setAppreciationRate] = useState(5);
 
   const currencySymbol = currencySymbols[selectedCurrency] || '$';
+
+  useEffect(() => {
+    async function track() {
+      if (!hasTracked && canUse) {
+        const success = await trackUsage();
+        if (!success && !isUnlimited) {
+          setShowUpgradeModal(true);
+        }
+        setHasTracked(true);
+      } else if (!canUse && !hasTracked) {
+        setShowUpgradeModal(true);
+        setHasTracked(true);
+      }
+    }
+    track();
+  }, [hasTracked, canUse, trackUsage, isUnlimited]);
 
   const handlePresetSelect = (preset: AreaPreset) => {
     setActivePreset(preset.name);
@@ -278,6 +307,15 @@ export default function TotalCostCalculator() {
   const formatValue = (value: number) => formatPrice(value);
 
   const handleExportPDF = () => {
+    if (!canExportPDF) {
+      toast({
+        title: "Elite Feature",
+        description: "PDF export is available for Elite members. Upgrade to unlock this feature.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       generateTotalCostPDF({
         propertyDetails: {
@@ -345,9 +383,19 @@ export default function TotalCostCalculator() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        feature="tools"
+        toolName="Total Cost Calculator"
+      />
+
       {/* Header */}
       <section className="pt-24 pb-8 bg-gradient-to-b from-primary-dark to-background">
         <div className="container mx-auto px-4">
+          {!isUnlimited && !usageLoading && (
+            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Total Cost Calculator" />
+          )}
           <Link 
             to="/tools" 
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -376,44 +424,58 @@ export default function TotalCostCalculator() {
               </div>
             </div>
             <div className="flex gap-3">
-              <CalculatorAIAnalysis
-                calculatorType="total-cost"
-                inputs={{
-                  purchasePrice,
-                  propertySize,
-                  useMortgage,
-                  downPayment,
-                  interestRate,
-                  loanTerm,
-                  usageType,
-                  annualRent,
-                  dailyRate,
-                  occupancyRate,
-                  holdingPeriod,
-                  appreciationRate,
-                }}
-                results={{
-                  acquisitionTotal: calculations.acquisition.grandTotal,
-                  annualOngoing: calculations.annualOngoing.total,
-                  totalFinancingCosts: calculations.totalFinancingCosts,
-                  exitTotal: calculations.exit.total,
-                  totalCostOfOwnership: calculations.totalCostOfOwnership,
-                  netProfit: calculations.netProfit,
-                  roi: calculations.roi,
-                  annualizedRoi: calculations.annualizedRoi,
-                  breakEvenYear: calculations.breakEvenYear,
-                  exitPropertyValue: calculations.exitPropertyValue,
-                }}
-                area={selectedArea}
-                buttonText="Get AI Analysis"
-              />
-              <Button 
-                onClick={handleExportPDF}
-                className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Export PDF Report
-              </Button>
+              {(!hasReachedLimit || isUnlimited) && (
+                <CalculatorAIAnalysis
+                  calculatorType="total-cost"
+                  inputs={{
+                    purchasePrice,
+                    propertySize,
+                    useMortgage,
+                    downPayment,
+                    interestRate,
+                    loanTerm,
+                    usageType,
+                    annualRent,
+                    dailyRate,
+                    occupancyRate,
+                    holdingPeriod,
+                    appreciationRate,
+                  }}
+                  results={{
+                    acquisitionTotal: calculations.acquisition.grandTotal,
+                    annualOngoing: calculations.annualOngoing.total,
+                    totalFinancingCosts: calculations.totalFinancingCosts,
+                    exitTotal: calculations.exit.total,
+                    totalCostOfOwnership: calculations.totalCostOfOwnership,
+                    netProfit: calculations.netProfit,
+                    roi: calculations.roi,
+                    annualizedRoi: calculations.annualizedRoi,
+                    breakEvenYear: calculations.breakEvenYear,
+                    exitPropertyValue: calculations.exitPropertyValue,
+                  }}
+                  area={selectedArea}
+                  buttonText="Get AI Analysis"
+                />
+              )}
+              {canExportPDF ? (
+                <Button 
+                  onClick={handleExportPDF}
+                  className="bg-teal-600 hover:bg-teal-700 text-white gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export PDF Report
+                </Button>
+              ) : (
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate('/pricing')}
+                  className="gap-2 border-gold/30 hover:bg-gold/10"
+                >
+                  <Lock className="w-4 h-4" />
+                  Unlock to Export Report
+                  <Badge variant="secondary" className="ml-1 bg-gold/20 text-gold text-xs">Elite+</Badge>
+                </Button>
+              )}
             </div>
           </motion.div>
         </div>
@@ -446,7 +508,7 @@ export default function TotalCostCalculator() {
                   <DubaiPresets
                     onSelectPreset={handlePresetSelect}
                     activePreset={activePreset}
-                    showDetails={true}
+                    showDetails
                   />
                 </CardContent>
               </Card>
@@ -465,7 +527,7 @@ export default function TotalCostCalculator() {
                     value={purchasePrice}
                     onChange={setPurchasePrice}
                     min={500000}
-                    max={50000000}
+                    max={20000000}
                     step={100000}
                     formatValue={formatValue}
                   />
@@ -473,24 +535,18 @@ export default function TotalCostCalculator() {
                     label="Property Size"
                     value={propertySize}
                     onChange={setPropertySize}
-                    min={300}
-                    max={10000}
+                    min={400}
+                    max={5000}
                     step={50}
-                    formatValue={(v) => `${v.toLocaleString()} sqft`}
+                    suffix=" sqft"
                   />
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Label>Off-Plan Property</Label>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Info className="w-4 h-4 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs">Off-plan properties have different fee structures and payment plans</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <Switch checked={isOffPlan} onCheckedChange={setIsOffPlan} />
+                    <Label htmlFor="offplan">Off-Plan Property</Label>
+                    <Switch
+                      id="offplan"
+                      checked={isOffPlan}
+                      onCheckedChange={setIsOffPlan}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -505,8 +561,12 @@ export default function TotalCostCalculator() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <Label>Use Mortgage</Label>
-                    <Switch checked={useMortgage} onCheckedChange={setUseMortgage} />
+                    <Label htmlFor="mortgage">Use Mortgage</Label>
+                    <Switch
+                      id="mortgage"
+                      checked={useMortgage}
+                      onCheckedChange={setUseMortgage}
+                    />
                   </div>
                   {useMortgage && (
                     <>
@@ -517,7 +577,7 @@ export default function TotalCostCalculator() {
                         min={20}
                         max={80}
                         step={5}
-                        formatValue={(v) => `${v}%`}
+                        suffix="%"
                       />
                       <SliderInput
                         label="Interest Rate"
@@ -526,7 +586,7 @@ export default function TotalCostCalculator() {
                         min={2}
                         max={8}
                         step={0.1}
-                        formatValue={(v) => `${v}%`}
+                        suffix="%"
                       />
                       <SliderInput
                         label="Loan Term"
@@ -535,7 +595,7 @@ export default function TotalCostCalculator() {
                         min={5}
                         max={25}
                         step={1}
-                        formatValue={(v) => `${v} years`}
+                        suffix=" years"
                       />
                     </>
                   )}
@@ -551,32 +611,32 @@ export default function TotalCostCalculator() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-2">
+                  <div>
                     <Label>Usage Type</Label>
                     <Select value={usageType} onValueChange={(v) => setUsageType(v as UsageType)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="mt-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="personal">Personal Use</SelectItem>
                         <SelectItem value="long-term">Long-Term Rental</SelectItem>
-                        <SelectItem value="short-term">Short-Term (Airbnb)</SelectItem>
+                        <SelectItem value="short-term">Short-Term Rental (Airbnb)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   {usageType === 'long-term' && (
                     <SliderInput
                       label="Annual Rent"
                       value={annualRent}
                       onChange={setAnnualRent}
-                      min={30000}
+                      min={24000}
                       max={500000}
-                      step={5000}
+                      step={6000}
                       formatValue={formatValue}
                     />
                   )}
-                  
+
                   {usageType === 'short-term' && (
                     <>
                       <SliderInput
@@ -584,7 +644,7 @@ export default function TotalCostCalculator() {
                         value={dailyRate}
                         onChange={setDailyRate}
                         min={200}
-                        max={5000}
+                        max={3000}
                         step={50}
                         formatValue={formatValue}
                       />
@@ -595,7 +655,7 @@ export default function TotalCostCalculator() {
                         min={30}
                         max={95}
                         step={5}
-                        formatValue={(v) => `${v}%`}
+                        suffix="%"
                       />
                     </>
                   )}
@@ -607,7 +667,7 @@ export default function TotalCostCalculator() {
                 <CardHeader>
                   <CardTitle className="text-lg font-heading flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />
-                    Timeline & Exit
+                    Investment Timeline
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -618,16 +678,16 @@ export default function TotalCostCalculator() {
                     min={1}
                     max={30}
                     step={1}
-                    formatValue={(v) => `${v} years`}
+                    suffix=" years"
                   />
                   <SliderInput
-                    label="Expected Appreciation"
+                    label="Annual Appreciation"
                     value={appreciationRate}
                     onChange={setAppreciationRate}
                     min={0}
                     max={15}
                     step={0.5}
-                    formatValue={(v) => `${v}% / year`}
+                    suffix="%"
                   />
                 </CardContent>
               </Card>
@@ -636,192 +696,157 @@ export default function TotalCostCalculator() {
             {/* Right Column - Results */}
             <div className="lg:col-span-2 space-y-6">
               {/* Key Metrics */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-teal-500/10 to-teal-500/5 border-teal-500/20">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Wallet className="w-4 h-4 text-teal-500" />
-                      <span className="text-xs text-muted-foreground">Total Cost</span>
-                    </div>
-                    <p className="text-xl font-heading text-foreground">
-                      {formatValue(calculations.totalCostOfOwnership)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <BarChart3 className="w-4 h-4 text-blue-500" />
-                      <span className="text-xs text-muted-foreground">Cost/Year</span>
-                    </div>
-                    <p className="text-xl font-heading text-foreground">
-                      {formatValue(calculations.totalCostOfOwnership / holdingPeriod)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className={`bg-gradient-to-br ${calculations.netProfit >= 0 ? 'from-emerald-500/10 to-emerald-500/5 border-emerald-500/20' : 'from-red-500/10 to-red-500/5 border-red-500/20'}`}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <PiggyBank className={`w-4 h-4 ${calculations.netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`} />
-                      <span className="text-xs text-muted-foreground">Net Profit</span>
-                    </div>
-                    <p className={`text-xl font-heading ${calculations.netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                      {formatValue(calculations.netProfit)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      <span className="text-xs text-muted-foreground">Total ROI</span>
-                    </div>
-                    <p className="text-xl font-heading text-primary">
-                      {calculations.roi.toFixed(1)}%
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              <HardPaywall
+                requiredTier="investor"
+                feature="Investment Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+                teaserMessage="Upgrade to see full ROI analysis, cost breakdowns, and projections"
+              >
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Card className="bg-gradient-to-br from-teal-500/10 to-transparent border-teal-500/20">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2 text-teal-400 mb-2">
+                        <DollarSign className="w-4 h-4" />
+                        <span className="text-sm">Total Cost</span>
+                      </div>
+                      <p className="font-heading text-2xl text-foreground">
+                        {formatValue(calculations.totalCostOfOwnership)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Over {holdingPeriod} years
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-emerald-500/10 to-transparent border-emerald-500/20">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2 text-emerald-400 mb-2">
+                        <PiggyBank className="w-4 h-4" />
+                        <span className="text-sm">Net Profit</span>
+                      </div>
+                      <p className={`font-heading text-2xl ${calculations.netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {formatValue(calculations.netProfit)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        After all costs
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-gold/10 to-transparent border-gold/20">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2 text-gold mb-2">
+                        <BarChart3 className="w-4 h-4" />
+                        <span className="text-sm">Total ROI</span>
+                      </div>
+                      <p className={`font-heading text-2xl ${calculations.roi >= 0 ? 'text-gold' : 'text-red-400'}`}>
+                        {calculations.roi.toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {calculations.annualizedRoi.toFixed(1)}% annualized
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-blue-500/10 to-transparent border-blue-500/20">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-2 text-blue-400 mb-2">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-sm">Break-Even</span>
+                      </div>
+                      <p className="font-heading text-2xl text-foreground">
+                        {calculations.breakEvenYear > 0 ? `Year ${calculations.breakEvenYear}` : 'N/A'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {calculations.breakEvenYear > 0 ? 'Cash flow positive' : 'No rental income'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </HardPaywall>
+
+              {/* Fee Breakdowns */}
+              <HardPaywall
+                requiredTier="investor"
+                feature="Cost Breakdown"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <Tabs defaultValue="acquisition" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="acquisition">Acquisition</TabsTrigger>
+                    <TabsTrigger value="ongoing">Ongoing</TabsTrigger>
+                    <TabsTrigger value="exit">Exit</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="acquisition">
+                    <FeeBreakdownCard
+                      title="Acquisition Costs"
+                      fees={acquisitionFeeItems}
+                      total={calculations.acquisition.grandTotal}
+                      formatValue={formatValue}
+                      accentColor="teal-400"
+                    />
+                  </TabsContent>
+                  <TabsContent value="ongoing">
+                    <FeeBreakdownCard
+                      title="Annual Ongoing Costs"
+                      fees={ongoingFeeItems}
+                      total={calculations.annualOngoing.total}
+                      formatValue={formatValue}
+                      accentColor="blue-400"
+                    />
+                  </TabsContent>
+                  <TabsContent value="exit">
+                    <FeeBreakdownCard
+                      title="Exit Costs"
+                      fees={exitFeeItems}
+                      total={calculations.exit.total}
+                      formatValue={formatValue}
+                      accentColor="orange-400"
+                    />
+                  </TabsContent>
+                </Tabs>
+              </HardPaywall>
 
               {/* Charts */}
-              <TotalCostCharts
-                yearlyData={calculations.yearlyData}
-                costBreakdown={calculations.costBreakdown}
-                formatValue={(v) => formatValue(v)}
-                currencySymbol={currencySymbol}
-              />
+              {(!hasReachedLimit || isUnlimited) && (
+                <>
+                  <TotalCostCharts
+                    yearlyData={calculations.yearlyData}
+                    costBreakdown={calculations.costBreakdown}
+                    formatValue={formatValue}
+                  />
 
-              {/* Fee Breakdown Tabs */}
-              <Tabs defaultValue="acquisition" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="acquisition">Acquisition</TabsTrigger>
-                  <TabsTrigger value="ongoing">Annual Ongoing</TabsTrigger>
-                  <TabsTrigger value="exit">Exit Costs</TabsTrigger>
-                  <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
-                </TabsList>
-                <TabsContent value="acquisition" className="mt-4">
-                  <FeeBreakdownCard
-                    title="Acquisition Costs (Year 0)"
-                    fees={acquisitionFeeItems}
-                    total={calculations.acquisition.grandTotal}
-                    formatValue={formatValue}
-                    defaultExpanded={true}
-                  />
-                </TabsContent>
-                <TabsContent value="ongoing" className="mt-4">
-                  <FeeBreakdownCard
-                    title="Annual Ongoing Costs"
-                    fees={ongoingFeeItems}
-                    total={calculations.annualOngoing.total}
-                    formatValue={formatValue}
-                    defaultExpanded={true}
-                  />
-                  <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground">
-                      <strong>Over {holdingPeriod} years:</strong> {formatValue(calculations.totalOngoingCosts)}
-                    </p>
-                  </div>
-                </TabsContent>
-                <TabsContent value="exit" className="mt-4">
-                  <FeeBreakdownCard
-                    title={`Exit Costs (Year ${holdingPeriod})`}
-                    fees={exitFeeItems}
-                    total={calculations.exit.total}
-                    formatValue={formatValue}
-                    defaultExpanded={true}
-                  />
-                </TabsContent>
-                <TabsContent value="sensitivity" className="mt-4">
                   <SensitivityAnalysisCharts
-                    baseAppreciationRate={appreciationRate}
-                    baseAnnualRent={annualRent}
-                    purchasePrice={purchasePrice}
-                    holdingPeriod={holdingPeriod}
-                    initialInvestment={calculations.initialInvestment}
-                    useMortgage={useMortgage}
-                    downPayment={downPayment}
-                    interestRate={interestRate}
-                    loanTerm={loanTerm}
-                    propertySize={propertySize}
-                    selectedArea={selectedArea}
-                    usageType={usageType}
-                    dailyRate={dailyRate}
-                    occupancyRate={occupancyRate}
+                    baseValues={{
+                      purchasePrice,
+                      appreciationRate,
+                      annualRent: usageType === 'long-term' ? annualRent : dailyRate * 365 * (occupancyRate / 100),
+                      holdingPeriod,
+                    }}
+                    calculateROI={(values) => {
+                      const exitValue = values.purchasePrice * Math.pow(1 + values.appreciationRate / 100, values.holdingPeriod);
+                      const totalRental = values.annualRent * values.holdingPeriod;
+                      const profit = exitValue - values.purchasePrice + totalRental - calculations.totalCostOfOwnership;
+                      return (profit / calculations.initialInvestment) * 100;
+                    }}
                     formatValue={formatValue}
-                    currencySymbol={currencySymbol}
                   />
-                </TabsContent>
-              </Tabs>
+                </>
+              )}
 
-              {/* Summary Card */}
-              <Card className="bg-secondary text-secondary-foreground">
-                <CardHeader>
-                  <CardTitle className="text-lg font-heading flex items-center gap-2">
-                    <DollarSign className="w-5 h-5" />
-                    Investment Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Initial Investment</p>
-                      <p className="text-lg font-medium">{formatValue(calculations.initialInvestment)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Property Value at Exit</p>
-                      <p className="text-lg font-medium">{formatValue(calculations.exitPropertyValue)}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Capital Appreciation</p>
-                      <p className="text-lg font-medium text-emerald-400">+{formatValue(calculations.capitalAppreciation)}</p>
-                    </div>
-                    {usageType !== 'personal' && (
-                      <>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Annual Rental Income</p>
-                          <p className="text-lg font-medium">{formatValue(calculations.annualRentalIncome)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Total Rental Income</p>
-                          <p className="text-lg font-medium text-emerald-400">+{formatValue(calculations.totalRentalIncome)}</p>
-                        </div>
-                        {calculations.breakEvenYear > 0 && (
-                          <div>
-                            <p className="text-sm text-muted-foreground mb-1">Break-Even Year</p>
-                            <p className="text-lg font-medium">Year {calculations.breakEvenYear}</p>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {useMortgage && (
-                      <>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
-                          <p className="text-lg font-medium">{formatValue(calculations.monthlyPayment)}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-1">Total Interest Paid</p>
-                          <p className="text-lg font-medium text-red-400">-{formatValue(calculations.totalInterest)}</p>
-                        </div>
-                      </>
-                    )}
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Annualized ROI</p>
-                      <p className="text-lg font-medium text-primary">{calculations.annualizedRoi.toFixed(2)}%</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {!isUnlimited && hasReachedLimit && (
+                <ContextualUpgradePrompt
+                  feature="Unlimited Calculator Access"
+                  description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+                  className="mt-8"
+                />
+              )}
+
+              <InvestmentDisclaimer className="mt-8" />
             </div>
           </div>
-
-          {!isUnlimited && hasReachedLimit && (
-            <ContextualUpgradePrompt
-              feature="Unlimited Calculator Access"
-              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
-              className="mt-8"
-            />
-          )}
         </div>
       </section>
 

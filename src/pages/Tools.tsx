@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
   Scale,
   MapPin,
+  Lock,
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -36,6 +37,7 @@ const residentialTools = [
     color: 'gold',
     href: '/ai',
     featured: true,
+    freeUses: 0, // AI has different limits
   },
   {
     id: 'roi',
@@ -44,6 +46,7 @@ const residentialTools = [
     icon: TrendingUp,
     color: 'emerald',
     href: '/tools/roi',
+    freeUses: 2,
   },
   {
     id: 'mortgage',
@@ -52,6 +55,7 @@ const residentialTools = [
     icon: Home,
     color: 'blue',
     href: '/tools/mortgage',
+    freeUses: 2,
   },
   {
     id: 'rent-vs-buy',
@@ -60,6 +64,7 @@ const residentialTools = [
     icon: Building2,
     color: 'purple',
     href: '/tools/rent-vs-buy',
+    freeUses: 2,
   },
   {
     id: 'airbnb',
@@ -68,6 +73,7 @@ const residentialTools = [
     icon: Calendar,
     color: 'orange',
     href: '/tools/airbnb',
+    freeUses: 2,
   },
   {
     id: 'str-vs-ltr',
@@ -76,6 +82,7 @@ const residentialTools = [
     icon: ArrowLeftRight,
     color: 'pink',
     href: '/tools/str-vs-ltr',
+    freeUses: 2,
   },
   {
     id: 'total-cost',
@@ -84,6 +91,8 @@ const residentialTools = [
     icon: Wallet,
     color: 'teal',
     href: '/tools/total-cost',
+    freeUses: 2,
+    pdfExport: true,
   },
   {
     id: 'offplan',
@@ -93,6 +102,7 @@ const residentialTools = [
     color: 'purple',
     href: '/tools/offplan',
     featured: true,
+    freeUses: 2,
   },
   {
     id: 'golden-visa',
@@ -101,6 +111,7 @@ const residentialTools = [
     icon: Award,
     color: 'gold',
     href: '/golden-visa',
+    freeUses: 0, // Special tool
   },
 ];
 
@@ -112,6 +123,7 @@ const commercialTools = [
     icon: Landmark,
     color: 'slate',
     href: '/tools/cap-rate',
+    freeUses: 2,
   },
   {
     id: 'dscr',
@@ -120,6 +132,7 @@ const commercialTools = [
     icon: Scale,
     color: 'slate',
     href: '/tools/dscr',
+    freeUses: 2,
   },
   {
     id: 'lease-analyzer',
@@ -128,6 +141,7 @@ const commercialTools = [
     icon: FileSpreadsheet,
     color: 'slate',
     href: '/tools/lease-analyzer',
+    freeUses: 2,
   },
   {
     id: 'free-zone',
@@ -136,6 +150,7 @@ const commercialTools = [
     icon: MapPin,
     color: 'slate',
     href: '/tools/free-zone',
+    freeUses: 2,
   },
 ];
 
@@ -229,6 +244,7 @@ export default function Tools() {
             {residentialTools.map((tool, index) => {
               const colors = colorClasses[tool.color];
               const isFeatured = 'featured' in tool && tool.featured;
+              const hasPdfExport = 'pdfExport' in tool && tool.pdfExport;
               return (
                 <motion.div
                   key={tool.id}
@@ -262,7 +278,7 @@ export default function Tools() {
                         </motion.div>
 
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <h3 className="font-heading text-2xl text-foreground group-hover:text-gold transition-colors">
                               {tool.title}
                             </h3>
@@ -270,6 +286,17 @@ export default function Tools() {
                               <Badge className="bg-gold/20 text-gold border-gold/30">
                                 <Sparkles className="w-3 h-3 mr-1" />
                                 Featured
+                              </Badge>
+                            )}
+                            {tool.freeUses > 0 && (
+                              <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
+                                {tool.freeUses} Free Uses
+                              </Badge>
+                            )}
+                            {hasPdfExport && (
+                              <Badge className="text-xs bg-gold/10 text-gold border-gold/30">
+                                <Lock className="w-3 h-3 mr-1" />
+                                PDF Export (Elite+)
                               </Badge>
                             )}
                           </div>
@@ -368,13 +395,18 @@ export default function Tools() {
                           </motion.div>
 
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <h3 className="font-heading text-2xl text-foreground group-hover:text-slate-600 transition-colors">
                               {tool.title}
                             </h3>
                               <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
                                 Commercial
                               </Badge>
+                              {tool.freeUses > 0 && (
+                                <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
+                                  {tool.freeUses} Free Uses
+                                </Badge>
+                              )}
                             </div>
 
                             <p className="text-muted-foreground mb-4">

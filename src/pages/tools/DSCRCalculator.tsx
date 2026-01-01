@@ -11,10 +11,9 @@ import { DSCRCharts } from '@/components/tools/DSCRCharts';
 import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
 import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
 import { useToolUsage } from '@/hooks/useToolUsage';
-import { Building2, TrendingUp, Calculator, AlertTriangle, CheckCircle, ArrowLeft, Sparkles } from 'lucide-react';
-
-const FREE_TOOL_LIMIT = 3;
+import { Building2, TrendingUp, Calculator, AlertTriangle, CheckCircle, ArrowLeft, Sparkles, Lock } from 'lucide-react';
 
 function formatAED(amount: number): string {
   return `AED ${amount.toLocaleString('en-AE', { maximumFractionDigits: 0 })}`;
@@ -159,7 +158,7 @@ export default function DSCRCalculator() {
           {!isUnlimited && (
             <UsageLimitBanner
               remaining={remainingUses}
-              total={FREE_TOOL_LIMIT}
+              total={2}
               type="tool"
             />
           )}
@@ -269,114 +268,142 @@ export default function DSCRCalculator() {
                     <div>
                       <p className="text-sm text-muted-foreground mb-1">Debt Service Coverage Ratio</p>
                       <div className="flex items-center gap-3">
-                        <span className="text-5xl font-bold">{calculations.dscr.toFixed(2)}x</span>
-                        <Badge className={`${dscrRating.bg} ${dscrRating.color} border-0`}>
-                          {dscrRating.label}
-                        </Badge>
+                        {hasReachedLimit && !isUnlimited ? (
+                          <div className="flex items-center gap-2">
+                            <Lock className="h-6 w-6 text-muted-foreground" />
+                            <span className="text-3xl font-bold text-muted-foreground">---</span>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-5xl font-bold">{calculations.dscr.toFixed(2)}x</span>
+                            <Badge className={`${dscrRating.bg} ${dscrRating.color} border-0`}>
+                              {dscrRating.label}
+                            </Badge>
+                          </>
+                        )}
                       </div>
                     </div>
-                    <div className="flex items-start gap-2 p-4 rounded-lg bg-background/50">
-                      {calculations.dscr >= 1.25 ? (
-                        <>
-                          <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                          <div>
-                            <p className="font-medium text-green-500">Meets Lender Requirements</p>
-                            <p className="text-sm text-muted-foreground">Eligible for most UAE commercial lenders</p>
-                          </div>
-                        </>
-                      ) : calculations.dscr >= 1.0 ? (
-                        <>
-                          <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-                          <div>
-                            <p className="font-medium text-yellow-500">Below Typical Requirements</p>
-                            <p className="text-sm text-muted-foreground">May qualify with lower LTV or higher down payment</p>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
-                          <div>
-                            <p className="font-medium text-red-500">Negative Cash Flow</p>
-                            <p className="text-sm text-muted-foreground">Income doesn't cover debt service</p>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    {(!hasReachedLimit || isUnlimited) && (
+                      <div className="flex items-start gap-2 p-4 rounded-lg bg-background/50">
+                        {calculations.dscr >= 1.25 ? (
+                          <>
+                            <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                            <div>
+                              <p className="font-medium text-green-500">Meets Lender Requirements</p>
+                              <p className="text-sm text-muted-foreground">Eligible for most UAE commercial lenders</p>
+                            </div>
+                          </>
+                        ) : calculations.dscr >= 1.0 ? (
+                          <>
+                            <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
+                            <div>
+                              <p className="font-medium text-yellow-500">Below Typical Requirements</p>
+                              <p className="text-sm text-muted-foreground">May qualify with lower LTV or higher down payment</p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+                            <div>
+                              <p className="font-medium text-red-500">Negative Cash Flow</p>
+                              <p className="text-sm text-muted-foreground">Income doesn't cover debt service</p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Key Metrics Grid */}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-card border-border">
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Loan Amount</p>
-                    <p className="text-2xl font-bold">{formatAED(calculations.loanAmount)}</p>
-                    <p className="text-xs text-muted-foreground">{inputs.loanToValue}% LTV</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card border-border">
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Annual Debt Service</p>
-                    <p className="text-2xl font-bold">{formatAED(calculations.annualDebtService)}</p>
-                    <p className="text-xs text-muted-foreground">{formatAED(calculations.monthlyPayment)}/month</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card border-border">
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Annual Cash Flow</p>
-                    <p className={`text-2xl font-bold ${calculations.annualCashFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatAED(calculations.annualCashFlow)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{formatAED(calculations.monthlyCashFlow)}/month</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card border-border">
-                  <CardContent className="pt-4">
-                    <p className="text-sm text-muted-foreground">Cash on Cash Return</p>
-                    <p className={`text-2xl font-bold ${calculations.cashOnCash >= 8 ? 'text-green-500' : calculations.cashOnCash >= 5 ? 'text-yellow-500' : 'text-red-500'}`}>
-                      {calculations.cashOnCash.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">On {formatAED(calculations.downPayment)} down</p>
-                  </CardContent>
-                </Card>
-              </div>
+              <HardPaywall
+                requiredTier="investor"
+                feature="DSCR Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+                teaserMessage="Upgrade to see full DSCR analysis, max loan calculations, and cash flow metrics"
+              >
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card className="bg-card border-border">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-muted-foreground">Loan Amount</p>
+                      <p className="text-2xl font-bold">{formatAED(calculations.loanAmount)}</p>
+                      <p className="text-xs text-muted-foreground">{inputs.loanToValue}% LTV</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-card border-border">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-muted-foreground">Annual Debt Service</p>
+                      <p className="text-2xl font-bold">{formatAED(calculations.annualDebtService)}</p>
+                      <p className="text-xs text-muted-foreground">{formatAED(calculations.monthlyPayment)}/month</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-card border-border">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-muted-foreground">Annual Cash Flow</p>
+                      <p className={`text-2xl font-bold ${calculations.annualCashFlow >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {formatAED(calculations.annualCashFlow)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{formatAED(calculations.monthlyCashFlow)}/month</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-card border-border">
+                    <CardContent className="pt-4">
+                      <p className="text-sm text-muted-foreground">Cash on Cash Return</p>
+                      <p className={`text-2xl font-bold ${calculations.cashOnCash >= 8 ? 'text-green-500' : calculations.cashOnCash >= 5 ? 'text-yellow-500' : 'text-red-500'}`}>
+                        {calculations.cashOnCash.toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground">On {formatAED(calculations.downPayment)} down</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </HardPaywall>
 
               {/* Max Loan Analysis */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg font-semibold">Maximum Loan at {inputs.targetDSCR}x DSCR</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="p-4 rounded-lg bg-muted/30">
-                      <p className="text-sm text-muted-foreground">Max Loan Amount</p>
-                      <p className="text-xl font-bold text-primary">{formatAED(calculations.maxLoanAmount)}</p>
+              <HardPaywall
+                requiredTier="investor"
+                feature="Max Loan Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-semibold">Maximum Loan at {inputs.targetDSCR}x DSCR</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      <div className="p-4 rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Max Loan Amount</p>
+                        <p className="text-xl font-bold text-primary">{formatAED(calculations.maxLoanAmount)}</p>
+                      </div>
+                      <div className="p-4 rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Max LTV Achievable</p>
+                        <p className="text-xl font-bold">{Math.min(calculations.maxLTV, 80).toFixed(1)}%</p>
+                      </div>
+                      <div className="p-4 rounded-lg bg-muted/30">
+                        <p className="text-sm text-muted-foreground">Required Down Payment</p>
+                        <p className="text-xl font-bold">{formatAED(inputs.propertyPrice - Math.min(calculations.maxLoanAmount, inputs.propertyPrice * 0.8))}</p>
+                      </div>
                     </div>
-                    <div className="p-4 rounded-lg bg-muted/30">
-                      <p className="text-sm text-muted-foreground">Max LTV Achievable</p>
-                      <p className="text-xl font-bold">{Math.min(calculations.maxLTV, 80).toFixed(1)}%</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-muted/30">
-                      <p className="text-sm text-muted-foreground">Required Down Payment</p>
-                      <p className="text-xl font-bold">{formatAED(inputs.propertyPrice - Math.min(calculations.maxLoanAmount, inputs.propertyPrice * 0.8))}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-4">
-                    Based on your NOI of {formatAED(inputs.noi)}, the maximum loan you can support while maintaining a {inputs.targetDSCR}x DSCR is {formatAED(calculations.maxLoanAmount)}.
-                  </p>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-muted-foreground mt-4">
+                      Based on your NOI of {formatAED(inputs.noi)}, the maximum loan you can support while maintaining a {inputs.targetDSCR}x DSCR is {formatAED(calculations.maxLoanAmount)}.
+                    </p>
+                  </CardContent>
+                </Card>
+              </HardPaywall>
 
               {/* Charts */}
-              <DSCRCharts
-                dscr={calculations.dscr}
-                noi={inputs.noi}
-                annualDebtService={calculations.annualDebtService}
-                loanAmount={calculations.loanAmount}
-                interestRate={inputs.interestRate}
-                formatAED={formatAED}
-              />
+              {(!hasReachedLimit || isUnlimited) && (
+                <DSCRCharts
+                  dscr={calculations.dscr}
+                  noi={inputs.noi}
+                  annualDebtService={calculations.annualDebtService}
+                  loanAmount={calculations.loanAmount}
+                  interestRate={inputs.interestRate}
+                  formatAED={formatAED}
+                />
+              )}
 
               {!isUnlimited && hasReachedLimit && (
                 <ContextualUpgradePrompt
