@@ -24,9 +24,26 @@ export function useEventRoom(eventId: string) {
     participantCount: 0,
   });
 
+  // Validate UUID format
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   useEffect(() => {
     async function fetchEvent() {
-      if (!eventId) return;
+      if (!eventId) {
+        setError('No event ID provided');
+        setIsLoading(false);
+        return;
+      }
+
+      // Validate eventId is a proper UUID before querying
+      if (!isValidUUID(eventId)) {
+        setError('Invalid event ID');
+        setIsLoading(false);
+        return;
+      }
 
       try {
         const { data, error: fetchError } = await supabase
