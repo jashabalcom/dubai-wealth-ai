@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Grid3X3, List, SortAsc } from 'lucide-react';
+import { Users, Grid3X3, List, SortAsc, Loader2 } from 'lucide-react';
 import { MemberCard } from '@/components/community/MemberCard';
 import { DirectoryFilters, MobileFilterBar } from '@/components/community/DirectoryFilters';
 import { CommunityPageHeader } from '@/components/community/CommunityPageHeader';
@@ -22,6 +22,8 @@ import { cn } from '@/lib/utils';
 
 export default function MembersPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  
   const {
     members,
     totalCount,
@@ -34,11 +36,32 @@ export default function MembersPage() {
     sortBy,
     setSortBy,
     refetchMembers,
+    loadMore,
+    hasNextPage,
+    isFetchingNextPage,
   } = useMemberDirectory();
 
   const handleRefresh = useCallback(async () => {
     await refetchMembers();
   }, [refetchMembers]);
+
+  // Intersection Observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, loadMore]);
 
   // Calculate quick stats (placeholder values - can be enhanced with real data)
   const onlineCount = Math.floor(totalCount * 0.1); // Placeholder: 10% online
@@ -168,9 +191,19 @@ export default function MembersPage() {
                 </motion.div>
               ) : (
                 <>
-                  <p className="text-sm text-muted-foreground mb-4 hidden lg:block">
-                    Showing {members.length} of {totalCount} members
-                  </p>
+                  {/* Results count */}
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {members.length} of {totalCount.toLocaleString()} members
+                    </p>
+                    {hasNextPage && (
+                      <span className="text-xs text-muted-foreground/60">
+                        Scroll for more
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Members Grid */}
                   <div className={viewMode === 'grid' ? COMMUNITY_LAYOUT.memberGrid.container : COMMUNITY_LAYOUT.memberGrid.list}>
                     {members.map((member, index) => (
                       <MemberCard 
@@ -180,6 +213,21 @@ export default function MembersPage() {
                         variant={viewMode}
                       />
                     ))}
+                  </div>
+
+                  {/* Infinite scroll trigger */}
+                  <div ref={loadMoreRef} className="py-8 flex justify-center">
+                    {isFetchingNextPage && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin text-gold" />
+                        <span className="text-sm">Loading more members...</span>
+                      </div>
+                    )}
+                    {!hasNextPage && members.length > 0 && (
+                      <p className="text-sm text-muted-foreground/60">
+                        You've reached the end • {totalCount.toLocaleString()} total members
+                      </p>
+                    )}
                   </div>
                 </>
               )}
