@@ -42,24 +42,42 @@ export interface DailyDigest {
   analyst_notes: string | null;
 }
 
-// Helper to map DB data to DailyDigest interface
+// Valid sentiments and actions for type safety
+const VALID_SENTIMENTS = ['bullish', 'bearish', 'neutral', 'mixed'] as const;
+const VALID_ACTIONS = ['buy', 'hold', 'watch', 'caution'] as const;
+
+// Helper to map DB data to DailyDigest interface with safe defaults
 function mapDigestData(data: any): DailyDigest {
+  // Safe date fallback: digest_date -> created_at -> today
+  const safeDigestDate = data.digest_date 
+    || (data.created_at ? data.created_at.slice(0, 10) : new Date().toISOString().slice(0, 10));
+  
+  // Validate sentiment enum
+  const sentiment = VALID_SENTIMENTS.includes(data.market_sentiment) 
+    ? data.market_sentiment 
+    : 'neutral';
+  
+  // Validate action enum
+  const action = VALID_ACTIONS.includes(data.investment_action) 
+    ? data.investment_action 
+    : 'watch';
+
   return {
-    id: data.id,
-    digest_date: data.digest_date,
-    headline: data.headline,
-    executive_summary: data.executive_summary,
-    market_sentiment: data.market_sentiment || 'neutral',
+    id: data.id || '',
+    digest_date: safeDigestDate,
+    headline: data.headline ?? '',
+    executive_summary: data.executive_summary ?? '',
+    market_sentiment: sentiment,
     key_metrics: Array.isArray(data.key_metrics) ? data.key_metrics : [],
     sector_highlights: Array.isArray(data.sector_highlights) ? data.sector_highlights : [],
     area_highlights: Array.isArray(data.area_highlights) ? data.area_highlights : [],
-    top_article_ids: data.top_article_ids || [],
-    is_published: data.is_published,
-    created_at: data.created_at,
-    investment_action: data.investment_action || 'watch',
-    confidence_score: data.confidence_score || 3,
-    data_sources: data.data_sources || [],
-    key_takeaways: data.key_takeaways || [],
+    top_article_ids: Array.isArray(data.top_article_ids) ? data.top_article_ids : [],
+    is_published: data.is_published ?? false,
+    created_at: data.created_at || new Date().toISOString(),
+    investment_action: action,
+    confidence_score: data.confidence_score ?? 3,
+    data_sources: Array.isArray(data.data_sources) ? data.data_sources : [],
+    key_takeaways: Array.isArray(data.key_takeaways) ? data.key_takeaways : [],
     top_areas: Array.isArray(data.top_areas) ? data.top_areas : [],
     transaction_volume: data.transaction_volume,
     avg_price_sqft: data.avg_price_sqft,
@@ -82,15 +100,13 @@ export function useLatestDigest() {
           .eq('is_published', true)
           .order('digest_date', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
-        if (fetchError && fetchError.code !== 'PGRST116') {
+        if (fetchError) {
           throw fetchError;
         }
 
-        if (data) {
-          setDigest(mapDigestData(data));
-        }
+        setDigest(data ? mapDigestData(data) : null);
       } catch (err) {
         console.error('Error fetching latest digest:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch digest');
@@ -123,13 +139,13 @@ export function useDigestByDate(date: string) {
           .select('*')
           .eq('digest_date', date)
           .eq('is_published', true)
-          .single();
+          .maybeSingle();
 
-        if (fetchError) throw fetchError;
-
-        if (data) {
-          setDigest(mapDigestData(data));
+        if (fetchError) {
+          throw fetchError;
         }
+
+        setDigest(data ? mapDigestData(data) : null);
       } catch (err) {
         console.error('Error fetching digest by date:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch digest');
