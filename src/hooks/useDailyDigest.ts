@@ -1,18 +1,45 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface KeyMetric {
+  label: string;
+  value: string;
+  change?: string;
+}
+
+export interface SectorHighlight {
+  sector: string;
+  summary: string;
+  sentiment: 'positive' | 'negative' | 'neutral';
+}
+
+export interface AreaHighlight {
+  area: string;
+  change: number;
+  avgPrice: number;
+}
+
 export interface DailyDigest {
   id: string;
   digest_date: string;
   headline: string;
   executive_summary: string;
   market_sentiment: 'bullish' | 'bearish' | 'neutral' | 'mixed';
-  key_metrics: Record<string, string>;
-  sector_highlights: Record<string, string>;
-  area_highlights: Record<string, string>;
+  key_metrics: KeyMetric[];
+  sector_highlights: SectorHighlight[];
+  area_highlights: AreaHighlight[];
   top_article_ids: string[];
   is_published: boolean;
   created_at: string;
+  investment_action: 'buy' | 'hold' | 'watch' | 'caution';
+  confidence_score: number;
+  data_sources: string[];
+  key_takeaways: string[];
+  top_areas: AreaHighlight[];
+  transaction_volume: number | null;
+  avg_price_sqft: number | null;
+  generated_at: string | null;
+  analyst_notes: string | null;
 }
 
 export function useLatestDigest() {
@@ -36,13 +63,7 @@ export function useLatestDigest() {
         }
 
         if (data) {
-          setDigest({
-            ...data,
-            key_metrics: data.key_metrics as Record<string, string> || {},
-            sector_highlights: data.sector_highlights as Record<string, string> || {},
-            area_highlights: data.area_highlights as Record<string, string> || {},
-            market_sentiment: data.market_sentiment as DailyDigest['market_sentiment'] || 'neutral',
-          });
+          setDigest(mapDigestData(data));
         }
       } catch (err) {
         console.error('Error fetching latest digest:', err);
@@ -81,13 +102,7 @@ export function useDigestByDate(date: string) {
         if (fetchError) throw fetchError;
 
         if (data) {
-          setDigest({
-            ...data,
-            key_metrics: data.key_metrics as Record<string, string> || {},
-            sector_highlights: data.sector_highlights as Record<string, string> || {},
-            area_highlights: data.area_highlights as Record<string, string> || {},
-            market_sentiment: data.market_sentiment as DailyDigest['market_sentiment'] || 'neutral',
-          });
+          setDigest(mapDigestData(data));
         }
       } catch (err) {
         console.error('Error fetching digest by date:', err);
@@ -119,13 +134,7 @@ export function useDigestAdmin() {
 
       if (error) throw error;
 
-      setDigests((data || []).map(d => ({
-        ...d,
-        key_metrics: d.key_metrics as Record<string, string> || {},
-        sector_highlights: d.sector_highlights as Record<string, string> || {},
-        area_highlights: d.area_highlights as Record<string, string> || {},
-        market_sentiment: d.market_sentiment as DailyDigest['market_sentiment'] || 'neutral',
-      })));
+      setDigests((data || []).map(mapDigestData));
     } catch (err) {
       console.error('Error fetching digests:', err);
     } finally {
