@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface KeyMetric {
+export interface KeyMetric {
   label: string;
   value: string;
-  change?: number;
+  change?: string;
 }
 
 interface MetricsDashboardProps {

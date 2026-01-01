@@ -21,7 +21,8 @@ import { Link } from "react-router-dom";
 
 interface SectorHighlight {
   sector: string;
-  insights: string[];
+  summary?: string;
+  insights?: string[];
   sentiment?: 'positive' | 'negative' | 'neutral';
 }
 
@@ -166,18 +167,22 @@ export function SectorAnalysis({
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
                 <div className="pt-2 space-y-3">
-                  {/* Insights List */}
-                  <ul className="space-y-2">
-                    {sector.insights.map((insight, idx) => (
-                      <li 
-                        key={idx}
-                        className="flex items-start gap-2 text-sm text-muted-foreground"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                        <span>{insight}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Insights List - handle both summary string and insights array */}
+                  {sector.insights ? (
+                    <ul className="space-y-2">
+                      {sector.insights.map((insight, idx) => (
+                        <li 
+                          key={idx}
+                          className="flex items-start gap-2 text-sm text-muted-foreground"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+                          <span>{insight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : sector.summary ? (
+                    <p className="text-sm text-muted-foreground">{sector.summary}</p>
+                  ) : null}
 
                   {/* CTA */}
                   <Button

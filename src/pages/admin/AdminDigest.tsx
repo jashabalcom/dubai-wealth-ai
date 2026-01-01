@@ -209,14 +209,14 @@ export default function AdminDigest() {
                                   </p>
                                 </div>
                                 
-                                {digest.key_metrics && (
+                                {digest.key_metrics && digest.key_metrics.length > 0 && (
                                   <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                                    {Object.entries(digest.key_metrics as Record<string, string>).map(([key, value]) => (
-                                      <div key={key}>
-                                        <p className="text-xs text-muted-foreground capitalize">
-                                          {key.replace(/_/g, ' ')}
+                                    {digest.key_metrics.slice(0, 4).map((metric, idx) => (
+                                      <div key={idx}>
+                                        <p className="text-xs text-muted-foreground">
+                                          {metric.label}
                                         </p>
-                                        <p className="font-semibold">{value}</p>
+                                        <p className="font-semibold">{metric.value}</p>
                                       </div>
                                     ))}
                                   </div>

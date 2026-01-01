@@ -5,15 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
+interface KeyMetric {
+  label: string;
+  value: string;
+  change?: string;
+}
+
 interface DailyDigestData {
   id: string;
   digest_date: string;
   headline: string;
   executive_summary: string;
   market_sentiment: 'bullish' | 'bearish' | 'neutral' | 'mixed';
-  key_metrics: Record<string, string>;
-  sector_highlights: Record<string, string>;
-  area_highlights: Record<string, string>;
+  key_metrics: KeyMetric[] | Record<string, string>;
+  sector_highlights: any[] | Record<string, string>;
+  area_highlights: any[] | Record<string, string>;
   top_article_ids: string[];
   is_published: boolean;
 }
@@ -148,21 +154,27 @@ export function DailyDigest({ digest, compact = false }: DailyDigestProps) {
       </div>
 
       {/* Key Metrics */}
-      {Object.keys(digest.key_metrics).length > 0 && (
+      {digest.key_metrics && (Array.isArray(digest.key_metrics) ? digest.key_metrics.length > 0 : Object.keys(digest.key_metrics).length > 0) && (
         <div className="p-6 border-b border-border bg-muted/30">
           <h3 className="font-display font-semibold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-primary" />
             Key Metrics
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(digest.key_metrics).slice(0, 4).map(([key, value]) => (
-              <div key={key} className="text-center p-3 rounded-lg bg-background border border-border">
-                <div className="text-lg font-bold text-foreground">{value}</div>
-                <div className="text-xs text-muted-foreground capitalize">
-                  {key.replace(/_/g, ' ')}
-                </div>
-              </div>
-            ))}
+            {Array.isArray(digest.key_metrics) 
+              ? digest.key_metrics.slice(0, 4).map((metric, idx) => (
+                  <div key={idx} className="text-center p-3 rounded-lg bg-background border border-border">
+                    <div className="text-lg font-bold text-foreground">{metric.value}</div>
+                    <div className="text-xs text-muted-foreground">{metric.label}</div>
+                  </div>
+                ))
+              : Object.entries(digest.key_metrics).slice(0, 4).map(([key, value]) => (
+                  <div key={key} className="text-center p-3 rounded-lg bg-background border border-border">
+                    <div className="text-lg font-bold text-foreground">{value}</div>
+                    <div className="text-xs text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</div>
+                  </div>
+                ))
+            }
           </div>
         </div>
       )}
@@ -170,37 +182,53 @@ export function DailyDigest({ digest, compact = false }: DailyDigestProps) {
       {/* Sector & Area Highlights */}
       <div className="p-6 grid md:grid-cols-2 gap-6">
         {/* Sector Highlights */}
-        {Object.keys(digest.sector_highlights).length > 0 && (
+        {digest.sector_highlights && (Array.isArray(digest.sector_highlights) ? digest.sector_highlights.length > 0 : Object.keys(digest.sector_highlights).length > 0) && (
           <div>
             <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
               <Building className="w-4 h-4 text-primary" />
               Sector Highlights
             </h3>
             <ul className="space-y-2">
-              {Object.entries(digest.sector_highlights).slice(0, 4).map(([sector, insight]) => (
-                <li key={sector} className="text-sm">
-                  <span className="font-medium text-foreground capitalize">{sector.replace(/_/g, ' ')}:</span>
-                  <span className="text-muted-foreground ml-1">{insight}</span>
-                </li>
-              ))}
+              {Array.isArray(digest.sector_highlights)
+                ? digest.sector_highlights.slice(0, 4).map((s: any, idx) => (
+                    <li key={idx} className="text-sm">
+                      <span className="font-medium text-foreground">{s.sector}:</span>
+                      <span className="text-muted-foreground ml-1">{s.summary}</span>
+                    </li>
+                  ))
+                : Object.entries(digest.sector_highlights).slice(0, 4).map(([sector, insight]) => (
+                    <li key={sector} className="text-sm">
+                      <span className="font-medium text-foreground capitalize">{sector.replace(/_/g, ' ')}:</span>
+                      <span className="text-muted-foreground ml-1">{insight}</span>
+                    </li>
+                  ))
+              }
             </ul>
           </div>
         )}
 
         {/* Area Highlights */}
-        {Object.keys(digest.area_highlights).length > 0 && (
+        {digest.area_highlights && (Array.isArray(digest.area_highlights) ? digest.area_highlights.length > 0 : Object.keys(digest.area_highlights).length > 0) && (
           <div>
             <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-primary" />
               Area Highlights
             </h3>
             <ul className="space-y-2">
-              {Object.entries(digest.area_highlights).slice(0, 4).map(([area, insight]) => (
-                <li key={area} className="text-sm">
-                  <span className="font-medium text-foreground">{area}:</span>
-                  <span className="text-muted-foreground ml-1">{insight}</span>
-                </li>
-              ))}
+              {Array.isArray(digest.area_highlights)
+                ? digest.area_highlights.slice(0, 4).map((a: any, idx) => (
+                    <li key={idx} className="text-sm">
+                      <span className="font-medium text-foreground">{a.area}:</span>
+                      <span className="text-muted-foreground ml-1">+{a.change}% YoY</span>
+                    </li>
+                  ))
+                : Object.entries(digest.area_highlights).slice(0, 4).map(([area, insight]) => (
+                    <li key={area} className="text-sm">
+                      <span className="font-medium text-foreground">{area}:</span>
+                      <span className="text-muted-foreground ml-1">{insight}</span>
+                    </li>
+                  ))
+              }
             </ul>
           </div>
         )}
