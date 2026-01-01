@@ -1617,6 +1617,7 @@ export type Database = {
           id: string
           is_live: boolean
           is_published: boolean
+          jitsi_room_name: string | null
           max_attendees: number | null
           meeting_id: string | null
           meeting_platform: string
@@ -1626,6 +1627,7 @@ export type Database = {
           recording_visible: boolean
           title: string
           updated_at: string
+          use_embedded_meeting: boolean | null
           visibility: Database["public"]["Enums"]["channel_visibility"]
         }
         Insert: {
@@ -1639,6 +1641,7 @@ export type Database = {
           id?: string
           is_live?: boolean
           is_published?: boolean
+          jitsi_room_name?: string | null
           max_attendees?: number | null
           meeting_id?: string | null
           meeting_platform?: string
@@ -1648,6 +1651,7 @@ export type Database = {
           recording_visible?: boolean
           title: string
           updated_at?: string
+          use_embedded_meeting?: boolean | null
           visibility?: Database["public"]["Enums"]["channel_visibility"]
         }
         Update: {
@@ -1661,6 +1665,7 @@ export type Database = {
           id?: string
           is_live?: boolean
           is_published?: boolean
+          jitsi_room_name?: string | null
           max_attendees?: number | null
           meeting_id?: string | null
           meeting_platform?: string
@@ -1670,6 +1675,7 @@ export type Database = {
           recording_visible?: boolean
           title?: string
           updated_at?: string
+          use_embedded_meeting?: boolean | null
           visibility?: Database["public"]["Enums"]["channel_visibility"]
         }
         Relationships: []

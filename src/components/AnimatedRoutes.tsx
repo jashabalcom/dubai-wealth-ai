@@ -70,6 +70,9 @@ const QuestionDetailPage = lazy(() => import("@/pages/community/QuestionDetailPa
 const NewsPage = lazy(() => import("@/pages/community/NewsPage"));
 const MemberProfilePage = lazy(() => import("@/pages/community/MemberProfilePage"));
 
+// Event Room (embedded video meetings)
+const EventRoom = lazy(() => import("@/pages/EventRoom"));
+
 // Lazy loaded pages - Tool calculators (users typically use 1-2)
 const ROICalculator = lazy(() => import("@/pages/tools/ROICalculator"));
 const MortgageCalculator = lazy(() => import("@/pages/tools/MortgageCalculator"));
@@ -243,6 +246,9 @@ export function AnimatedRoutes() {
           <Route path="messages/group/:groupId" element={<Suspense fallback={<LazyLoadFallback />}><MessagesPage /></Suspense>} />
           <Route path="leaderboard" element={<Suspense fallback={<LazyLoadFallback />}><LeaderboardPage /></Suspense>} />
         </Route>
+        
+        {/* Event Room - Embedded video meetings */}
+        <Route path="/event-room/:eventId" element={<ProtectedRoute><LazyPage><EventRoom /></LazyPage></ProtectedRoute>} />
         
         {/* Golden Visa - Elite tier required (lazy loaded) */}
         <Route path="/golden-visa" element={<ProtectedRoute requiredTier="elite"><LazyPage><GoldenVisaWizard /></LazyPage></ProtectedRoute>} />
