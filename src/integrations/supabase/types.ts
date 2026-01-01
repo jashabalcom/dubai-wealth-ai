@@ -1703,6 +1703,9 @@ export type Database = {
           updated_at: string
           use_embedded_meeting: boolean | null
           visibility: Database["public"]["Enums"]["channel_visibility"]
+          zoom_host_key: string | null
+          zoom_meeting_number: string | null
+          zoom_password: string | null
         }
         Insert: {
           cover_image_url?: string | null
@@ -1727,6 +1730,9 @@ export type Database = {
           updated_at?: string
           use_embedded_meeting?: boolean | null
           visibility?: Database["public"]["Enums"]["channel_visibility"]
+          zoom_host_key?: string | null
+          zoom_meeting_number?: string | null
+          zoom_password?: string | null
         }
         Update: {
           cover_image_url?: string | null
@@ -1751,6 +1757,9 @@ export type Database = {
           updated_at?: string
           use_embedded_meeting?: boolean | null
           visibility?: Database["public"]["Enums"]["channel_visibility"]
+          zoom_host_key?: string | null
+          zoom_meeting_number?: string | null
+          zoom_password?: string | null
         }
         Relationships: []
       }

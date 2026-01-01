@@ -17,7 +17,7 @@ import {
 import { useEventRoom } from '@/hooks/useEventRoom';
 import { useProfile } from '@/hooks/useProfile';
 import { EventLobby } from '@/components/events/EventLobby';
-import { EmbeddedMeetingRoom } from '@/components/events/EmbeddedMeetingRoom';
+import { MeetingRoomWrapper } from '@/components/events/MeetingRoomWrapper';
 import { AttendeeSidebar } from '@/components/events/AttendeeSidebar';
 import { EventInfoPanel } from '@/components/events/EventInfoPanel';
 import { LazyLoadFallback } from '@/components/LazyLoadFallback';
@@ -186,7 +186,8 @@ export default function EventRoom() {
             className="flex-1 p-4 lg:p-6"
           >
             <AnimatePresence mode="wait">
-              <EmbeddedMeetingRoom
+              <MeetingRoomWrapper
+                event={event}
                 roomName={roomName}
                 displayName={displayName}
                 email={profile?.email}
