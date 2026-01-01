@@ -15,4 +15,28 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-select',
+            '@radix-ui/react-accordion',
+          ],
+          'vendor-charts': ['recharts'],
+          'vendor-map': ['mapbox-gl'],
+          'vendor-motion': ['framer-motion'],
+          'vendor-stripe': ['@stripe/react-stripe-js', '@stripe/stripe-js'],
+          'vendor-query': ['@tanstack/react-query'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 }));
