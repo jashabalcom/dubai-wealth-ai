@@ -18,6 +18,20 @@ export interface NewsArticle {
   reading_time_minutes: number | null;
   published_at: string | null;
   created_at: string;
+  // Bloomberg-style fields
+  briefing_type?: string | null;
+  urgency_level?: string | null;
+  investment_rating?: number | null;
+  affected_areas?: string[] | null;
+  affected_sectors?: string[] | null;
+  key_metrics?: Record<string, any> | null;
+  verification_status?: string | null;
+  verification_notes?: string | null;
+  ai_confidence_score?: number | null;
+  related_articles?: string[] | null;
+  tags?: string[] | null;
+  is_featured_digest?: boolean | null;
+  digest_date?: string | null;
 }
 
 export function useNews(category: NewsCategory = 'all') {

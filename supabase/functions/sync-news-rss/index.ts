@@ -74,7 +74,7 @@ const DUBAI_KEYWORDS = [
   'business', 'company', 'startup', 'expansion', 'headquarters'
 ];
 
-// Enhanced AI prompt for structured investor-angle content
+// Enhanced AI prompt for structured investor-angle content with metadata extraction
 const INVESTOR_ANGLE_PROMPT = `You are a senior Dubai real estate investment analyst writing for sophisticated property investors.
 
 Your task: Analyze this news article and write a comprehensive investment-focused analysis.
@@ -109,6 +109,83 @@ One powerful sentence summarizing the most important investment implication.
 - Include timing considerations if relevant
 
 Write 400-500 words total. Use professional, analytical tone. Be specific to Dubai market dynamics.`;
+
+// Dubai areas for extraction
+const DUBAI_AREAS = [
+  'Downtown Dubai', 'Dubai Marina', 'Palm Jumeirah', 'JVC', 'Jumeirah Village Circle',
+  'Business Bay', 'DIFC', 'Meydan', 'Dubai Hills', 'Dubai Hills Estate',
+  'Arabian Ranches', 'Bluewaters', 'Creek Harbour', 'Dubai Creek Harbour', 'JBR',
+  'Jumeirah Beach Residence', 'JLT', 'Jumeirah Lake Towers', 'Al Barsha',
+  'Sports City', 'Motor City', 'Silicon Oasis', 'Jumeirah', 'City Walk',
+  'MBR City', 'Mohammed Bin Rashid City', 'Town Square', 'Damac Hills',
+  'Emaar Beachfront', 'Dubai South', 'Dubai Investment Park'
+];
+
+// Sectors for extraction
+const SECTORS = ['off-plan', 'ready', 'rental', 'commercial', 'luxury', 'affordable', 'mid-market'];
+
+// Extract affected areas from content
+function extractAffectedAreas(content: string): string[] {
+  const contentLower = content.toLowerCase();
+  return DUBAI_AREAS.filter(area => contentLower.includes(area.toLowerCase()));
+}
+
+// Extract affected sectors from content
+function extractAffectedSectors(content: string): string[] {
+  const contentLower = content.toLowerCase();
+  const found: string[] = [];
+  
+  if (contentLower.includes('off-plan') || contentLower.includes('off plan') || contentLower.includes('launch')) {
+    found.push('off-plan');
+  }
+  if (contentLower.includes('ready') || contentLower.includes('handover') || contentLower.includes('completed')) {
+    found.push('ready');
+  }
+  if (contentLower.includes('rent') || contentLower.includes('lease') || contentLower.includes('tenant')) {
+    found.push('rental');
+  }
+  if (contentLower.includes('commercial') || contentLower.includes('office') || contentLower.includes('retail')) {
+    found.push('commercial');
+  }
+  if (contentLower.includes('luxury') || contentLower.includes('premium') || contentLower.includes('ultra')) {
+    found.push('luxury');
+  }
+  
+  return found;
+}
+
+// Calculate investment rating based on content
+function calculateInvestmentRating(title: string, content: string): number {
+  const text = `${title} ${content}`.toLowerCase();
+  let score = 2; // Base score
+  
+  // High-value keywords
+  const highValueKeywords = ['billion', 'million', 'record', 'surge', 'launch', 'golden visa', 'roi', 'yield'];
+  const mediumValueKeywords = ['investment', 'price', 'growth', 'developer', 'project', 'expansion'];
+  
+  for (const kw of highValueKeywords) {
+    if (text.includes(kw)) score += 0.5;
+  }
+  for (const kw of mediumValueKeywords) {
+    if (text.includes(kw)) score += 0.25;
+  }
+  
+  // Cap at 5
+  return Math.min(5, Math.round(score));
+}
+
+// Determine urgency level
+function determineUrgencyLevel(title: string, content: string): string {
+  const text = `${title} ${content}`.toLowerCase();
+  
+  if (text.includes('breaking') || text.includes('just announced') || text.includes('today')) {
+    return 'high';
+  }
+  if (text.includes('guide') || text.includes('how to') || text.includes('tips')) {
+    return 'evergreen';
+  }
+  return 'normal';
+}
 
 // Scrape article content using Firecrawl with screenshot fallback
 async function scrapeArticle(url: string, firecrawlKey: string): Promise<{ content: string; imageUrl: string | null; screenshot: string | null } | null> {
@@ -442,6 +519,13 @@ serve(async (req) => {
           const wordCount = enrichedContent ? enrichedContent.split(/\s+/).length : 0;
           const readingTime = Math.max(2, Math.ceil(wordCount / 200));
 
+          // Extract enhanced metadata
+          const fullContent = `${article.title} ${article.excerpt} ${enrichedContent || ''}`;
+          const affectedAreas = extractAffectedAreas(fullContent);
+          const affectedSectors = extractAffectedSectors(fullContent);
+          const investmentRating = calculateInvestmentRating(article.title, fullContent);
+          const urgencyLevel = determineUrgencyLevel(article.title, fullContent);
+
           const { error } = await supabase
             .from('news_articles')
             .insert({
@@ -451,6 +535,14 @@ serve(async (req) => {
               article_type: 'headline',
               status: 'published',
               reading_time_minutes: readingTime,
+              // New Bloomberg-style fields
+              investment_rating: investmentRating,
+              urgency_level: urgencyLevel,
+              affected_areas: affectedAreas.length > 0 ? affectedAreas : null,
+              affected_sectors: affectedSectors.length > 0 ? affectedSectors : null,
+              briefing_type: 'standard',
+              verification_status: 'unverified',
+              ai_confidence_score: enrichedContent ? 0.85 : null,
             });
 
           if (error) {

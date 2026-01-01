@@ -85,6 +85,7 @@ const GoldenVisaWizard = lazy(() => import("@/pages/GoldenVisaWizard"));
 const MembershipFunnel = lazy(() => import("@/pages/MembershipFunnel"));
 const EliteFunnel = lazy(() => import("@/pages/EliteFunnel"));
 const BlogArticle = lazy(() => import("@/pages/BlogArticle"));
+const DailyBriefing = lazy(() => import("@/pages/DailyBriefing"));
 const Calendar = lazy(() => import("@/pages/Calendar"));
 
 // Lazy loaded pages - Admin (only ~1% of users are admins)
@@ -272,6 +273,8 @@ export function AnimatedRoutes() {
         <Route path="/about" element={<LazyPage><About /></LazyPage>} />
         <Route path="/blog" element={<LazyPage><Blog /></LazyPage>} />
         <Route path="/blog/:slug" element={<LazyPage><BlogArticle /></LazyPage>} />
+        <Route path="/briefing" element={<LazyPage><DailyBriefing /></LazyPage>} />
+        <Route path="/briefing/:date" element={<LazyPage><DailyBriefing /></LazyPage>} />
         <Route path="/contact" element={<LazyPage><Contact /></LazyPage>} />
         
         {/* Agent Portal Routes (lazy loaded) */}

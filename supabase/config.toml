@@ -119,3 +119,6 @@ verify_jwt = false
 
 [functions.investor-metrics]
 verify_jwt = false
+
+[functions.generate-daily-digest]
+verify_jwt = false
