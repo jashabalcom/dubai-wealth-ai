@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CommunityEvent } from '@/hooks/useCommunityEvents';
 import { fadeUpVariants, staggerContainerVariants } from '@/lib/motion';
+import { getEventEndTime, hasEventEnded } from '@/lib/eventUtils';
 
 interface EventLobbyProps {
   event: CommunityEvent;
@@ -31,9 +32,29 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, isHost = fal
   const [isLoadingCamera, setIsLoadingCamera] = useState(false);
 
   const eventDate = new Date(event.event_date);
+  const endTime = getEventEndTime(eventDate, event.duration_minutes);
+  const eventEnded = hasEventEnded(eventDate, event.duration_minutes);
   const isLive = event.is_live;
   const hasStarted = isPast(eventDate);
   const isStartingSoon = isFuture(eventDate) && differenceInSeconds(eventDate, new Date()) < 600; // 10 minutes
+
+  // If event has ended, show ended message
+  if (eventEnded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-serif font-bold">Event Has Ended</h2>
+          <p className="text-muted-foreground">
+            This event ended on {format(endTime, 'MMMM d, yyyy')} at {format(endTime, 'h:mm a')}.
+          </p>
+          <Button onClick={onBack} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Events
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -227,7 +248,7 @@ export function EventLobby({ event, userDisplayName, userAvatarUrl, isHost = fal
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-gold" />
-              <span>{format(eventDate, 'h:mm a')} · {event.duration_minutes}min</span>
+              <span>{format(eventDate, 'h:mm a')} - {format(endTime, 'h:mm a')} ({event.duration_minutes}min)</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-gold" />
