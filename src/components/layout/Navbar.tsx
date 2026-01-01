@@ -155,12 +155,12 @@ export function Navbar() {
         )}
       >
         <div className="container-luxury">
-          <nav className="flex items-center justify-between h-20 md:h-24">
+          <nav className="flex items-center justify-between h-24 md:h-28 pb-2">
             {/* Logo */}
             <Link to="/" className="group flex-shrink-0">
               <BrandLogo 
                 variant={useDarkText ? "light" : "dark"} 
-                size="sm" 
+                size="md" 
               />
             </Link>
 
