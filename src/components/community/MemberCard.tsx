@@ -201,7 +201,7 @@ export function MemberCard({ member, index = 0, variant = 'grid' }: MemberCardPr
               userName={member.full_name || undefined}
               className="flex-1"
             />
-            <Link to={`/profile/${member.id}`} className="flex-1">
+            <Link to={`/member/${member.id}`} className="flex-1">
               <Button 
                 variant="outline" 
                 size="sm" 

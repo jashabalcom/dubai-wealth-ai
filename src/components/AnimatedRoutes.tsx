@@ -65,6 +65,7 @@ const LeaderboardPage = lazy(() => import("@/pages/community/LeaderboardPage"));
 const QAPage = lazy(() => import("@/pages/community/QAPage"));
 const QuestionDetailPage = lazy(() => import("@/pages/community/QuestionDetailPage"));
 const NewsPage = lazy(() => import("@/pages/community/NewsPage"));
+const MemberProfilePage = lazy(() => import("@/pages/community/MemberProfilePage"));
 
 // Lazy loaded pages - Tool calculators (users typically use 1-2)
 const ROICalculator = lazy(() => import("@/pages/tools/ROICalculator"));
@@ -211,6 +212,9 @@ export function AnimatedRoutes() {
         
         <Route path="/profile" element={<LazyPage><Profile /></LazyPage>} />
         <Route path="/profile/:userId" element={<LazyPage><Profile /></LazyPage>} />
+        
+        {/* Member Profile - Public view of community member */}
+        <Route path="/member/:memberId" element={<LazyPage><MemberProfilePage /></LazyPage>} />
         
         {/* Community Hub Routes - Auth required, read-only gating in-page */}
         <Route path="/community" element={
