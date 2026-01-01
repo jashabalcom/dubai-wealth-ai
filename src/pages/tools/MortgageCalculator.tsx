@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Home, AlertCircle, Building2, Lock } from 'lucide-react';
+import { ArrowLeft, Home, AlertCircle, Building2 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -14,16 +14,10 @@ import { MortgageLeadForm } from '@/components/tools/MortgageLeadForm';
 import { Button } from '@/components/ui/button';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useToolUsage } from '@/hooks/useToolUsage';
 import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
-import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
-import { HardPaywall } from '@/components/freemium/HardPaywall';
-import { LockedResultValue } from '@/components/freemium/LockedResultValue';
-import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
-import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
@@ -33,23 +27,8 @@ function formatAED(amount: number): string {
 export default function MortgageCalculator() {
   const { formatPrice } = useCurrency();
   const { user } = useAuth();
-  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, isLoading: usageLoading } = useToolUsage('mortgage');
   const [activePreset, setActivePreset] = useState<string>();
   const [leadFormOpen, setLeadFormOpen] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [hasTrackedUsage, setHasTrackedUsage] = useState(false);
-
-  // Track usage on first load
-  useState(() => {
-    if (!hasTrackedUsage && !usageLoading && !isUnlimited) {
-      trackUsage().then(success => {
-        if (!success) {
-          setShowUpgradeModal(true);
-        }
-        setHasTrackedUsage(true);
-      });
-    }
-  });
 
   const [inputs, setInputs] = useState({
     propertyPrice: 2000000,
@@ -163,19 +142,8 @@ export default function MortgageCalculator() {
       />
       <Navbar />
 
-      <UpgradeModal 
-        isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
-        feature="tools"
-        toolName="Mortgage Calculator"
-      />
-
       <section className="pt-32 pb-8">
         <div className="container mx-auto px-4">
-          {/* Usage Limit Banner */}
-          {!isUnlimited && !usageLoading && (
-            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Mortgage Calculator" />
-          )}
           <Link
             to="/tools"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
@@ -524,14 +492,6 @@ export default function MortgageCalculator() {
               </div>
             </motion.div>
           </div>
-
-          {!isUnlimited && hasReachedLimit && (
-            <ContextualUpgradePrompt
-              feature="Unlimited Calculator Access"
-              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
-              className="mt-8"
-            />
-          )}
         </div>
       </section>
 

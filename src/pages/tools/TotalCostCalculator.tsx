@@ -816,22 +816,26 @@ export default function TotalCostCalculator() {
                     yearlyData={calculations.yearlyData}
                     costBreakdown={calculations.costBreakdown}
                     formatValue={formatValue}
+                    currencySymbol="AED "
                   />
 
                   <SensitivityAnalysisCharts
-                    baseValues={{
-                      purchasePrice,
-                      appreciationRate,
-                      annualRent: usageType === 'long-term' ? annualRent : dailyRate * 365 * (occupancyRate / 100),
-                      holdingPeriod,
-                    }}
-                    calculateROI={(values) => {
-                      const exitValue = values.purchasePrice * Math.pow(1 + values.appreciationRate / 100, values.holdingPeriod);
-                      const totalRental = values.annualRent * values.holdingPeriod;
-                      const profit = exitValue - values.purchasePrice + totalRental - calculations.totalCostOfOwnership;
-                      return (profit / calculations.initialInvestment) * 100;
-                    }}
+                    baseAppreciationRate={appreciationRate}
+                    baseAnnualRent={usageType === 'long-term' ? annualRent : dailyRate * 365 * (occupancyRate / 100)}
+                    purchasePrice={purchasePrice}
+                    holdingPeriod={holdingPeriod}
+                    initialInvestment={calculations.initialInvestment}
+                    useMortgage={useMortgage}
+                    downPayment={downPayment}
+                    interestRate={interestRate}
+                    loanTerm={loanTerm}
+                    propertySize={propertySize}
+                    selectedArea={selectedArea}
+                    usageType={usageType}
+                    dailyRate={dailyRate}
+                    occupancyRate={occupancyRate}
                     formatValue={formatValue}
+                    currencySymbol="AED "
                   />
                 </>
               )}
