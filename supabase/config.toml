@@ -143,3 +143,6 @@ verify_jwt = false
 
 [functions.process-affiliate-payouts]
 verify_jwt = false
+
+[functions.record-affiliate-payout]
+verify_jwt = false

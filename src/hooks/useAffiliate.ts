@@ -22,6 +22,10 @@ export interface Affiliate {
   approved_at: string | null;
   created_at: string;
   updated_at: string;
+  // PayPal payout fields
+  paypal_email: string | null;
+  preferred_payout_method: 'paypal' | 'stripe' | 'bank_transfer';
+  bank_details: Record<string, unknown>;
 }
 
 export interface Referral {
@@ -59,6 +63,10 @@ export interface Payout {
   currency: string;
   commission_count: number;
   status: 'pending' | 'processing' | 'completed' | 'failed';
+  payout_method: 'paypal' | 'stripe' | 'bank_transfer' | 'other';
+  paypal_transaction_id: string | null;
+  stripe_transfer_id: string | null;
+  admin_notes: string | null;
   processed_at: string | null;
   created_at: string;
 }
@@ -185,7 +193,7 @@ export const useAffiliate = () => {
   }, [affiliate]);
 
   // Apply to become an affiliate
-  const applyAsAffiliate = useCallback(async (notes?: string) => {
+  const applyAsAffiliate = useCallback(async (notes?: string, paypalEmail?: string) => {
     if (!user) {
       toast.error('Please sign in to apply');
       return null;
@@ -205,7 +213,9 @@ export const useAffiliate = () => {
           referral_code: codeData,
           affiliate_type: 'member',
           status: 'pending',
-          application_notes: notes || null
+          application_notes: notes || null,
+          paypal_email: paypalEmail || null,
+          preferred_payout_method: 'paypal'
         })
         .select()
         .single();
@@ -224,7 +234,39 @@ export const useAffiliate = () => {
     }
   }, [user]);
 
-  // Connect Stripe account
+  // Update payout preferences
+  const updatePayoutPreferences = useCallback(async (
+    paypalEmail: string, 
+    preferredMethod: 'paypal' | 'stripe' | 'bank_transfer' = 'paypal'
+  ) => {
+    if (!affiliate) return;
+
+    try {
+      const { error } = await supabase
+        .from('affiliates')
+        .update({
+          paypal_email: paypalEmail,
+          preferred_payout_method: preferredMethod
+        })
+        .eq('id', affiliate.id);
+
+      if (error) throw error;
+
+      setAffiliate(prev => prev ? {
+        ...prev,
+        paypal_email: paypalEmail,
+        preferred_payout_method: preferredMethod
+      } : null);
+
+      toast.success('Payout preferences updated');
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error('Error updating payout preferences:', error);
+      toast.error(error.message || 'Failed to update preferences');
+    }
+  }, [affiliate]);
+
+  // Connect Stripe account (optional)
   const connectStripeAccount = useCallback(async () => {
     if (!affiliate) return;
 
@@ -310,6 +352,7 @@ export const useAffiliate = () => {
     loading,
     isAffiliate,
     applyAsAffiliate,
+    updatePayoutPreferences,
     connectStripeAccount,
     copyReferralLink,
     markNotificationRead,

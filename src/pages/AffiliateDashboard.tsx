@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Copy, 
   DollarSign, 
@@ -17,10 +19,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Link2,
-  CreditCard,
   Bell,
-  Settings,
-  QrCode
+  QrCode,
+  Wallet,
+  Mail
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { Navigate } from 'react-router-dom';
@@ -37,13 +39,16 @@ const AffiliateDashboard = () => {
     loading,
     isAffiliate,
     applyAsAffiliate,
-    connectStripeAccount,
+    updatePayoutPreferences,
     copyReferralLink,
     markNotificationRead
   } = useAffiliate();
 
   const [applicationNotes, setApplicationNotes] = useState('');
+  const [applicationPaypalEmail, setApplicationPaypalEmail] = useState('');
   const [applying, setApplying] = useState(false);
+  const [paypalEmail, setPaypalEmail] = useState('');
+  const [savingPreferences, setSavingPreferences] = useState(false);
 
   if (authLoading || loading) {
     return (
@@ -59,9 +64,19 @@ const AffiliateDashboard = () => {
 
   const handleApply = async () => {
     setApplying(true);
-    await applyAsAffiliate(applicationNotes);
+    await applyAsAffiliate(applicationNotes, applicationPaypalEmail);
     setApplying(false);
   };
+
+  const handleSavePayoutPreferences = async () => {
+    if (!paypalEmail) return;
+    setSavingPreferences(true);
+    await updatePayoutPreferences(paypalEmail, 'paypal');
+    setSavingPreferences(false);
+  };
+
+  // Initialize paypal email from affiliate data
+  const currentPaypalEmail = paypalEmail || affiliate?.paypal_email || '';
 
   // Not an affiliate yet - show application form
   if (!isAffiliate) {
@@ -72,7 +87,7 @@ const AffiliateDashboard = () => {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Join Our Partner Program</CardTitle>
               <CardDescription>
-                Earn 50% commission on every subscription you refer. Get paid monthly via Stripe.
+                Earn 50% commission on every subscription you refer. Get paid monthly via PayPal.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -93,8 +108,24 @@ const AffiliateDashboard = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium">Tell us about yourself (optional)</label>
+                  <Label htmlFor="paypal-email">PayPal Email (for payouts)</Label>
+                  <Input
+                    id="paypal-email"
+                    type="email"
+                    placeholder="your@paypal.email"
+                    value={applicationPaypalEmail}
+                    onChange={(e) => setApplicationPaypalEmail(e.target.value)}
+                    className="mt-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can add or update this later in your dashboard settings.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Tell us about yourself (optional)</Label>
                   <Textarea
+                    id="notes"
                     placeholder="How do you plan to promote Dubai REI Community?"
                     value={applicationNotes}
                     onChange={(e) => setApplicationNotes(e.target.value)}
@@ -182,7 +213,7 @@ const AffiliateDashboard = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={affiliate?.stripe_connect_status === 'active' ? 'default' : 'secondary'}>
+            <Badge variant="default">
               {affiliate?.affiliate_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </Badge>
             <Button onClick={copyReferralLink} variant="outline" size="sm">
@@ -234,21 +265,21 @@ const AffiliateDashboard = () => {
           </Card>
         </div>
 
-        {/* Stripe Connect Banner */}
-        {affiliate?.stripe_connect_status !== 'active' && (
+        {/* Payout Settings Banner */}
+        {!affiliate?.paypal_email && (
           <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
             <CardContent className="py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-amber-600" />
+                <Wallet className="h-5 w-5 text-amber-600" />
                 <div>
-                  <div className="font-medium">Connect your Stripe account</div>
+                  <div className="font-medium">Add your PayPal email</div>
                   <div className="text-sm text-muted-foreground">
-                    Complete Stripe onboarding to receive your payouts
+                    Required to receive your commission payouts
                   </div>
                 </div>
               </div>
-              <Button onClick={connectStripeAccount}>
-                Connect Stripe
+              <Button onClick={() => document.getElementById('payout-settings')?.scrollIntoView({ behavior: 'smooth' })}>
+                Add PayPal
               </Button>
             </CardContent>
           </Card>
@@ -261,6 +292,7 @@ const AffiliateDashboard = () => {
             <TabsTrigger value="referrals">Referrals</TabsTrigger>
             <TabsTrigger value="earnings">Earnings</TabsTrigger>
             <TabsTrigger value="payouts">Payouts</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
             <TabsTrigger value="notifications" className="relative">
               Notifications
               {stats.unreadNotifications > 0 && (
@@ -459,7 +491,7 @@ const AffiliateDashboard = () => {
               <CardHeader>
                 <CardTitle>Payout History</CardTitle>
                 <CardDescription>
-                  Payouts are processed on the 1st of each month
+                  Payouts are processed on the 1st of each month via PayPal
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -476,6 +508,11 @@ const AffiliateDashboard = () => {
                           <div className="text-sm text-muted-foreground">
                             {payout.commission_count} commissions • {format(new Date(payout.created_at), 'MMM d, yyyy')}
                           </div>
+                          {payout.paypal_transaction_id && (
+                            <div className="text-xs font-mono text-muted-foreground mt-1">
+                              PayPal: {payout.paypal_transaction_id}
+                            </div>
+                          )}
                         </div>
                         <Badge variant={
                           payout.status === 'completed' ? 'default' :
@@ -491,6 +528,95 @@ const AffiliateDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <div className="space-y-6">
+              {/* Payout Settings */}
+              <Card id="payout-settings">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Wallet className="h-5 w-5" />
+                    Payout Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Configure how you receive your commission payouts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="paypal">PayPal Email</Label>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          id="paypal"
+                          type="email"
+                          placeholder="your@paypal.email"
+                          value={currentPaypalEmail}
+                          onChange={(e) => setPaypalEmail(e.target.value)}
+                        />
+                        <Button 
+                          onClick={handleSavePayoutPreferences}
+                          disabled={savingPreferences || !paypalEmail}
+                        >
+                          {savingPreferences ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        This is where we'll send your monthly commission payouts.
+                      </p>
+                    </div>
+
+                    {affiliate?.paypal_email && (
+                      <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <span className="text-sm text-emerald-700 dark:text-emerald-300">
+                          Payout email verified: {affiliate.paypal_email}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="border-t pt-4">
+                    <div className="text-sm font-medium mb-2">Payout Information</div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Payouts are processed on the 1st of each month</li>
+                      <li>• Minimum payout threshold: $50</li>
+                      <li>• Commissions must be approved before payout</li>
+                      <li>• You'll receive an email notification when paid</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Account Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Referral Code</span>
+                      <p className="font-mono font-medium">{affiliate?.referral_code}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Account Type</span>
+                      <p className="font-medium capitalize">{affiliate?.affiliate_type.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Commission Rate</span>
+                      <p className="font-medium">50%</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Member Since</span>
+                      <p className="font-medium">{affiliate?.created_at ? format(new Date(affiliate.created_at), 'MMM d, yyyy') : '-'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Notifications Tab */}

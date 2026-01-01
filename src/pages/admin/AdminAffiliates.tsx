@@ -9,23 +9,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
 import {
   Users,
   DollarSign,
-  TrendingUp,
-  MousePointerClick,
-  UserPlus,
+  Clock,
   CheckCircle,
   XCircle,
-  Clock,
-  Settings,
   Eye,
   Wallet,
-  AlertTriangle
+  AlertTriangle,
+  Send,
+  Mail,
+  Copy
 } from 'lucide-react';
 
 interface Affiliate {
@@ -42,6 +40,8 @@ interface Affiliate {
   pending_earnings: number;
   stripe_connect_id: string | null;
   stripe_connect_status: string | null;
+  paypal_email: string | null;
+  preferred_payout_method: string | null;
   admin_notes: string | null;
   created_at: string;
   approved_at: string | null;
@@ -68,7 +68,10 @@ interface Payout {
   amount: number;
   commission_count: number;
   status: string;
+  payout_method: string | null;
+  paypal_transaction_id: string | null;
   stripe_transfer_id: string | null;
+  admin_notes: string | null;
   created_at: string;
   processed_at: string | null;
 }
@@ -78,8 +81,10 @@ export default function AdminAffiliates() {
   const queryClient = useQueryClient();
   const [selectedAffiliate, setSelectedAffiliate] = useState<Affiliate | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [payoutDialogOpen, setPayoutDialogOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paypalTransactionId, setPaypalTransactionId] = useState('');
+  const [payoutNotes, setPayoutNotes] = useState('');
 
   // Fetch affiliates
   const { data: affiliates, isLoading: affiliatesLoading } = useQuery({
@@ -140,6 +145,13 @@ export default function AdminAffiliates() {
   const totalPendingEarnings = affiliates?.reduce((sum, a) => sum + (a.pending_earnings || 0), 0) || 0;
   const totalPaidOut = payouts?.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0) || 0;
 
+  // Affiliates ready for payout (approved status, has paypal, pending earnings >= $50)
+  const affiliatesReadyForPayout = affiliates?.filter(a => 
+    a.status === 'approved' && 
+    a.paypal_email && 
+    a.pending_earnings >= 50
+  ) || [];
+
   // Approve/Reject mutation
   const updateAffiliateMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes?: string }) => {
@@ -189,6 +201,38 @@ export default function AdminAffiliates() {
     },
   });
 
+  // Process payout mutation
+  const processPayoutMutation = useMutation({
+    mutationFn: async ({ affiliateId, paypalTransactionId, notes }: { 
+      affiliateId: string; 
+      paypalTransactionId: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke('record-affiliate-payout', {
+        body: { 
+          affiliate_id: affiliateId,
+          paypal_transaction_id: paypalTransactionId,
+          admin_notes: notes
+        }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-affiliates'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-commissions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-payouts'] });
+      toast({ title: 'Payout recorded successfully' });
+      setPayoutDialogOpen(false);
+      setSelectedAffiliate(null);
+      setPaypalTransactionId('');
+      setPayoutNotes('');
+    },
+    onError: (error) => {
+      toast({ title: 'Error recording payout', description: String(error), variant: 'destructive' });
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
       pending: 'bg-yellow-500/10 text-yellow-500',
@@ -217,6 +261,11 @@ export default function AdminAffiliates() {
       agent_premium: 'Agent Premium',
     };
     return <Badge className={styles[type] || 'bg-muted'}>{labels[type] || type}</Badge>;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Copied to clipboard' });
   };
 
   return (
@@ -274,8 +323,11 @@ export default function AdminAffiliates() {
           <TabsList>
             <TabsTrigger value="affiliates">Affiliates</TabsTrigger>
             <TabsTrigger value="applications">Applications ({pendingApplications})</TabsTrigger>
+            <TabsTrigger value="process-payouts">
+              Process Payouts ({affiliatesReadyForPayout.length})
+            </TabsTrigger>
             <TabsTrigger value="commissions">Commissions</TabsTrigger>
-            <TabsTrigger value="payouts">Payouts</TabsTrigger>
+            <TabsTrigger value="payout-history">Payout History</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
         </div>
@@ -297,13 +349,11 @@ export default function AdminAffiliates() {
                       <tr className="border-b">
                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Code</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">PayPal</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Clicks</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Signups</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Qualified</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Pending</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Total</th>
-                        <th className="text-center py-3 px-4 text-sm font-medium text-muted-foreground">Stripe</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
                       </tr>
                     </thead>
@@ -312,19 +362,20 @@ export default function AdminAffiliates() {
                         <tr key={affiliate.id} className="border-b hover:bg-muted/50">
                           <td className="py-3 px-4 font-mono text-sm">{affiliate.referral_code}</td>
                           <td className="py-3 px-4">{getTypeBadge(affiliate.affiliate_type)}</td>
-                          <td className="py-3 px-4">{getStatusBadge(affiliate.status)}</td>
-                          <td className="py-3 px-4 text-right">{affiliate.total_clicks.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{affiliate.total_signups.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right">{affiliate.total_qualified.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right text-gold">${affiliate.pending_earnings.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-right text-emerald-500">${affiliate.total_earnings.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-center">
-                            {affiliate.stripe_connect_id ? (
-                              <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto" />
+                          <td className="py-3 px-4">
+                            {affiliate.paypal_email ? (
+                              <div className="flex items-center gap-1">
+                                <Mail className="h-3 w-3 text-emerald-500" />
+                                <span className="text-sm truncate max-w-[150px]">{affiliate.paypal_email}</span>
+                              </div>
                             ) : (
-                              <XCircle className="h-4 w-4 text-muted-foreground mx-auto" />
+                              <span className="text-sm text-muted-foreground">Not set</span>
                             )}
                           </td>
+                          <td className="py-3 px-4 text-right">{affiliate.total_clicks.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right">{affiliate.total_signups.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right text-gold">${affiliate.pending_earnings.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-right text-emerald-500">${affiliate.total_earnings.toLocaleString()}</td>
                           <td className="py-3 px-4 text-right">
                             <Button
                               variant="ghost"
@@ -364,7 +415,14 @@ export default function AdminAffiliates() {
                       <p className="text-sm text-muted-foreground">
                         Applied {formatDistanceToNow(new Date(affiliate.created_at), { addSuffix: true })}
                       </p>
-                      <div className="mt-1">{getTypeBadge(affiliate.affiliate_type)}</div>
+                      <div className="mt-1 flex items-center gap-2">
+                        {getTypeBadge(affiliate.affiliate_type)}
+                        {affiliate.paypal_email && (
+                          <span className="text-xs text-muted-foreground">
+                            PayPal: {affiliate.paypal_email}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -392,6 +450,77 @@ export default function AdminAffiliates() {
                 {(!affiliates || affiliates.filter(a => a.status === 'pending').length === 0) && (
                   <p className="text-center py-8 text-muted-foreground">No pending applications</p>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Process Payouts Tab */}
+        <TabsContent value="process-payouts">
+          <Card>
+            <CardHeader>
+              <CardTitle>Ready for Payout</CardTitle>
+              <CardDescription>
+                Affiliates with approved commissions ≥ $50 and PayPal configured
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {affiliatesReadyForPayout.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground">
+                  No affiliates ready for payout at this time
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {affiliatesReadyForPayout.map((affiliate) => (
+                    <div key={affiliate.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <p className="font-mono font-medium">{affiliate.referral_code}</p>
+                          {getTypeBadge(affiliate.affiliate_type)}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{affiliate.paypal_email}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => copyToClipboard(affiliate.paypal_email || '')}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="text-right mr-4">
+                        <p className="text-2xl font-bold text-gold">
+                          ${affiliate.pending_earnings.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">pending</p>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setSelectedAffiliate(affiliate);
+                          setPaypalTransactionId('');
+                          setPayoutNotes('');
+                          setPayoutDialogOpen(true);
+                        }}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Process Payout
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-6 p-4 border rounded-lg bg-muted/50">
+                <h4 className="font-medium mb-2">Payout Workflow</h4>
+                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Copy the affiliate's PayPal email</li>
+                  <li>Send payment via PayPal.com</li>
+                  <li>Click "Process Payout" and enter the PayPal Transaction ID</li>
+                  <li>The system will mark commissions as paid and notify the affiliate</li>
+                </ol>
               </div>
             </CardContent>
           </Card>
@@ -462,8 +591,8 @@ export default function AdminAffiliates() {
           </Card>
         </TabsContent>
 
-        {/* Payouts Tab */}
-        <TabsContent value="payouts">
+        {/* Payout History Tab */}
+        <TabsContent value="payout-history">
           <Card>
             <CardHeader>
               <CardTitle>Payout History</CardTitle>
@@ -477,8 +606,9 @@ export default function AdminAffiliates() {
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
                       <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Amount</th>
                       <th className="text-right py-3 px-4 text-sm font-medium text-muted-foreground">Commissions</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Method</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Stripe ID</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Transaction ID</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Processed</th>
                     </tr>
                   </thead>
@@ -490,9 +620,10 @@ export default function AdminAffiliates() {
                         </td>
                         <td className="py-3 px-4 text-right text-sm font-medium">${payout.amount.toFixed(2)}</td>
                         <td className="py-3 px-4 text-right text-sm">{payout.commission_count}</td>
+                        <td className="py-3 px-4 text-sm capitalize">{payout.payout_method || 'paypal'}</td>
                         <td className="py-3 px-4">{getStatusBadge(payout.status)}</td>
                         <td className="py-3 px-4 text-sm font-mono text-muted-foreground">
-                          {payout.stripe_transfer_id || '-'}
+                          {payout.paypal_transaction_id || payout.stripe_transfer_id || '-'}
                         </td>
                         <td className="py-3 px-4 text-sm">
                           {payout.processed_at ? format(new Date(payout.processed_at), 'MMM d, yyyy') : '-'}
@@ -569,6 +700,10 @@ export default function AdminAffiliates() {
                 <p className="text-muted-foreground">Total Earnings</p>
                 <p>${selectedAffiliate?.total_earnings?.toFixed(2)}</p>
               </div>
+              <div className="col-span-2">
+                <p className="text-muted-foreground">PayPal Email</p>
+                <p>{selectedAffiliate?.paypal_email || 'Not set'}</p>
+              </div>
             </div>
             <div>
               <Label htmlFor="notes">Admin Notes</Label>
@@ -641,6 +776,85 @@ export default function AdminAffiliates() {
                 Reactivate
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payout Dialog */}
+      <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Process Payout</DialogTitle>
+            <DialogDescription>
+              Record a PayPal payment for {selectedAffiliate?.referral_code}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="text-2xl font-bold text-gold">
+                  ${selectedAffiliate?.pending_earnings?.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-sm">PayPal:</span>
+                <span className="text-sm">{selectedAffiliate?.paypal_email}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => copyToClipboard(selectedAffiliate?.paypal_email || '')}
+                >
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="transaction-id">PayPal Transaction ID *</Label>
+              <Input
+                id="transaction-id"
+                value={paypalTransactionId}
+                onChange={(e) => setPaypalTransactionId(e.target.value)}
+                placeholder="e.g., 5TY12345AB678901C"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Enter the transaction ID from PayPal after sending the payment
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="payout-notes">Notes (optional)</Label>
+              <Textarea
+                id="payout-notes"
+                value={payoutNotes}
+                onChange={(e) => setPayoutNotes(e.target.value)}
+                placeholder="Any notes about this payout..."
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedAffiliate && paypalTransactionId) {
+                  processPayoutMutation.mutate({
+                    affiliateId: selectedAffiliate.id,
+                    paypalTransactionId,
+                    notes: payoutNotes
+                  });
+                }
+              }}
+              disabled={!paypalTransactionId || processPayoutMutation.isPending}
+            >
+              {processPayoutMutation.isPending ? 'Processing...' : 'Confirm Payout'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
