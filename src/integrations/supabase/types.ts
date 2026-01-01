@@ -1232,6 +1232,51 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_market_digests: {
+        Row: {
+          area_highlights: Json | null
+          created_at: string | null
+          digest_date: string
+          executive_summary: string
+          headline: string
+          id: string
+          is_published: boolean | null
+          key_metrics: Json | null
+          market_sentiment: string | null
+          sector_highlights: Json | null
+          top_article_ids: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          area_highlights?: Json | null
+          created_at?: string | null
+          digest_date: string
+          executive_summary: string
+          headline: string
+          id?: string
+          is_published?: boolean | null
+          key_metrics?: Json | null
+          market_sentiment?: string | null
+          sector_highlights?: Json | null
+          top_article_ids?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          area_highlights?: Json | null
+          created_at?: string | null
+          digest_date?: string
+          executive_summary?: string
+          headline?: string
+          id?: string
+          is_published?: boolean | null
+          key_metrics?: Json | null
+          market_sentiment?: string | null
+          sector_highlights?: Json | null
+          top_article_ids?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       demo_members: {
         Row: {
           avatar_url: string | null
@@ -2555,55 +2600,94 @@ export type Database = {
       }
       news_articles: {
         Row: {
+          affected_areas: string[] | null
+          affected_sectors: string[] | null
+          ai_confidence_score: number | null
           article_type: string
+          briefing_type: string | null
           category: string | null
           content: string | null
           created_at: string
+          digest_date: string | null
           excerpt: string | null
           id: string
           image_url: string | null
+          investment_rating: number | null
+          is_featured_digest: boolean | null
+          key_metrics: Json | null
           published_at: string | null
           reading_time_minutes: number | null
+          related_articles: string[] | null
           source_hash: string | null
           source_name: string
           source_url: string
           status: string
+          tags: string[] | null
           title: string
           updated_at: string
+          urgency_level: string | null
+          verification_notes: string | null
+          verification_status: string | null
         }
         Insert: {
+          affected_areas?: string[] | null
+          affected_sectors?: string[] | null
+          ai_confidence_score?: number | null
           article_type?: string
+          briefing_type?: string | null
           category?: string | null
           content?: string | null
           created_at?: string
+          digest_date?: string | null
           excerpt?: string | null
           id?: string
           image_url?: string | null
+          investment_rating?: number | null
+          is_featured_digest?: boolean | null
+          key_metrics?: Json | null
           published_at?: string | null
           reading_time_minutes?: number | null
+          related_articles?: string[] | null
           source_hash?: string | null
           source_name: string
           source_url: string
           status?: string
+          tags?: string[] | null
           title: string
           updated_at?: string
+          urgency_level?: string | null
+          verification_notes?: string | null
+          verification_status?: string | null
         }
         Update: {
+          affected_areas?: string[] | null
+          affected_sectors?: string[] | null
+          ai_confidence_score?: number | null
           article_type?: string
+          briefing_type?: string | null
           category?: string | null
           content?: string | null
           created_at?: string
+          digest_date?: string | null
           excerpt?: string | null
           id?: string
           image_url?: string | null
+          investment_rating?: number | null
+          is_featured_digest?: boolean | null
+          key_metrics?: Json | null
           published_at?: string | null
           reading_time_minutes?: number | null
+          related_articles?: string[] | null
           source_hash?: string | null
           source_name?: string
           source_url?: string
           status?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string
+          urgency_level?: string | null
+          verification_notes?: string | null
+          verification_status?: string | null
         }
         Relationships: []
       }

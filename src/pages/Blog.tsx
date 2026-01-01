@@ -3,7 +3,10 @@ import { Helmet } from "react-helmet";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useBlogArticles } from "@/hooks/useBlogArticles";
+import { useLatestDigest } from "@/hooks/useDailyDigest";
 import { ArticleCard, ArticleCardSkeleton } from "@/components/blog/ArticleCard";
+import { DailyDigest, DailyDigestSkeleton } from "@/components/news/DailyDigest";
+import { MarketPulseWidget } from "@/components/news/MarketPulseWidget";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import type { NewsCategory } from "@/hooks/useNews";
@@ -39,6 +42,7 @@ function generateBlogSchema() {
 const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState<NewsCategory>("all");
   const { articles, featuredArticle, isLoading } = useBlogArticles(selectedCategory);
+  const { digest, isLoading: isLoadingDigest } = useLatestDigest();
 
   // Filter out featured article from main list
   const regularArticles = articles.filter(
@@ -116,6 +120,17 @@ const Blog = () => {
             {/* Content */}
             {!isLoading && (
               <>
+                {/* Daily Digest Section */}
+                {selectedCategory === "all" && (
+                  <div className="mb-10">
+                    {isLoadingDigest ? (
+                      <DailyDigestSkeleton />
+                    ) : digest ? (
+                      <DailyDigest digest={digest} />
+                    ) : null}
+                  </div>
+                )}
+
                 {/* Featured Article */}
                 {featuredArticle && selectedCategory === "all" && (
                   <div className="mb-10">
