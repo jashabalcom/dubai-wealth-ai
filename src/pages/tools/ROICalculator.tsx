@@ -346,25 +346,25 @@ export default function ROICalculator() {
                 requiredTier="investor"
                 teaserMessage="Upgrade to unlock your ROI analysis, yield calculations, and AI-powered investment insights."
               >
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20">
-                  <h2 className="font-heading text-xl text-foreground mb-6">Key Returns</h2>
+                <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/20">
+                  <h2 className="font-heading text-lg sm:text-xl text-foreground mb-4 sm:mb-6">Key Returns</h2>
                   
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="p-4 rounded-xl bg-card/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                    <div className="p-3 sm:p-4 rounded-xl bg-card/50">
                       <LockedResultValue
                         label="Total ROI"
                         isLocked={hasReachedLimit}
                         value={`${totalROI.toFixed(1)}%`}
-                        valueClassName="font-heading text-3xl text-emerald-400"
+                        valueClassName="font-heading text-2xl sm:text-3xl text-emerald-400"
                       />
                       <p className="text-xs text-muted-foreground">Over {inputs.holdingPeriod} years</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-card/50">
+                    <div className="p-3 sm:p-4 rounded-xl bg-card/50">
                       <LockedResultValue
                         label="Annualized ROI"
                         isLocked={hasReachedLimit}
                         value={`${annualizedROI.toFixed(1)}%`}
-                        valueClassName="font-heading text-3xl text-emerald-400"
+                        valueClassName="font-heading text-2xl sm:text-3xl text-emerald-400"
                       />
                       <p className="text-xs text-muted-foreground">Per year</p>
                     </div>

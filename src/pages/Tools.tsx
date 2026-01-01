@@ -266,63 +266,63 @@ export default function Tools() {
                     className="group block h-full"
                   >
                     <div className={cn(
-                      "h-full p-6 md:p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl",
+                      "h-full p-4 sm:p-6 md:p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl",
                       isFeatured 
                         ? "border-gold/30 bg-gradient-to-r from-gold/5 to-transparent hover:border-gold/50" 
                         : "border-border hover:border-gold/30",
                       colors.glow
                     )}>
-                      <div className="flex items-start gap-6">
+                      <div className="flex items-start gap-3 sm:gap-6">
                         <motion.div 
-                          className={`w-14 h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
+                          className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
                           whileHover={{ scale: 1.1, rotate: 5 }}
                           transition={{ type: 'spring', stiffness: 400 }}
                         >
-                          <tool.icon className={`w-7 h-7 ${colors.text}`} />
+                          <tool.icon className={`w-5 h-5 sm:w-7 sm:h-7 ${colors.text}`} />
                         </motion.div>
 
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h3 className="font-heading text-2xl text-foreground group-hover:text-gold transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                            <h3 className="font-heading text-lg sm:text-2xl text-foreground group-hover:text-gold transition-colors">
                               {tool.title}
                             </h3>
                             {isFeatured && (
-                              <Badge className="bg-gold/20 text-gold border-gold/30">
-                                <Sparkles className="w-3 h-3 mr-1" />
+                              <Badge className="bg-gold/20 text-gold border-gold/30 text-[10px] sm:text-xs">
+                                <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
                                 Featured
                               </Badge>
                             )}
                             {'isFree' in tool && tool.isFree && (
-                              <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/30">
+                              <Badge variant="outline" className="text-[10px] sm:text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/30">
                                 Free
                               </Badge>
                             )}
                             {'eliteOnly' in tool && tool.eliteOnly && (
-                              <Badge className="text-xs bg-gold/10 text-gold border-gold/30">
-                                <Lock className="w-3 h-3 mr-1" />
+                              <Badge className="text-[10px] sm:text-xs bg-gold/10 text-gold border-gold/30">
+                                <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
                                 Elite+
                               </Badge>
                             )}
                             {tool.freeUses > 0 && !('isFree' in tool) && !('eliteOnly' in tool) && (
-                              <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
-                                {tool.freeUses} Free Uses
+                              <Badge variant="outline" className="text-[10px] sm:text-xs bg-muted/50 text-muted-foreground">
+                                {tool.freeUses} Free
                               </Badge>
                             )}
                             {hasPdfExport && (
-                              <Badge className="text-xs bg-gold/10 text-gold border-gold/30">
-                                <Lock className="w-3 h-3 mr-1" />
-                                PDF Export (Elite+)
+                              <Badge className="text-[10px] sm:text-xs bg-gold/10 text-gold border-gold/30">
+                                <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
+                                PDF (Elite+)
                               </Badge>
                             )}
                           </div>
 
-                          <p className="text-muted-foreground mb-4">
+                          <p className="text-muted-foreground text-sm mb-3 sm:mb-4 line-clamp-2 sm:line-clamp-none">
                             {tool.description}
                           </p>
 
                           <div className={`flex items-center gap-2 ${colors.text}`}>
-                            <span className="text-sm font-medium">{isFeatured ? 'Start Chat' : 'Open Calculator'}</span>
-                            <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                            <span className="text-xs sm:text-sm font-medium">{isFeatured ? 'Start Chat' : 'Open Calculator'}</span>
+                            <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-2 transition-transform duration-300" />
                           </div>
                         </div>
                       </div>
@@ -397,46 +397,46 @@ export default function Tools() {
                       className="group block h-full"
                     >
                       <div className={cn(
-                        "h-full p-6 md:p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl border-border hover:border-slate-500/30",
+                        "h-full p-4 sm:p-6 md:p-8 rounded-2xl bg-card border transition-all duration-300 hover:shadow-2xl border-border hover:border-slate-500/30",
                         colors.glow
                       )}>
-                        <div className="flex items-start gap-6">
+                        <div className="flex items-start gap-3 sm:gap-6">
                           <motion.div 
-                            className={`w-14 h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
+                            className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}
                             whileHover={{ scale: 1.1, rotate: 5 }}
                             transition={{ type: 'spring', stiffness: 400 }}
                           >
-                            <tool.icon className={`w-7 h-7 ${colors.text}`} />
+                            <tool.icon className={`w-5 h-5 sm:w-7 sm:h-7 ${colors.text}`} />
                           </motion.div>
 
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h3 className="font-heading text-2xl text-foreground group-hover:text-slate-600 transition-colors">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                            <h3 className="font-heading text-lg sm:text-2xl text-foreground group-hover:text-slate-600 transition-colors">
                               {tool.title}
                             </h3>
-                              <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30">
+                              <Badge className="bg-slate-500/20 text-slate-300 border-slate-500/30 text-[10px] sm:text-xs">
                                 Commercial
                               </Badge>
                               {'eliteOnly' in tool && tool.eliteOnly && (
-                                <Badge className="text-xs bg-gold/10 text-gold border-gold/30">
-                                  <Lock className="w-3 h-3 mr-1" />
+                                <Badge className="text-[10px] sm:text-xs bg-gold/10 text-gold border-gold/30">
+                                  <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
                                   Elite+
                                 </Badge>
                               )}
                               {tool.freeUses > 0 && !('eliteOnly' in tool) && (
-                                <Badge variant="outline" className="text-xs bg-muted/50 text-muted-foreground">
-                                  {tool.freeUses} Free Uses
+                                <Badge variant="outline" className="text-[10px] sm:text-xs bg-muted/50 text-muted-foreground">
+                                  {tool.freeUses} Free
                                 </Badge>
                               )}
                             </div>
 
-                            <p className="text-muted-foreground mb-4">
+                            <p className="text-muted-foreground text-sm mb-3 sm:mb-4 line-clamp-2 sm:line-clamp-none">
                               {tool.description}
                             </p>
 
                             <div className={`flex items-center gap-2 ${colors.text}`}>
-                              <span className="text-sm font-medium">Open Calculator</span>
-                              <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
+                              <span className="text-xs sm:text-sm font-medium">Open Calculator</span>
+                              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-2 transition-transform duration-300" />
                             </div>
                           </div>
                         </div>

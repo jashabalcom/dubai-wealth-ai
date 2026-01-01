@@ -66,31 +66,31 @@ export function HardPaywall({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`relative z-10 p-6 rounded-xl bg-gradient-to-br ${tierColors[requiredTier]} border backdrop-blur-sm`}
+        className={`relative z-10 p-4 sm:p-6 rounded-xl bg-gradient-to-br ${tierColors[requiredTier]} border backdrop-blur-sm`}
       >
-        <div className="flex flex-col items-center text-center py-4">
-          <div className="w-14 h-14 rounded-full bg-card/80 border border-border flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-muted-foreground" />
+        <div className="flex flex-col items-center text-center py-2 sm:py-4">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-card/80 border border-border flex items-center justify-center mb-3 sm:mb-4">
+            <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-muted-foreground" />
           </div>
           
-          <h3 className="font-heading text-xl text-foreground mb-2">
+          <h3 className="font-heading text-lg sm:text-xl text-foreground mb-2">
             {feature}
           </h3>
           
-          <p className="text-muted-foreground text-sm mb-4 max-w-md">
+          <p className="text-muted-foreground text-xs sm:text-sm mb-3 sm:mb-4 max-w-md px-2">
             {teaserMessage || `Unlock ${feature.toLowerCase()} and get unlimited access to all investment tools.`}
           </p>
 
-          <div className="flex items-center gap-2 mb-4">
-            <Crown className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <Crown className="w-4 h-4 text-primary flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium text-foreground">
               Available to {tierLabels[requiredTier]}+ members
             </span>
           </div>
 
-          <Button variant="gold" onClick={handleUpgradeClick} className="gap-2">
+          <Button variant="gold" onClick={handleUpgradeClick} className="gap-2 w-full sm:w-auto">
             <TrendingUp className="w-4 h-4" />
-            Upgrade to {tierLabels[requiredTier]}
+            <span className="truncate">Upgrade to {tierLabels[requiredTier]}</span>
           </Button>
         </div>
       </motion.div>
