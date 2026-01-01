@@ -299,7 +299,7 @@ const DailyBriefing = () => {
               {/* Area Highlights */}
               {hasFullAccess ? (
                 <AreaHighlights
-                  areaHighlights={digest.top_areas.length > 0 ? digest.top_areas : digest.area_highlights}
+                  areaHighlights={(digest.top_areas && digest.top_areas.length > 0) ? digest.top_areas : digest.area_highlights}
                 />
               ) : (
                 <LockedContent title="Area Highlights" tier="investor" />
