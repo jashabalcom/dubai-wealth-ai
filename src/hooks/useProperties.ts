@@ -42,6 +42,12 @@ export interface Property {
   created_at?: string;
 }
 
+interface Cursor {
+  id: string;
+  sortValue: number | string | boolean;
+  secondarySortValue?: string;
+}
+
 interface UsePropertiesReturn {
   properties: Property[];
   isLoading: boolean;
@@ -63,14 +69,34 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
   const [propertyCounts, setPropertyCounts] = useState<Record<string, number>>({});
   const [developerCounts, setDeveloperCounts] = useState<Record<string, number>>({});
   
-  const offsetRef = useRef(0);
+  const cursorRef = useRef<Cursor | null>(null);
   const filtersRef = useRef(filters);
 
-  // Build query with filters
-  const buildQuery = useCallback((countOnly = false) => {
+  // Get sort configuration based on sortBy filter
+  const getSortConfig = useCallback(() => {
+    switch (filters.sortBy) {
+      case 'price-asc':
+        return { column: 'price_aed', ascending: true };
+      case 'price-desc':
+        return { column: 'price_aed', ascending: false };
+      case 'yield-desc':
+        return { column: 'rental_yield_estimate', ascending: false };
+      case 'size-desc':
+        return { column: 'size_sqft', ascending: false };
+      case 'newest':
+        return { column: 'created_at', ascending: false };
+      case 'score-desc':
+        return { column: 'rental_yield_estimate', ascending: false };
+      default:
+        return { column: 'is_featured', ascending: false, secondary: 'created_at' };
+    }
+  }, [filters.sortBy]);
+
+  // Build base query with filters (no pagination)
+  const buildBaseQuery = useCallback(() => {
     let query = supabase
       .from('properties')
-      .select(countOnly ? '*' : '*', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .eq('status', 'available');
 
     // Search filter
@@ -129,41 +155,55 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
     return query;
   }, [filters]);
 
-  // Apply sorting
-  const applySorting = useCallback((query: any) => {
-    switch (filters.sortBy) {
-      case 'price-asc':
-        return query.order('price_aed', { ascending: true });
-      case 'price-desc':
-        return query.order('price_aed', { ascending: false });
-      case 'yield-desc':
-        return query.order('rental_yield_estimate', { ascending: false });
-      case 'size-desc':
-        return query.order('size_sqft', { ascending: false });
-      case 'newest':
-        return query.order('created_at', { ascending: false });
-      case 'score-desc':
-        // Score requires client-side calculation, so we order by yield as proxy
-        return query.order('rental_yield_estimate', { ascending: false });
-      default:
-        // Featured first, then by created_at
-        return query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+  // Apply cursor-based pagination
+  const applyCursorPagination = useCallback((query: any, cursor: Cursor | null) => {
+    const sortConfig = getSortConfig();
+    
+    if (cursor) {
+      // For cursor-based pagination, we need to fetch items after the cursor
+      // Using compound cursor: (sortValue, id) for stable pagination
+      if (sortConfig.ascending) {
+        // Ascending: get items where (sortValue > cursor.sortValue) OR (sortValue = cursor.sortValue AND id > cursor.id)
+        query = query.or(
+          `${sortConfig.column}.gt.${cursor.sortValue},and(${sortConfig.column}.eq.${cursor.sortValue},id.gt.${cursor.id})`
+        );
+      } else {
+        // Descending: get items where (sortValue < cursor.sortValue) OR (sortValue = cursor.sortValue AND id > cursor.id)
+        query = query.or(
+          `${sortConfig.column}.lt.${cursor.sortValue},and(${sortConfig.column}.eq.${cursor.sortValue},id.gt.${cursor.id})`
+        );
+      }
     }
-  }, [filters.sortBy]);
 
-  // Fetch initial properties
+    // Apply sorting
+    query = query.order(sortConfig.column, { ascending: sortConfig.ascending });
+    
+    // Secondary sort for featured (featured first, then by created_at)
+    if (sortConfig.secondary) {
+      query = query.order(sortConfig.secondary, { ascending: false });
+    }
+    
+    // Always add id as final sort for stable cursor pagination
+    query = query.order('id', { ascending: true });
+    
+    // Limit results
+    query = query.limit(PAGE_SIZE);
+
+    return query;
+  }, [getSortConfig]);
+
+  // Fetch properties with cursor-based pagination
   const fetchProperties = useCallback(async (reset = true) => {
     if (reset) {
       setIsLoading(true);
-      offsetRef.current = 0;
+      cursorRef.current = null;
     } else {
       setIsLoadingMore(true);
     }
 
     try {
-      let query = buildQuery();
-      query = applySorting(query);
-      query = query.range(offsetRef.current, offsetRef.current + PAGE_SIZE - 1);
+      let query = buildBaseQuery();
+      query = applyCursorPagination(query, reset ? null : cursorRef.current);
 
       const { data, error, count } = await query;
 
@@ -182,20 +222,32 @@ export function useProperties(filters: PropertyFilters): UsePropertiesReturn {
         longitude: p.longitude ? Number(p.longitude) : undefined,
       }));
 
+      // Update cursor to last item for next page
+      if (mappedData.length > 0) {
+        const lastItem = mappedData[mappedData.length - 1];
+        const sortConfig = getSortConfig();
+        cursorRef.current = {
+          id: lastItem.id,
+          sortValue: lastItem[sortConfig.column as keyof Property] as number | string | boolean,
+          secondarySortValue: sortConfig.secondary ? lastItem[sortConfig.secondary as keyof Property] as string : undefined,
+        };
+      }
+
       if (reset) {
         setProperties(mappedData);
-        setTotalCount(count || 0);
+        if (count !== null) {
+          setTotalCount(count);
+        }
       } else {
         setProperties(prev => [...prev, ...mappedData]);
       }
 
       setHasMore(mappedData.length === PAGE_SIZE);
-      offsetRef.current += mappedData.length;
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [buildQuery, applySorting]);
+  }, [buildBaseQuery, applyCursorPagination, getSortConfig]);
 
   // Fetch area and developer counts using server-side aggregation
   const fetchCounts = useCallback(async () => {
