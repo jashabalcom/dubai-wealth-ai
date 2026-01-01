@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Info, Database, TrendingUp, TrendingDown, Minus, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Calendar, Info, Database, TrendingUp, TrendingDown, Minus, RotateCcw, Lock } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -20,6 +20,9 @@ import { toast } from 'sonner';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
+import { UsageLimitBanner } from '@/components/freemium/UsageLimitBanner';
+import { UpgradeModal } from '@/components/freemium/UpgradeModal';
+import { HardPaywall } from '@/components/freemium/HardPaywall';
 import { useAuth } from '@/hooks/useAuth';
 import { useToolUsage } from '@/hooks/useToolUsage';
 
@@ -75,7 +78,9 @@ function MarketBenchmark({
 
 export default function AirbnbCalculator() {
   const { formatPrice } = useCurrency();
-  const { hasReachedLimit, isUnlimited } = useToolUsage('airbnb');
+  const { remainingUses, hasReachedLimit, isUnlimited, trackUsage, canUse, isLoading: usageLoading } = useToolUsage('airbnb');
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [hasTracked, setHasTracked] = useState(false);
   const [activePreset, setActivePreset] = useState<string>();
   const [isUsingMarketData, setIsUsingMarketData] = useState(false);
   const prevAreaRef = useRef<string>();
@@ -112,6 +117,22 @@ export default function AirbnbCalculator() {
     furnishingCost: 150000,
     professionalPhotos: DEFAULT_SHORT_TERM_COSTS.professionalPhotography,
   });
+
+  useEffect(() => {
+    async function track() {
+      if (!hasTracked && canUse) {
+        const success = await trackUsage();
+        if (!success && !isUnlimited) {
+          setShowUpgradeModal(true);
+        }
+        setHasTracked(true);
+      } else if (!canUse && !hasTracked) {
+        setShowUpgradeModal(true);
+        setHasTracked(true);
+      }
+    }
+    track();
+  }, [hasTracked, canUse, trackUsage, isUnlimited]);
 
   const handleChange = (field: string, value: number | string) => {
     setInputs(prev => ({ ...prev, [field]: value }));
@@ -260,8 +281,18 @@ export default function AirbnbCalculator() {
       />
       <Navbar />
 
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        feature="tools"
+        toolName="Airbnb Calculator"
+      />
+
       <section className="pt-32 pb-8">
         <div className="container mx-auto px-4">
+          {!isUnlimited && !usageLoading && (
+            <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Airbnb Calculator" />
+          )}
           <Link to="/tools" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6">
             <ArrowLeft className="w-4 h-4" /> Back to Tools
           </Link>
@@ -374,7 +405,7 @@ export default function AirbnbCalculator() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Mid Season (Mar-Apr, Sep-Oct)</span>
-                    <MarketBenchmark value={inputs.nightlyRateMid} marketValue={marketData?.avg_daily_rate || null} label="Market avg rate" />
+                    <MarketBenchmark value={inputs.nightlyRateMid} marketValue={marketData?.avg_daily_rate || null} label="Market average rate" />
                   </div>
                   <SliderInput label="" value={inputs.nightlyRateMid} onChange={(v) => handleChange('nightlyRateMid', v)} min={200} max={3000} step={50} formatValue={formatAED} />
                 </div>
@@ -385,7 +416,7 @@ export default function AirbnbCalculator() {
                   </div>
                   <SliderInput label="" value={inputs.nightlyRateLow} onChange={(v) => handleChange('nightlyRateLow', v)} min={100} max={2000} step={50} formatValue={formatAED} />
                 </div>
-                <SliderInput label="Weekend Premium" value={inputs.weekendPremium} onChange={(v) => handleChange('weekendPremium', v)} min={0} max={50} suffix="%" />
+                <SliderInput label="Weekend Premium" value={inputs.weekendPremium} onChange={(v) => handleChange('weekendPremium', v)} min={0} max={50} step={5} suffix="%" />
               </div>
 
               <div className="p-6 rounded-2xl bg-card border border-border space-y-6">
@@ -395,201 +426,147 @@ export default function AirbnbCalculator() {
                     <span className="text-sm text-muted-foreground">Peak Season</span>
                     <MarketBenchmark value={inputs.occupancyPeak} marketValue={marketData?.peak_occupancy || null} label="Market peak occupancy" isPercentage />
                   </div>
-                  <SliderInput label="" value={inputs.occupancyPeak} onChange={(v) => handleChange('occupancyPeak', v)} min={30} max={100} suffix="%" />
+                  <SliderInput label="" value={inputs.occupancyPeak} onChange={(v) => handleChange('occupancyPeak', v)} min={50} max={100} step={5} suffix="%" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Mid Season</span>
-                    <MarketBenchmark value={inputs.occupancyMid} marketValue={marketData?.avg_occupancy || null} label="Market avg occupancy" isPercentage />
+                    <MarketBenchmark value={inputs.occupancyMid} marketValue={marketData?.avg_occupancy || null} label="Market average occupancy" isPercentage />
                   </div>
-                  <SliderInput label="" value={inputs.occupancyMid} onChange={(v) => handleChange('occupancyMid', v)} min={20} max={100} suffix="%" />
+                  <SliderInput label="" value={inputs.occupancyMid} onChange={(v) => handleChange('occupancyMid', v)} min={30} max={100} step={5} suffix="%" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Low Season</span>
                     <MarketBenchmark value={inputs.occupancyLow} marketValue={marketData?.low_occupancy || null} label="Market low occupancy" isPercentage />
                   </div>
-                  <SliderInput label="" value={inputs.occupancyLow} onChange={(v) => handleChange('occupancyLow', v)} min={10} max={100} suffix="%" />
+                  <SliderInput label="" value={inputs.occupancyLow} onChange={(v) => handleChange('occupancyLow', v)} min={20} max={80} step={5} suffix="%" />
                 </div>
               </div>
+            </motion.div>
+
+            {/* Results Column */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-6">
+              {/* Key Metrics */}
+              <HardPaywall
+                requiredTier="investor"
+                feature="Yield Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+                teaserMessage="Upgrade to see full yield analysis, revenue breakdown, and expense details"
+              >
+                <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent border border-orange-500/20">
+                  <h2 className="font-heading text-xl text-foreground mb-6">Annual Returns</h2>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <p className="text-sm text-muted-foreground">Net Yield</p>
+                      <p className="font-heading text-3xl text-emerald-400">{netYield.toFixed(1)}%</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-card/50">
+                      <p className="text-sm text-muted-foreground">Gross Yield</p>
+                      <p className="font-heading text-3xl text-foreground">{grossYield.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Gross Revenue</span>
+                      <span className="font-medium text-emerald-400">{formatAED(grossRevenue)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Total Expenses</span>
+                      <span className="font-medium text-red-400">-{formatAED(totalExpenses)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-3 border-t border-orange-500/20">
+                      <span className="font-medium text-foreground">Net Annual Income</span>
+                      <span className="font-heading text-2xl text-emerald-400">{formatAED(netAnnualIncome)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Monthly Income</span>
+                      <span className="font-medium">{formatAED(netMonthlyIncome)}</span>
+                    </div>
+                  </div>
+                </div>
+              </HardPaywall>
+
+              {/* Occupancy Summary */}
+              <HardPaywall
+                requiredTier="investor"
+                feature="Occupancy Analysis"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <div className="p-6 rounded-2xl bg-card border border-border">
+                  <h2 className="font-heading text-xl text-foreground mb-4">Occupancy Summary</h2>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 rounded-lg bg-orange-500/10">
+                      <p className="text-xs text-muted-foreground">Peak Nights</p>
+                      <p className="font-heading text-xl">{peakNights.toFixed(0)}</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-orange-500/10">
+                      <p className="text-xs text-muted-foreground">Mid Nights</p>
+                      <p className="font-heading text-xl">{midNights.toFixed(0)}</p>
+                    </div>
+                    <div className="text-center p-3 rounded-lg bg-orange-500/10">
+                      <p className="text-xs text-muted-foreground">Low Nights</p>
+                      <p className="font-heading text-xl">{lowNights.toFixed(0)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 p-3 rounded-lg bg-muted/30 flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Total Nights Booked</span>
+                    <span className="font-heading text-lg">{totalNights.toFixed(0)} / 365</span>
+                  </div>
+                </div>
+              </HardPaywall>
 
               {/* Fee Breakdowns */}
-              <div className="space-y-3">
-                <FeeBreakdownCard
-                  title="Initial Setup Costs"
-                  fees={setupItems}
-                  total={totalSetupCosts}
-                  formatValue={formatAED}
-                  accentColor="purple-400"
-                  defaultExpanded
+              <HardPaywall
+                requiredTier="investor"
+                feature="Fee Breakdown"
+                isLocked={hasReachedLimit && !isUnlimited}
+                showTeaser={true}
+              >
+                <div className="space-y-4">
+                  <FeeBreakdownCard
+                    title="Annual Expenses"
+                    fees={expenseItems}
+                    total={totalExpenses}
+                    formatValue={formatAED}
+                    accentColor="red-400"
+                  />
+                  <FeeBreakdownCard
+                    title="Setup Costs (One-Time)"
+                    fees={setupItems}
+                    total={totalSetupCosts}
+                    formatValue={formatAED}
+                    accentColor="orange-400"
+                  />
+                </div>
+              </HardPaywall>
+
+              {/* Charts */}
+              {(!hasReachedLimit || isUnlimited) && (
+                <AirbnbCharts
+                  peakRevenue={peakRevenue}
+                  midRevenue={midRevenue}
+                  lowRevenue={lowRevenue}
+                  totalExpenses={totalExpenses}
+                  expenseItems={expenseItems}
+                  formatAED={formatAED}
                 />
-                <FeeBreakdownCard
-                  title="Annual Expenses"
-                  fees={expenseItems}
-                  total={totalExpenses}
-                  formatValue={formatAED}
-                  accentColor="orange-400"
+              )}
+
+              {!isUnlimited && hasReachedLimit && (
+                <ContextualUpgradePrompt
+                  feature="Unlimited Calculator Access"
+                  description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
+                  className="mt-8"
                 />
-              </div>
-
-              <AirbnbCharts 
-                peakRevenue={peakRevenue} 
-                midRevenue={midRevenue} 
-                lowRevenue={lowRevenue} 
-                totalExpenses={totalExpenses} 
-                netAnnualIncome={netAnnualIncome} 
-                grossRevenue={grossRevenue} 
-                platformFees={platformFees} 
-                managementFees={managementFees} 
-                annualUtilities={annualUtilities} 
-                annualMaintenance={annualMaintenance} 
-                serviceCharges={annualServiceCharges} 
-                licenseFee={annualLicensing} 
-                formatAED={formatAED} 
-              />
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-6">
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent border border-orange-500/20">
-                <h2 className="font-heading text-xl text-foreground mb-4">Annual Returns</h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">Net Yield</p>
-                    <p className="font-heading text-3xl text-orange-400">{netYield.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">After all expenses</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-card/50">
-                    <p className="text-sm text-muted-foreground mb-1">Gross Yield</p>
-                    <p className="font-heading text-3xl text-foreground">{grossYield.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">Before expenses</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Monthly Income</h2>
-                <div className="text-center py-4">
-                  <p className="font-heading text-4xl text-emerald-400 mb-2">{formatAED(netMonthlyIncome)}</p>
-                  <p className="text-muted-foreground">{formatPrice(netMonthlyIncome)}</p>
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Occupancy Summary</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Peak Season Nights</span>
-                    <span className="font-medium">{Math.round(peakNights)} nights</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Mid Season Nights</span>
-                    <span className="font-medium">{Math.round(midNights)} nights</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Low Season Nights</span>
-                    <span className="font-medium">{Math.round(lowNights)} nights</span>
-                  </div>
-                  <div className="flex justify-between py-2 bg-muted/30 rounded-lg px-3 -mx-3">
-                    <span className="font-medium text-foreground">Total Nights Booked</span>
-                    <span className="font-heading text-lg text-foreground">{Math.round(totalNights)} nights</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground text-center pt-2">
-                    Average occupancy: {((totalNights / 365) * 100).toFixed(0)}% annually
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Revenue Breakdown</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Peak Season Revenue</span>
-                    <span className="font-medium text-emerald-400">{formatAED(peakRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Mid Season Revenue</span>
-                    <span className="font-medium text-emerald-400">{formatAED(midRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Low Season Revenue</span>
-                    <span className="font-medium text-emerald-400">{formatAED(lowRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Cleaning Revenue</span>
-                    <span className="font-medium">{formatAED(cleaningRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between py-3 bg-emerald-500/10 rounded-lg px-3 -mx-3">
-                    <span className="font-medium text-foreground">Gross Revenue</span>
-                    <span className="font-heading text-xl text-emerald-400">{formatAED(grossRevenue)}</span>
-                  </div>
-                  {/* Market Revenue Comparison */}
-                  {marketData?.avg_annual_revenue && (
-                    <div className="mt-4 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Market Avg Revenue</span>
-                        <span className="font-medium">{formatAED(marketData.avg_annual_revenue)}</span>
-                      </div>
-                      {marketData.revenue_percentile_25 && marketData.revenue_percentile_75 && (
-                        <div className="mt-2 text-xs text-muted-foreground">
-                          <span>Market range: {formatAED(marketData.revenue_percentile_25)} - {formatAED(marketData.revenue_percentile_75)}</span>
-                          {grossRevenue >= marketData.revenue_percentile_75 && (
-                            <Badge className="ml-2 text-xs bg-emerald-500/10 text-emerald-400 border-0">Top 25%</Badge>
-                          )}
-                          {grossRevenue <= marketData.revenue_percentile_25 && (
-                            <Badge className="ml-2 text-xs bg-orange-500/10 text-orange-400 border-0">Below avg</Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-6 rounded-2xl bg-card border border-border">
-                <h2 className="font-heading text-xl text-foreground mb-6">Financial Summary</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Gross Revenue</span>
-                    <span className="font-medium text-emerald-400">{formatAED(grossRevenue)}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-border">
-                    <span className="text-muted-foreground">Total Expenses</span>
-                    <span className="font-medium text-orange-400">-{formatAED(totalExpenses)}</span>
-                  </div>
-                  <div className="flex justify-between py-3 bg-gold/10 rounded-lg px-3 -mx-3">
-                    <span className="font-medium text-foreground">Net Annual Income</span>
-                    <div className="text-right">
-                      <p className="font-heading text-xl text-gold">{formatAED(netAnnualIncome)}</p>
-                      <p className="text-sm text-gold/80">{formatPrice(netAnnualIncome)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                <div className="flex gap-3">
-                  <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-medium text-foreground text-sm">Setup Investment Required</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Before earning income, you'll need approximately {formatAED(totalSetupCosts)} for furnishing, photography, and licensing. 
-                      Payback period: ~{Math.ceil(totalSetupCosts / netMonthlyIncome)} months.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              )}
             </motion.div>
           </div>
-
-          {!isUnlimited && hasReachedLimit && (
-            <ContextualUpgradePrompt
-              feature="Unlimited Calculator Access"
-              description="Get unlimited access to all investment calculators, AI analysis, and advanced features."
-              className="mt-8"
-            />
-          )}
         </div>
       </section>
+
       <Footer />
     </div>
   );
