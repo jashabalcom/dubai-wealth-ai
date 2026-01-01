@@ -54,7 +54,9 @@ const eventTypes = [
 ];
 
 const platforms = [
-  { value: 'zoom', label: 'Zoom' },
+  { value: 'jitsi_embedded', label: 'Embedded Meeting (Jitsi)' },
+  { value: 'zoom_embedded', label: 'Embedded Zoom (SDK)' },
+  { value: 'zoom', label: 'Zoom (External Link)' },
   { value: 'google_meet', label: 'Google Meet' },
   { value: 'other', label: 'Other' },
 ];
@@ -83,6 +85,8 @@ interface EventFormData {
   recording_url: string;
   recording_visible: boolean;
   recording_access: 'all_members' | 'elite_only';
+  zoom_meeting_number: string;
+  zoom_password: string;
 }
 
 const defaultFormData: EventFormData = {
@@ -92,7 +96,7 @@ const defaultFormData: EventFormData = {
   event_time: '10:00',
   duration_minutes: 60,
   event_type: 'webinar',
-  meeting_platform: 'zoom',
+  meeting_platform: 'jitsi_embedded',
   meeting_url: '',
   meeting_id: '',
   visibility: 'all_members',
@@ -101,6 +105,8 @@ const defaultFormData: EventFormData = {
   recording_url: '',
   recording_visible: false,
   recording_access: 'all_members',
+  zoom_meeting_number: '',
+  zoom_password: '',
 };
 
 export default function AdminEvents() {
@@ -131,6 +137,8 @@ export default function AdminEvents() {
         recording_url: event.recording_url || '',
         recording_visible: event.recording_visible,
         recording_access: event.recording_access,
+        zoom_meeting_number: (event as any).zoom_meeting_number || '',
+        zoom_password: (event as any).zoom_password || '',
       });
     } else {
       setEditingEvent(null);
@@ -146,7 +154,7 @@ export default function AdminEvents() {
     const eventDateTime = new Date(formData.event_date);
     eventDateTime.setHours(hours, minutes, 0, 0);
 
-    const eventData = {
+    const eventData: any = {
       title: formData.title,
       description: formData.description || null,
       event_date: eventDateTime.toISOString(),
@@ -164,6 +172,8 @@ export default function AdminEvents() {
       recording_url: formData.recording_url || null,
       recording_visible: formData.recording_visible,
       recording_access: formData.recording_access,
+      zoom_meeting_number: formData.zoom_meeting_number || null,
+      zoom_password: formData.zoom_password || null,
     };
 
     if (editingEvent) {
@@ -192,10 +202,14 @@ export default function AdminEvents() {
 
   const getPlatformBadge = (platform: string) => {
     switch (platform) {
+      case 'jitsi_embedded':
+        return <Badge variant="outline" className="border-green-500/50 text-green-500">Embedded (Jitsi)</Badge>;
+      case 'zoom_embedded':
+        return <Badge variant="outline" className="border-blue-500/50 text-blue-500">Embedded (Zoom)</Badge>;
       case 'zoom':
         return <Badge variant="outline" className="border-blue-500/50 text-blue-500">Zoom</Badge>;
       case 'google_meet':
-        return <Badge variant="outline" className="border-green-500/50 text-green-500">Google Meet</Badge>;
+        return <Badge variant="outline" className="border-yellow-500/50 text-yellow-500">Google Meet</Badge>;
       default:
         return <Badge variant="outline">Other</Badge>;
     }
@@ -507,18 +521,59 @@ export default function AdminEvents() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="meeting_url">Meeting URL</Label>
-                <Input
-                  id="meeting_url"
-                  value={formData.meeting_url}
-                  onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
-                  placeholder="Paste your Zoom or Google Meet link here"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Create your meeting in {formData.meeting_platform === 'zoom' ? 'Zoom' : formData.meeting_platform === 'google_meet' ? 'Google Calendar' : 'your platform'} and paste the invite link here
-                </p>
-              </div>
+              {/* Meeting URL - for external link platforms */}
+              {formData.meeting_platform !== 'jitsi_embedded' && formData.meeting_platform !== 'zoom_embedded' && (
+                <div className="space-y-2">
+                  <Label htmlFor="meeting_url">Meeting URL</Label>
+                  <Input
+                    id="meeting_url"
+                    value={formData.meeting_url}
+                    onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
+                    placeholder="Paste your Zoom or Google Meet link here"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Create your meeting in {formData.meeting_platform === 'zoom' ? 'Zoom' : formData.meeting_platform === 'google_meet' ? 'Google Calendar' : 'your platform'} and paste the invite link here
+                  </p>
+                </div>
+              )}
+
+              {/* Zoom SDK fields - only for zoom_embedded */}
+              {formData.meeting_platform === 'zoom_embedded' && (
+                <div className="space-y-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-xs text-blue-400">
+                    Create a meeting in your Zoom account and enter the details below
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="zoom_meeting_number">Zoom Meeting Number *</Label>
+                      <Input
+                        id="zoom_meeting_number"
+                        value={formData.zoom_meeting_number}
+                        onChange={(e) => setFormData({ ...formData, zoom_meeting_number: e.target.value })}
+                        placeholder="123 456 7890"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zoom_password">Meeting Passcode</Label>
+                      <Input
+                        id="zoom_password"
+                        value={formData.zoom_password}
+                        onChange={(e) => setFormData({ ...formData, zoom_password: e.target.value })}
+                        placeholder="Optional"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Jitsi info */}
+              {formData.meeting_platform === 'jitsi_embedded' && (
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-xs text-green-400">
+                    A meeting room will be automatically created when the event goes live. No external configuration needed.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Visibility & Capacity */}

@@ -27,6 +27,9 @@ export interface CommunityEvent {
   recording_access: 'all_members' | 'elite_only';
   use_embedded_meeting?: boolean;
   jitsi_room_name?: string | null;
+  zoom_meeting_number?: string | null;
+  zoom_password?: string | null;
+  zoom_host_key?: string | null;
   registrations_count?: number;
   is_registered?: boolean;
 }

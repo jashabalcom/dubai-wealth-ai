@@ -155,3 +155,6 @@ verify_jwt = false
 
 [functions.check-data-freshness]
 verify_jwt = false
+
+[functions.generate-zoom-signature]
+verify_jwt = false
