@@ -48,6 +48,7 @@ const Contact = lazy(() => import("@/pages/Contact"));
 // Lazy loaded - Developers & Neighborhoods
 const Developers = lazy(() => import("@/pages/Developers"));
 const DeveloperDetail = lazy(() => import("@/pages/DeveloperDetail"));
+const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
 const Neighborhoods = lazy(() => import("@/pages/Neighborhoods"));
 const NeighborhoodDetail = lazy(() => import("@/pages/NeighborhoodDetail"));
 
@@ -176,9 +177,10 @@ export function AnimatedRoutes() {
         <Route path="/properties/:slug" element={<LazyPage><PropertyDetail /></LazyPage>} />
         <Route path="/properties/saved" element={<ProtectedRoute requiredTier="investor"><LazyPage><SavedProperties /></LazyPage></ProtectedRoute>} />
         
-        {/* Developers - Free to browse listing, detail pages require Investor tier */}
+        {/* Developers & Projects - Free to browse listing, detail pages require Investor tier */}
         <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />
         <Route path="/developers/:slug" element={<ProtectedRoute requiredTier="investor"><LazyPage><DeveloperDetail /></LazyPage></ProtectedRoute>} />
+        <Route path="/projects/:slug" element={<ProtectedRoute requiredTier="investor"><LazyPage><ProjectDetail /></LazyPage></ProtectedRoute>} />
         
         {/* Neighborhoods - Public browse */}
         <Route path="/neighborhoods" element={<LazyPage><Neighborhoods /></LazyPage>} />
