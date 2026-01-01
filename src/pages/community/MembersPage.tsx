@@ -5,6 +5,7 @@ import { MemberCard } from '@/components/community/MemberCard';
 import { DirectoryFilters } from '@/components/community/DirectoryFilters';
 import { PageTransition } from '@/components/community/PageTransition';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
+import { VirtualGrid } from '@/components/ui/virtual-grid';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -15,19 +16,6 @@ import {
 } from '@/components/ui/select';
 import { useMemberDirectory } from '@/hooks/useMemberDirectory';
 import { cn } from '@/lib/utils';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
-};
 
 export default function MembersPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -171,21 +159,23 @@ export default function MembersPage() {
               <p className="text-sm text-muted-foreground mb-3">
                 Showing {members.length} of {totalCount} members
               </p>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className={cn(
-                  'gap-4',
-                  viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2' : 'space-y-4'
-                )}
-              >
-                {members.map((member) => (
-                  <motion.div key={member.id} variants={itemVariants}>
-                    <MemberCard member={member} />
-                  </motion.div>
-                ))}
-              </motion.div>
+              {viewMode === 'grid' ? (
+                <VirtualGrid
+                  items={members}
+                  renderItem={(member, index) => (
+                    <MemberCard key={member.id} member={member} index={index} />
+                  )}
+                  estimatedItemHeight={280}
+                  gap={16}
+                  className="min-h-[600px]"
+                />
+              ) : (
+                <div className="space-y-4">
+                  {members.map((member, index) => (
+                    <MemberCard key={member.id} member={member} index={index} />
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>
