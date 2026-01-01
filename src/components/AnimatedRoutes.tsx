@@ -25,6 +25,8 @@ const Lesson = lazy(() => import("@/pages/Lesson"));
 const Properties = lazy(() => import("@/pages/Properties"));
 const PropertyDetail = lazy(() => import("@/pages/PropertyDetail"));
 const SavedProperties = lazy(() => import("@/pages/SavedProperties"));
+const MyInquiries = lazy(() => import("@/pages/MyInquiries"));
+const SavedSearches = lazy(() => import("@/pages/SavedSearches"));
 
 // Lazy loaded - Tools main page
 const Tools = lazy(() => import("@/pages/Tools"));
@@ -176,6 +178,8 @@ export function AnimatedRoutes() {
         <Route path="/properties" element={<LazyPage><Properties /></LazyPage>} />
         <Route path="/properties/:slug" element={<LazyPage><PropertyDetail /></LazyPage>} />
         <Route path="/properties/saved" element={<ProtectedRoute><LazyPage><SavedProperties /></LazyPage></ProtectedRoute>} />
+        <Route path="/my-inquiries" element={<ProtectedRoute><LazyPage><MyInquiries /></LazyPage></ProtectedRoute>} />
+        <Route path="/saved-searches" element={<ProtectedRoute><LazyPage><SavedSearches /></LazyPage></ProtectedRoute>} />
         
         {/* Developers & Projects - Public browse */}
         <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />

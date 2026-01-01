@@ -109,6 +109,7 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
           email: data.email,
           phone: data.phone,
           message: data.message,
+          userId: user.id,
         }
       });
 

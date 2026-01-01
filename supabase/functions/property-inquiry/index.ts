@@ -25,6 +25,7 @@ interface InquiryRequest {
   email: string;
   phone: string;
   message?: string;
+  userId?: string;
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -118,6 +119,7 @@ serve(async (req) => {
       .insert({
         property_id: inquiry.propertyId,
         agent_id: agent?.id || null,
+        user_id: inquiry.userId || null,
         name: inquiry.name,
         email: inquiry.email,
         phone: inquiry.phone,
