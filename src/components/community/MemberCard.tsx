@@ -9,14 +9,16 @@ import { ConnectButton } from '@/components/community/ConnectButton';
 import { OnlineIndicator } from '@/components/ui/online-indicator';
 import { useOnlineStatus } from '@/contexts/OnlinePresenceContext';
 import { cn } from '@/lib/utils';
+import { COMMUNITY_LAYOUT } from '@/lib/designTokens';
 import type { DirectoryMember } from '@/hooks/useMemberDirectory';
 
 interface MemberCardProps {
   member: DirectoryMember;
   index?: number;
+  variant?: 'grid' | 'list';
 }
 
-export function MemberCard({ member, index = 0 }: MemberCardProps) {
+export function MemberCard({ member, index = 0, variant = 'grid' }: MemberCardProps) {
   const { isUserOnline } = useOnlineStatus();
   const isOnline = isUserOnline(member.id);
 
@@ -33,119 +35,131 @@ export function MemberCard({ member, index = 0 }: MemberCardProps) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.02 }}
       whileHover={{ y: -4 }}
-      className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-2xl p-6 hover:shadow-xl hover:shadow-gold/5 hover:border-gold/20 transition-all duration-300"
+      className={cn(
+        'group h-full',
+        COMMUNITY_LAYOUT.card.base,
+        COMMUNITY_LAYOUT.card.padding,
+        COMMUNITY_LAYOUT.card.hover,
+      )}
     >
-      <div className="flex items-start gap-4">
-        {/* Avatar */}
-        <div className="relative shrink-0">
-          <Avatar className={cn(
-            'h-16 w-16 ring-2 ring-offset-2 ring-offset-card transition-all duration-300',
-            member.membership_tier === 'elite' ? 'ring-gold/50 group-hover:ring-gold' : 'ring-border/30 group-hover:ring-gold/30'
-          )}>
-            <AvatarImage src={member.avatar_url || undefined} />
-            <AvatarFallback className={cn(
-              'text-lg font-serif transition-colors',
-              member.membership_tier === 'elite' ? 'bg-gold/20 text-gold' : 'bg-muted group-hover:bg-gold/10'
+      <div className="flex flex-col h-full">
+        {/* Header: Avatar + Name */}
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <Avatar className={cn(
+              'h-14 w-14 ring-2 ring-offset-2 ring-offset-card transition-all duration-300',
+              member.membership_tier === 'elite' 
+                ? 'ring-gold/50 group-hover:ring-gold' 
+                : 'ring-border/30 group-hover:ring-gold/30'
             )}>
-              {member.full_name?.charAt(0) || '?'}
-            </AvatarFallback>
-          </Avatar>
-          {member.membership_tier === 'elite' && (
-            <motion.div 
-              className="absolute -top-1 -right-1 p-1.5 rounded-full bg-card border border-gold/30 shadow-lg shadow-gold/20"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <Crown className="h-3 w-3 text-gold" />
-            </motion.div>
-          )}
-          <OnlineIndicator 
-            isOnline={isOnline} 
-            size="md" 
-            className="absolute bottom-0 right-0"
-          />
+              <AvatarImage src={member.avatar_url || undefined} />
+              <AvatarFallback className={cn(
+                'text-base font-serif transition-colors',
+                member.membership_tier === 'elite' 
+                  ? 'bg-gold/20 text-gold' 
+                  : 'bg-muted group-hover:bg-gold/10'
+              )}>
+                {member.full_name?.charAt(0) || '?'}
+              </AvatarFallback>
+            </Avatar>
+            {member.membership_tier === 'elite' && (
+              <motion.div 
+                className="absolute -top-1 -right-1 p-1 rounded-full bg-card border border-gold/30 shadow-lg shadow-gold/20"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Crown className="h-3 w-3 text-gold" />
+              </motion.div>
+            )}
+            <OnlineIndicator 
+              isOnline={isOnline} 
+              size="md" 
+              className="absolute bottom-0 right-0"
+            />
+          </div>
+
+          {/* Name + Tier */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-serif font-semibold text-base truncate group-hover:text-gold transition-colors duration-300">
+              {member.full_name || 'Anonymous'}
+            </h3>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  'text-xs capitalize transition-all duration-300',
+                  getMembershipBadgeStyle(member.membership_tier),
+                  'group-hover:scale-105'
+                )}
+              >
+                {member.membership_tier === 'elite' && <Crown className="h-3 w-3 mr-1" />}
+                {member.membership_tier}
+              </Badge>
+              {member.country && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground/80 transition-colors truncate">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{member.country}</span>
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="font-serif font-semibold text-lg truncate group-hover:text-gold transition-colors duration-300">
-                {member.full_name || 'Anonymous'}
-              </h3>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <Badge 
-                  variant="outline" 
-                  className={cn(
-                    'text-xs capitalize transition-all duration-300',
-                    getMembershipBadgeStyle(member.membership_tier),
-                    'group-hover:scale-105'
-                  )}
-                >
-                  {member.membership_tier === 'elite' && <Crown className="h-3 w-3 mr-1" />}
-                  {member.membership_tier}
-                </Badge>
-                {member.country && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                    <MapPin className="h-3 w-3" />
-                    {member.country}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Bio */}
-          {member.bio && (
-            <p className="text-sm text-muted-foreground mt-3 line-clamp-2 group-hover:text-foreground/80 transition-colors">
+        {/* Bio - Fixed height for grid consistency */}
+        <div className="flex-1 mt-3">
+          {member.bio ? (
+            <p className="text-sm text-muted-foreground line-clamp-2 group-hover:text-foreground/80 transition-colors">
               {member.bio}
             </p>
+          ) : (
+            <p className="text-sm text-muted-foreground/50 italic">
+              No bio yet
+            </p>
           )}
+        </div>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {member.investment_goal && (
-              <motion.span 
-                className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted/50 text-muted-foreground transition-all group-hover:bg-muted group-hover:text-foreground"
-                whileHover={{ scale: 1.05 }}
-              >
-                <Target className="h-3 w-3" />
-                {member.investment_goal}
-              </motion.span>
-            )}
-            {member.looking_for && (
-              <motion.span 
-                className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gold/10 text-gold transition-all group-hover:bg-gold/20"
-                whileHover={{ scale: 1.05 }}
-              >
-                <Briefcase className="h-3 w-3" />
-                {member.looking_for}
-              </motion.span>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30 group-hover:border-gold/20 transition-colors">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              Joined {format(new Date(member.created_at), 'MMM yyyy')}
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1.5 mt-3 min-h-[28px]">
+          {member.investment_goal && (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-muted/50 text-muted-foreground group-hover:bg-muted group-hover:text-foreground transition-all">
+              <Target className="h-3 w-3 shrink-0" />
+              <span className="truncate max-w-[100px]">{member.investment_goal}</span>
             </span>
-            <div className="flex items-center gap-2">
-              <ConnectButton 
-                userId={member.id} 
-                userName={member.full_name || undefined}
-                className="text-xs h-8"
-              />
-              <Link to={`/profile/${member.id}`}>
-                <Button variant="ghost" size="sm" className="text-xs hover:text-gold hover:bg-gold/10 transition-all">
-                  View
-                </Button>
-              </Link>
-            </div>
+          )}
+          {member.looking_for && (
+            <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-gold/10 text-gold group-hover:bg-gold/20 transition-all">
+              <Briefcase className="h-3 w-3 shrink-0" />
+              <span className="truncate max-w-[100px]">{member.looking_for}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30 group-hover:border-gold/20 transition-colors">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3 shrink-0" />
+            <span className="hidden sm:inline">Joined</span> {format(new Date(member.created_at), 'MMM yyyy')}
+          </span>
+          <div className="flex items-center gap-2">
+            <ConnectButton 
+              userId={member.id} 
+              userName={member.full_name || undefined}
+              className="text-xs h-7 px-2.5"
+            />
+            <Link to={`/profile/${member.id}`}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-7 px-2.5 hover:text-gold hover:bg-gold/10 transition-all"
+              >
+                View
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
