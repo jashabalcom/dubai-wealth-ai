@@ -162,44 +162,6 @@ const Checkout = () => {
       ".TabIcon--selected": {
         fill: "#0A0F1D",
       },
-      // Dropdown styling for Country selector
-      ".DropdownMenu": {
-        backgroundColor: "#0D1321",
-        border: "1px solid rgba(255, 255, 255, 0.15)",
-        boxShadow: "0 10px 40px rgba(0, 0, 0, 0.5)",
-      },
-      ".DropdownItem": {
-        backgroundColor: "#0D1321",
-        color: "#FFFFFF",
-      },
-      ".DropdownItem--selected": {
-        backgroundColor: "rgba(203, 184, 158, 0.2)",
-        color: "#FFFFFF",
-      },
-      ".DropdownItem:hover": {
-        backgroundColor: "rgba(255, 255, 255, 0.08)",
-        color: "#FFFFFF",
-      },
-      ".Select": {
-        backgroundColor: "rgba(255, 255, 255, 0.04)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        color: "#FFFFFF",
-      },
-      ".SelectOption": {
-        backgroundColor: "#0D1321",
-        color: "#FFFFFF",
-      },
-      ".PickerItem": {
-        backgroundColor: "#0D1321",
-        color: "#FFFFFF",
-      },
-      ".PickerItem--selected": {
-        backgroundColor: "rgba(203, 184, 158, 0.2)",
-        color: "#FFFFFF",
-      },
-      ".PickerItem:hover": {
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-      },
     },
   };
 
@@ -376,11 +338,11 @@ const Checkout = () => {
                     
                     {/* Stripe Trust Badge & Payment Methods */}
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
-                      <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground">
-                        <Lock className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
-                        <span className="text-[11px] sm:text-xs">Powered by</span>
+                      <div className="flex items-center gap-2.5 text-muted-foreground">
+                        <Lock className="h-3.5 w-3.5" />
+                        <span className="text-xs">Powered by</span>
                         {/* Official Stripe Slate Logo */}
-                        <svg className="h-3.5 sm:h-4 w-auto" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="h-4 w-auto" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg">
                           <path d="M5 12.2c0-.6.5-.9 1.3-.9 1.2 0 2.7.4 3.9 1v-3.7c-1.3-.5-2.6-.8-3.9-.8-3.2 0-5.3 1.7-5.3 4.5 0 4.4 6 3.7 6 5.6 0 .7-.6.9-1.5.9-1.3 0-3-.5-4.3-1.3v3.8c1.5.6 2.9.9 4.3.9 3.2 0 5.5-1.6 5.5-4.5 0-4.7-6-3.9-6-5.7zm13.4-5.8l-2.4.5v13.2c0 2.4 1.8 4.2 4.2 4.2.7 0 1.2-.1 1.5-.2v-3c-.3.1-1.5.5-1.5-1.5V8.8h1.5V5.4h-1.5V3.2l-1.8.2v3zm8.1 1.9l-.1-1.9h-3.3v14.4h3.8v-9.7c.9-1.2 2.4-1 2.9-.8V5.4c-.5-.2-2.4-.5-3.3 1zm4.3-1.9h3.8v14.4h-3.8zm0-5.3l3.8-.8v3.3l-3.8.8v-3.3zm9 3.4c-1.4 0-2.4.7-2.9 1.1l-.2-.9h-3.3v18.7l3.8-.8v-4.5c.5.4 1.4.9 2.7.9 2.7 0 5.2-2.2 5.2-6.9 0-4.4-2.5-6.8-5.3-6.8zm-.9 10.4c-.9 0-1.4-.3-1.8-.7v-5.7c.4-.5 1-.8 1.8-.8 1.4 0 2.3 1.5 2.3 3.6s-.9 3.6-2.3 3.6zm14 .4c-1.6 0-2.3-.8-2.4-2h7.5c0-.2 0-1-.1-1.4-.3-2.9-1.9-5.4-5.4-5.4-3.3 0-5.7 2.7-5.7 6.9 0 4.6 2.4 6.8 5.8 6.8 1.7 0 3-.4 4-1.1v-3c-1 .6-2.1.9-3.3.9zm-.2-6.1c1.1 0 1.6.9 1.6 2h-3.5c.1-1.3.8-2 1.9-2z" fill="#0A2540"/>
                         </svg>
                       </div>
