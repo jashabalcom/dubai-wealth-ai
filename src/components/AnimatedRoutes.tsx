@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Suspense, lazy } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -155,6 +155,7 @@ export function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<AnimatedPage><Index /></AnimatedPage>} />
         <Route path="/auth" element={<AnimatedPage><Auth /></AnimatedPage>} />
+        <Route path="/login" element={<Navigate to="/auth" replace />} />
         <Route path="/reset-password" element={<LazyPage><ResetPassword /></LazyPage>} />
         <Route path="/settings" element={<ProtectedRoute><LazyPage><Settings /></LazyPage></ProtectedRoute>} />
         <Route
