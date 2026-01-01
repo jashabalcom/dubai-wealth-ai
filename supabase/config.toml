@@ -3,6 +3,9 @@ project_id = "bswllmynuxkhekqqeznr"
 [functions.health-check]
 verify_jwt = false
 
+[functions.rate-limiter]
+verify_jwt = false
+
 [functions.sync-airdna-market]
 verify_jwt = false
 
