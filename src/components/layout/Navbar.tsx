@@ -21,7 +21,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Badge } from "@/components/ui/badge";
-import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, Building2, Users, Calendar, ChevronDown, Briefcase } from "lucide-react";
+import { Menu, X, User, LogOut, LayoutDashboard, Settings, Heart, Building2, Users, Calendar, ChevronDown, Briefcase, Newspaper, Radio, CalendarDays } from "lucide-react";
 import { useSavedProperties } from "@/hooks/useSavedProperties";
 import { useAuth } from "@/hooks/useAuth";
 import { useDirectMessages } from "@/hooks/useDirectMessages";
@@ -44,6 +44,7 @@ type NavLink = {
 const baseNavLinks: NavLink[] = [
   { label: "Academy", href: "/academy", isRoute: true },
   { label: "Properties", href: "/properties", isRoute: true, hasDropdown: true },
+  { label: "Insights", href: "/briefing", isRoute: true, hasDropdown: true },
   { label: "Tools", href: "/tools", isRoute: true },
   { label: "Community", href: "/community", isRoute: true, hasBadge: true },
 ];
@@ -55,6 +56,12 @@ const propertiesDropdownItems = [
   { label: "Neighborhoods", href: "/neighborhoods", description: "Explore Dubai areas & guides", icon: MapPin },
   { label: "Developers", href: "/developers", description: "Browse Dubai's top developers", icon: Users },
   { label: "Off-Plan Projects", href: "/properties?offplan=true", description: "Upcoming developments", icon: Calendar },
+];
+
+const insightsDropdownItems = [
+  { label: "Daily Briefing", href: "/briefing", description: "Bloomberg-style market intelligence", icon: Radio, badge: "Live" },
+  { label: "Blog & Articles", href: "/blog", description: "Analysis & investment insights", icon: Newspaper },
+  { label: "Market Calendar", href: "/calendar", description: "Events & key dates", icon: CalendarDays },
 ];
 
 export function Navbar() {
@@ -194,6 +201,59 @@ export function Navbar() {
                                       </div>
                                       <div>
                                         <div className="text-sm font-medium text-foreground">{item.label}</div>
+                                        <div className="text-xs text-muted-foreground">{item.description}</div>
+                                      </div>
+                                    </Link>
+                                  </NavigationMenuLink>
+                                </li>
+                              ))}
+                            </ul>
+                          </NavigationMenuContent>
+                        </NavigationMenuItem>
+                      </NavigationMenuList>
+                    </NavigationMenu>
+                  );
+                }
+
+                // Render Insights dropdown
+                if (link.hasDropdown && link.label === 'Insights') {
+                  return (
+                    <NavigationMenu key={link.label}>
+                      <NavigationMenuList>
+                        <NavigationMenuItem>
+                          <NavigationMenuTrigger 
+                            className={cn(
+                              "text-xs uppercase tracking-[0.15em] font-sans bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent px-0",
+                              isActive 
+                                ? "text-primary" 
+                                : useDarkText 
+                                  ? "text-foreground/80 hover:text-primary"
+                                  : "text-secondary-foreground/80 hover:text-primary"
+                            )}
+                          >
+                            {link.label}
+                          </NavigationMenuTrigger>
+                          <NavigationMenuContent>
+                            <ul className="grid w-[320px] gap-2 p-4">
+                              {insightsDropdownItems.map((item) => (
+                                <li key={item.href}>
+                                  <NavigationMenuLink asChild>
+                                    <Link
+                                      to={item.href}
+                                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors group"
+                                    >
+                                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                        <item.icon className="w-5 h-5 text-primary" />
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-medium text-foreground">{item.label}</span>
+                                          {item.badge && (
+                                            <Badge variant="default" className="h-4 px-1.5 text-[9px] bg-primary/20 text-primary border-primary/30 animate-pulse">
+                                              {item.badge}
+                                            </Badge>
+                                          )}
+                                        </div>
                                         <div className="text-xs text-muted-foreground">{item.description}</div>
                                       </div>
                                     </Link>

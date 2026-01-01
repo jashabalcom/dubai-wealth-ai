@@ -6,23 +6,33 @@ import {
   Printer, 
   Share2, 
   Bookmark,
-  Radio
+  Radio,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface BloombergBriefingProps {
   date: string;
   generatedAt?: string;
   children: ReactNode;
   className?: string;
+  hasHistoricalAccess?: boolean;
+  selectedDate?: Date;
+  onDateChange?: (date: Date | undefined) => void;
 }
 
 export function BloombergBriefing({ 
   date, 
   generatedAt,
   children, 
-  className 
+  className,
+  hasHistoricalAccess = false,
+  selectedDate,
+  onDateChange
 }: BloombergBriefingProps) {
   const formattedDate = format(new Date(date), "EEEE, MMMM d, yyyy");
   const generatedTime = generatedAt 
@@ -63,12 +73,40 @@ export function BloombergBriefing({
               </div>
             </div>
 
-            {/* Center: Date & Time */}
+            {/* Center: Date & Time + Historical Access */}
             <div className="hidden md:flex items-center gap-6 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5" />
-                <span className="font-mono">{formattedDate}</span>
-              </div>
+              {hasHistoricalAccess ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 px-3 text-muted-foreground hover:text-foreground gap-2"
+                    >
+                      <CalendarDays className="w-3.5 h-3.5" />
+                      <span className="font-mono">{formattedDate}</span>
+                      <Badge variant="outline" className="ml-1 h-4 px-1.5 text-[9px] border-primary/30 text-primary">
+                        Elite
+                      </Badge>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="center">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={onDateChange}
+                      disabled={(d) => d > new Date()}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span className="font-mono">{formattedDate}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5" />
                 <span className="font-mono">As of {generatedTime} GST</span>

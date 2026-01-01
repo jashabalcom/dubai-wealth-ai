@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { AIInsightsCard } from '@/components/dashboard/AIInsightsCard';
+import { MarketBriefingWidget } from '@/components/dashboard/MarketBriefingWidget';
 import { NewsWidget } from '@/components/dashboard/NewsWidget';
 import { UpcomingEventsWidget } from '@/components/dashboard/UpcomingEventsWidget';
 import { ProfileWizard } from '@/components/onboarding/ProfileWizard';
@@ -257,12 +258,20 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          {/* Right Column - AI, News, Events */}
+          {/* Right Column - Briefing, AI, News, Events */}
           <div className="space-y-4">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
+            >
+              <MarketBriefingWidget />
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
             >
               <AIInsightsCard />
             </motion.div>
