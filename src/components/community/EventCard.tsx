@@ -205,15 +205,26 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
           <div className="flex items-center gap-2">
             {isLive ? (
               // Live event - show prominent Join Live button
-              <Button
-                variant="default"
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white transition-transform hover:scale-[1.02] animate-pulse"
-                onClick={() => window.open(event.meeting_url!, '_blank')}
-                disabled={!event.meeting_url}
-              >
-                <Radio className="h-4 w-4 mr-2" />
-                Join Live Now
-              </Button>
+              event.use_embedded_meeting ? (
+                <Button
+                  variant="default"
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white transition-transform hover:scale-[1.02] animate-pulse"
+                  onClick={() => navigate(`/event-room/${event.id}`)}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Join Live Now
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white transition-transform hover:scale-[1.02] animate-pulse"
+                  onClick={() => window.open(event.meeting_url!, '_blank')}
+                  disabled={!event.meeting_url}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Join Live Now
+                </Button>
+              )
             ) : isPast ? (
               hasRecording ? (
                 canAccessRecording ? (
@@ -242,7 +253,16 @@ export function EventCard({ event, onRegister, onUnregister, isRegistering }: Ev
               )
             ) : event.is_registered ? (
               <>
-                {event.meeting_url && (
+                {event.use_embedded_meeting ? (
+                  <Button
+                    variant="default"
+                    className="flex-1 bg-gold hover:bg-gold/90 text-background transition-transform hover:scale-[1.02]"
+                    onClick={() => navigate(`/event-room/${event.id}`)}
+                  >
+                    <Video className="h-4 w-4 mr-2" />
+                    Join Meeting
+                  </Button>
+                ) : event.meeting_url && (
                   <Button
                     variant="default"
                     className="flex-1 bg-gold hover:bg-gold/90 text-background transition-transform hover:scale-[1.02]"

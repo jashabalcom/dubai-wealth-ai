@@ -25,6 +25,8 @@ export interface CommunityEvent {
   recording_url: string | null;
   recording_visible: boolean;
   recording_access: 'all_members' | 'elite_only';
+  use_embedded_meeting?: boolean;
+  jitsi_room_name?: string | null;
   registrations_count?: number;
   is_registered?: boolean;
 }
