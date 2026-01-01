@@ -115,12 +115,16 @@ export function MetricsDashboard({
       <StatGrid columns={4}>
         {displayMetrics.slice(0, 8).map((metric, index) => {
           const IconComponent = metric.icon;
+          // Parse change value - can be string like "+18%" or number
+          const changeValue = typeof metric.change === 'string' 
+            ? parseFloat(metric.change.replace(/[^-\d.]/g, '')) || undefined
+            : metric.change;
           return (
             <StatCard
               key={index}
               label={metric.label}
               value={metric.value}
-              change={metric.change}
+              change={changeValue}
               icon={<IconComponent className="w-4 h-4" />}
             />
           );
