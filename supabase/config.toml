@@ -122,3 +122,6 @@ verify_jwt = false
 
 [functions.generate-daily-digest]
 verify_jwt = false
+
+[functions.scrape-news-sources]
+verify_jwt = false

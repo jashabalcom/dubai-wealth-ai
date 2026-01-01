@@ -2691,6 +2691,57 @@ export type Database = {
         }
         Relationships: []
       }
+      news_sources: {
+        Row: {
+          articles_synced: number
+          created_at: string
+          error_count: number
+          feed_type: string
+          id: string
+          is_active: boolean
+          keywords: string[] | null
+          last_error: string | null
+          last_synced_at: string | null
+          name: string
+          sync_frequency: string | null
+          tier: number
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          articles_synced?: number
+          created_at?: string
+          error_count?: number
+          feed_type?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string[] | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          name: string
+          sync_frequency?: string | null
+          tier?: number
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          articles_synced?: number
+          created_at?: string
+          error_count?: number
+          feed_type?: string
+          id?: string
+          is_active?: boolean
+          keywords?: string[] | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          name?: string
+          sync_frequency?: string | null
+          tier?: number
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
