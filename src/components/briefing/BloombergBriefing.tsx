@@ -25,6 +25,18 @@ interface BloombergBriefingProps {
   onDateChange?: (date: Date | undefined) => void;
 }
 
+// Helper to safely format date with fallback
+function safeFormatDate(dateStr: string | undefined, formatStr: string, fallback: string): string {
+  if (!dateStr) return fallback;
+  try {
+    const parsed = new Date(dateStr);
+    if (isNaN(parsed.getTime())) return fallback;
+    return format(parsed, formatStr);
+  } catch {
+    return fallback;
+  }
+}
+
 export function BloombergBriefing({ 
   date, 
   generatedAt,
@@ -34,10 +46,9 @@ export function BloombergBriefing({
   selectedDate,
   onDateChange
 }: BloombergBriefingProps) {
-  const formattedDate = format(new Date(date), "EEEE, MMMM d, yyyy");
-  const generatedTime = generatedAt 
-    ? format(new Date(generatedAt), "HH:mm") 
-    : format(new Date(), "HH:mm");
+  const formattedDate = safeFormatDate(date, "EEEE, MMMM d, yyyy", "Today");
+  const shortDate = safeFormatDate(date, "MMM d, yyyy", "Today");
+  const generatedTime = safeFormatDate(generatedAt, "HH:mm", format(new Date(), "HH:mm"));
   
   const handlePrint = () => window.print();
   const handleShare = async () => {
@@ -148,7 +159,7 @@ export function BloombergBriefing({
         <div className="container mx-auto px-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3 h-3" />
-            <span className="font-mono">{format(new Date(date), "MMM d, yyyy")}</span>
+            <span className="font-mono">{shortDate}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Clock className="w-3 h-3" />

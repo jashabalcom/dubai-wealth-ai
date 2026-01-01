@@ -207,12 +207,12 @@ const DailyBriefing = () => {
         <title>Daily Market Intelligence - {formatDisplayDate(digest.digest_date)} | Dubai Wealth Hub</title>
         <meta
           name="description"
-          content={`Dubai real estate market intelligence for ${formatDisplayDate(digest.digest_date)}: ${digest.headline}`}
+          content={`Dubai real estate market intelligence for ${formatDisplayDate(digest.digest_date)}: ${digest.headline || 'Market Update'}`}
         />
         <link rel="canonical" href={`https://dubaiwealthhub.com/briefing/${digest.digest_date}`} />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={digest.headline} />
-        <meta property="og:description" content={digest.executive_summary.slice(0, 160)} />
+        <meta property="og:title" content={digest.headline || 'Daily Market Intelligence'} />
+        <meta property="og:description" content={(digest.executive_summary || '').slice(0, 160)} />
       </Helmet>
 
       <div className="min-h-screen bg-background">
