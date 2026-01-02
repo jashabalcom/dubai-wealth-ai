@@ -1637,17 +1637,22 @@ serve(async (req) => {
     }
 
     // ===========================================
-    // CHUNKED SYNC - Process 3-5 areas at a time with auto-resume
+    // CHUNKED SYNC - Process areas with auto-resume and timeout protection
     // ===========================================
     if (action === 'chunked_sync') {
       const { 
         areas = [], 
-        max_pages = 20, 
-        lite_mode = false, 
+        max_pages = 2,  // Reduced from 20 to prevent timeout
+        lite_mode = true, // Default to lite mode for faster processing
         include_rentals = true,
         progress_id,
-        areas_per_chunk = 3,
+        areas_per_chunk = 1, // Reduced from 3 to prevent timeout
       } = body;
+      
+      // Timeout protection constants
+      const CHUNK_START_TIME = Date.now();
+      const MAX_EXECUTION_MS = 120000; // 2 minutes, leaving 30s buffer
+      const MAX_PROPERTIES_PER_CHUNK = 20; // Hard limit on properties per chunk
       
       const propertiesPerPage = 50;
       let progressRecord: any = null;
@@ -1694,7 +1699,18 @@ serve(async (req) => {
             .eq('id', progress_id);
         }
       } else {
-        // Start new sync - create progress record
+        // Start new sync - first clean up stale running jobs
+        await supabase
+          .from('sync_progress')
+          .update({ 
+            status: 'failed', 
+            errors: ['Stale job cleanup - exceeded 10 minute timeout'],
+            updated_at: new Date().toISOString()
+          })
+          .eq('status', 'running')
+          .eq('sync_type', 'bayut_properties')
+          .lt('updated_at', new Date(Date.now() - 10 * 60 * 1000).toISOString());
+
         if (areas.length === 0) {
           return new Response(
             JSON.stringify({ error: 'areas array is required for new sync' }),
@@ -1768,12 +1784,18 @@ serve(async (req) => {
       let chunkPhotosSynced = 0;
       const chunkErrors: string[] = [];
       const listingTypes: Array<'for-sale' | 'for-rent'> = include_rentals ? ['for-sale', 'for-rent'] : ['for-sale'];
+      let hitTimeLimit = false;
+      let hitPropertyLimit = false;
 
       for (const area of chunkAreas) {
+        if (hitTimeLimit || hitPropertyLimit) break;
+        
         console.log(`[Chunked Sync] Processing area: ${area.name} (ID: ${area.id})`);
 
         for (const listingType of listingTypes) {
+          if (hitTimeLimit || hitPropertyLimit) break;
           for (let pageNum = 0; pageNum < max_pages; pageNum++) {
+            if (hitTimeLimit || hitPropertyLimit) break;
             try {
               // Fetch properties page using POST /properties_search (correct endpoint per API docs)
               const searchBody = {
@@ -1820,6 +1842,20 @@ serve(async (req) => {
 
               // Process each property
               for (const prop of properties) {
+                // Check execution time limit
+                if (Date.now() - CHUNK_START_TIME > MAX_EXECUTION_MS) {
+                  console.log(`[Chunked Sync] Approaching timeout (${Math.round((Date.now() - CHUNK_START_TIME) / 1000)}s), saving progress and exiting`);
+                  hitTimeLimit = true;
+                  break;
+                }
+                
+                // Check property count limit
+                if (chunkPropertiesSynced >= MAX_PROPERTIES_PER_CHUNK) {
+                  console.log(`[Chunked Sync] Hit property limit (${MAX_PROPERTIES_PER_CHUNK}), saving progress`);
+                  hitPropertyLimit = true;
+                  break;
+                }
+                
                 try {
                   const externalId = String(prop.id || prop.externalID);
                   
@@ -1910,6 +1946,18 @@ serve(async (req) => {
 
                   if (!upsertError) {
                     chunkPropertiesSynced++;
+                    
+                    // Save progress after each property to prevent data loss
+                    if (chunkPropertiesSynced % 5 === 0) {
+                      await supabase
+                        .from('sync_progress')
+                        .update({
+                          properties_synced: (progressRecord.properties_synced || 0) + chunkPropertiesSynced,
+                          photos_synced: (progressRecord.photos_synced || 0) + chunkPhotosSynced,
+                          updated_at: new Date().toISOString(),
+                        })
+                        .eq('id', progressId);
+                    }
                   } else {
                     chunkErrors.push(`${externalId}: ${upsertError.message}`);
                   }
@@ -1938,8 +1986,11 @@ serve(async (req) => {
       }
 
       // Update final progress for this chunk
-      const newAreaIndex = endAreaIndex;
-      const isComplete = newAreaIndex >= areasToProcess.length;
+      // If we hit limits, don't advance area index (resume from same position)
+      const newAreaIndex = hitTimeLimit || hitPropertyLimit 
+        ? startAreaIndex  // Stay at same area for resume
+        : endAreaIndex;
+      const isComplete = !hitTimeLimit && !hitPropertyLimit && newAreaIndex >= areasToProcess.length;
 
       const { data: updatedProgress } = await supabase
         .from('sync_progress')
@@ -1956,19 +2007,24 @@ serve(async (req) => {
         .select()
         .single();
 
-      console.log(`[Chunked Sync] Chunk complete. Areas ${startAreaIndex}-${endAreaIndex}. Synced ${chunkPropertiesSynced} properties.`);
+      const executionTimeMs = Date.now() - CHUNK_START_TIME;
+      console.log(`[Chunked Sync] Chunk complete. Areas ${startAreaIndex}-${newAreaIndex}. Synced ${chunkPropertiesSynced} properties in ${Math.round(executionTimeMs / 1000)}s. HitTimeLimit: ${hitTimeLimit}, HitPropertyLimit: ${hitPropertyLimit}`);
 
       return new Response(
         JSON.stringify({
           success: true,
           completed: isComplete,
+          partial: hitTimeLimit || hitPropertyLimit,
           progress_id: progressId,
           progress: updatedProgress,
           chunk_stats: {
-            areas_processed: chunkAreas.length,
+            areas_processed: hitTimeLimit || hitPropertyLimit ? 0 : chunkAreas.length,
             properties_synced: chunkPropertiesSynced,
             photos_synced: chunkPhotosSynced,
             errors: chunkErrors.length,
+            execution_time_ms: executionTimeMs,
+            hit_time_limit: hitTimeLimit,
+            hit_property_limit: hitPropertyLimit,
           },
           next_chunk: isComplete ? null : {
             start_area_index: newAreaIndex,
