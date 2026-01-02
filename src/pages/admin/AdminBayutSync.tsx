@@ -182,9 +182,9 @@ export default function AdminBayutSync() {
     totalApiCalls: 0,
   });
   const [scaleTargetAreas, setScaleTargetAreas] = useState<typeof TOP_DUBAI_AREAS>([...TOP_DUBAI_AREAS]);
-  const [scalePagesPerArea, setScalePagesPerArea] = useState(10); // 10 pages = 500 props per area
-  const [scaleLiteMode, setScaleLiteMode] = useState(true); // Default to lite mode for speed
-  const [scaleIncludeRentals, setScaleIncludeRentals] = useState(false);
+  const [scalePagesPerArea, setScalePagesPerArea] = useState(20); // 20 pages = 1000 props per area
+  const [scaleLiteMode, setScaleLiteMode] = useState(false); // Default to FULL MODE for quality
+  const [scaleIncludeRentals, setScaleIncludeRentals] = useState(true); // Include rentals by default
   const [scaleSkipRecent, setScaleSkipRecent] = useState(false);
   const [showScaleConfirmDialog, setShowScaleConfirmDialog] = useState(false);
   
@@ -684,6 +684,15 @@ export default function AdminBayutSync() {
   const estimatedApiCalls = scaleLiteMode 
     ? scaleTargetAreas.length * scalePagesPerArea * (scaleIncludeRentals ? 2 : 1)
     : estimatedPropertiesCount + scaleTargetAreas.length * scalePagesPerArea * (scaleIncludeRentals ? 2 : 1);
+  
+  // Realistic duration estimate (based on API rate limits and image rehosting)
+  const estimatedDurationMinutes = scaleLiteMode 
+    ? Math.ceil(estimatedPropertiesCount / 500) // ~500 props/min in lite mode
+    : Math.ceil(estimatedPropertiesCount / 150); // ~150 props/min in full mode (with 10 photo rehosts)
+  const estimatedDurationHours = Math.ceil(estimatedDurationMinutes / 60);
+  const durationDisplay = estimatedDurationMinutes < 60 
+    ? `~${estimatedDurationMinutes} min` 
+    : `~${estimatedDurationHours}-${estimatedDurationHours + 1} hrs`;
 
   const fetchTransactions = async () => {
     setIsLoadingTransactions(true);
@@ -1134,37 +1143,37 @@ export default function AdminBayutSync() {
               </CardContent>
             </Card>
 
-            {/* 15K LATEST LISTINGS - Enhanced Sync Preset */}
-            <Card className="border-purple-500/30 bg-purple-500/5">
+            {/* 30K QUALITY SYNC - Premium Preset */}
+            <Card className="border-gold/50 bg-gold/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-purple-500" />
-                  15K Latest Listings Sync
+                  <Rocket className="h-5 w-5 text-gold" />
+                  🚀 30K Quality Sync (Recommended)
                 </CardTitle>
                 <CardDescription>
-                  Optimized preset: 25 areas × 12 pages × 50 properties = 15,000 latest Dubai listings. LITE MODE for fast syncing (~2-3 hrs). Strict Dubai-only filter.
+                  Premium sync: 25 areas × 20 pages × 50 properties + rentals = 50,000 potential listings. FULL MODE with 10 photos/property. ~3-4 hours.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-lg bg-background/50 border">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-lg bg-background/50 border border-gold/30">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-500">25</p>
+                    <p className="text-2xl font-bold text-gold">25</p>
                     <p className="text-xs text-muted-foreground">Dubai Areas</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-500">15,000</p>
-                    <p className="text-xs text-muted-foreground">Properties Target</p>
+                    <p className="text-2xl font-bold text-blue-500">50,000</p>
+                    <p className="text-xs text-muted-foreground">Potential Props</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-amber-500">~15,000</p>
-                    <p className="text-xs text-muted-foreground">Photos (1/prop)</p>
+                    <p className="text-2xl font-bold text-amber-500">~300K+</p>
+                    <p className="text-xs text-muted-foreground">Photos (10/prop)</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-emerald-500">Lite Mode</p>
-                    <p className="text-xs text-muted-foreground">Fast Sync</p>
+                    <p className="text-2xl font-bold text-emerald-500">Full Mode</p>
+                    <p className="text-xs text-muted-foreground">Quality Data</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-rose-500">~2-3 hrs</p>
+                    <p className="text-2xl font-bold text-rose-500">~3-4 hrs</p>
                     <p className="text-xs text-muted-foreground">Est. Duration</p>
                   </div>
                 </div>
@@ -1172,14 +1181,14 @@ export default function AdminBayutSync() {
                 <Button 
                   onClick={() => {
                     setScaleTargetAreas([...TOP_DUBAI_AREAS]);
-                    setScalePagesPerArea(12);
-                    setScaleLiteMode(true); // LITE MODE for speed (2-3 hrs vs 125+ hrs)
-                    setScaleIncludeRentals(false);
+                    setScalePagesPerArea(20); // Max pages per area
+                    setScaleLiteMode(false); // FULL MODE for quality
+                    setScaleIncludeRentals(true); // Include rentals (doubles count)
                     setScaleSkipRecent(false);
                     setShowScaleConfirmDialog(true);
                   }} 
                   disabled={isScaleSyncing || isQuickSyncing}
-                  className="bg-purple-600 hover:bg-purple-700 text-white w-full"
+                  className="bg-gradient-to-r from-gold to-amber-500 hover:from-gold/90 hover:to-amber-500/90 text-black w-full"
                   size="lg"
                 >
                   {isScaleSyncing ? (
@@ -1190,13 +1199,13 @@ export default function AdminBayutSync() {
                   ) : (
                     <>
                       <Rocket className="h-4 w-4 mr-2" />
-                      Start 15K Latest Listings Sync
+                      Start 30K Quality Sync
                     </>
                   )}
                 </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
-                  Uses LITE MODE for fast syncing (2-3 hours). Strict Dubai-only filter enabled. 6 photos per property.
+                  Uses FULL MODE for quality data. Rehosts 10 photos per property. Includes both sales & rentals. ~3-4 hour estimated duration.
                 </p>
               </CardContent>
             </Card>
@@ -1239,7 +1248,7 @@ export default function AdminBayutSync() {
                   
                   <div className="space-y-3">
                     <label className="text-sm font-medium flex items-center gap-1">
-                      <Zap className="h-3 w-3" /> Lite Mode
+                      <Zap className="h-3 w-3" /> Lite Mode (Faster)
                     </label>
                     <div className="flex items-center gap-2">
                       <Checkbox 
@@ -1249,9 +1258,12 @@ export default function AdminBayutSync() {
                         disabled={isScaleSyncing}
                       />
                       <label htmlFor="lite-mode" className="text-sm text-muted-foreground">
-                        Skip photo rehosting
+                        1 photo only (faster)
                       </label>
                     </div>
+                    <p className="text-xs text-muted-foreground/70">
+                      {scaleLiteMode ? '⚡ Fast: 1 photo/prop' : '📸 Quality: 10 photos/prop'}
+                    </p>
                   </div>
                   
                   <div className="space-y-3">
@@ -1286,7 +1298,7 @@ export default function AdminBayutSync() {
                 </div>
 
                 {/* Estimates */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-background/50 border">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-lg bg-background/50 border">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-emerald-500">{scaleTargetAreas.length}</p>
                     <p className="text-xs text-muted-foreground">Areas Selected</p>
@@ -1296,13 +1308,19 @@ export default function AdminBayutSync() {
                     <p className="text-xs text-muted-foreground">Est. Properties</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-amber-500">{estimatedApiCalls.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Est. API Calls</p>
+                    <p className="text-2xl font-bold text-amber-500">
+                      {scaleLiteMode ? '~1/prop' : '~10/prop'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Photos</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-500">
-                      {scaleLiteMode ? '~5 min' : '~30 min'}
+                      {scaleLiteMode ? 'Lite' : 'Full'}
                     </p>
+                    <p className="text-xs text-muted-foreground">Mode</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-rose-500">{durationDisplay}</p>
                     <p className="text-xs text-muted-foreground">Est. Duration</p>
                   </div>
                 </div>

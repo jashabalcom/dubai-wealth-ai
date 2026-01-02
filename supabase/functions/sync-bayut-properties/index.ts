@@ -11,9 +11,9 @@ const API_HOST = 'uae-real-estate2.p.rapidapi.com';
 const API_BASE = `https://${API_HOST}`;
 
 // Hybrid storage configuration
-const REHOST_LIMIT = 6; // Cover photo + first 5 gallery images (increased for better coverage)
+const REHOST_LIMIT = 10; // Cover photo + first 9 gallery images (high quality sync)
 const BATCH_SIZE = 20;
-const BATCH_COOLDOWN_MS = 5000; // 5 seconds between batches
+const BATCH_COOLDOWN_MS = 3000; // 3 seconds between batches (faster for quality sync)
 
 // STRICT DUBAI-ONLY WHITELIST - prevents syncing properties from other emirates
 const DUBAI_AREA_WHITELIST = new Set([
