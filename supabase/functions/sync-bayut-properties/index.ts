@@ -15,6 +15,87 @@ const REHOST_LIMIT = 4; // Cover photo + first 3 gallery images
 const BATCH_SIZE = 20;
 const BATCH_COOLDOWN_MS = 5000; // 5 seconds between batches
 
+// STRICT DUBAI-ONLY WHITELIST - prevents syncing properties from other emirates
+const DUBAI_AREA_WHITELIST = new Set([
+  // Core Dubai Areas
+  'dubai', 'downtown dubai', 'dubai marina', 'palm jumeirah', 'business bay',
+  'jumeirah beach residence', 'jbr', 'dubai hills estate', 'dubai creek harbour',
+  'jumeirah village circle', 'jvc', 'arabian ranches', 'emirates hills', 'difc',
+  'meydan city', 'damac hills', 'emaar beachfront', 'bluewaters island',
+  'jumeirah lake towers', 'jlt', 'the greens', 'the views', 'discovery gardens',
+  'dubai sports city', 'motor city', 'dubai silicon oasis', 'dubai south',
+  'al barsha', 'al barsha heights', 'tecom', 'internet city', 'media city',
+  'dubai investment park', 'dip', 'dubai production city', 'impz',
+  'jumeirah', 'umm suqeim', 'al safa', 'al wasl', 'city walk', 'la mer',
+  'dubai land', 'dubailand', 'living legends', 'falcon city', 'mirdif',
+  'al warqa', 'al nahda dubai', 'al qusais', 'deira', 'bur dubai', 'karama',
+  'al quoz', 'al satwa', 'oud metha', 'healthcare city', 'culture village',
+  'dubai festival city', 'creek beach', 'sobha hartland', 'mohammed bin rashid city',
+  'mbr city', 'district one', 'tilal al ghaf', 'mudon', 'remraam', 'akoya',
+  'arjan', 'al furjan', 'jumeirah golf estates', 'victory heights',
+  'the springs', 'the meadows', 'the lakes', 'emirates living', 'al sufouh',
+  'palm deira', 'palm jebel ali', 'world islands', 'dubai islands',
+  'dubai harbour', 'madinat jumeirah', 'port rashid', 'mina rashid',
+  'dubai design district', 'd3', 'al jadaf', 'al khawaneej', 'al mamzar',
+  'nad al sheba', 'al mizhar', 'dubailand oasis', 'wadi al safa',
+  'liwan', 'queue point', 'international city', 'dragon mart',
+]);
+
+// Check if a location is in Dubai
+function isDubaiLocation(prop: any): boolean {
+  // Check location array (preferred method)
+  if (Array.isArray(prop.location)) {
+    for (const loc of prop.location) {
+      const locName = (loc.name || '').toLowerCase();
+      // If it explicitly says Dubai at any level, it's Dubai
+      if (locName === 'dubai' || locName.includes('dubai')) {
+        return true;
+      }
+      // Check against whitelist
+      if (DUBAI_AREA_WHITELIST.has(locName)) {
+        return true;
+      }
+    }
+    // Check if any location explicitly mentions another emirate
+    for (const loc of prop.location) {
+      const locName = (loc.name || '').toLowerCase();
+      if (locName.includes('ajman') || locName.includes('sharjah') || 
+          locName.includes('abu dhabi') || locName.includes('ras al khaimah') ||
+          locName.includes('fujairah') || locName.includes('umm al quwain') ||
+          locName === 'al helio' || locName === 'al raqaib' || locName === 'al rashidiya ajman') {
+        return false;
+      }
+    }
+  }
+  
+  // Check geography object
+  if (prop.geography?.city) {
+    const city = prop.geography.city.toLowerCase();
+    if (city.includes('dubai')) return true;
+    if (city.includes('ajman') || city.includes('sharjah') || 
+        city.includes('abu dhabi') || city.includes('ras al khaimah')) {
+      return false;
+    }
+  }
+  
+  // Check location_area field
+  if (prop.location_area) {
+    const area = prop.location_area.toLowerCase();
+    if (DUBAI_AREA_WHITELIST.has(area) || area.includes('dubai')) {
+      return true;
+    }
+    if (area.includes('ajman') || area.includes('sharjah') || 
+        area === 'al helio' || area === 'al raqaib') {
+      return false;
+    }
+  }
+  
+  // Default: allow if we can't determine (may be new Dubai area)
+  // But log it for review
+  console.log(`[Bayut API] Location check inconclusive for property, allowing by default`);
+  return true;
+}
+
 interface SyncRequest {
   action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects' | 'bulk_sync';
   // Location search
@@ -543,7 +624,7 @@ serve(async (req) => {
               continue;
             }
             
-            // Skip LAND PLOTS (they don't have size_sqft)
+            // Skip land/plots
             const propTitle = (prop.title || '').toLowerCase();
             const propCategory = (prop.category || '').toLowerCase();
             if (propTitle.includes('plot') || propTitle.includes('land') || 
@@ -552,16 +633,9 @@ serve(async (req) => {
               continue;
             }
             
-            // Skip non-Dubai properties (check if location array exists and filter)
-            let locationName = '';
-            if (Array.isArray(prop.location)) {
-              locationName = prop.location.find((l: any) => l.level === 0)?.name?.toLowerCase() || '';
-            } else if (prop.geography?.city) {
-              locationName = prop.geography.city.toLowerCase();
-            }
-            // Only skip if we have location info and it's clearly not Dubai
-            if (locationName && !locationName.includes('dubai') && !locationName.includes('uae') && locationName.length > 0) {
-              console.log(`[Bayut API] Skipping ${externalId} - not in Dubai: ${locationName}`);
+            // STRICT DUBAI-ONLY FILTER - use whitelist
+            if (!isDubaiLocation(prop)) {
+              console.log(`[Bayut API] Skipping ${externalId} - not in Dubai (strict filter)`);
               continue;
             }
             
@@ -1164,6 +1238,12 @@ serve(async (req) => {
 
                       // Basic validation
                       if (!prop.id || !prop.price || prop.price <= 0) continue;
+
+                      // STRICT DUBAI-ONLY FILTER - use whitelist
+                      if (!isDubaiLocation(prop)) {
+                        console.log(`[Bayut API] Bulk sync: Skipping ${externalId} - not in Dubai (strict filter)`);
+                        continue;
+                      }
 
                       // Skip land/plots
                       const propTitle = (prop.title || '').toLowerCase();
