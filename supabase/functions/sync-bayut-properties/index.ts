@@ -41,63 +41,94 @@ const DUBAI_AREA_WHITELIST = new Set([
   'liwan', 'queue point', 'international city', 'dragon mart',
 ]);
 
-// Check if a location is in Dubai
+// NON-DUBAI KEYWORDS - properties with these in title/location are REJECTED
+const NON_DUBAI_KEYWORDS = [
+  'ajman', 'sharjah', 'abu dhabi', 'ras al khaimah', 'fujairah', 'umm al quwain',
+  'al helio', 'al-helio', 'helio', 'al haliou', 'al-haliou', 'haliou',
+  'al raqaib', 'al rashidiya ajman', 'al nuaimia', 'al rawda ajman',
+  'al jurf', 'al mowaihat', 'al tallah', 'al zahya', 'masfoot',
+];
+
+// Check if a location is in Dubai - STRICT: REJECT by default unless confirmed Dubai
 function isDubaiLocation(prop: any): boolean {
-  // Check location array (preferred method)
+  let foundDubai = false;
+  let foundOtherEmirate = false;
+  
+  // STEP 1: Check title first - if it mentions non-Dubai, reject IMMEDIATELY
+  const title = (prop.title || prop.name || '').toLowerCase();
+  for (const keyword of NON_DUBAI_KEYWORDS) {
+    if (title.includes(keyword)) {
+      console.log(`[Bayut API] REJECTED: Title contains non-Dubai keyword "${keyword}"`);
+      return false;
+    }
+  }
+  
+  // STEP 2: Check location array
   if (Array.isArray(prop.location)) {
     for (const loc of prop.location) {
       const locName = (loc.name || '').toLowerCase();
-      // If it explicitly says Dubai at any level, it's Dubai
+      
+      // Check for non-Dubai emirates
+      for (const keyword of NON_DUBAI_KEYWORDS) {
+        if (locName.includes(keyword)) {
+          foundOtherEmirate = true;
+          break;
+        }
+      }
+      
+      // Check for Dubai
       if (locName === 'dubai' || locName.includes('dubai')) {
-        return true;
+        foundDubai = true;
       }
-      // Check against whitelist
       if (DUBAI_AREA_WHITELIST.has(locName)) {
-        return true;
-      }
-    }
-    // Check if any location explicitly mentions another emirate
-    for (const loc of prop.location) {
-      const locName = (loc.name || '').toLowerCase();
-      if (locName.includes('ajman') || locName.includes('sharjah') || 
-          locName.includes('abu dhabi') || locName.includes('ras al khaimah') ||
-          locName.includes('fujairah') || locName.includes('umm al quwain') ||
-          locName === 'al helio' || locName === 'al raqaib' || locName === 'al rashidiya ajman') {
-        return false;
+        foundDubai = true;
       }
     }
   }
   
-  // Check geography object
+  // STEP 3: Check structured location object
+  if (prop.location?.city?.name) {
+    const cityName = prop.location.city.name.toLowerCase();
+    if (cityName === 'dubai' || cityName.includes('dubai')) {
+      foundDubai = true;
+    }
+    for (const keyword of NON_DUBAI_KEYWORDS) {
+      if (cityName.includes(keyword)) {
+        foundOtherEmirate = true;
+      }
+    }
+  }
+  
+  // STEP 4: Check geography object
   if (prop.geography?.city) {
     const city = prop.geography.city.toLowerCase();
-    if (city.includes('dubai')) return true;
-    if (city.includes('ajman') || city.includes('sharjah') || 
-        city.includes('abu dhabi') || city.includes('ras al khaimah')) {
-      return false;
+    if (city.includes('dubai')) foundDubai = true;
+    for (const keyword of NON_DUBAI_KEYWORDS) {
+      if (city.includes(keyword)) {
+        foundOtherEmirate = true;
+      }
     }
   }
   
-  // Check location_area field
-  if (prop.location_area) {
-    const area = prop.location_area.toLowerCase();
-    if (DUBAI_AREA_WHITELIST.has(area) || area.includes('dubai')) {
-      return true;
-    }
-    if (area.includes('ajman') || area.includes('sharjah') || 
-        area === 'al helio' || area === 'al raqaib') {
-      return false;
-    }
+  // DECISION LOGIC: 
+  // If we found non-Dubai emirate -> REJECT
+  if (foundOtherEmirate) {
+    console.log(`[Bayut API] REJECTED: Location contains non-Dubai emirate`);
+    return false;
   }
   
-  // Default: allow if we can't determine (may be new Dubai area)
-  // But log it for review
-  console.log(`[Bayut API] Location check inconclusive for property, allowing by default`);
-  return true;
+  // If we confirmed Dubai -> ACCEPT
+  if (foundDubai) {
+    return true;
+  }
+  
+  // DEFAULT: REJECT if we cannot confirm it's Dubai (strict mode)
+  console.log(`[Bayut API] REJECTED: Could not confirm Dubai location - rejecting by default`);
+  return false;
 }
 
 interface SyncRequest {
-  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects' | 'bulk_sync';
+  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects' | 'bulk_sync' | 'cleanup_non_dubai';
   // Location search
   query?: string;
   // Property search filters
@@ -1141,6 +1172,39 @@ serve(async (req) => {
     }
 
     // ===========================================
+    // CLEANUP NON-DUBAI - Remove Al Helio/Ajman properties
+    // ===========================================
+    if (action === 'cleanup_non_dubai') {
+      console.log(`[Bayut API] CLEANUP: Removing non-Dubai properties...`);
+      
+      // Delete properties matching non-Dubai patterns
+      const { data: deleted, error: deleteError } = await supabase
+        .from('properties')
+        .delete()
+        .or('location_area.ilike.%ajman%,location_area.ilike.%helio%,location_area.eq.Al Helio,location_area.ilike.%sharjah%,title.ilike.%ajman%,title.ilike.%helio%')
+        .select('id, title, location_area');
+      
+      if (deleteError) {
+        console.error(`[Bayut API] Cleanup error:`, deleteError);
+        return new Response(
+          JSON.stringify({ success: false, error: deleteError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      console.log(`[Bayut API] CLEANUP: Deleted ${deleted?.length || 0} non-Dubai properties`);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          deleted: deleted?.length || 0,
+          deletedProperties: deleted?.slice(0, 20) || [], // First 20 for reference
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
     // BULK SYNC - Scale to 10K Properties (Fire-and-Forget)
     // ===========================================
     if (action === 'bulk_sync') {
@@ -1167,6 +1231,18 @@ serve(async (req) => {
 
       console.log(`[Bayut API] BULK SYNC - ${areas.length} areas, ${maxPagesPerArea} pages each, lite_mode=${lite_mode}`);
 
+      // CLEANUP: Mark stuck syncs as timed_out before starting new one
+      const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+      await supabase
+        .from('bayut_sync_logs')
+        .update({ 
+          status: 'timed_out',
+          completed_at: new Date().toISOString(),
+          errors: { reason: 'Automatically marked as timed_out after 4 hours' }
+        })
+        .eq('status', 'running')
+        .lt('started_at', fourHoursAgo);
+
       // Create sync log FIRST so we can return the ID immediately
       const { data: syncLog } = await supabase
         .from('bayut_sync_logs')
@@ -1190,6 +1266,7 @@ serve(async (req) => {
         let totalAgentsDiscovered = 0;
         let totalAgenciesDiscovered = 0;
         let totalDuplicatesBlocked = 0;
+        let totalRejectedNonDubai = 0;
         const allErrors: string[] = [];
         const areaResults: { name: string; synced: number; pages: number }[] = [];
         const discoveredAgentIds = new Set<string>();
@@ -1197,6 +1274,21 @@ serve(async (req) => {
         
         // DUPLICATE PREVENTION: Global Set for entire bulk sync session
         const processedExternalIds = new Set<string>();
+        
+        // Progress tracking helper - update every 50 properties
+        const updateProgress = async () => {
+          if (syncLogId && totalPropertiesSynced % 50 === 0) {
+            await supabase
+              .from('bayut_sync_logs')
+              .update({
+                properties_found: totalPropertiesFound,
+                properties_synced: totalPropertiesSynced,
+                photos_synced: totalPhotosRehosted,
+                api_calls_used: totalApiCalls,
+              })
+              .eq('id', syncLogId);
+          }
+        };
 
         const purposes = include_rentals ? ['for-sale', 'for-rent'] : [purpose];
 
@@ -1403,6 +1495,8 @@ serve(async (req) => {
                       if (!upsertError) {
                         totalPropertiesSynced++;
                         areaSynced++;
+                        // Update progress every 50 properties
+                        await updateProgress();
                       } else {
                         allErrors.push(`${externalId}: ${upsertError.message}`);
                       }
