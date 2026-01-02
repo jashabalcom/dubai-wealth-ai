@@ -4569,10 +4569,13 @@ export type Database = {
           community_id: string | null
           completion_date: string | null
           completion_percent: number | null
+          completion_status: string | null
           created_at: string
+          days_on_market: number | null
           description: string | null
           developer_id: string | null
           developer_name: string | null
+          estimated_completion_date: string | null
           expires_at: string | null
           external_id: string | null
           external_source: string | null
@@ -4606,6 +4609,7 @@ export type Database = {
           size_sqft: number
           slug: string
           status: string
+          sync_error: string | null
           title: string
           total_floors: number | null
           updated_at: string
@@ -4628,10 +4632,13 @@ export type Database = {
           community_id?: string | null
           completion_date?: string | null
           completion_percent?: number | null
+          completion_status?: string | null
           created_at?: string
+          days_on_market?: number | null
           description?: string | null
           developer_id?: string | null
           developer_name?: string | null
+          estimated_completion_date?: string | null
           expires_at?: string | null
           external_id?: string | null
           external_source?: string | null
@@ -4665,6 +4672,7 @@ export type Database = {
           size_sqft?: number
           slug: string
           status?: string
+          sync_error?: string | null
           title: string
           total_floors?: number | null
           updated_at?: string
@@ -4687,10 +4695,13 @@ export type Database = {
           community_id?: string | null
           completion_date?: string | null
           completion_percent?: number | null
+          completion_status?: string | null
           created_at?: string
+          days_on_market?: number | null
           description?: string | null
           developer_id?: string | null
           developer_name?: string | null
+          estimated_completion_date?: string | null
           expires_at?: string | null
           external_id?: string | null
           external_source?: string | null
@@ -4724,6 +4735,7 @@ export type Database = {
           size_sqft?: number
           slug?: string
           status?: string
+          sync_error?: string | null
           title?: string
           total_floors?: number | null
           updated_at?: string
@@ -5313,6 +5325,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sync_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          message: string
+          severity: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          message: string
+          severity?: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          message?: string
+          severity?: string
+        }
+        Relationships: []
       }
       tool_usage: {
         Row: {
