@@ -17,6 +17,7 @@ export interface PropertyFilters {
   yieldMin?: number;
   sortBy?: string;
   developer?: string;
+  completionStatus?: 'all' | 'ready' | 'off_plan'; // NEW: Ready vs Off-Plan filter
 }
 
 export interface Property {
@@ -27,6 +28,8 @@ export interface Property {
   property_type: string;
   developer_name: string;
   is_off_plan: boolean;
+  completion_status?: string; // NEW: 'ready', 'off_plan', 'under_construction'
+  estimated_completion_date?: string | null; // NEW: for off-plan
   status: string;
   price_aed: number;
   bedrooms: number;
@@ -53,6 +56,12 @@ interface UsePropertiesOptions {
   isAuthenticated?: boolean;
 }
 
+interface StatusCounts {
+  all: number;
+  ready: number;
+  off_plan: number;
+}
+
 interface UsePropertiesReturn {
   properties: Property[];
   isLoading: boolean;
@@ -63,6 +72,7 @@ interface UsePropertiesReturn {
   refresh: () => void;
   propertyCounts: Record<string, number>;
   developerCounts: Record<string, number>;
+  statusCounts: StatusCounts; // NEW: counts for Ready vs Off-Plan tabs
   isGuestLimited: boolean;
 }
 
@@ -77,6 +87,7 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
   const [totalCount, setTotalCount] = useState(0);
   const [propertyCounts, setPropertyCounts] = useState<Record<string, number>>({});
   const [developerCounts, setDeveloperCounts] = useState<Record<string, number>>({});
+  const [statusCounts, setStatusCounts] = useState<StatusCounts>({ all: 0, ready: 0, off_plan: 0 });
   
   const cursorRef = useRef<Cursor | null>(null);
   const filtersRef = useRef(filters);
@@ -141,8 +152,11 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
       query = query.lt('price_aed', filters.priceMax);
     }
 
-    // Off-plan only filter
-    if (filters.offPlanOnly) {
+    // Completion status filter (new Ready vs Off-Plan tabs)
+    if (filters.completionStatus && filters.completionStatus !== 'all') {
+      query = query.eq('completion_status', filters.completionStatus);
+    } else if (filters.offPlanOnly) {
+      // Legacy off-plan filter (fallback)
       query = query.eq('is_off_plan', true);
     }
 
@@ -283,6 +297,39 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
     }
   }, []);
 
+  // Fetch status counts for Ready vs Off-Plan tabs
+  const fetchStatusCounts = useCallback(async () => {
+    try {
+      // Get total count
+      const { count: allCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'available');
+      
+      // Get ready count
+      const { count: readyCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'available')
+        .eq('completion_status', 'ready');
+      
+      // Get off-plan count (includes 'off_plan' and 'under_construction')
+      const { count: offPlanCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'available')
+        .neq('completion_status', 'ready');
+      
+      setStatusCounts({
+        all: allCount || 0,
+        ready: readyCount || 0,
+        off_plan: offPlanCount || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching status counts:', error);
+    }
+  }, []);
+
   // Load more function with error handling
   const loadMore = useCallback(async () => {
     if (!isLoadingMore && hasMore) {
@@ -317,6 +364,7 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
   useEffect(() => {
     fetchProperties(true);
     fetchCounts();
+    fetchStatusCounts();
   }, []); // Only run once on mount
 
   return {
@@ -329,6 +377,7 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
     refresh,
     propertyCounts,
     developerCounts,
+    statusCounts,
     isGuestLimited: !isAuthenticated && totalCount > GUEST_RESULT_LIMIT,
   };
 }

@@ -1753,6 +1753,154 @@ function extractBuildingInfo(prop: any): any | null {
 }
 
 // ===========================================
+// AREA RENTAL BENCHMARKS FOR YIELD CALCULATION
+// ===========================================
+const AREA_RENTAL_BENCHMARKS: Record<string, { studioRent: number; oneBedRent: number; twoBedRent: number; threeBedRent: number }> = {
+  'Dubai Marina': { studioRent: 55000, oneBedRent: 85000, twoBedRent: 130000, threeBedRent: 180000 },
+  'Downtown Dubai': { studioRent: 70000, oneBedRent: 110000, twoBedRent: 170000, threeBedRent: 240000 },
+  'Palm Jumeirah': { studioRent: 80000, oneBedRent: 130000, twoBedRent: 200000, threeBedRent: 320000 },
+  'Business Bay': { studioRent: 50000, oneBedRent: 75000, twoBedRent: 120000, threeBedRent: 170000 },
+  'JVC': { studioRent: 35000, oneBedRent: 55000, twoBedRent: 80000, threeBedRent: 110000 },
+  'Jumeirah Village Circle': { studioRent: 35000, oneBedRent: 55000, twoBedRent: 80000, threeBedRent: 110000 },
+  'Dubai Hills Estate': { studioRent: 55000, oneBedRent: 85000, twoBedRent: 140000, threeBedRent: 200000 },
+  'Arabian Ranches': { studioRent: 0, oneBedRent: 0, twoBedRent: 120000, threeBedRent: 180000 },
+  'DIFC': { studioRent: 80000, oneBedRent: 120000, twoBedRent: 180000, threeBedRent: 250000 },
+  'Jumeirah Beach Residence': { studioRent: 60000, oneBedRent: 90000, twoBedRent: 140000, threeBedRent: 200000 },
+  'JBR': { studioRent: 60000, oneBedRent: 90000, twoBedRent: 140000, threeBedRent: 200000 },
+  'Jumeirah Lake Towers': { studioRent: 45000, oneBedRent: 70000, twoBedRent: 100000, threeBedRent: 140000 },
+  'JLT': { studioRent: 45000, oneBedRent: 70000, twoBedRent: 100000, threeBedRent: 140000 },
+  'Dubai Creek Harbour': { studioRent: 55000, oneBedRent: 85000, twoBedRent: 130000, threeBedRent: 180000 },
+  'MBR City': { studioRent: 50000, oneBedRent: 80000, twoBedRent: 120000, threeBedRent: 170000 },
+  'Mohammed Bin Rashid City': { studioRent: 50000, oneBedRent: 80000, twoBedRent: 120000, threeBedRent: 170000 },
+  'Emaar Beachfront': { studioRent: 65000, oneBedRent: 100000, twoBedRent: 160000, threeBedRent: 220000 },
+  'Dubai Silicon Oasis': { studioRent: 30000, oneBedRent: 45000, twoBedRent: 65000, threeBedRent: 90000 },
+  'Motor City': { studioRent: 35000, oneBedRent: 50000, twoBedRent: 75000, threeBedRent: 100000 },
+  'Dubai Sports City': { studioRent: 32000, oneBedRent: 48000, twoBedRent: 70000, threeBedRent: 95000 },
+  'Damac Hills': { studioRent: 40000, oneBedRent: 60000, twoBedRent: 90000, threeBedRent: 130000 },
+  'Al Barsha': { studioRent: 40000, oneBedRent: 60000, twoBedRent: 85000, threeBedRent: 120000 },
+  'Meydan City': { studioRent: 45000, oneBedRent: 70000, twoBedRent: 100000, threeBedRent: 140000 },
+};
+
+// Calculate rental yield based on area benchmarks
+function calculateRentalYield(price: number, bedrooms: number, area: string): number {
+  if (!price || price <= 0) return 0;
+  
+  // Find benchmark for the area (try exact match first, then partial)
+  let benchmark = AREA_RENTAL_BENCHMARKS[area];
+  if (!benchmark) {
+    // Try partial matching
+    for (const [benchmarkArea, data] of Object.entries(AREA_RENTAL_BENCHMARKS)) {
+      if (area.toLowerCase().includes(benchmarkArea.toLowerCase()) || 
+          benchmarkArea.toLowerCase().includes(area.toLowerCase())) {
+        benchmark = data;
+        break;
+      }
+    }
+  }
+  
+  // Default benchmark if area not found
+  if (!benchmark) {
+    benchmark = { studioRent: 45000, oneBedRent: 65000, twoBedRent: 95000, threeBedRent: 130000 };
+  }
+  
+  // Calculate annual rent based on bedrooms
+  let annualRent: number;
+  if (bedrooms === 0) {
+    annualRent = benchmark.studioRent;
+  } else if (bedrooms === 1) {
+    annualRent = benchmark.oneBedRent;
+  } else if (bedrooms === 2) {
+    annualRent = benchmark.twoBedRent;
+  } else if (bedrooms === 3) {
+    annualRent = benchmark.threeBedRent;
+  } else {
+    // For 4+ bedrooms, scale up from 3BR
+    annualRent = benchmark.threeBedRent * (1 + (bedrooms - 3) * 0.3);
+  }
+  
+  // Calculate yield percentage
+  const yieldPercent = (annualRent / price) * 100;
+  
+  // Return rounded to 2 decimal places, capped at reasonable range
+  return Math.min(15, Math.max(0, Number(yieldPercent.toFixed(2))));
+}
+
+// Detect completion status from multiple API fields
+function detectCompletionStatus(prop: any): 'ready' | 'off_plan' | 'under_construction' {
+  // Check direct completion_status field
+  const completionStatus = (prop.completion_status || '').toLowerCase();
+  if (completionStatus === 'off_plan' || completionStatus === 'offplan') {
+    return 'off_plan';
+  }
+  if (completionStatus === 'under_construction') {
+    return 'under_construction';
+  }
+  
+  // Check is_completed boolean
+  if (prop.is_completed === false) {
+    return 'off_plan';
+  }
+  
+  // Check isOffPlan boolean
+  if (prop.isOffPlan === true || prop.is_off_plan === true) {
+    return 'off_plan';
+  }
+  
+  // Check completionDate - if in future, it's off-plan
+  const completionDate = prop.completionDate || prop.completion_date || prop.handover_date;
+  if (completionDate) {
+    try {
+      const date = new Date(completionDate);
+      if (date > new Date()) {
+        return 'off_plan';
+      }
+    } catch (e) {
+      // Ignore date parsing errors
+    }
+  }
+  
+  // Check title keywords
+  const title = (prop.title || '').toLowerCase();
+  if (title.includes('off plan') || title.includes('offplan') || 
+      title.includes('off-plan') || title.includes('handover') ||
+      title.includes('under construction') || title.includes('launching')) {
+    return 'off_plan';
+  }
+  
+  // Check for payment plan mentions (typical for off-plan)
+  const description = (prop.description || '').toLowerCase();
+  if (description.includes('payment plan') || description.includes('post handover')) {
+    return 'off_plan';
+  }
+  
+  // Default to ready
+  return 'ready';
+}
+
+// Parse estimated completion date
+function parseCompletionDate(prop: any): Date | null {
+  const dateStr = prop.completionDate || prop.completion_date || prop.handover_date || prop.expected_completion;
+  if (!dateStr) return null;
+  
+  try {
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  } catch (e) {
+    // Ignore parsing errors
+  }
+  
+  // Try parsing year-only formats like "Q4 2025" or "2026"
+  const yearMatch = String(dateStr).match(/20\d{2}/);
+  if (yearMatch) {
+    return new Date(`${yearMatch[0]}-06-01`); // Default to mid-year
+  }
+  
+  return null;
+}
+
+// ===========================================
 // TRANSFORM PROPERTY (FIXED FOR NEW BAYUT API)
 // ===========================================
 function transformProperty(prop: any): any {
@@ -1947,13 +2095,6 @@ function transformProperty(prop: any): any {
     sizeSqft = parseFloat(prop.builtupArea) || 1;
   }
   
-  // VALIDATION: Size must make sense for property type
-  // Studios typically < 1500 sqft, apartments < 6000 sqft
-  if (bedrooms === 0 && sizeSqft > 2000) {
-    console.log(`[Bayut API] WARNING: Studio with ${sizeSqft} sqft - likely incorrect bedroom count for property ${externalId}`);
-    // The bedroom correction from title should have fixed this, but log it
-  }
-  
   sizeSqft = Math.max(1, Math.round(sizeSqft));
   
   // Extract coordinates - PRIORITY ORDER
@@ -1992,13 +2133,26 @@ function transformProperty(prop: any): any {
     developerName = prop.building.developer.name;
   }
 
+  // Get price
+  const price = Math.max(0, prop.price || 0);
+  
+  // CALCULATE RENTAL YIELD - NEW!
+  const rentalYieldEstimate = calculateRentalYield(price, bedrooms, locationArea);
+  
+  // DETECT COMPLETION STATUS - IMPROVED!
+  const completionStatus = detectCompletionStatus(prop);
+  const isOffPlan = completionStatus !== 'ready';
+  
+  // Parse completion date for off-plan properties
+  const estimatedCompletionDate = isOffPlan ? parseCompletionDate(prop) : null;
+
   return {
     external_id: externalId,
     external_source: 'bayut',
     external_url: prop.url || `https://www.bayut.com/property/details-${externalId}.html`,
     title,
     description: prop.description || null,
-    price_aed: Math.max(0, prop.price || 0),
+    price_aed: price,
     size_sqft: sizeSqft,
     bedrooms: bedrooms,
     bathrooms: bathrooms,
@@ -2007,7 +2161,10 @@ function transformProperty(prop: any): any {
     location_area: locationArea,
     latitude,
     longitude,
-    is_off_plan: prop.is_completed === false || prop.completion_status === 'off_plan' || prop.completion_status === 'offplan',
+    is_off_plan: isOffPlan,
+    completion_status: completionStatus, // NEW FIELD
+    estimated_completion_date: estimatedCompletionDate?.toISOString().split('T')[0] || null, // NEW FIELD
+    rental_yield_estimate: rentalYieldEstimate, // NOW CALCULATED
     completion_percent: prop.completion_percent || null,
     furnishing: prop.is_furnished ? 'furnished' : (prop.furnishing || null),
     rera_permit_number: prop.rera_permit || prop.permit_number || prop.trakheesi || null,
