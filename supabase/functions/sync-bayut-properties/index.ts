@@ -1775,27 +1775,47 @@ serve(async (req) => {
         for (const listingType of listingTypes) {
           for (let pageNum = 0; pageNum < max_pages; pageNum++) {
             try {
-              // Fetch properties page
-              const searchUrl = `${API_BASE}/properties/list?location_id=${area.id}&purpose=${listingType}&page=${pageNum}&hits=${propertiesPerPage}&sort=date-desc`;
+              // Fetch properties page using POST /properties_search (correct endpoint per API docs)
+              const searchBody = {
+                purpose: listingType,
+                locations_ids: [area.id],
+                index: 'latest',
+              };
+              
+              const searchUrl = `${API_BASE}/properties_search?page=${pageNum}&hitsPerPage=${propertiesPerPage}`;
+              console.log(`[Chunked Sync] POST ${searchUrl}`, JSON.stringify(searchBody));
               
               const searchResponse = await fetch(searchUrl, {
+                method: 'POST',
                 headers: {
+                  'Content-Type': 'application/json',
                   'X-RapidAPI-Key': rapidApiKey,
                   'X-RapidAPI-Host': API_HOST,
                 },
+                body: JSON.stringify(searchBody),
               });
 
               if (!searchResponse.ok) {
-                console.error(`[Chunked Sync] Search failed for ${area.name} page ${pageNum}`);
+                const errorText = await searchResponse.text();
+                console.error(`[Chunked Sync] API Error for ${area.name} page ${pageNum}: ${searchResponse.status} - ${errorText}`);
+                chunkErrors.push(`${area.name} page ${pageNum}: ${searchResponse.status} - ${errorText.substring(0, 100)}`);
                 continue;
               }
 
               const searchData = await searchResponse.json();
-              const properties = searchData.results || searchData.hits || [];
+              const properties = searchData.results || [];
+              const totalHits = searchData.count || searchData.nbHits || 0;
+
+              console.log(`[Chunked Sync] ${area.name} ${listingType} page ${pageNum}: ${properties.length} properties (total: ${totalHits})`);
 
               if (properties.length === 0) {
-                console.log(`[Chunked Sync] No more properties for ${area.name} ${listingType} page ${pageNum}`);
+                console.log(`[Chunked Sync] No more properties for ${area.name} ${listingType}`);
                 break;
+              }
+              
+              // Early break if we've fetched all available properties
+              if ((pageNum + 1) * propertiesPerPage >= totalHits) {
+                console.log(`[Chunked Sync] Reached end of ${area.name} ${listingType}: ${totalHits} total`);
               }
 
               // Process each property
