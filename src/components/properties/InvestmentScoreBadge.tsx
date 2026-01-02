@@ -20,7 +20,7 @@ interface InvestmentScoreProps {
   area: string;
   isOffPlan?: boolean;
   developerName?: string;
-  variant?: 'badge' | 'card';
+  variant?: 'badge' | 'card' | 'compact';
   className?: string;
 }
 
@@ -62,14 +62,59 @@ export function InvestmentScoreBadge({
     { label: isOffPlan ? 'Off-Plan Advantage' : 'Ready Property', score: breakdown.offPlanBonus, max: 10 },
   ];
 
+  // Compact variant for property cards - minimal inline display
+  if (variant === 'compact') {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div
+              className={cn(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium cursor-help',
+                colors.bg,
+                colors.text,
+                className
+              )}
+            >
+              <TrendingUp className="w-3 h-3" />
+              <span>{score}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs p-3">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">Investment Score</span>
+                <span className={cn('font-bold', colors.text)}>{score}/100 ({label})</span>
+              </div>
+              <div className="space-y-1.5">
+                {breakdownItems.map((item) => (
+                  <div key={item.label} className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gold rounded-full transition-all"
+                          style={{ width: `${(item.score / item.max) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-foreground w-10 text-right">{item.score}/{item.max}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
   if (variant === 'badge') {
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+            <div
               className={cn(
                 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm cursor-help border',
                 colors.bg,
@@ -81,7 +126,7 @@ export function InvestmentScoreBadge({
               <TrendingUp className="w-3 h-3" />
               <span>{score}</span>
               <span className="hidden sm:inline">/ 100</span>
-            </motion.div>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-xs p-3">
             <div className="space-y-2">
