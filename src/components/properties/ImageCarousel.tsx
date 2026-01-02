@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useCallback, useRef, TouchEvent } from 'react';
+import { ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
@@ -14,13 +14,24 @@ interface ImageCarouselProps {
   alt: string;
   className?: string;
   sizes?: string;
+  showPhotoCount?: boolean;
 }
 
-export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SIZES }: ImageCarouselProps) {
+export function ImageCarousel({ 
+  images, 
+  alt, 
+  className, 
+  sizes = PROPERTY_CARD_SIZES,
+  showPhotoCount = true 
+}: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  
+  // Touch/swipe handling
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   const validImages = images.length > 0 
     ? images 
@@ -59,11 +70,45 @@ export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SI
     setHasError(true);
   }, []);
 
+  // Touch handlers for swipe navigation
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    
+    const diff = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+    
+    if (Math.abs(diff) > minSwipeDistance) {
+      if (diff > 0) {
+        // Swiped left -> next image
+        setIsLoading(true);
+        setCurrentIndex(prev => (prev === validImages.length - 1 ? 0 : prev + 1));
+      } else {
+        // Swiped right -> previous image
+        setIsLoading(true);
+        setCurrentIndex(prev => (prev === 0 ? validImages.length - 1 : prev - 1));
+      }
+    }
+    
+    touchStartX.current = null;
+    touchEndX.current = null;
+  }, [validImages.length]);
+
   return (
     <div 
       className={cn("relative overflow-hidden", className)}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Loading Skeleton */}
       {isLoading && (
@@ -97,7 +142,15 @@ export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SI
         </div>
       )}
 
-      {/* Navigation Arrows - Only show if more than 1 image */}
+      {/* Photo Count Badge - Always visible in top-left */}
+      {showPhotoCount && validImages.length > 1 && (
+        <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full bg-background/80 backdrop-blur-sm text-xs text-foreground">
+          <Camera className="w-3 h-3" />
+          <span>{validImages.length}</span>
+        </div>
+      )}
+
+      {/* Navigation Arrows - Show on hover (desktop) or always visible on mobile */}
       {validImages.length > 1 && (
         <>
           <button
@@ -105,8 +158,9 @@ export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SI
             className={cn(
               "absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center",
               "transition-all duration-200 hover:bg-background hover:scale-110 will-change-transform",
-              "opacity-0 translate-x-2",
-              isHovering && "opacity-100 translate-x-0"
+              // Mobile: always visible but subtle, Desktop: show on hover
+              "opacity-50 md:opacity-0 md:translate-x-2",
+              isHovering && "md:opacity-100 md:translate-x-0"
             )}
             aria-label="Previous image"
           >
@@ -117,8 +171,9 @@ export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SI
             className={cn(
               "absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center",
               "transition-all duration-200 hover:bg-background hover:scale-110 will-change-transform",
-              "opacity-0 -translate-x-2",
-              isHovering && "opacity-100 translate-x-0"
+              // Mobile: always visible but subtle, Desktop: show on hover
+              "opacity-50 md:opacity-0 md:-translate-x-2",
+              isHovering && "md:opacity-100 md:translate-x-0"
             )}
             aria-label="Next image"
           >
@@ -127,13 +182,12 @@ export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SI
         </>
       )}
 
-      {/* Dots Indicator */}
+      {/* Dots Indicator - Always visible at bottom */}
       {validImages.length > 1 && (
         <div 
           className={cn(
             "absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 px-2 py-1 rounded-full bg-background/60 backdrop-blur-sm",
-            "transition-opacity duration-200",
-            isHovering ? "opacity-100" : "opacity-0"
+            "transition-opacity duration-200"
           )}
         >
           {validImages.slice(0, 5).map((_, index) => (
@@ -157,7 +211,7 @@ export function ImageCarousel({ images, alt, className, sizes = PROPERTY_CARD_SI
         </div>
       )}
 
-      {/* Image Counter */}
+      {/* Image Counter - Bottom right */}
       {validImages.length > 1 && (
         <div 
           className={cn(
