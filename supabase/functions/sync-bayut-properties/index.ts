@@ -11,7 +11,7 @@ const API_HOST = 'uae-real-estate2.p.rapidapi.com';
 const API_BASE = `https://${API_HOST}`;
 
 // Hybrid storage configuration
-const REHOST_LIMIT = 4; // Cover photo + first 3 gallery images
+const REHOST_LIMIT = 6; // Cover photo + first 5 gallery images (increased for better coverage)
 const BATCH_SIZE = 20;
 const BATCH_COOLDOWN_MS = 5000; // 5 seconds between batches
 
@@ -1684,19 +1684,36 @@ function transformProperty(prop: any): any {
     propertyType = 'penthouse';
   }
 
-  // Parse bedrooms - PRIORITY ORDER based on Bayut API structure
+  // Parse bedrooms - ENHANCED PRIORITY ORDER with more field variations
   let bedrooms = 0;
   
   // Try details.bedrooms first (NEW API format)
-  if (prop.details?.bedrooms !== undefined) {
+  if (prop.details?.bedrooms !== undefined && prop.details.bedrooms !== null) {
     bedrooms = parseInt(prop.details.bedrooms, 10) || 0;
   }
+  // Try rooms_count (API variation)
+  else if (prop.rooms_count !== undefined && prop.rooms_count !== null) {
+    bedrooms = parseInt(prop.rooms_count, 10) || 0;
+  }
+  // Try beds (API variation)
+  else if (prop.beds !== undefined && prop.beds !== null) {
+    bedrooms = parseInt(prop.beds, 10) || 0;
+  }
   // Then direct bedrooms field
-  else if (prop.bedrooms !== undefined) {
+  else if (prop.bedrooms !== undefined && prop.bedrooms !== null) {
     bedrooms = parseInt(prop.bedrooms, 10) || 0;
   }
+  // Try rooms_en (API variation - string like "3 Bedroom")
+  else if (prop.rooms_en) {
+    const roomsMatch = prop.rooms_en.match(/(\d+)\s*(?:bed|bedroom)/i);
+    if (roomsMatch) {
+      bedrooms = parseInt(roomsMatch[1], 10) || 0;
+    } else if (prop.rooms_en.toLowerCase().includes('studio')) {
+      bedrooms = 0;
+    }
+  }
   // Then rooms field (legacy)
-  else if (prop.rooms !== undefined) {
+  else if (prop.rooms !== undefined && prop.rooms !== null) {
     if (typeof prop.rooms === 'number') {
       bedrooms = prop.rooms;
     } else if (typeof prop.rooms === 'string') {
@@ -1730,14 +1747,52 @@ function transformProperty(prop: any): any {
     }
   }
   
-  // Extract bathrooms
+  // Extract bathrooms - ENHANCED with more field variations
   let bathrooms = 0;
-  if (prop.details?.bathrooms !== undefined) {
+  
+  // Try details.bathrooms first (NEW API format)
+  if (prop.details?.bathrooms !== undefined && prop.details.bathrooms !== null) {
     bathrooms = parseInt(prop.details.bathrooms, 10) || 0;
-  } else if (prop.baths !== undefined) {
+  }
+  // Try baths_count (API variation)
+  else if (prop.baths_count !== undefined && prop.baths_count !== null) {
+    bathrooms = parseInt(prop.baths_count, 10) || 0;
+  }
+  // Try bathroom_count (API variation)
+  else if (prop.bathroom_count !== undefined && prop.bathroom_count !== null) {
+    bathrooms = parseInt(prop.bathroom_count, 10) || 0;
+  }
+  // Try bath (API variation)
+  else if (prop.bath !== undefined && prop.bath !== null) {
+    bathrooms = parseInt(prop.bath, 10) || 0;
+  }
+  // Then baths field
+  else if (prop.baths !== undefined && prop.baths !== null) {
     bathrooms = parseInt(prop.baths, 10) || 0;
-  } else if (prop.bathrooms !== undefined) {
+  }
+  // Then bathrooms field
+  else if (prop.bathrooms !== undefined && prop.bathrooms !== null) {
     bathrooms = parseInt(prop.bathrooms, 10) || 0;
+  }
+  
+  // VALIDATION: Cross-check bathrooms from title if we got 0
+  if (bathrooms === 0) {
+    const bathMatch = title.match(/(\d+)\s*(?:bath|bathroom)/i);
+    if (bathMatch) {
+      const titleBaths = parseInt(bathMatch[1], 10);
+      if (!isNaN(titleBaths) && titleBaths > 0) {
+        console.log(`[Bayut API] Correcting bathrooms from 0 to ${titleBaths} based on title: "${title}"`);
+        bathrooms = titleBaths;
+      }
+    }
+  }
+  
+  // VALIDATION: If bedrooms > 0 but bathrooms = 0, estimate minimum bathrooms
+  if (bedrooms > 0 && bathrooms === 0) {
+    // Reasonable estimate: at least 1 bathroom per 2 bedrooms, minimum 1
+    const estimatedBaths = Math.max(1, Math.ceil(bedrooms / 2));
+    console.log(`[Bayut API] Estimating ${estimatedBaths} bathrooms for ${bedrooms} bedroom property: ${externalId}`);
+    bathrooms = estimatedBaths;
   }
   
   // Extract size - PRIORITY ORDER with VALIDATION
