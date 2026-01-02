@@ -26,6 +26,7 @@ import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } fr
 import { useQueryClient } from '@tanstack/react-query';
 
 type PropertyStatusFilter = 'all' | 'ready' | 'off_plan';
+type ListingType = 'buy' | 'rent';
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -50,7 +51,10 @@ export default function Properties() {
   const sortBy = searchParams.get('sort') || 'featured';
   const viewMode = (searchParams.get('view') as 'grid' | 'map') || 'grid';
   
-  // NEW: Property status filter (Ready vs Off-Plan tabs)
+  // Listing type filter (Buy vs Rent)
+  const listingType = (searchParams.get('listing') as ListingType) || 'buy';
+  
+  // Property status filter (Ready vs Off-Plan tabs) - only for Buy
   const propertyStatus = (searchParams.get('status') as PropertyStatusFilter) || 'all';
   
   // Smart investment filters
@@ -72,12 +76,13 @@ export default function Properties() {
       priceMin: priceRange?.min,
       priceMax: priceRange?.max !== Infinity ? priceRange?.max : undefined,
       offPlanOnly: showOffPlanOnly || undefined,
-      goldenVisaOnly: showGoldenVisaOnly || undefined,
-      yieldMin: yieldRange?.min,
+      goldenVisaOnly: listingType === 'buy' ? showGoldenVisaOnly : undefined, // Only for buy
+      yieldMin: listingType === 'buy' ? yieldRange?.min : undefined, // Only for buy
       sortBy,
-      completionStatus: propertyStatus !== 'all' ? propertyStatus : undefined, // NEW
+      listingType, // Buy vs Rent
+      completionStatus: listingType === 'buy' && propertyStatus !== 'all' ? propertyStatus : undefined,
     };
-  }, [searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedYield, showGoldenVisaOnly, propertyStatus]);
+  }, [searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedYield, showGoldenVisaOnly, propertyStatus, listingType]);
 
   // Use server-side filtering hook
   const {
@@ -90,12 +95,18 @@ export default function Properties() {
     propertyCounts,
     developerCounts,
     statusCounts,
+    listingCounts,
     isGuestLimited,
   } = useProperties(filters, { isAuthenticated: !!user });
 
-  // Client-side filters that require complex calculation (score, below market value)
+  // Client-side filters that require complex calculation (score, below market value) - only for Buy
   const filteredProperties = useMemo(() => {
     let result = properties;
+
+    // Skip investment filters for rentals
+    if (listingType === 'rent') {
+      return result;
+    }
 
     // Investment score filter (requires client-side calculation)
     if (selectedScore !== 'all') {
@@ -144,7 +155,7 @@ export default function Properties() {
     }
 
     return result;
-  }, [properties, selectedScore, showBelowMarketOnly, sortBy]);
+  }, [properties, selectedScore, showBelowMarketOnly, sortBy, listingType]);
 
   const updateFilter = (key: string, value: string) => {
     const newParams = new URLSearchParams(searchParams);
@@ -157,7 +168,12 @@ export default function Properties() {
   };
 
   const clearFilters = () => {
-    setSearchParams(new URLSearchParams());
+    // Keep listing type when clearing filters
+    const newParams = new URLSearchParams();
+    if (listingType !== 'buy') {
+      newParams.set('listing', listingType);
+    }
+    setSearchParams(newParams);
   };
 
   const toggleCompare = (id: string) => {
@@ -181,10 +197,16 @@ export default function Properties() {
         <div className="container mx-auto px-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-3xl mx-auto">
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-foreground mb-4">
-              Dubai <span className="text-gradient-gold">Properties</span>
+              Dubai Properties {listingType === 'rent' ? 
+                <span className="text-gradient-gold">for Rent</span> : 
+                <span className="text-gradient-gold">for Sale</span>
+              }
             </h1>
             <p className="text-lg text-muted-foreground">
-              Discover premium investment opportunities across Dubai's most sought-after locations.
+              {listingType === 'rent' 
+                ? 'Find your perfect rental home in Dubai\'s most desirable locations.'
+                : 'Discover premium investment opportunities across Dubai\'s most sought-after locations.'
+              }
             </p>
             <PropertyDisclaimer variant="inline" className="mt-2" />
             {user && (
@@ -220,28 +242,48 @@ export default function Properties() {
             resultCount={totalCount}
             viewMode={viewMode}
             onViewModeChange={(mode) => updateFilter('view', mode)}
-            // Smart investment filters
-            selectedScore={selectedScore}
+            selectedScore={listingType === 'buy' ? selectedScore : 'all'}
             onScoreChange={(v) => updateFilter('score', v)}
-            selectedYield={selectedYield}
+            selectedYield={listingType === 'buy' ? selectedYield : 'all'}
             onYieldChange={(v) => updateFilter('yield', v)}
-            showGoldenVisaOnly={showGoldenVisaOnly}
+            showGoldenVisaOnly={listingType === 'buy' && showGoldenVisaOnly}
             onGoldenVisaChange={(v) => updateFilter('visa', v ? 'true' : 'false')}
-            showBelowMarketOnly={showBelowMarketOnly}
+            showBelowMarketOnly={listingType === 'buy' && showBelowMarketOnly}
             onBelowMarketChange={(v) => updateFilter('belowmarket', v ? 'true' : 'false')}
             propertyCounts={propertyCounts}
             developerCounts={developerCounts}
+            hideInvestmentFilters={listingType === 'rent'}
           />
         </div>
       </section>
 
       <section className="py-12">
         <div className="container mx-auto px-4">
-          {/* Property Status Tabs: All | Ready to Move | Off-Plan */}
+          {/* Buy/Rent Toggle & Property Status Tabs */}
           <PropertyStatusTabs
             value={propertyStatus}
             onChange={(status) => updateFilter('status', status)}
             counts={statusCounts}
+            listingType={listingType}
+            onListingTypeChange={(type) => {
+              const newParams = new URLSearchParams(searchParams);
+              if (type === 'buy') {
+                newParams.delete('listing');
+              } else {
+                newParams.set('listing', type);
+              }
+              // Clear status filter when switching to rent
+              if (type === 'rent') {
+                newParams.delete('status');
+                // Clear investment filters
+                newParams.delete('score');
+                newParams.delete('yield');
+                newParams.delete('visa');
+                newParams.delete('belowmarket');
+              }
+              setSearchParams(newParams);
+            }}
+            listingCounts={listingCounts}
           />
           
           {/* Recently Viewed Section */}
@@ -304,6 +346,7 @@ export default function Properties() {
                   isComparing={compareIds.includes(property.id)}
                   showCompareButton
                   isAuthenticated={!!user}
+                  isRental={listingType === 'rent'}
                 />
               )}
               estimatedItemHeight={420}

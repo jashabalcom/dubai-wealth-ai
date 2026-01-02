@@ -683,40 +683,49 @@ export default function PropertyDetail() {
                 </div>
               )}
 
-              <InlineROICalculator 
-                purchasePrice={property.price_aed} 
-                estimatedYield={property.rental_yield_estimate || 6} 
-                sizeSquft={property.size_sqft}
-                area={property.location_area || 'Dubai Marina'}
-              />
+              {/* ROI Calculator - Only for sale properties */}
+              {property.listing_type !== 'rent' && (
+                <InlineROICalculator 
+                  purchasePrice={property.price_aed} 
+                  estimatedYield={property.rental_yield_estimate || 6} 
+                  sizeSquft={property.size_sqft}
+                  area={property.location_area || 'Dubai Marina'}
+                />
+              )}
             </div>
 
             {/* Sidebar */}
             <div className="space-y-6">
-              {/* Investment Score Card */}
-              <InvestmentScoreBadge
-                price={property.price_aed}
-                sizeSqft={property.size_sqft}
-                rentalYield={property.rental_yield_estimate || 0}
-                area={property.location_area}
-                isOffPlan={property.is_off_plan}
-                developerName={property.developer?.name || property.developer_name}
-                variant="card"
-              />
+              {/* Investment Score Card - Only for sale properties */}
+              {property.listing_type !== 'rent' && (
+                <InvestmentScoreBadge
+                  price={property.price_aed}
+                  sizeSqft={property.size_sqft}
+                  rentalYield={property.rental_yield_estimate || 0}
+                  area={property.location_area}
+                  isOffPlan={property.is_off_plan}
+                  developerName={property.developer?.name || property.developer_name}
+                  variant="card"
+                />
+              )}
 
-              {/* Golden Visa Eligibility */}
-              <GoldenVisaBadge
-                priceAed={property.price_aed}
-                variant="card"
-              />
+              {/* Golden Visa Eligibility - Only for sale properties */}
+              {property.listing_type !== 'rent' && (
+                <GoldenVisaBadge
+                  priceAed={property.price_aed}
+                  variant="card"
+                />
+              )}
 
-              {/* True Cost of Ownership */}
-              <TrueCostCard
-                priceAed={property.price_aed}
-                sizeSqft={property.size_sqft}
-                area={property.location_area}
-                isOffPlan={property.is_off_plan}
-              />
+              {/* True Cost of Ownership - Only for sale properties */}
+              {property.listing_type !== 'rent' && (
+                <TrueCostCard
+                  priceAed={property.price_aed}
+                  sizeSqft={property.size_sqft}
+                  area={property.location_area}
+                  isOffPlan={property.is_off_plan}
+                />
+              )}
 
               {/* Neighborhood Deep-Dive */}
               <NeighborhoodWidget
@@ -729,8 +738,10 @@ export default function PropertyDetail() {
               {/* Property Notes (Elite Only) */}
               <PropertyNotesCard propertyId={property.id} />
 
-              {/* Investment Metrics */}
+              {/* Investment Metrics - Only for sale properties */}
+              {property.listing_type !== 'rent' && (
               <div className="p-6 rounded-xl bg-card border border-border">
+                <h2 className="font-heading text-xl text-foreground mb-4">Investment Metrics</h2>
                 <h2 className="font-heading text-xl text-foreground mb-4">Investment Metrics</h2>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
@@ -809,15 +820,18 @@ export default function PropertyDetail() {
                   </div>
                 )}
               </div>
+              )}
 
-              {/* STR Yield Card */}
-              <AirbnbYieldCard
-                propertyPrice={property.price_aed}
-                areaName={property.location_area}
-                bedrooms={property.bedrooms ?? 0}
-                propertyType={property.property_type || 'apartment'}
-                ltrYield={rentalYield}
-              />
+              {/* STR Yield Card - Only for sale properties */}
+              {property.listing_type !== 'rent' && (
+                <AirbnbYieldCard
+                  propertyPrice={property.price_aed}
+                  areaName={property.location_area}
+                  bedrooms={property.bedrooms ?? 0}
+                  propertyType={property.property_type || 'apartment'}
+                  ltrYield={rentalYield}
+                />
+              )}
 
               {/* Agent Contact Card */}
               {property.agent && (
