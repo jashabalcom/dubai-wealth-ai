@@ -187,6 +187,10 @@ export default function AdminBayutSync() {
   const [scaleSkipRecent, setScaleSkipRecent] = useState(false);
   const [showScaleConfirmDialog, setShowScaleConfirmDialog] = useState(false);
   
+  // Cleanup state
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<{ deleted: number } | null>(null);
+  
   // Abort ref
   const abortRef = useRef(false);
 
@@ -423,6 +427,33 @@ export default function AdminBayutSync() {
   const abortSync = () => {
     abortRef.current = true;
     toast.warning('Aborting sync after current area completes...');
+  };
+
+  // Cleanup non-Dubai properties (Al Helio, Ajman, etc.)
+  const cleanupNonDubaiProperties = async () => {
+    setIsCleaningUp(true);
+    setCleanupResult(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+        body: { action: 'cleanup_non_dubai' },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        setCleanupResult({ deleted: data.deleted });
+        toast.success(`Cleaned up ${data.deleted} non-Dubai properties`);
+        fetchTotalStats();
+      } else {
+        toast.error(data?.error || 'Cleanup failed');
+      }
+    } catch (error) {
+      toast.error('Failed to cleanup non-Dubai properties');
+      console.error(error);
+    } finally {
+      setIsCleaningUp(false);
+    }
   };
 
   const quickSyncAllAreas = async () => {
@@ -1058,6 +1089,50 @@ export default function AdminBayutSync() {
               </CardContent>
             </Card>
 
+            {/* CLEANUP NON-DUBAI PROPERTIES */}
+            <Card className="border-red-500/30 bg-red-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <X className="h-5 w-5 text-red-500" />
+                  Cleanup Non-Dubai Properties
+                </CardTitle>
+                <CardDescription>
+                  Remove properties from Al Helio, Ajman, Sharjah, and other non-Dubai emirates that may have been synced.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Button 
+                    onClick={cleanupNonDubaiProperties} 
+                    disabled={isCleaningUp || isQuickSyncing || isScaleSyncing}
+                    variant="destructive"
+                  >
+                    {isCleaningUp ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Cleaning Up...
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Delete Non-Dubai Properties
+                      </>
+                    )}
+                  </Button>
+                  
+                  {cleanupResult && (
+                    <Badge variant="outline" className="text-emerald-500 border-emerald-500">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Deleted {cleanupResult.deleted} properties
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  This will delete all properties with location_area or title containing: Ajman, Al Helio, Sharjah, etc.
+                </p>
+              </CardContent>
+            </Card>
+
             {/* 15K LATEST LISTINGS - Enhanced Sync Preset */}
             <Card className="border-purple-500/30 bg-purple-500/5">
               <CardHeader>
@@ -1066,7 +1141,7 @@ export default function AdminBayutSync() {
                   15K Latest Listings Sync
                 </CardTitle>
                 <CardDescription>
-                  Optimized preset: 25 areas × 12 pages × 50 properties = 15,000 latest Dubai listings with full detail fetching for accurate bedrooms/bathrooms.
+                  Optimized preset: 25 areas × 12 pages × 50 properties = 15,000 latest Dubai listings. LITE MODE for fast syncing (~2-3 hrs). Strict Dubai-only filter.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1080,15 +1155,15 @@ export default function AdminBayutSync() {
                     <p className="text-xs text-muted-foreground">Properties Target</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-amber-500">~90,000</p>
-                    <p className="text-xs text-muted-foreground">Photos (6/prop)</p>
+                    <p className="text-2xl font-bold text-amber-500">~15,000</p>
+                    <p className="text-xs text-muted-foreground">Photos (1/prop)</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-emerald-500">Full Mode</p>
-                    <p className="text-xs text-muted-foreground">Accurate Data</p>
+                    <p className="text-2xl font-bold text-emerald-500">Lite Mode</p>
+                    <p className="text-xs text-muted-foreground">Fast Sync</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-rose-500">~2-4 hrs</p>
+                    <p className="text-2xl font-bold text-rose-500">~2-3 hrs</p>
                     <p className="text-xs text-muted-foreground">Est. Duration</p>
                   </div>
                 </div>
@@ -1097,7 +1172,7 @@ export default function AdminBayutSync() {
                   onClick={() => {
                     setScaleTargetAreas([...TOP_DUBAI_AREAS]);
                     setScalePagesPerArea(12);
-                    setScaleLiteMode(false); // FULL MODE for accurate data
+                    setScaleLiteMode(true); // LITE MODE for speed (2-3 hrs vs 125+ hrs)
                     setScaleIncludeRentals(false);
                     setScaleSkipRecent(false);
                     setShowScaleConfirmDialog(true);
@@ -1120,7 +1195,7 @@ export default function AdminBayutSync() {
                 </Button>
                 
                 <p className="text-xs text-muted-foreground text-center">
-                  Uses FULL MODE (not lite) for accurate bedroom/bathroom counts. 6 photos per property rehosted to storage.
+                  Uses LITE MODE for fast syncing (2-3 hours). Strict Dubai-only filter enabled. 6 photos per property.
                 </p>
               </CardContent>
             </Card>
