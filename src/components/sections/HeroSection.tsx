@@ -124,7 +124,7 @@ export function HeroSection() {
           >
             <span className="h-px w-12 bg-primary" />
             <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans">
-              Intelligence & Access for Global Investors
+              Smart Dubai Real Estate Investing
             </span>
             <span className="h-px w-12 bg-primary" />
           </motion.div>
@@ -141,13 +141,13 @@ export function HeroSection() {
           </motion.h1>
 
           {/* Subheadline */}
-          <motion.p
+            <motion.p
             {...fadeIn}
             transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 0.6 }}
             className="text-lg md:text-xl text-secondary-foreground/70 max-w-2xl mx-auto mb-12 font-sans leading-relaxed"
           >
-            Market intelligence, curated opportunities, and expert education for 
-            investors who approach Dubai real estate with intention.
+            Education, tools, and market intelligence to help you make confident 
+            property decisions — whether you're buying your first home or building a portfolio.
           </motion.p>
 
           {/* CTA Button */}
@@ -162,7 +162,7 @@ export function HeroSection() {
               className="group"
               onClick={() => navigate('/auth')}
             >
-              Access the Platform
+              Start Free
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform rtl:mr-2 rtl:ml-0 rtl:group-hover:-translate-x-1" />
             </Button>
           </motion.div>
