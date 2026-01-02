@@ -128,7 +128,7 @@ function isDubaiLocation(prop: any): boolean {
 }
 
 interface SyncRequest {
-  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects' | 'bulk_sync' | 'cleanup_non_dubai';
+  action: 'test' | 'search_locations' | 'sync_properties' | 'sync_transactions' | 'search_developers' | 'search_agents' | 'search_agencies' | 'get_property_details' | 'sync_new_projects' | 'bulk_sync' | 'cleanup_non_dubai' | 'chunked_sync' | 'get_sync_progress';
   // Location search
   query?: string;
   // Property search filters
@@ -168,6 +168,9 @@ interface SyncRequest {
   lite_mode?: boolean; // Skip detail fetches - uses search data only
   include_rentals?: boolean; // Also sync rental properties
   skip_recently_synced?: boolean; // Skip 24-hour check (force re-sync)
+  // CHUNKED SYNC options (new for auto-resume)
+  progress_id?: string; // ID of sync_progress record to resume
+  areas_per_chunk?: number; // Number of areas per chunk (default: 3)
 }
 
 // Organic throttling: random delay between 800-2000ms
@@ -1601,6 +1604,360 @@ serve(async (req) => {
       );
     }
 
+    // ===========================================
+    // GET SYNC PROGRESS - Check status of a sync
+    // ===========================================
+    if (action === 'get_sync_progress') {
+      const { progress_id } = body;
+      
+      if (!progress_id) {
+        return new Response(
+          JSON.stringify({ error: 'progress_id is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const { data: progress, error: progressError } = await supabase
+        .from('sync_progress')
+        .select('*')
+        .eq('id', progress_id)
+        .single();
+
+      if (progressError || !progress) {
+        return new Response(
+          JSON.stringify({ error: 'Progress record not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, progress }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // ===========================================
+    // CHUNKED SYNC - Process 3-5 areas at a time with auto-resume
+    // ===========================================
+    if (action === 'chunked_sync') {
+      const { 
+        areas = [], 
+        max_pages = 20, 
+        lite_mode = false, 
+        include_rentals = true,
+        progress_id,
+        areas_per_chunk = 3,
+      } = body;
+      
+      const propertiesPerPage = 50;
+      let progressRecord: any = null;
+      let areasToProcess: { id: number; name: string }[] = [];
+      let startAreaIndex = 0;
+
+      // Check if resuming from existing progress
+      if (progress_id) {
+        const { data: existingProgress, error: progressError } = await supabase
+          .from('sync_progress')
+          .select('*')
+          .eq('id', progress_id)
+          .single();
+
+        if (progressError || !existingProgress) {
+          return new Response(
+            JSON.stringify({ error: 'Progress record not found' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        progressRecord = existingProgress;
+        areasToProcess = progressRecord.areas_config || [];
+        startAreaIndex = progressRecord.current_area_index || 0;
+
+        // Check if already completed
+        if (progressRecord.status === 'completed') {
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              completed: true, 
+              progress: progressRecord,
+              message: 'Sync already completed'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Resume from paused state
+        if (progressRecord.status === 'paused') {
+          await supabase
+            .from('sync_progress')
+            .update({ status: 'running', updated_at: new Date().toISOString() })
+            .eq('id', progress_id);
+        }
+      } else {
+        // Start new sync - create progress record
+        if (areas.length === 0) {
+          return new Response(
+            JSON.stringify({ error: 'areas array is required for new sync' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        areasToProcess = areas;
+
+        const { data: newProgress, error: createError } = await supabase
+          .from('sync_progress')
+          .insert({
+            sync_type: 'bayut_properties',
+            status: 'running',
+            current_area_index: 0,
+            current_page: 1,
+            current_listing_type: 'for-sale',
+            areas_config: areas,
+            total_areas: areas.length,
+            total_pages_per_area: max_pages,
+            properties_synced: 0,
+            photos_synced: 0,
+            errors: [],
+            started_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (createError || !newProgress) {
+          console.error('[Chunked Sync] Failed to create progress record:', createError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create progress record' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        progressRecord = newProgress;
+      }
+
+      const progressId = progressRecord.id;
+      console.log(`[Chunked Sync] Processing chunk starting at area ${startAreaIndex}, total areas: ${areasToProcess.length}`);
+
+      // Calculate which areas to process in this chunk
+      const endAreaIndex = Math.min(startAreaIndex + areas_per_chunk, areasToProcess.length);
+      const chunkAreas = areasToProcess.slice(startAreaIndex, endAreaIndex);
+      
+      if (chunkAreas.length === 0) {
+        // All areas processed
+        await supabase
+          .from('sync_progress')
+          .update({ 
+            status: 'completed', 
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', progressId);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            completed: true, 
+            progress_id: progressId,
+            message: 'All areas synced'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Process this chunk of areas synchronously (NOT in background)
+      let chunkPropertiesSynced = 0;
+      let chunkPhotosSynced = 0;
+      const chunkErrors: string[] = [];
+      const listingTypes: Array<'for-sale' | 'for-rent'> = include_rentals ? ['for-sale', 'for-rent'] : ['for-sale'];
+
+      for (const area of chunkAreas) {
+        console.log(`[Chunked Sync] Processing area: ${area.name} (ID: ${area.id})`);
+
+        for (const listingType of listingTypes) {
+          for (let pageNum = 0; pageNum < max_pages; pageNum++) {
+            try {
+              // Fetch properties page
+              const searchUrl = `${API_BASE}/properties/list?location_id=${area.id}&purpose=${listingType}&page=${pageNum}&hits=${propertiesPerPage}&sort=date-desc`;
+              
+              const searchResponse = await fetch(searchUrl, {
+                headers: {
+                  'X-RapidAPI-Key': rapidApiKey,
+                  'X-RapidAPI-Host': API_HOST,
+                },
+              });
+
+              if (!searchResponse.ok) {
+                console.error(`[Chunked Sync] Search failed for ${area.name} page ${pageNum}`);
+                continue;
+              }
+
+              const searchData = await searchResponse.json();
+              const properties = searchData.results || searchData.hits || [];
+
+              if (properties.length === 0) {
+                console.log(`[Chunked Sync] No more properties for ${area.name} ${listingType} page ${pageNum}`);
+                break;
+              }
+
+              // Process each property
+              for (const prop of properties) {
+                try {
+                  const externalId = String(prop.id || prop.externalID);
+                  
+                  // Skip non-Dubai properties
+                  if (!isDubaiLocation(prop)) continue;
+
+                  // Check if already synced recently (within 24 hours)
+                  const { data: existingProp } = await supabase
+                    .from('properties')
+                    .select('id, updated_at')
+                    .eq('external_id', externalId)
+                    .eq('external_source', 'bayut')
+                    .single();
+
+                  if (existingProp) {
+                    const lastUpdated = new Date(existingProp.updated_at);
+                    const hoursSince = (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60);
+                    if (hoursSince < 24) continue;
+                  }
+
+                  let fullProp = prop;
+                  let imageResult: ImageProcessResult = {
+                    rehostedImages: [],
+                    cdnGalleryUrls: [],
+                    floorPlanUrls: [],
+                    rehostedCount: 0,
+                    cdnCount: 0,
+                    floorPlansCount: 0,
+                  };
+
+                  if (!lite_mode) {
+                    // Full mode: fetch details and rehost images
+                    try {
+                      const detailResponse = await fetch(`${API_BASE}/property/${externalId}`, {
+                        headers: {
+                          'X-RapidAPI-Key': rapidApiKey,
+                          'X-RapidAPI-Host': API_HOST,
+                        },
+                      });
+                      if (detailResponse.ok) {
+                        fullProp = await detailResponse.json();
+                      }
+                      await new Promise(r => setTimeout(r, 150));
+                    } catch (e) {
+                      console.error(`[Chunked Sync] Detail fetch error:`, e);
+                    }
+                    imageResult = await processPropertyImages(supabase, fullProp, externalId);
+                    chunkPhotosSynced += imageResult.rehostedCount;
+                  } else {
+                    // Lite mode: rehost cover only
+                    const allPhotos = extractPhotoUrls(prop);
+                    if (allPhotos.length > 0) {
+                      try {
+                        const rehostedCoverUrl = await rehostPhoto(supabase, allPhotos[0], externalId, 'gallery');
+                        if (rehostedCoverUrl) {
+                          imageResult.rehostedImages = [rehostedCoverUrl];
+                          imageResult.rehostedCount = 1;
+                          chunkPhotosSynced++;
+                        }
+                      } catch (coverError) {
+                        console.error(`[Chunked Sync] Lite mode cover rehost error:`, coverError);
+                      }
+                      if (allPhotos.length > 1) {
+                        imageResult.cdnGalleryUrls = allPhotos.slice(1);
+                        imageResult.cdnCount = allPhotos.length - 1;
+                      }
+                    }
+                  }
+
+                  // Transform and upsert property
+                  const transformedProperty = transformProperty(fullProp);
+                  if (!transformedProperty.size_sqft || transformedProperty.size_sqft < 1) {
+                    transformedProperty.size_sqft = 1;
+                  }
+                  transformedProperty.images = imageResult.rehostedImages;
+                  transformedProperty.gallery_urls = imageResult.cdnGalleryUrls;
+                  transformedProperty.floor_plan_urls = imageResult.floorPlanUrls;
+                  transformedProperty.bayut_agent_data = extractAgentData(prop);
+                  transformedProperty.bayut_agency_data = extractAgencyData(prop);
+                  transformedProperty.bayut_building_info = extractBuildingInfo(prop);
+
+                  const { error: upsertError } = await supabase
+                    .from('properties')
+                    .upsert(
+                      { ...transformedProperty, id: existingProp?.id },
+                      { onConflict: 'external_source,external_id' }
+                    );
+
+                  if (!upsertError) {
+                    chunkPropertiesSynced++;
+                  } else {
+                    chunkErrors.push(`${externalId}: ${upsertError.message}`);
+                  }
+                } catch (propError) {
+                  chunkErrors.push(propError instanceof Error ? propError.message : String(propError));
+                }
+              }
+
+              await new Promise(r => setTimeout(r, 200));
+            } catch (pageError) {
+              chunkErrors.push(`${area.name} page ${pageNum}: ${pageError instanceof Error ? pageError.message : String(pageError)}`);
+            }
+          }
+        }
+
+        // Update progress after each area
+        await supabase
+          .from('sync_progress')
+          .update({
+            current_area_index: startAreaIndex + chunkAreas.indexOf(area) + 1,
+            properties_synced: (progressRecord.properties_synced || 0) + chunkPropertiesSynced,
+            photos_synced: (progressRecord.photos_synced || 0) + chunkPhotosSynced,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', progressId);
+      }
+
+      // Update final progress for this chunk
+      const newAreaIndex = endAreaIndex;
+      const isComplete = newAreaIndex >= areasToProcess.length;
+
+      const { data: updatedProgress } = await supabase
+        .from('sync_progress')
+        .update({
+          current_area_index: newAreaIndex,
+          properties_synced: (progressRecord.properties_synced || 0) + chunkPropertiesSynced,
+          photos_synced: (progressRecord.photos_synced || 0) + chunkPhotosSynced,
+          errors: [...(progressRecord.errors || []), ...chunkErrors.slice(0, 20)],
+          status: isComplete ? 'completed' : 'running',
+          completed_at: isComplete ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', progressId)
+        .select()
+        .single();
+
+      console.log(`[Chunked Sync] Chunk complete. Areas ${startAreaIndex}-${endAreaIndex}. Synced ${chunkPropertiesSynced} properties.`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          completed: isComplete,
+          progress_id: progressId,
+          progress: updatedProgress,
+          chunk_stats: {
+            areas_processed: chunkAreas.length,
+            properties_synced: chunkPropertiesSynced,
+            photos_synced: chunkPhotosSynced,
+            errors: chunkErrors.length,
+          },
+          next_chunk: isComplete ? null : {
+            start_area_index: newAreaIndex,
+            remaining_areas: areasToProcess.length - newAreaIndex,
+          },
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     return new Response(
       JSON.stringify({ error: `Unknown action: ${action}` }),

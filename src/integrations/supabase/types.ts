@@ -5362,6 +5362,63 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_progress: {
+        Row: {
+          areas_config: Json | null
+          completed_at: string | null
+          created_at: string | null
+          current_area_index: number | null
+          current_listing_type: string | null
+          current_page: number | null
+          errors: Json | null
+          id: string
+          photos_synced: number | null
+          properties_synced: number | null
+          started_at: string | null
+          status: string
+          sync_type: string
+          total_areas: number | null
+          total_pages_per_area: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          areas_config?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_area_index?: number | null
+          current_listing_type?: string | null
+          current_page?: number | null
+          errors?: Json | null
+          id?: string
+          photos_synced?: number | null
+          properties_synced?: number | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+          total_areas?: number | null
+          total_pages_per_area?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          areas_config?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_area_index?: number | null
+          current_listing_type?: string | null
+          current_page?: number | null
+          errors?: Json | null
+          id?: string
+          photos_synced?: number | null
+          properties_synced?: number | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+          total_areas?: number | null
+          total_pages_per_area?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tool_usage: {
         Row: {
           id: string

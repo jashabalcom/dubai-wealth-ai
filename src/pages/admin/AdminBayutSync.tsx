@@ -188,6 +188,11 @@ export default function AdminBayutSync() {
   const [scaleSkipRecent, setScaleSkipRecent] = useState(false);
   const [showScaleConfirmDialog, setShowScaleConfirmDialog] = useState(false);
   
+  // Chunked Sync state (auto-resume)
+  const [chunkedProgressId, setChunkedProgressId] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Cleanup state
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [cleanupResult, setCleanupResult] = useState<{ deleted: number } | null>(null);
@@ -561,107 +566,133 @@ export default function AdminBayutSync() {
     }
   };
 
-  // SCALE SYNC - Bulk sync to reach 10K+ properties (Fire-and-Forget with Polling)
-  const runScaleSync = async () => {
+  // SCALE SYNC - Chunked sync with auto-resume (Fire-and-Poll)
+  const runScaleSync = async (resumeProgressId?: string) => {
     setShowScaleConfirmDialog(false);
     setIsScaleSyncing(true);
+    setIsPaused(false);
     abortRef.current = false;
     
-    setScaleSyncProgress({
-      currentArea: 'Starting...',
-      currentAreaIndex: 0,
-      totalAreas: scaleTargetAreas.length,
-      totalPropertiesSynced: 0,
-      totalApiCalls: 0,
-    });
-
-    toast.info(`Starting Scale Sync: ${scaleTargetAreas.length} areas, ${scalePagesPerArea} pages each${scaleLiteMode ? ' (Lite Mode)' : ''}...`);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
-        body: {
-          action: 'bulk_sync',
-          areas: scaleTargetAreas.map(a => ({ id: a.id, name: a.name })),
-          max_pages: scalePagesPerArea,
-          lite_mode: scaleLiteMode,
-          include_rentals: scaleIncludeRentals,
-          skip_recently_synced: scaleSkipRecent,
-          limit: 50,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.success && data?.syncLogId) {
-        toast.success(`Bulk sync started in background! Estimated: ${data.estimatedProperties} properties`);
-        
-        // Start polling for progress
-        const syncLogId = data.syncLogId;
-        const pollInterval = setInterval(async () => {
-          try {
-            const { data: logData } = await supabase
-              .from('bayut_sync_logs')
-              .select('*')
-              .eq('id', syncLogId)
-              .single();
-            
-            if (logData) {
-              const errorsData = logData.errors as Record<string, unknown> | null;
-              const areaResults = errorsData?.area_results as unknown[] | undefined;
-              
-              setScaleSyncProgress({
-                currentArea: logData.area_name || 'Processing...',
-                currentAreaIndex: areaResults?.length || 0,
-                totalAreas: scaleTargetAreas.length,
-                totalPropertiesSynced: logData.properties_synced || 0,
-                totalApiCalls: logData.api_calls_used || 0,
-              });
-
-              // Check if completed
-              if (logData.status === 'completed' || logData.status === 'completed_with_errors' || logData.status === 'failed') {
-                clearInterval(pollInterval);
-                setIsScaleSyncing(false);
-                
-                if (logData.status === 'failed') {
-                  const fatalError = errorsData?.fatal as string | undefined;
-                  toast.error(`Sync failed: ${fatalError || 'Unknown error'}`);
-                } else {
-                  toast.success(`Scale Sync complete! ${logData.properties_synced} properties synced.`);
-                }
-                
-                fetchSyncLogs();
-                fetchTotalStats();
-                setScaleSyncProgress({
-                  currentArea: '',
-                  currentAreaIndex: 0,
-                  totalAreas: 0,
-                  totalPropertiesSynced: 0,
-                  totalApiCalls: 0,
-                });
-              }
-            }
-          } catch (pollError) {
-            console.error('Polling error:', pollError);
-          }
-        }, 3000); // Poll every 3 seconds
-
-        // Cleanup on unmount or abort
-        return () => clearInterval(pollInterval);
-      } else {
-        toast.error(data?.error || 'Failed to start scale sync');
-        setIsScaleSyncing(false);
-      }
-    } catch (error) {
-      console.error('Scale sync error:', error);
-      toast.error('Scale sync failed to start. Check console for details.');
-      setIsScaleSyncing(false);
+    const progressId = resumeProgressId || chunkedProgressId;
+    
+    if (!progressId) {
+      // Starting fresh - initialize progress
       setScaleSyncProgress({
-        currentArea: '',
+        currentArea: 'Starting...',
         currentAreaIndex: 0,
-        totalAreas: 0,
+        totalAreas: scaleTargetAreas.length,
         totalPropertiesSynced: 0,
         totalApiCalls: 0,
       });
+    }
+
+    toast.info(`Starting Chunked Sync: ${scaleTargetAreas.length} areas, processing 3 areas at a time...`);
+
+    // Start the chunked sync loop
+    const processNextChunk = async (currentProgressId?: string) => {
+      if (abortRef.current || isPaused) {
+        setIsScaleSyncing(false);
+        toast.warning('Sync paused. Click Resume to continue.');
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('sync-bayut-properties', {
+          body: {
+            action: 'chunked_sync',
+            areas: currentProgressId ? undefined : scaleTargetAreas.map(a => ({ id: a.id, name: a.name })),
+            max_pages: scalePagesPerArea,
+            lite_mode: scaleLiteMode,
+            include_rentals: scaleIncludeRentals,
+            progress_id: currentProgressId,
+            areas_per_chunk: 3, // Process 3 areas at a time
+          },
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          const progress = data.progress;
+          const progressIdFromResponse = data.progress_id;
+          
+          // Store progress ID for resume
+          setChunkedProgressId(progressIdFromResponse);
+
+          // Update UI progress
+          const areasConfig = progress?.areas_config || scaleTargetAreas;
+          const currentAreaIdx = progress?.current_area_index || 0;
+          const currentAreaName = currentAreaIdx < areasConfig.length 
+            ? areasConfig[currentAreaIdx]?.name || 'Processing...'
+            : 'Completing...';
+          
+          setScaleSyncProgress({
+            currentArea: currentAreaName,
+            currentAreaIndex: currentAreaIdx,
+            totalAreas: areasConfig.length,
+            totalPropertiesSynced: progress?.properties_synced || 0,
+            totalApiCalls: progress?.photos_synced || 0,
+          });
+
+          // Check if completed
+          if (data.completed) {
+            setIsScaleSyncing(false);
+            setChunkedProgressId(null);
+            toast.success(`Scale Sync complete! ${progress?.properties_synced || 0} properties synced.`);
+            fetchSyncLogs();
+            fetchTotalStats();
+            setScaleSyncProgress({
+              currentArea: '',
+              currentAreaIndex: 0,
+              totalAreas: 0,
+              totalPropertiesSynced: 0,
+              totalApiCalls: 0,
+            });
+            return;
+          }
+
+          // Process next chunk after a short delay
+          if (data.next_chunk && !abortRef.current) {
+            toast.info(`Chunk done: ${data.chunk_stats?.properties_synced || 0} props. ${data.next_chunk.remaining_areas} areas remaining...`);
+            
+            // Wait 5 seconds then process next chunk
+            setTimeout(() => {
+              processNextChunk(progressIdFromResponse);
+            }, 5000);
+          }
+        } else {
+          throw new Error(data?.error || 'Unknown error');
+        }
+      } catch (error) {
+        console.error('Chunked sync error:', error);
+        toast.error(`Sync error: ${error instanceof Error ? error.message : 'Unknown error'}. Will retry...`);
+        
+        // Retry after delay
+        if (!abortRef.current) {
+          setTimeout(() => {
+            processNextChunk(chunkedProgressId || undefined);
+          }, 10000);
+        } else {
+          setIsScaleSyncing(false);
+        }
+      }
+    };
+
+    // Start processing
+    processNextChunk(progressId || undefined);
+  };
+
+  // Pause/Resume handlers
+  const pauseSync = () => {
+    abortRef.current = true;
+    setIsPaused(true);
+    toast.warning('Pausing sync after current chunk...');
+  };
+
+  const resumeSync = () => {
+    if (chunkedProgressId) {
+      runScaleSync(chunkedProgressId);
+    } else {
+      toast.error('No sync in progress to resume');
     }
   };
 
@@ -1187,14 +1218,19 @@ export default function AdminBayutSync() {
                     setScaleSkipRecent(false);
                     setShowScaleConfirmDialog(true);
                   }} 
-                  disabled={isScaleSyncing || isQuickSyncing}
+                  disabled={isScaleSyncing || isQuickSyncing || isPaused}
                   className="bg-gradient-to-r from-gold to-amber-500 hover:from-gold/90 hover:to-amber-500/90 text-black w-full"
                   size="lg"
                 >
                   {isScaleSyncing ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Syncing in Progress...
+                      Syncing: {scaleSyncProgress.currentAreaIndex}/{scaleSyncProgress.totalAreas} areas ({scaleSyncProgress.totalPropertiesSynced.toLocaleString()} props)
+                    </>
+                  ) : isPaused ? (
+                    <>
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Resume Sync ({scaleSyncProgress.totalPropertiesSynced.toLocaleString()} props done)
                     </>
                   ) : (
                     <>
@@ -1204,8 +1240,26 @@ export default function AdminBayutSync() {
                   )}
                 </Button>
                 
+                {/* Progress Bar when syncing */}
+                {(isScaleSyncing || isPaused) && scaleSyncProgress.totalAreas > 0 && (
+                  <div className="space-y-2 mt-4">
+                    <Progress 
+                      value={(scaleSyncProgress.currentAreaIndex / scaleSyncProgress.totalAreas) * 100} 
+                      className="h-3"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Area: {scaleSyncProgress.currentArea}</span>
+                      <span>{scaleSyncProgress.currentAreaIndex}/{scaleSyncProgress.totalAreas} areas</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-emerald-500">{scaleSyncProgress.totalPropertiesSynced.toLocaleString()} properties synced</span>
+                      {isPaused && <span className="text-amber-500">PAUSED - Click Resume to continue</span>}
+                    </div>
+                  </div>
+                )}
+                
                 <p className="text-xs text-muted-foreground text-center">
-                  Uses FULL MODE for quality data. Rehosts 10 photos per property. Includes both sales & rentals. ~3-4 hour estimated duration.
+                  Uses CHUNKED sync (3 areas at a time) for reliability. Rehosts 10 photos per property. Auto-resumes on page refresh.
                 </p>
               </CardContent>
             </Card>
@@ -1372,32 +1426,43 @@ export default function AdminBayutSync() {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button 
-                    onClick={() => setShowScaleConfirmDialog(true)} 
-                    disabled={isScaleSyncing || scaleTargetAreas.length === 0}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                    size="lg"
-                  >
-                    {isScaleSyncing ? (
-                      <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Scale Syncing...
-                      </>
-                    ) : (
-                      <>
-                        <Rocket className="h-4 w-4 mr-2" />
-                        Start Scale Sync ({estimatedPropertiesCount.toLocaleString()} props)
-                      </>
-                    )}
-                  </Button>
+                  {!isScaleSyncing && !isPaused && (
+                    <Button 
+                      onClick={() => setShowScaleConfirmDialog(true)} 
+                      disabled={scaleTargetAreas.length === 0}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                      size="lg"
+                    >
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Start Scale Sync ({estimatedPropertiesCount.toLocaleString()} props)
+                    </Button>
+                  )}
                   
                   {isScaleSyncing && (
+                    <>
+                      <Button 
+                        onClick={pauseSync}
+                        variant="outline"
+                        className="border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                      >
+                        <StopCircle className="h-4 w-4 mr-2" />
+                        Pause Sync
+                      </Button>
+                      <Badge variant="outline" className="text-blue-500 border-blue-500">
+                        <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                        Syncing in progress...
+                      </Badge>
+                    </>
+                  )}
+                  
+                  {isPaused && chunkedProgressId && (
                     <Button 
-                      onClick={abortSync}
-                      variant="destructive"
+                      onClick={resumeSync}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      size="lg"
                     >
-                      <StopCircle className="h-4 w-4 mr-2" />
-                      Abort
+                      <PlayCircle className="h-4 w-4 mr-2" />
+                      Resume Sync
                     </Button>
                   )}
                 </div>
@@ -1961,7 +2026,7 @@ export default function AdminBayutSync() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                onClick={runScaleSync}
+                onClick={() => runScaleSync()}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Rocket className="h-4 w-4 mr-2" />
