@@ -17,7 +17,8 @@ export interface PropertyFilters {
   yieldMin?: number;
   sortBy?: string;
   developer?: string;
-  completionStatus?: 'all' | 'ready' | 'off_plan'; // NEW: Ready vs Off-Plan filter
+  completionStatus?: 'all' | 'ready' | 'off_plan';
+  listingType?: 'buy' | 'rent'; // NEW: Buy vs Rent filter
 }
 
 export interface Property {
@@ -62,6 +63,11 @@ interface StatusCounts {
   off_plan: number;
 }
 
+interface ListingCounts {
+  buy: number;
+  rent: number;
+}
+
 interface UsePropertiesReturn {
   properties: Property[];
   isLoading: boolean;
@@ -72,7 +78,8 @@ interface UsePropertiesReturn {
   refresh: () => void;
   propertyCounts: Record<string, number>;
   developerCounts: Record<string, number>;
-  statusCounts: StatusCounts; // NEW: counts for Ready vs Off-Plan tabs
+  statusCounts: StatusCounts;
+  listingCounts: ListingCounts; // NEW: counts for Buy vs Rent tabs
   isGuestLimited: boolean;
 }
 
@@ -88,6 +95,7 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
   const [propertyCounts, setPropertyCounts] = useState<Record<string, number>>({});
   const [developerCounts, setDeveloperCounts] = useState<Record<string, number>>({});
   const [statusCounts, setStatusCounts] = useState<StatusCounts>({ all: 0, ready: 0, off_plan: 0 });
+  const [listingCounts, setListingCounts] = useState<ListingCounts>({ buy: 0, rent: 0 });
   
   const cursorRef = useRef<Cursor | null>(null);
   const filtersRef = useRef(filters);
@@ -152,8 +160,13 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
       query = query.lt('price_aed', filters.priceMax);
     }
 
-    // Completion status filter (new Ready vs Off-Plan tabs)
-    if (filters.completionStatus && filters.completionStatus !== 'all') {
+    // Listing type filter (Buy vs Rent)
+    if (filters.listingType) {
+      query = query.eq('listing_type', filters.listingType === 'buy' ? 'sale' : 'rent');
+    }
+
+    // Completion status filter (Ready vs Off-Plan tabs) - only applies to Buy
+    if (filters.listingType !== 'rent' && filters.completionStatus && filters.completionStatus !== 'all') {
       query = query.eq('completion_status', filters.completionStatus);
     } else if (filters.offPlanOnly) {
       // Legacy off-plan filter (fallback)
@@ -297,27 +310,32 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
     }
   }, []);
 
-  // Fetch status counts for Ready vs Off-Plan tabs
+  // Fetch status counts for Ready vs Off-Plan tabs (filtered by current listing type)
   const fetchStatusCounts = useCallback(async () => {
     try {
-      // Get total count
+      const listingTypeFilter = filters.listingType === 'rent' ? 'rent' : 'sale';
+      
+      // Get total count for current listing type
       const { count: allCount } = await supabase
         .from('properties')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'available');
+        .eq('status', 'available')
+        .eq('listing_type', listingTypeFilter);
       
       // Get ready count
       const { count: readyCount } = await supabase
         .from('properties')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'available')
+        .eq('listing_type', listingTypeFilter)
         .eq('completion_status', 'ready');
       
-      // Get off-plan count (includes 'off_plan' and 'under_construction')
+      // Get off-plan count
       const { count: offPlanCount } = await supabase
         .from('properties')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'available')
+        .eq('listing_type', listingTypeFilter)
         .neq('completion_status', 'ready');
       
       setStatusCounts({
@@ -327,6 +345,30 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
       });
     } catch (error) {
       console.error('Error fetching status counts:', error);
+    }
+  }, [filters.listingType]);
+
+  // Fetch listing type counts (Buy vs Rent)
+  const fetchListingCounts = useCallback(async () => {
+    try {
+      const { count: buyCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'available')
+        .eq('listing_type', 'sale');
+      
+      const { count: rentCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'available')
+        .eq('listing_type', 'rent');
+      
+      setListingCounts({
+        buy: buyCount || 0,
+        rent: rentCount || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching listing counts:', error);
     }
   }, []);
 
@@ -365,7 +407,13 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
     fetchProperties(true);
     fetchCounts();
     fetchStatusCounts();
+    fetchListingCounts();
   }, []); // Only run once on mount
+
+  // Re-fetch status counts when listing type changes
+  useEffect(() => {
+    fetchStatusCounts();
+  }, [filters.listingType, fetchStatusCounts]);
 
   return {
     properties,
@@ -378,6 +426,7 @@ export function useProperties(filters: PropertyFilters, options: UsePropertiesOp
     propertyCounts,
     developerCounts,
     statusCounts,
+    listingCounts,
     isGuestLimited: !isAuthenticated && totalCount > GUEST_RESULT_LIMIT,
   };
 }

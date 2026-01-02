@@ -117,6 +117,8 @@ interface PropertyFiltersProps {
   // Autocomplete data
   propertyCounts?: Record<string, number>;
   developerCounts?: Record<string, number>;
+  // Hide investment filters for rentals
+  hideInvestmentFilters?: boolean;
 }
 
 export function PropertyFilters({
@@ -149,9 +151,11 @@ export function PropertyFilters({
   onBelowMarketChange,
   propertyCounts = {},
   developerCounts = {},
+  hideInvestmentFilters = false,
 }: PropertyFiltersProps) {
-  // Progressive disclosure - remember user preference
+  // Progressive disclosure - remember user preference (only if not hidden)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(() => {
+    if (hideInvestmentFilters) return false;
     const saved = localStorage.getItem('showAdvancedFilters');
     return saved === 'true';
   });
@@ -253,6 +257,7 @@ export function PropertyFilters({
                   onGoldenVisaChange={onGoldenVisaChange}
                   showBelowMarketOnly={showBelowMarketOnly}
                   onBelowMarketChange={onBelowMarketChange}
+                  hideInvestmentFilters={hideInvestmentFilters}
                 />
               </div>
             </SheetContent>
@@ -344,7 +349,8 @@ export function PropertyFilters({
         </Select>
       </div>
 
-      {/* Smart Investment Filters Row - Progressive Disclosure */}
+      {/* Smart Investment Filters Row - Progressive Disclosure (hidden for rentals) */}
+      {!hideInvestmentFilters && (
       <Collapsible open={showAdvancedFilters} onOpenChange={setShowAdvancedFilters}>
         <div className="hidden lg:block">
           <CollapsibleTrigger asChild>
@@ -430,7 +436,7 @@ export function PropertyFilters({
           </CollapsibleContent>
         </div>
       </Collapsible>
-
+      )}
       {/* Active Filters */}
       {hasActiveFilters && (
         <div className="flex items-center gap-2">
@@ -466,6 +472,7 @@ function MobileFilterContent({
   onGoldenVisaChange,
   showBelowMarketOnly,
   onBelowMarketChange,
+  hideInvestmentFilters = false,
 }: {
   selectedArea: string;
   onAreaChange: (value: string) => void;
@@ -485,6 +492,7 @@ function MobileFilterContent({
   onGoldenVisaChange?: (value: boolean) => void;
   showBelowMarketOnly?: boolean;
   onBelowMarketChange?: (value: boolean) => void;
+  hideInvestmentFilters?: boolean;
 }) {
   return (
     <div className="space-y-5 px-1">
@@ -558,68 +566,70 @@ function MobileFilterContent({
         </Select>
       </div>
 
-      {/* Smart Investment Filters Section */}
-      <div className="pt-4 border-t border-gold/20">
-        <div className="flex items-center gap-2 text-gold mb-4">
-          <Sparkles className="w-4 h-4" />
-          <span className="text-sm font-medium">Smart Investment Filters</span>
-        </div>
-
-        {onScoreChange && (
-          <div className="mb-4">
-            <label className="text-sm font-medium mb-2 block">Investment Score</label>
-            <Select value={selectedScore || 'all'} onValueChange={onScoreChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {scoreRanges.map((range) => (
-                  <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      {/* Smart Investment Filters Section (hidden for rentals) */}
+      {!hideInvestmentFilters && (
+        <div className="pt-4 border-t border-gold/20">
+          <div className="flex items-center gap-2 text-gold mb-4">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm font-medium">Smart Investment Filters</span>
           </div>
-        )}
 
-        {onYieldChange && (
-          <div className="mb-4">
-            <label className="text-sm font-medium mb-2 block">Min. Rental Yield</label>
-            <Select value={selectedYield || 'all'} onValueChange={onYieldChange}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {yieldRanges.map((range) => (
-                  <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          {onGoldenVisaChange && (
-            <Button
-              variant={showGoldenVisaOnly ? 'gold' : 'outline'}
-              onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
-              className="border-gold/30 min-h-[48px] justify-start"
-            >
-              <Award className="w-4 h-4 mr-2" />
-              Golden Visa Only
-            </Button>
+          {onScoreChange && (
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">Investment Score</label>
+              <Select value={selectedScore || 'all'} onValueChange={onScoreChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {scoreRanges.map((range) => (
+                    <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
 
-          {onBelowMarketChange && (
-            <Button
-              variant={showBelowMarketOnly ? 'gold' : 'outline'}
-              onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
-              className="border-gold/30 min-h-[48px] justify-start"
-            >
-              Below Market Value
-            </Button>
+          {onYieldChange && (
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">Min. Rental Yield</label>
+              <Select value={selectedYield || 'all'} onValueChange={onYieldChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {yieldRanges.map((range) => (
+                    <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
+
+          <div className="flex flex-col gap-3">
+            {onGoldenVisaChange && (
+              <Button
+                variant={showGoldenVisaOnly ? 'gold' : 'outline'}
+                onClick={() => onGoldenVisaChange(!showGoldenVisaOnly)}
+                className="border-gold/30 min-h-[48px] justify-start"
+              >
+                <Award className="w-4 h-4 mr-2" />
+                Golden Visa Only
+              </Button>
+            )}
+
+            {onBelowMarketChange && (
+              <Button
+                variant={showBelowMarketOnly ? 'gold' : 'outline'}
+                onClick={() => onBelowMarketChange(!showBelowMarketOnly)}
+                className="border-gold/30 min-h-[48px] justify-start"
+              >
+                Below Market Value
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

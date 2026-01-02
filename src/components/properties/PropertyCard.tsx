@@ -41,6 +41,7 @@ interface PropertyCardProps {
   isComparing?: boolean;
   showCompareButton?: boolean;
   isAuthenticated?: boolean;
+  isRental?: boolean; // Hide investment badges for rentals
 }
 
 function formatPrice(price: number): string {
@@ -59,6 +60,7 @@ export function PropertyCard({
   isComparing = false,
   showCompareButton = false,
   isAuthenticated = false,
+  isRental = false,
 }: PropertyCardProps) {
   const { prefetchPropertyDetail, cancelPrefetch } = usePrefetch();
 
@@ -126,11 +128,12 @@ export function PropertyCard({
                   Featured
                 </span>
               )}
-              <GoldenVisaBadge priceAed={property.price_aed} variant="badge" />
+              {/* Only show Golden Visa badge for sale properties */}
+              {!isRental && <GoldenVisaBadge priceAed={property.price_aed} variant="badge" />}
             </div>
 
-            {/* Top Right - Yield only (score moved to content) */}
-            {property.rental_yield_estimate > 0 && (
+            {/* Top Right - Yield only for sale properties */}
+            {!isRental && property.rental_yield_estimate > 0 && (
               <div className="absolute top-3 right-3">
                 <div className="px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full flex items-center gap-1 backdrop-blur-sm">
                   <TrendingUp className="w-3 h-3" />
@@ -217,8 +220,8 @@ export function PropertyCard({
               </span>
             </div>
 
-            {/* Completion Date & Investment Score Row */}
-            {(property.is_off_plan && property.completion_date) && (
+            {/* Completion Date & Investment Score Row - Only for sale properties */}
+            {!isRental && (property.is_off_plan && property.completion_date) && (
               <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />
@@ -236,8 +239,8 @@ export function PropertyCard({
               </div>
             )}
             
-            {/* Investment Score for ready properties */}
-            {!(property.is_off_plan && property.completion_date) && (
+            {/* Investment Score for ready sale properties */}
+            {!isRental && !(property.is_off_plan && property.completion_date) && (
               <div className="mt-3 pt-3 border-t border-border flex justify-end">
                 <InvestmentScoreBadge
                   price={property.price_aed}
