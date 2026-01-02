@@ -1058,15 +1058,82 @@ export default function AdminBayutSync() {
               </CardContent>
             </Card>
 
-            {/* SCALE TO 10K - Bulk Sync */}
+            {/* 15K LATEST LISTINGS - Enhanced Sync Preset */}
+            <Card className="border-purple-500/30 bg-purple-500/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-500" />
+                  15K Latest Listings Sync
+                </CardTitle>
+                <CardDescription>
+                  Optimized preset: 25 areas × 12 pages × 50 properties = 15,000 latest Dubai listings with full detail fetching for accurate bedrooms/bathrooms.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 rounded-lg bg-background/50 border">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-500">25</p>
+                    <p className="text-xs text-muted-foreground">Dubai Areas</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-500">15,000</p>
+                    <p className="text-xs text-muted-foreground">Properties Target</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-amber-500">~90,000</p>
+                    <p className="text-xs text-muted-foreground">Photos (6/prop)</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-emerald-500">Full Mode</p>
+                    <p className="text-xs text-muted-foreground">Accurate Data</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-rose-500">~2-4 hrs</p>
+                    <p className="text-xs text-muted-foreground">Est. Duration</p>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={() => {
+                    setScaleTargetAreas([...TOP_DUBAI_AREAS]);
+                    setScalePagesPerArea(12);
+                    setScaleLiteMode(false); // FULL MODE for accurate data
+                    setScaleIncludeRentals(false);
+                    setScaleSkipRecent(false);
+                    setShowScaleConfirmDialog(true);
+                  }} 
+                  disabled={isScaleSyncing || isQuickSyncing}
+                  className="bg-purple-600 hover:bg-purple-700 text-white w-full"
+                  size="lg"
+                >
+                  {isScaleSyncing ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Syncing in Progress...
+                    </>
+                  ) : (
+                    <>
+                      <Rocket className="h-4 w-4 mr-2" />
+                      Start 15K Latest Listings Sync
+                    </>
+                  )}
+                </Button>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Uses FULL MODE (not lite) for accurate bedroom/bathroom counts. 6 photos per property rehosted to storage.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* SCALE TO 10K - Bulk Sync (Custom) */}
             <Card className="border-emerald-500/30 bg-emerald-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Rocket className="h-5 w-5 text-emerald-500" />
-                  Scale to 10K Properties
+                  <Settings2 className="h-5 w-5 text-emerald-500" />
+                  Custom Scale Sync
                 </CardTitle>
                 <CardDescription>
-                  Bulk sync with multi-page pagination. Lite mode syncs faster using search data only.
+                  Advanced bulk sync with customizable options. Use lite mode for faster syncing.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
