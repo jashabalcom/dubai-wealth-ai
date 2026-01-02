@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Shield, Cookie } from "lucide-react";
+import { Shield, Cookie, GraduationCap, Lock, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CookiePreferencesManager } from "@/components/CookiePreferences";
@@ -80,9 +80,26 @@ export function Footer() {
             <Link to="/" className="inline-block mb-6 group">
               <BrandLogo variant="dark" size="lg" />
             </Link>
-            <p className="text-secondary-foreground/60 text-sm leading-relaxed mb-6 max-w-sm">
+            <p className="text-secondary-foreground/60 text-sm leading-relaxed mb-5 max-w-sm">
               {t('footer.description')}
             </p>
+            
+            {/* Trust Badges */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 border border-primary/20 rounded-full text-xs text-primary">
+                <GraduationCap className="w-3 h-3" />
+                <span>Educational Platform</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-400">
+                <Lock className="w-3 h-3" />
+                <span>Secure Platform</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-sky-500/10 border border-sky-500/20 rounded-full text-xs text-sky-400">
+                <MapPin className="w-3 h-3" />
+                <span>Dubai-Focused</span>
+              </div>
+            </div>
+            
             <div className="flex gap-4">
               {["LinkedIn", "Twitter", "Instagram"].map((social) => (
                 <a

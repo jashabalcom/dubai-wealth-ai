@@ -102,13 +102,13 @@ export const CookieConsent = () => {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-4 left-4 right-4 z-50"
           >
-            <div className="max-w-2xl mx-auto bg-card border border-border rounded-lg shadow-lg px-4 py-3">
+            <div className="max-w-2xl mx-auto bg-background/90 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl shadow-black/10 px-5 py-4">
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                   <Cookie className="h-4 w-4 shrink-0 text-primary" />
                   <span>
-                    We use cookies to enhance your experience.{" "}
-                    <Link to="/cookie-policy" className="underline hover:text-foreground transition-colors">
+                    We use cookies to improve your experience.{" "}
+                    <Link to="/cookie-policy" className="text-primary hover:underline transition-colors">
                       Learn more
                     </Link>
                   </span>
@@ -119,23 +119,25 @@ export const CookieConsent = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPreferences(true)}
-                    className="gap-1"
+                    className="gap-1.5 text-muted-foreground hover:text-foreground"
                   >
                     <Settings className="w-3.5 h-3.5" />
                     Customize
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => handleConsent(false)}
+                    className="border-border/50"
                   >
                     Essential Only
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => handleConsent(true)}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
                   >
-                    Accept All
+                    Accept
                   </Button>
                 </div>
               </div>
