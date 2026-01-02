@@ -11,25 +11,25 @@ import { STRIPE_TIERS, type BillingPeriod } from "@/lib/stripe-config";
 
 const tiers = [
   {
-    name: "Free",
+    name: "Explorer",
     monthlyPrice: "$0",
     annualPrice: "$0",
     period: "forever",
     annualPeriod: "forever",
-    description: "Explore Dubai real estate basics and community access.",
+    description: "Everything you need to start learning.",
     features: [
       "Property listings browser",
       "Basic community access",
       "Newsletter & market updates",
     ],
-    cta: "Get Started",
+    cta: "Start Free",
     variant: "outline" as const,
     highlighted: false,
     tier: "free" as const,
     icon: Star,
   },
   {
-    name: "Dubai Investor",
+    name: "Investor",
     monthlyPrice: STRIPE_TIERS.investor.monthly.priceDisplay,
     annualPrice: STRIPE_TIERS.investor.annual.monthlyEquivalent,
     period: "/month",
@@ -44,15 +44,15 @@ const tiers = [
       "Core community channels",
       "Monthly market reports",
     ],
-    cta: "Become an Investor",
+    cta: "Upgrade to Investor",
     variant: "hero" as const,
     highlighted: true,
-    badge: "Recommended",
+    badge: "Most Popular",
     tier: "investor" as const,
     icon: Zap,
   },
   {
-    name: "Dubai Elite",
+    name: "Investor Pro",
     monthlyPrice: STRIPE_TIERS.elite.monthly.priceDisplay,
     annualPrice: STRIPE_TIERS.elite.annual.monthlyEquivalent,
     period: "/month",
@@ -68,7 +68,7 @@ const tiers = [
       "Weekly intelligence reports",
       "Direct expert consultation",
     ],
-    cta: "Go Elite",
+    cta: "Go Pro",
     variant: "default" as const,
     highlighted: false,
     badge: "Best Value",
@@ -76,7 +76,7 @@ const tiers = [
     icon: Crown,
   },
   {
-    name: "Dubai Private",
+    name: "Private",
     monthlyPrice: STRIPE_TIERS.private.monthly.priceDisplay,
     annualPrice: STRIPE_TIERS.private.annual.monthlyEquivalent,
     period: "/month",
@@ -84,14 +84,14 @@ const tiers = [
     annualSavings: STRIPE_TIERS.private.annual.savingsDisplay,
     description: "You now have a team in Dubai.",
     features: [
-      "Everything in Elite, plus:",
+      "Everything in Pro, plus:",
       "Dedicated concierge",
       "Off-market opportunities",
       "Direct advisory support",
       "Same-day priority response",
       "White-glove transaction support",
     ],
-    cta: "Request Access",
+    cta: "Contact Us",
     variant: "private" as const,
     highlighted: false,
     badge: "Concierge",
@@ -155,8 +155,7 @@ export function MembershipSection() {
             <span className="text-gradient-gold">Level of Access</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Select the membership that aligns with your investment goals. 
-            Upgrade or adjust anytime.
+            Start free. Upgrade when you're ready.
           </p>
 
           {/* Annual/Monthly Toggle */}

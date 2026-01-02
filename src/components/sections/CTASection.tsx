@@ -44,8 +44,8 @@ export function CTASection() {
           </h2>
 
           <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
-            Join 12,000+ global investors who are already leveraging Dubai's 
-            unprecedented wealth-building opportunities.
+            Join a growing community of smart property investors building wealth 
+            through Dubai's unprecedented opportunities.
           </p>
 
           {/* CTA Buttons */}
@@ -54,10 +54,10 @@ export function CTASection() {
               variant="default" 
               size="xl" 
               className="group"
-              onClick={handleGetStarted}
+              onClick={() => navigate('/auth')}
               disabled={loading}
             >
-              {loading ? 'Redirecting...' : 'Get Started — $29/month'}
+              {loading ? 'Redirecting...' : 'Start Free Today'}
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
@@ -70,17 +70,20 @@ export function CTASection() {
           </div>
 
           {/* Trust badges */}
+          <p className="text-muted-foreground/60 text-sm mb-6">
+            Free forever plan available · No credit card required
+          </p>
           <div className="flex flex-wrap items-center justify-center gap-8 text-muted-foreground text-sm">
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               30-day money-back guarantee
             </span>
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               Cancel anytime
             </span>
             <span className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               Secure payment
             </span>
           </div>
