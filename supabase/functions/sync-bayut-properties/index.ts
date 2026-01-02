@@ -1430,19 +1430,28 @@ serve(async (req) => {
                         totalPhotosRehosted += imageResult.rehostedCount;
                         totalPhotosCdn += imageResult.cdnCount;
                       } else {
-                        // LITE MODE: Rehost ONLY the cover photo to Supabase (owned image)
-                        const coverPhotoUrl = prop.media?.cover_photo || prop.coverPhoto?.url;
-                        if (coverPhotoUrl) {
+                        // LITE MODE: Rehost cover photo + store photo count metadata
+                        // Extract ALL available photos from search response
+                        const allPhotos = extractPhotoUrls(prop);
+                        
+                        // Rehost cover photo to Supabase (owned image)
+                        if (allPhotos.length > 0) {
                           try {
-                            const rehostedCoverUrl = await rehostPhoto(supabase, coverPhotoUrl, externalId, 'gallery');
+                            const rehostedCoverUrl = await rehostPhoto(supabase, allPhotos[0], externalId, 'gallery');
                             if (rehostedCoverUrl) {
                               imageResult.rehostedImages = [rehostedCoverUrl];
                               imageResult.rehostedCount = 1;
                               totalPhotosRehosted++;
-                              console.log(`[Bayut API] Lite mode: rehosted cover for ${externalId}`);
                             }
                           } catch (coverError) {
                             console.error(`[Bayut API] Lite mode cover rehost error for ${externalId}:`, coverError);
+                          }
+                          
+                          // Store remaining photos as CDN references (no storage cost)
+                          if (allPhotos.length > 1) {
+                            imageResult.cdnGalleryUrls = allPhotos.slice(1);
+                            imageResult.cdnCount = allPhotos.length - 1;
+                            totalPhotosCdn += imageResult.cdnCount;
                           }
                         }
                       }
@@ -2228,24 +2237,16 @@ function mapPropertyType(typeStr: string): string {
   return 'apartment';
 }
 
-// Extract photo URLs - handles Bayut API structure (media.cover_photo, media.photos)
+// Extract photo URLs - handles ALL Bayut API structures (search API, detail API, legacy formats)
 function extractPhotoUrls(prop: any): string[] {
   const urls: string[] = [];
   
-  // Debug logging for photo fields
-  console.log(`[Bayut API] Photo fields for ${prop.id}:`, {
-    hasMedia: !!prop.media,
-    coverPhoto: prop.media?.cover_photo?.substring(0, 50),
-    photosCount: prop.media?.photos?.length || 0,
-    photoCount: prop.media?.photo_count || 0,
-  });
-  
-  // Cover photo from media.cover_photo
+  // Priority 1: media.cover_photo (always first)
   if (prop.media?.cover_photo) {
     urls.push(prop.media.cover_photo);
   }
   
-  // Gallery photos from media.photos (array of URLs)
+  // Priority 2: media.photos array (detail API returns this)
   if (prop.media?.photos && Array.isArray(prop.media.photos)) {
     for (const photo of prop.media.photos) {
       const url = typeof photo === 'string' ? photo : photo?.url;
@@ -2255,13 +2256,43 @@ function extractPhotoUrls(prop: any): string[] {
     }
   }
   
-  // Fallback: check legacy field names
+  // Priority 3: photos array at root level (some API responses)
+  if (prop.photos && Array.isArray(prop.photos)) {
+    for (const photo of prop.photos) {
+      const url = typeof photo === 'string' ? photo : photo?.url;
+      if (url && !urls.includes(url)) {
+        urls.push(url);
+      }
+    }
+  }
+  
+  // Priority 4: Legacy formats (coverPhoto object, photo_urls)
   if (urls.length === 0) {
     if (prop.coverPhoto?.url) urls.push(prop.coverPhoto.url);
-    if (prop.photos && Array.isArray(prop.photos)) {
-      for (const photo of prop.photos) {
-        const url = photo?.url || (typeof photo === 'string' ? photo : null);
+    if (prop.cover_photo_url) urls.push(prop.cover_photo_url);
+    if (prop.photo_urls && Array.isArray(prop.photo_urls)) {
+      for (const url of prop.photo_urls) {
         if (url && !urls.includes(url)) urls.push(url);
+      }
+    }
+  }
+  
+  // Priority 5: gallery field (alternative structure)
+  if (prop.gallery && Array.isArray(prop.gallery)) {
+    for (const img of prop.gallery) {
+      const url = typeof img === 'string' ? img : img?.url || img?.image;
+      if (url && !urls.includes(url)) {
+        urls.push(url);
+      }
+    }
+  }
+  
+  // Priority 6: images field (alternative structure)
+  if (prop.images && Array.isArray(prop.images)) {
+    for (const img of prop.images) {
+      const url = typeof img === 'string' ? img : img?.url || img?.image_url;
+      if (url && !urls.includes(url)) {
+        urls.push(url);
       }
     }
   }
