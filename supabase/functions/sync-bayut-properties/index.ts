@@ -568,6 +568,10 @@ serve(async (req) => {
       const discoveredAgentIds = new Set<string>();
       const discoveredAgencyIds = new Set<string>();
 
+      // DUPLICATE PREVENTION: Track processed external IDs in this sync session
+      const processedExternalIds = new Set<string>();
+      let duplicatesBlocked = 0;
+
       try {
         // Fetch properties using POST
         const searchUrl = `${API_BASE}/properties_search?page=${page}&hitsPerPage=${limit}`;
@@ -609,14 +613,22 @@ serve(async (req) => {
               await new Promise(r => setTimeout(r, BATCH_COOLDOWN_MS));
             }
 
-            const externalId = String(prop.id);
-            
             // VALIDATION: Skip properties with missing essential data
             if (!prop.id) {
               console.log(`[Bayut API] Skipping property - no ID`);
               errors.push('Property skipped: no ID');
               continue;
             }
+
+            const externalId = String(prop.id);
+            
+            // DUPLICATE PREVENTION #1: Memory guard - skip if already processed in this batch
+            if (processedExternalIds.has(externalId)) {
+              console.log(`[Bayut API] DUPLICATE BLOCKED (memory): ${externalId} already processed in this sync`);
+              duplicatesBlocked++;
+              continue;
+            }
+            processedExternalIds.add(externalId);
             
             if (!prop.price || prop.price <= 0) {
               console.log(`[Bayut API] Skipping ${externalId} - no valid price`);
@@ -639,13 +651,13 @@ serve(async (req) => {
               continue;
             }
             
-            // Check if recently synced (within 24 hours)
+            // DUPLICATE PREVENTION #2: Database check with maybeSingle (no error if not found)
             const { data: existing } = await supabase
               .from('properties')
               .select('id, last_synced_at')
               .eq('external_id', externalId)
               .eq('external_source', 'bayut')
-              .single();
+              .maybeSingle();
 
             if (existing?.last_synced_at) {
               const lastSync = new Date(existing.last_synced_at);
@@ -784,6 +796,8 @@ serve(async (req) => {
         // Calculate estimated storage saved (avg 500KB per CDN image)
         const estimatedStorageSavedMb = Math.round((photosCdnReferenced * 500) / 1024);
 
+        console.log(`[Bayut API] Sync complete: ${propertiesSynced} synced, ${duplicatesBlocked} duplicates blocked`);
+
         // Update sync log with comprehensive metrics
         if (syncLogId) {
           await supabase
@@ -802,6 +816,7 @@ serve(async (req) => {
                 agents_discovered: agentsDiscovered,
                 agencies_discovered: agenciesDiscovered,
                 estimated_storage_saved_mb: estimatedStorageSavedMb,
+                duplicates_blocked: duplicatesBlocked,
               } : null,
               status: errors.length > 0 ? 'completed_with_errors' : 'completed',
             })
@@ -811,9 +826,10 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             success: true,
-            message: `Synced ${propertiesSynced} of ${propertiesFound} properties`,
+            message: `Synced ${propertiesSynced} of ${propertiesFound} properties (${duplicatesBlocked} duplicates blocked)`,
             propertiesFound,
             propertiesSynced,
+            duplicatesBlocked,
             storage: {
               photosRehosted,
               photosCdnReferenced,
@@ -1173,10 +1189,14 @@ serve(async (req) => {
         let totalPhotosCdn = 0;
         let totalAgentsDiscovered = 0;
         let totalAgenciesDiscovered = 0;
+        let totalDuplicatesBlocked = 0;
         const allErrors: string[] = [];
         const areaResults: { name: string; synced: number; pages: number }[] = [];
         const discoveredAgentIds = new Set<string>();
         const discoveredAgencyIds = new Set<string>();
+        
+        // DUPLICATE PREVENTION: Global Set for entire bulk sync session
+        const processedExternalIds = new Set<string>();
 
         const purposes = include_rentals ? ['for-sale', 'for-rent'] : [purpose];
 
@@ -1234,10 +1254,21 @@ serve(async (req) => {
                   // Process properties (LITE MODE or FULL MODE)
                   for (const prop of properties) {
                     try {
+                      // Basic validation - check ID first
+                      if (!prop.id) continue;
+                      
                       const externalId = String(prop.id);
 
-                      // Basic validation
-                      if (!prop.id || !prop.price || prop.price <= 0) continue;
+                      // DUPLICATE PREVENTION #1: Memory guard - skip if already processed
+                      if (processedExternalIds.has(externalId)) {
+                        console.log(`[Bayut API] DUPLICATE BLOCKED (memory): ${externalId}`);
+                        totalDuplicatesBlocked++;
+                        continue;
+                      }
+                      processedExternalIds.add(externalId);
+
+                      // Basic validation - check price
+                      if (!prop.price || prop.price <= 0) continue;
 
                       // STRICT DUBAI-ONLY FILTER - use whitelist
                       if (!isDubaiLocation(prop)) {
@@ -1253,14 +1284,14 @@ serve(async (req) => {
                         continue;
                       }
 
-                      // Check if recently synced (unless skip_recently_synced)
+                      // DUPLICATE PREVENTION #2: Database check with maybeSingle
                       if (!skip_recently_synced) {
                         const { data: existing } = await supabase
                           .from('properties')
                           .select('id, last_synced_at')
                           .eq('external_id', externalId)
                           .eq('external_source', 'bayut')
-                          .single();
+                          .maybeSingle();
 
                         if (existing?.last_synced_at) {
                           const lastSync = new Date(existing.last_synced_at);
@@ -1412,14 +1443,18 @@ serve(async (req) => {
                   photos_cdn: totalPhotosCdn,
                   agents_discovered: totalAgentsDiscovered,
                   agencies_discovered: totalAgenciesDiscovered,
+                  duplicates_blocked: totalDuplicatesBlocked,
                   area_results: areaResults,
-                } : null,
+                } : {
+                  duplicates_blocked: totalDuplicatesBlocked,
+                  area_results: areaResults,
+                },
                 status: allErrors.length > 0 ? 'completed_with_errors' : 'completed',
               })
               .eq('id', syncLogId);
           }
 
-          console.log(`[Bayut API] BULK SYNC COMPLETE: ${totalPropertiesSynced} properties synced`);
+          console.log(`[Bayut API] BULK SYNC COMPLETE: ${totalPropertiesSynced} synced, ${totalDuplicatesBlocked} duplicates blocked`);
 
         } catch (syncError) {
           console.error('[Bayut API] Bulk sync fatal error:', syncError);
