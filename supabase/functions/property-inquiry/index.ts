@@ -68,11 +68,13 @@ serve(async (req) => {
     const inquiry: InquiryRequest = await req.json();
     logStep("Received inquiry", { propertyId: inquiry.propertyId, type: inquiry.inquiryType });
 
-    // Get property with agent info
+    // Get property with agent info AND Bayut agent/agency data
     const { data: property, error: propError } = await supabaseClient
       .from('properties')
       .select(`
         id, title, location_area, price_aed,
+        bayut_agent_data, bayut_agency_data, bayut_building_info,
+        developer_name,
         agent:agents(
           id, full_name, email,
           subscription_tier, show_direct_contact
@@ -88,11 +90,18 @@ serve(async (req) => {
     // Agent comes back as an array from the join, get first element
     const agentData = property.agent as any;
     const agent = Array.isArray(agentData) ? agentData[0] : agentData;
+    
+    // Extract Bayut agent/agency info for admin reference
+    const bayutAgent = property.bayut_agent_data as any;
+    const bayutAgency = property.bayut_agency_data as any;
+    const bayutBuilding = property.bayut_building_info as any;
 
     logStep("Property found", { 
       title: property.title, 
       hasAgent: !!agent,
-      agentTier: agent?.subscription_tier 
+      agentTier: agent?.subscription_tier,
+      hasBayutAgent: !!bayutAgent?.agent_name,
+      hasBayutAgency: !!bayutAgency?.agency_name,
     });
 
     // Determine where to route the inquiry
@@ -168,6 +177,7 @@ serve(async (req) => {
           .label { font-weight: bold; color: #666; font-size: 12px; text-transform: uppercase; }
           .value { font-size: 16px; margin-bottom: 10px; }
           .footer { text-align: center; padding: 20px; color: #888; font-size: 12px; }
+          .agent-box { background: #E8F4F8; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #3B82F6; }
           ${!routeToAgent ? '.notice { background: #FEF3C7; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }' : ''}
         </style>
       </head>
@@ -191,6 +201,10 @@ serve(async (req) => {
               <div class="value">${property.location_area}</div>
               <div class="label">Price</div>
               <div class="value" style="color: #CBB89E; font-weight: bold;">${priceFormatted}</div>
+              ${property.developer_name ? `
+              <div class="label">Developer</div>
+              <div class="value">${property.developer_name}</div>
+              ` : ''}
             </div>
             
             <div class="lead-box">
@@ -206,6 +220,36 @@ serve(async (req) => {
               <div class="value">${safeMessage}</div>
               ` : ''}
             </div>
+            
+            ${!routeToAgent && (bayutAgent?.agent_name || bayutAgency?.agency_name) ? `
+            <div class="agent-box">
+              <h3 style="margin-top: 0; color: #1E40AF;">🏢 Original Listing Agent (for reference)</h3>
+              ${bayutAgent?.agent_name ? `
+              <div class="label">Agent Name</div>
+              <div class="value">${bayutAgent.agent_name}</div>
+              ` : ''}
+              ${bayutAgent?.agent_phone ? `
+              <div class="label">Agent Phone</div>
+              <div class="value"><a href="tel:${bayutAgent.agent_phone}">${bayutAgent.agent_phone}</a></div>
+              ` : ''}
+              ${bayutAgent?.agent_whatsapp ? `
+              <div class="label">Agent WhatsApp</div>
+              <div class="value"><a href="https://wa.me/${bayutAgent.agent_whatsapp.replace(/[^0-9]/g, '')}">${bayutAgent.agent_whatsapp}</a></div>
+              ` : ''}
+              ${bayutAgency?.agency_name ? `
+              <div class="label">Agency</div>
+              <div class="value">${bayutAgency.agency_name}</div>
+              ` : ''}
+              ${bayutAgency?.agency_orn ? `
+              <div class="label">Agency ORN</div>
+              <div class="value">${bayutAgency.agency_orn}</div>
+              ` : ''}
+              ${bayutBuilding?.building_name ? `
+              <div class="label">Building</div>
+              <div class="value">${bayutBuilding.building_name}</div>
+              ` : ''}
+            </div>
+            ` : ''}
           </div>
           <div class="footer">
             <p>This inquiry was submitted via Dubai Wealth Hub</p>
