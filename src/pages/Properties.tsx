@@ -13,6 +13,7 @@ import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useProperties, PropertyFilters } from '@/hooks/useProperties';
 import { PropertyCard } from '@/components/properties/PropertyCard';
 import { PropertyFilters as PropertyFiltersComponent, priceRanges, yieldRanges } from '@/components/properties/PropertyFilters';
+import { PropertyStatusTabs } from '@/components/properties/PropertyStatusTabs';
 import { PropertyGridSkeleton } from '@/components/properties/PropertySkeleton';
 import { PropertyComparison, ComparisonBar } from '@/components/properties/PropertyComparison';
 import { PropertyMap } from '@/components/properties/PropertyMap';
@@ -23,6 +24,8 @@ import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import { calculateInvestmentScore, isGoldenVisaEligible, isBelowMarketValue } from '@/lib/investmentScore';
 import { useQueryClient } from '@tanstack/react-query';
+
+type PropertyStatusFilter = 'all' | 'ready' | 'off_plan';
 
 export default function Properties() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,6 +50,9 @@ export default function Properties() {
   const sortBy = searchParams.get('sort') || 'featured';
   const viewMode = (searchParams.get('view') as 'grid' | 'map') || 'grid';
   
+  // NEW: Property status filter (Ready vs Off-Plan tabs)
+  const propertyStatus = (searchParams.get('status') as PropertyStatusFilter) || 'all';
+  
   // Smart investment filters
   const selectedScore = searchParams.get('score') || 'all';
   const selectedYield = searchParams.get('yield') || 'all';
@@ -69,8 +75,9 @@ export default function Properties() {
       goldenVisaOnly: showGoldenVisaOnly || undefined,
       yieldMin: yieldRange?.min,
       sortBy,
+      completionStatus: propertyStatus !== 'all' ? propertyStatus : undefined, // NEW
     };
-  }, [searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedYield, showGoldenVisaOnly]);
+  }, [searchQuery, selectedArea, selectedType, selectedBedrooms, selectedPrice, showOffPlanOnly, sortBy, selectedYield, showGoldenVisaOnly, propertyStatus]);
 
   // Use server-side filtering hook
   const {
@@ -82,6 +89,7 @@ export default function Properties() {
     loadMore,
     propertyCounts,
     developerCounts,
+    statusCounts,
     isGuestLimited,
   } = useProperties(filters, { isAuthenticated: !!user });
 
@@ -229,6 +237,13 @@ export default function Properties() {
 
       <section className="py-12">
         <div className="container mx-auto px-4">
+          {/* Property Status Tabs: All | Ready to Move | Off-Plan */}
+          <PropertyStatusTabs
+            value={propertyStatus}
+            onChange={(status) => updateFilter('status', status)}
+            counts={statusCounts}
+          />
+          
           {/* Recently Viewed Section */}
           {recentlyViewed.length > 0 && (
             <RecentlyViewedSection
