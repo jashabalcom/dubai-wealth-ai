@@ -2,9 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Utensils, GraduationCap, HeartPulse, Dumbbell, ShoppingCart, Film, MapPin } from 'lucide-react';
+import { MAP_STYLES } from '@/types/maps';
 
 interface NeighborhoodMapProps {
   latitude: number;
@@ -48,23 +50,11 @@ export function NeighborhoodMap({ latitude, longitude, neighborhoodId, neighborh
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [mapToken, setMapToken] = useState<string | null>(null);
   const [pois, setPois] = useState<POI[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // Fetch Mapbox token
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        setMapToken(data.token);
-      } catch (error) {
-        console.error('Error fetching Mapbox token:', error);
-      }
-    };
-    fetchToken();
-  }, []);
+  // Use cached Mapbox token from React Query
+  const { token: mapToken, loading: tokenLoading } = useMapboxToken();
 
   // Fetch POIs
   useEffect(() => {
@@ -91,7 +81,7 @@ export function NeighborhoodMap({ latitude, longitude, neighborhoodId, neighborh
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: MAP_STYLES.light, // Reliable style
       center: [longitude, latitude],
       zoom: 14,
       pitch: 30,
@@ -105,6 +95,11 @@ export function NeighborhoodMap({ latitude, longitude, neighborhoodId, neighborh
       .setLngLat([longitude, latitude])
       .setPopup(new mapboxgl.Popup().setHTML(`<strong>${neighborhoodName}</strong>`))
       .addTo(map.current);
+
+    // Handle errors gracefully
+    map.current.on('error', (e) => {
+      console.error('Mapbox error:', e.error);
+    });
 
     map.current.on('load', () => {
       setIsLoading(false);
@@ -187,14 +182,14 @@ export function NeighborhoodMap({ latitude, longitude, neighborhoodId, neighborh
       </div>
 
       {/* Loading Skeleton */}
-      {isLoading && (
+      {(isLoading || tokenLoading) && (
         <div className="absolute inset-0 z-5">
           <Skeleton className="w-full h-full" />
         </div>
       )}
 
       {/* No POIs Message */}
-      {pois.length === 0 && !isLoading && (
+      {pois.length === 0 && !isLoading && !tokenLoading && (
         <div className="absolute bottom-4 left-4 z-10 bg-background/90 backdrop-blur-sm px-3 py-2 rounded-lg text-sm text-muted-foreground">
           No points of interest loaded for this area
         </div>
