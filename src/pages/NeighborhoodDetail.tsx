@@ -40,7 +40,7 @@ export default function NeighborhoodDetail() {
     allPOIs?.filter(poi => poi.poi_type === 'restaurant') || [], [allPOIs]);
   
   const userTier = profile?.membership_tier || 'free';
-  const hasFullAccess = userTier === 'investor' || userTier === 'elite';
+  const hasFullAccess = ['investor', 'elite', 'private'].includes(userTier);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
