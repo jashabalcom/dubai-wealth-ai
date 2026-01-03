@@ -176,31 +176,26 @@ export function Navbar() {
                     <NavigationMenu key={link.label}>
                       <NavigationMenuList>
                         <NavigationMenuItem>
-                          <div className="flex items-center">
+                          <NavigationMenuTrigger 
+                            className={cn(
+                              "flex items-center gap-1 bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent h-auto px-0",
+                              "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
+                              isActive 
+                                ? "text-primary" 
+                                : useDarkText 
+                                  ? "text-foreground/80 hover:text-primary"
+                                  : "text-secondary-foreground/80 hover:text-primary"
+                            )}
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <Link
                               to="/properties"
-                              className={cn(
-                                "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
-                                isActive 
-                                  ? "text-primary" 
-                                  : useDarkText 
-                                    ? "text-foreground/80 hover:text-primary"
-                                    : "text-secondary-foreground/80 hover:text-primary"
-                              )}
+                              onClick={(e) => e.stopPropagation()}
+                              className="hover:text-primary transition-colors"
                             >
                               {link.label}
                             </Link>
-                            <NavigationMenuTrigger 
-                              className={cn(
-                                "bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent p-0 pl-1 h-auto",
-                                useDarkText 
-                                  ? "text-foreground/60 hover:text-primary"
-                                  : "text-secondary-foreground/60 hover:text-primary"
-                              )}
-                            >
-                              <span className="sr-only">Open properties menu</span>
-                            </NavigationMenuTrigger>
-                          </div>
+                          </NavigationMenuTrigger>
                           <NavigationMenuContent>
                             <ul className="grid w-[300px] gap-2 p-4">
                               {propertiesDropdownItems.map((item) => (
@@ -235,31 +230,26 @@ export function Navbar() {
                     <NavigationMenu key={link.label}>
                       <NavigationMenuList>
                         <NavigationMenuItem>
-                          <div className="flex items-center">
+                          <NavigationMenuTrigger 
+                            className={cn(
+                              "flex items-center gap-1 bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent h-auto px-0",
+                              "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
+                              isActive 
+                                ? "text-primary" 
+                                : useDarkText 
+                                  ? "text-foreground/80 hover:text-primary"
+                                  : "text-secondary-foreground/80 hover:text-primary"
+                            )}
+                            onClick={(e) => e.preventDefault()}
+                          >
                             <Link
                               to="/briefing"
-                              className={cn(
-                                "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
-                                isActive 
-                                  ? "text-primary" 
-                                  : useDarkText 
-                                    ? "text-foreground/80 hover:text-primary"
-                                    : "text-secondary-foreground/80 hover:text-primary"
-                              )}
+                              onClick={(e) => e.stopPropagation()}
+                              className="hover:text-primary transition-colors"
                             >
                               {link.label}
                             </Link>
-                            <NavigationMenuTrigger 
-                              className={cn(
-                                "bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent p-0 pl-1 h-auto",
-                                useDarkText 
-                                  ? "text-foreground/60 hover:text-primary"
-                                  : "text-secondary-foreground/60 hover:text-primary"
-                              )}
-                            >
-                              <span className="sr-only">Open insights menu</span>
-                            </NavigationMenuTrigger>
-                          </div>
+                          </NavigationMenuTrigger>
                           <NavigationMenuContent>
                             <ul className="grid w-[320px] gap-2 p-4">
                               {insightsDropdownItems.map((item) => (
