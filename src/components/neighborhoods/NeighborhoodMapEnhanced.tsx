@@ -64,10 +64,12 @@ export function NeighborhoodMapEnhanced({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: MAP_STYLES.light, // Reliable style that works everywhere
+      style: MAP_STYLES.light,
       center: [longitude, latitude],
       zoom: 15,
-      pitch: 45, // Simple tilt for depth
+      pitch: 45,
+      bearing: -17.6,
+      antialias: true,
     });
 
     // Add navigation controls
@@ -81,8 +83,32 @@ export function NeighborhoodMapEnhanced({
       console.error('Mapbox error:', e.error);
     });
 
-    // Set loading state on load event (more reliable than style.load)
+    // Add 3D buildings on load
     map.current.on('load', () => {
+      const layers = map.current!.getStyle().layers;
+      const labelLayerId = layers?.find(
+        (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
+      )?.id;
+
+      // Add 3D building extrusions
+      map.current!.addLayer(
+        {
+          id: '3d-buildings',
+          source: 'composite',
+          'source-layer': 'building',
+          filter: ['==', 'extrude', 'true'],
+          type: 'fill-extrusion',
+          minzoom: 14,
+          paint: {
+            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, ['get', 'height']],
+            'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, ['get', 'min_height']],
+            'fill-extrusion-opacity': 0.6,
+          },
+        },
+        labelLayerId
+      );
+
       setIsLoading(false);
     });
 
