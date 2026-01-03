@@ -3,11 +3,22 @@ import { cn } from '@/lib/utils';
 
 interface RemainingViewsBadgeProps {
   remainingViews: number;
+  userTier?: 'anonymous' | 'free' | 'investor' | 'elite' | 'private';
   className?: string;
 }
 
-export function RemainingViewsBadge({ remainingViews, className }: RemainingViewsBadgeProps) {
-  if (remainingViews <= 0 || remainingViews > 3) return null;
+export function RemainingViewsBadge({ 
+  remainingViews, 
+  userTier = 'anonymous',
+  className 
+}: RemainingViewsBadgeProps) {
+  // Don't show for paid members or when views are plenty
+  if (remainingViews <= 0 || remainingViews > 5) return null;
+  if (['investor', 'elite', 'private'].includes(userTier)) return null;
+
+  const message = userTier === 'anonymous'
+    ? `${remainingViews} free ${remainingViews === 1 ? 'view' : 'views'} left - Sign up for more`
+    : `${remainingViews} ${remainingViews === 1 ? 'view' : 'views'} left - Upgrade for unlimited`;
 
   return (
     <div
@@ -20,7 +31,7 @@ export function RemainingViewsBadge({ remainingViews, className }: RemainingView
       )}
     >
       <Eye className="w-3 h-3" />
-      <span>{remainingViews} free {remainingViews === 1 ? 'analysis' : 'analyses'} left</span>
+      <span>{message}</span>
     </div>
   );
 }

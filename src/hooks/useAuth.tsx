@@ -151,6 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!error && data.user) {
       // Track sign-up conversion
       trackSignUp('email');
+      // Clear anonymous views to give user fresh free-tier limits
+      localStorage.removeItem('anonymous_property_views');
       
       // Check for affiliate referral cookie and create referral record
       const referralCode = document.cookie
@@ -212,6 +214,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!error) {
       // Track login event
       trackLogin('email');
+      // Clear anonymous views to give user fresh free-tier limits
+      localStorage.removeItem('anonymous_property_views');
     }
 
     return { error: error as Error | null };
