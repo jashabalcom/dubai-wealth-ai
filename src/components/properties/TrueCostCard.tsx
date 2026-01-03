@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, ChevronDown, Info, Calculator } from 'lucide-react';
+import { DollarSign, ChevronDown, Info, Calculator, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Tooltip,
@@ -18,6 +18,7 @@ import {
 } from '@/lib/dubaiRealEstateFees';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { InlinePrice } from '@/components/DualPrice';
+import type { AccessLevel } from '@/hooks/usePropertyViewLimit';
 
 interface TrueCostCardProps {
   priceAed: number;
@@ -25,6 +26,7 @@ interface TrueCostCardProps {
   area: string;
   isOffPlan?: boolean;
   className?: string;
+  accessLevel?: AccessLevel;
 }
 
 function formatAed(amount: number): string {
@@ -42,7 +44,8 @@ export function TrueCostCard({
   sizeSqft, 
   area, 
   isOffPlan = false,
-  className 
+  className,
+  accessLevel = 'full',
 }: TrueCostCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMortgage, setShowMortgage] = useState(false);
@@ -132,6 +135,96 @@ export function TrueCostCard({
     mortgage: 'text-pink-400',
   };
 
+  // Blocked state - show locked card
+  if (accessLevel === 'blocked') {
+    return (
+      <div className={cn('p-4 rounded-xl bg-card border border-border', className)}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-gold" />
+            <h3 className="font-heading text-lg">True Cost of Ownership</h3>
+          </div>
+        </div>
+        
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <Lock className="w-8 h-8 text-muted-foreground mb-3" />
+          <p className="text-muted-foreground mb-4">Sign up to see the true cost breakdown</p>
+          <Link to="/auth">
+            <Button variant="gold" size="sm">
+              Sign Up Free
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Partial access - show summary, lock breakdown
+  if (accessLevel === 'partial') {
+    return (
+      <div className={cn('p-4 rounded-xl bg-card border border-border', className)}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-gold" />
+            <h3 className="font-heading text-lg">True Cost of Ownership</h3>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="w-4 h-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Complete breakdown of all acquisition costs including government fees, agent commission, and legal costs.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        {/* Summary - visible */}
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Property Price</span>
+            <InlinePrice amountAED={priceAed} />
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Acquisition Costs</span>
+            <span className="font-medium text-amber-400">+{formatAed(costs.grandTotal)}</span>
+          </div>
+          <div className="h-px bg-border my-2" />
+          <div className="flex justify-between items-center">
+            <span className="font-semibold">True Cost to Own</span>
+            <InlinePrice amountAED={trueCost} className="text-lg" />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {costs.percentageOfProperty.toFixed(1)}% above listing price
+          </p>
+        </div>
+
+        {/* Locked breakdown */}
+        <div className="relative pt-3 border-t border-border">
+          <div className="space-y-2 blur-sm select-none">
+            {feeItems.slice(0, 4).map((item) => (
+              <div key={item.key} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{item.label}</span>
+                <span>AED ???</span>
+              </div>
+            ))}
+          </div>
+          <Link 
+            to="/auth" 
+            className="absolute inset-0 flex items-center justify-center bg-background/40 backdrop-blur-[2px] rounded-lg"
+          >
+            <div className="flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/30 rounded-full hover:bg-gold/20 transition-colors">
+              <Lock className="w-4 h-4 text-gold" />
+              <span className="text-sm font-medium text-gold">Sign up for full breakdown</span>
+            </div>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Full access
   return (
     <div className={cn('p-4 rounded-xl bg-card border border-border', className)}>
       <div className="flex items-center justify-between mb-4">
