@@ -163,6 +163,9 @@ export function NeighborhoodMapEnhanced({
     };
   }, [mapToken, latitude, longitude, neighborhoodName]);
 
+  // Track if we've done initial fit
+  const hasInitialFit = useRef(false);
+
   // Update markers when POIs change
   useEffect(() => {
     if (!map.current || isLoading) return;
@@ -195,7 +198,7 @@ export function NeighborhoodMapEnhanced({
         justify-content: center;
         ${isSelected ? 'transform: scale(1.2); z-index: 10;' : ''}
       `;
-      
+
       el.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
           <circle cx="12" cy="12" r="4"/>
@@ -223,11 +226,12 @@ export function NeighborhoodMapEnhanced({
       markersRef.current.set(poi.id, marker);
     });
 
-    // Fit bounds to show all markers with animation
-    if (pois.length > 0) {
+    // Only fit bounds on INITIAL load, not on every category change
+    if (pois.length > 0 && !hasInitialFit.current) {
+      hasInitialFit.current = true;
       const bounds = new mapboxgl.LngLatBounds();
-      bounds.extend([longitude, latitude]); // Include center
-      
+      bounds.extend([longitude, latitude]);
+
       pois.forEach(poi => {
         if (poi.latitude && poi.longitude) {
           bounds.extend([poi.longitude, poi.latitude]);

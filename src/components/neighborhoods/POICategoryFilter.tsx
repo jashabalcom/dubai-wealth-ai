@@ -1,7 +1,6 @@
-import { useRef, useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Utensils, GraduationCap, HeartPulse, Dumbbell, ShoppingCart, Film, MapPin } from 'lucide-react';
+import { Utensils, GraduationCap, HeartPulse, Dumbbell, ShoppingCart, Film, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ScrollableRail } from '@/components/ui/ScrollableRail';
 
 export interface POICategory {
   key: string;
@@ -26,6 +25,7 @@ interface POICategoryFilterProps {
   counts: Record<string, number>;
   totalCount: number;
   className?: string;
+  isLoading?: boolean;
 }
 
 export function POICategoryFilter({
@@ -33,115 +33,63 @@ export function POICategoryFilter({
   onCategoryChange,
   counts,
   totalCount,
-  className
+  className,
+  isLoading = false
 }: POICategoryFilterProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
+  // Filter to only show categories that have POIs (plus 'all')
+  const visibleCategories = POI_CATEGORIES.filter(cat => {
+    if (cat.key === 'all') return true;
+    return (counts[cat.key] || 0) > 0;
+  });
 
-  const checkScroll = () => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    setShowLeftArrow(scrollLeft > 0);
-    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  useEffect(() => {
-    checkScroll();
-    const ref = scrollRef.current;
-    if (ref) {
-      ref.addEventListener('scroll', checkScroll);
-    }
-    window.addEventListener('resize', checkScroll);
-    return () => {
-      if (ref) {
-        ref.removeEventListener('scroll', checkScroll);
-      }
-      window.removeEventListener('resize', checkScroll);
-    };
-  }, []);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (!scrollRef.current) return;
-    const scrollAmount = 200;
-    scrollRef.current.scrollBy({
-      left: direction === 'left' ? -scrollAmount : scrollAmount,
-      behavior: 'smooth'
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className={cn("flex gap-2 overflow-hidden", className)}>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-11 w-24 rounded-full bg-muted animate-pulse flex-none" />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Left Arrow - hidden on mobile */}
-      {showLeftArrow && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm shadow-md hover:bg-background"
-          onClick={() => scroll('left')}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-      )}
+    <ScrollableRail className={className} gap={8} showFade={false}>
+      {visibleCategories.map(cat => {
+        const Icon = cat.icon;
+        const isActive = activeCategory === cat.key;
+        const count = cat.key === 'all' ? totalCount : (counts[cat.key] || 0);
 
-      {/* Scrollable Pills - simple single container */}
-      <div
-        ref={scrollRef}
-        className="flex gap-2 overflow-x-auto scrollbar-none py-1"
-        style={{ 
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorX: 'contain'
-        }}
-      >
-        {POI_CATEGORIES.map(cat => {
-          const Icon = cat.icon;
-          const isActive = activeCategory === cat.key;
-          const count = cat.key === 'all' ? totalCount : (counts[cat.key] || 0);
-
-          return (
-            <Button
-              key={cat.key}
-              variant={isActive ? 'default' : 'outline'}
-              size="sm"
-              className={cn(
-                "flex-none gap-1.5 rounded-full transition-all duration-300 min-h-[44px] px-3",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-                  : "bg-card hover:bg-muted border-border"
-              )}
-              onClick={() => onCategoryChange(cat.key)}
-            >
-              <Icon 
-                className="h-4 w-4 flex-none" 
-                style={{ color: isActive ? undefined : cat.color }} 
-              />
-              <span className="font-medium whitespace-nowrap">{cat.label}</span>
-              {count > 0 && (
-                <span className={cn(
-                  "text-xs px-1.5 py-0.5 rounded-full flex-none",
-                  isActive 
-                    ? "bg-primary-foreground/20 text-primary-foreground" 
-                    : "bg-muted text-muted-foreground"
-                )}>
-                  {count}
-                </span>
-              )}
-            </Button>
-          );
-        })}
-      </div>
-
-      {/* Right Arrow - hidden on mobile */}
-      {showRightArrow && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm shadow-md hover:bg-background"
-          onClick={() => scroll('right')}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      )}
-    </div>
+        return (
+          <button
+            key={cat.key}
+            type="button"
+            onClick={() => onCategoryChange(cat.key)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-full border text-sm font-medium transition-all duration-200 flex-none min-h-[44px]",
+              "scroll-snap-align-start",
+              isActive
+                ? "bg-primary text-primary-foreground border-primary shadow-md"
+                : "bg-card hover:bg-muted border-border"
+            )}
+          >
+            <Icon
+              className="h-4 w-4 flex-none"
+              style={{ color: isActive ? undefined : cat.color }}
+            />
+            <span className="whitespace-nowrap">{cat.label}</span>
+            {count > 0 && (
+              <span className={cn(
+                "text-xs px-1.5 py-0.5 rounded-full flex-none tabular-nums",
+                isActive
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              )}>
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </ScrollableRail>
   );
 }
