@@ -3369,6 +3369,7 @@ export type Database = {
           curriculum: string | null
           description: string | null
           external_id: string | null
+          google_place_id: string | null
           grade_levels: string | null
           id: string
           image_url: string | null
@@ -3399,6 +3400,7 @@ export type Database = {
           curriculum?: string | null
           description?: string | null
           external_id?: string | null
+          google_place_id?: string | null
           grade_levels?: string | null
           id?: string
           image_url?: string | null
@@ -3429,6 +3431,7 @@ export type Database = {
           curriculum?: string | null
           description?: string | null
           external_id?: string | null
+          google_place_id?: string | null
           grade_levels?: string | null
           id?: string
           image_url?: string | null

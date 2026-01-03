@@ -164,3 +164,6 @@ verify_jwt = false
 
 [functions.fetch-neighborhood-pois]
 verify_jwt = false
+
+[functions.google-place-photo]
+verify_jwt = false
