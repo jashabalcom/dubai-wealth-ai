@@ -146,10 +146,15 @@ export function PropertyLocationMap({
           type: 'fill-extrusion',
           minzoom: 14,
           paint: {
-            'fill-extrusion-color': '#aaa',
+            'fill-extrusion-color': [
+              'interpolate', ['linear'], ['get', 'height'],
+              0, '#c9c5bc',   // Warm pearl grey - matches luxury theme
+              50, '#b8b4ab',  
+              150, '#a8a49b'  
+            ],
             'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, ['get', 'height']],
             'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 14, 0, 14.5, ['get', 'min_height']],
-            'fill-extrusion-opacity': 0.6,
+            'fill-extrusion-opacity': 0.7,
           },
         },
         labelLayerId
@@ -233,6 +238,8 @@ export function PropertyLocationMap({
         padding: { top: 80, bottom: 50, left: 50, right: 50 },
         maxZoom: 16,
         duration: 800,
+        pitch: 45,
+        bearing: -17.6
       });
     }
   }, [filteredPOIs, isMapReady, latitude, longitude]);
