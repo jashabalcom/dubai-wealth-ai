@@ -13,15 +13,15 @@ const CATEGORY_MAPPING: Record<string, { apiCategories: string[], ourType: strin
     ourType: 'restaurant' 
   },
   school: { 
-    apiCategories: ['education.school', 'education.kindergarten', 'education.college', 'education.university'],
+    apiCategories: ['education'],
     ourType: 'school' 
   },
   healthcare: { 
-    apiCategories: ['healthcare.hospital', 'healthcare.clinic', 'healthcare.pharmacy'],
+    apiCategories: ['healthcare'],
     ourType: 'healthcare' 
   },
   gym: { 
-    apiCategories: ['leisure.fitness', 'leisure.sports'],
+    apiCategories: ['sport.fitness', 'sport.sports_centre'],
     ourType: 'gym' 
   },
   supermarket: { 
@@ -29,7 +29,7 @@ const CATEGORY_MAPPING: Record<string, { apiCategories: string[], ourType: strin
     ourType: 'supermarket' 
   },
   entertainment: { 
-    apiCategories: ['entertainment.cinema', 'entertainment.culture', 'leisure.park'],
+    apiCategories: ['entertainment', 'leisure.park'],
     ourType: 'entertainment' 
   },
 };
@@ -45,7 +45,7 @@ interface POIResult {
   address: string | null;
   rating: number | null;
   review_count: number | null;
-  website: string | null;
+  website_url: string | null;
   image_url: string | null;
   source: string;
   last_synced_at: string;
@@ -116,7 +116,7 @@ serve(async (req) => {
             address: props.formatted || props.address_line1 || null,
             rating: props.rating || null,
             review_count: null,
-            website: props.website || null,
+            website_url: props.website || null,
             image_url: null,
             source: 'geoapify',
             last_synced_at: new Date().toISOString(),
