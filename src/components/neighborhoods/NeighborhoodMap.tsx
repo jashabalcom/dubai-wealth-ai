@@ -91,7 +91,7 @@ export function NeighborhoodMap({ latitude, longitude, neighborhoodId, neighborh
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [longitude, latitude],
       zoom: 14,
       pitch: 30,
@@ -190,6 +190,13 @@ export function NeighborhoodMap({ latitude, longitude, neighborhoodId, neighborh
       {isLoading && (
         <div className="absolute inset-0 z-5">
           <Skeleton className="w-full h-full" />
+        </div>
+      )}
+
+      {/* No POIs Message */}
+      {pois.length === 0 && !isLoading && (
+        <div className="absolute bottom-4 left-4 z-10 bg-background/90 backdrop-blur-sm px-3 py-2 rounded-lg text-sm text-muted-foreground">
+          No points of interest loaded for this area
         </div>
       )}
 
