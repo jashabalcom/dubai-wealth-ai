@@ -91,7 +91,7 @@ export default function NeighborhoodDetail() {
       
       <main className="min-h-screen bg-background">
         {/* Parallax Hero Section */}
-        <section ref={heroRef} className="relative h-[55vh] min-h-[450px] overflow-hidden">
+        <section ref={heroRef} className="relative h-[50vh] min-h-[350px] md:min-h-[450px] overflow-hidden">
           <motion.div 
             style={{ y: heroY, scale: heroScale }}
             className="absolute inset-0"
@@ -209,16 +209,16 @@ export default function NeighborhoodDetail() {
                 {/* Gold Accent Line */}
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                 
-                <div className="p-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div className="p-4 md:p-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 md:gap-6">
                     {neighborhood.avg_price_sqft && (
                       <div className="text-center">
                         <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 mb-2">
                           <Home className="h-5 w-5 text-primary" />
                         </div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Price/sqft</p>
-                        <p className="text-xl font-bold text-foreground">
-                          AED {priceCount.toLocaleString()}
+                        <p className="text-lg md:text-xl font-bold text-foreground">
+                          AED {statsInView ? priceCount.toLocaleString() : neighborhood.avg_price_sqft.toLocaleString()}
                         </p>
                       </div>
                     )}
@@ -228,8 +228,8 @@ export default function NeighborhoodDetail() {
                           <TrendingUp className="h-5 w-5 text-primary" />
                         </div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Rental Yield</p>
-                        <p className="text-xl font-bold text-primary">
-                          {(yieldCount / 10).toFixed(1)}%
+                        <p className="text-lg md:text-xl font-bold text-primary">
+                          {statsInView ? (yieldCount / 10).toFixed(1) : neighborhood.avg_rental_yield.toFixed(1)}%
                         </p>
                       </div>
                     )}
@@ -239,27 +239,27 @@ export default function NeighborhoodDetail() {
                           <TrendingUp className="h-5 w-5 text-primary" />
                         </div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">YoY Growth</p>
-                        <p className={`text-xl font-bold ${neighborhood.yoy_appreciation >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                          {neighborhood.yoy_appreciation >= 0 ? '+' : '-'}{(yoyCount / 10).toFixed(1)}%
+                        <p className={`text-lg md:text-xl font-bold ${neighborhood.yoy_appreciation >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {neighborhood.yoy_appreciation >= 0 ? '+' : '-'}{statsInView ? (yoyCount / 10).toFixed(1) : Math.abs(neighborhood.yoy_appreciation).toFixed(1)}%
                         </p>
                       </div>
                     )}
                     {neighborhood.walkability_score && (
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Walkability</p>
-                        <p className="text-xl font-bold text-foreground">{neighborhood.walkability_score}/100</p>
+                        <p className="text-lg md:text-xl font-bold text-foreground">{neighborhood.walkability_score}/100</p>
                       </div>
                     )}
                     {neighborhood.transit_score && (
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Transit Score</p>
-                        <p className="text-xl font-bold text-foreground">{neighborhood.transit_score}/100</p>
+                        <p className="text-lg md:text-xl font-bold text-foreground">{neighborhood.transit_score}/100</p>
                       </div>
                     )}
                     {neighborhood.safety_score && (
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Safety Score</p>
-                        <p className="text-xl font-bold text-foreground">{neighborhood.safety_score}/100</p>
+                        <p className="text-lg md:text-xl font-bold text-foreground">{neighborhood.safety_score}/100</p>
                       </div>
                     )}
                   </div>

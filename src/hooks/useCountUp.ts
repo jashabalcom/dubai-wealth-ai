@@ -26,6 +26,14 @@ export function useCountUp({
       return;
     }
 
+    // Reset the start time so animation runs fresh
+    startTimeRef.current = null;
+    
+    // Cancel any existing animation
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
     const animate = (timestamp: number) => {
       if (!startTimeRef.current) {
         startTimeRef.current = timestamp;
