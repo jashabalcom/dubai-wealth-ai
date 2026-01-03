@@ -47,9 +47,10 @@ const About = lazy(() => import("@/pages/About"));
 const Blog = lazy(() => import("@/pages/Blog"));
 const Contact = lazy(() => import("@/pages/Contact"));
 
-// Lazy loaded - Developers & Neighborhoods
+// Lazy loaded - Developers & Neighborhoods & Projects
 const Developers = lazy(() => import("@/pages/Developers"));
 const DeveloperDetail = lazy(() => import("@/pages/DeveloperDetail"));
+const Projects = lazy(() => import("@/pages/Projects"));
 const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
 const Neighborhoods = lazy(() => import("@/pages/Neighborhoods"));
 const NeighborhoodDetail = lazy(() => import("@/pages/NeighborhoodDetail"));
@@ -189,6 +190,7 @@ export function AnimatedRoutes() {
         {/* Developers & Projects - Public browse */}
         <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />
         <Route path="/developers/:slug" element={<LazyPage><DeveloperDetail /></LazyPage>} />
+        <Route path="/projects" element={<LazyPage><Projects /></LazyPage>} />
         <Route path="/projects/:slug" element={<LazyPage><ProjectDetail /></LazyPage>} />
         
         {/* Neighborhoods - Public browse */}
