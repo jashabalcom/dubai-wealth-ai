@@ -1,31 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export function useMapboxToken() {
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: token, isLoading: loading, error } = useQuery({
+    queryKey: ['mapbox-token'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.token) throw new Error('No token returned');
+      
+      return data.token as string;
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 24, // 24 hours (formerly cacheTime)
+    retry: 2,
+  });
 
-  useEffect(() => {
-    async function fetchToken() {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        
-        if (error) throw error;
-        if (data?.token) {
-          setToken(data.token);
-        } else if (data?.error) {
-          setError(data.error);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load map');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchToken();
-  }, []);
-
-  return { token, loading, error };
+  return { 
+    token: token || null, 
+    loading, 
+    error: error instanceof Error ? error.message : null 
+  };
 }
