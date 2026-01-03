@@ -146,7 +146,7 @@ export function NeighborhoodExplorer({
           
           {/* POI Cards - Horizontal Scroll */}
           {filteredPOIs.length > 0 && (
-            <div className="p-4 border-t border-border/50 overflow-x-hidden">
+            <div className="p-4 border-t border-border/50">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -155,28 +155,24 @@ export function NeighborhoodExplorer({
                 </h4>
               </div>
               
-              <div 
-                className="flex gap-3 sm:gap-4 pb-4 overflow-x-auto scrollbar-none"
-                style={{ 
-                  WebkitOverflowScrolling: 'touch',
-                  overscrollBehaviorX: 'contain',
-                  overscrollBehaviorY: 'auto',
-                  scrollSnapType: 'x mandatory',
-                  paddingLeft: '1rem',
-                  paddingRight: '1rem'
-                }}
-              >
+              <div className="relative -mx-4 sm:mx-0">
+                <div 
+                  className="flex gap-3 sm:gap-4 pb-4 px-4 sm:px-0 overflow-x-auto scrollbar-none snap-x snap-mandatory"
+                  style={{ 
+                    WebkitOverflowScrolling: 'touch',
+                    overscrollBehaviorX: 'contain'
+                  }}
+                >
                 {filteredPOIs.map((poi) => (
                   <motion.div
                     key={poi.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className={`w-[240px] sm:w-[280px] shrink-0 transition-all duration-300 cursor-pointer ${
+                    className={`w-[220px] sm:w-[260px] shrink-0 transition-all duration-300 cursor-pointer snap-start ${
                       selectedPOIId === poi.id 
                         ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' 
                         : ''
                     }`}
-                    style={{ scrollSnapAlign: 'start' }}
                     onClick={() => {
                       if (poi.latitude && poi.longitude) {
                         handleViewOnMap(poi.id, poi.latitude, poi.longitude);
@@ -186,6 +182,7 @@ export function NeighborhoodExplorer({
                     <POICard poi={poi} />
                   </motion.div>
                 ))}
+                </div>
               </div>
             </div>
           )}

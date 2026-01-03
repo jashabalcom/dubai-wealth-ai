@@ -76,16 +76,16 @@ export function POICategoryFilter({
       )}
 
       {/* Scrollable Pills */}
-      <div
-        ref={scrollRef}
-        onScroll={checkScroll}
-        className="flex gap-2 overflow-x-auto scrollbar-none py-1 px-1"
-        style={{ 
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorX: 'contain',
-          overscrollBehaviorY: 'auto'
-        }}
-      >
+      <div className="relative -mx-4 sm:mx-0">
+        <div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          className="flex gap-2 overflow-x-auto scrollbar-none py-2 px-4 sm:px-0 snap-x"
+          style={{ 
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorX: 'contain'
+          }}
+        >
         {POI_CATEGORIES.map(cat => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.key;
@@ -97,7 +97,7 @@ export function POICategoryFilter({
               variant={isActive ? 'default' : 'outline'}
               size="sm"
               className={cn(
-                "shrink-0 gap-2 rounded-full transition-all duration-300",
+                "shrink-0 gap-2 rounded-full transition-all duration-300 snap-start min-h-[44px]",
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
                   : "bg-card hover:bg-muted border-border"
@@ -122,6 +122,7 @@ export function POICategoryFilter({
             </Button>
           );
         })}
+        </div>
       </div>
 
       {/* Right Arrow - hidden on mobile */}
