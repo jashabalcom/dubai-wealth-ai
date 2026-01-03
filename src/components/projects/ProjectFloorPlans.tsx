@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Maximize2, Bed, Maximize, X } from 'lucide-react';
+import { Download, Maximize2, Bed, Maximize, X, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import type { ProjectFloorPlan } from '@/hooks/useProject';
 
 interface ProjectFloorPlansProps {
@@ -16,7 +17,11 @@ interface ProjectFloorPlansProps {
 
 export function ProjectFloorPlans({ floorPlans, brandColor }: ProjectFloorPlansProps) {
   const [bedroomFilter, setBedroomFilter] = useState<string>('all');
-  const [selectedPlan, setSelectedPlan] = useState<ProjectFloorPlan | null>(null);
+  const [selectedPlanIndex, setSelectedPlanIndex] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   // Get unique bedroom counts
   const bedroomOptions = ['all', ...new Set(floorPlans.map(p => p.bedrooms?.toString() || 'other'))].sort((a, b) => {
@@ -30,6 +35,101 @@ export function ProjectFloorPlans({ floorPlans, brandColor }: ProjectFloorPlansP
   const filteredPlans = bedroomFilter === 'all' 
     ? floorPlans 
     : floorPlans.filter(p => (p.bedrooms?.toString() || 'other') === bedroomFilter);
+
+  const selectedPlan = selectedPlanIndex !== null ? filteredPlans[selectedPlanIndex] : null;
+  const hasMultiplePlans = filteredPlans.length > 1;
+
+  // Reset zoom/pan when changing plans
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [selectedPlanIndex]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedPlanIndex === null) return;
+
+      switch (e.key) {
+        case 'Escape':
+          setSelectedPlanIndex(null);
+          break;
+        case 'ArrowLeft':
+          if (selectedPlanIndex > 0) {
+            setSelectedPlanIndex(selectedPlanIndex - 1);
+          }
+          break;
+        case 'ArrowRight':
+          if (selectedPlanIndex < filteredPlans.length - 1) {
+            setSelectedPlanIndex(selectedPlanIndex + 1);
+          }
+          break;
+        case '+':
+        case '=':
+          setZoom(z => Math.min(z + 0.25, 3));
+          break;
+        case '-':
+          setZoom(z => Math.max(z - 0.25, 0.5));
+          break;
+        case '0':
+          setZoom(1);
+          setPan({ x: 0, y: 0 });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPlanIndex, filteredPlans.length]);
+
+  // Handle mouse wheel zoom
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setZoom(z => Math.min(Math.max(z + delta, 0.5), 3));
+    }
+  }, []);
+
+  // Handle pan start
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (zoom > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  }, [zoom, pan]);
+
+  // Handle pan move
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDragging && zoom > 1) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  }, [isDragging, dragStart, zoom]);
+
+  // Handle pan end
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const goToPrevious = () => {
+    if (selectedPlanIndex !== null && selectedPlanIndex > 0) {
+      setSelectedPlanIndex(selectedPlanIndex - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (selectedPlanIndex !== null && selectedPlanIndex < filteredPlans.length - 1) {
+      setSelectedPlanIndex(selectedPlanIndex + 1);
+    }
+  };
+
+  const resetView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
 
   return (
     <div className="space-y-6">
@@ -62,7 +162,7 @@ export function ProjectFloorPlans({ floorPlans, brandColor }: ProjectFloorPlansP
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: index * 0.05 }}
               className="group relative bg-card border border-border rounded-xl overflow-hidden hover:shadow-elegant transition-all duration-300 cursor-pointer"
-              onClick={() => setSelectedPlan(plan)}
+              onClick={() => setSelectedPlanIndex(index)}
             >
               {/* Floor Plan Image */}
               <div className="relative aspect-square bg-muted/30 p-4">
@@ -110,27 +210,140 @@ export function ProjectFloorPlans({ floorPlans, brandColor }: ProjectFloorPlansP
         </div>
       )}
 
-      {/* Lightbox Dialog */}
-      <Dialog open={!!selectedPlan} onOpenChange={() => setSelectedPlan(null)}>
-        <DialogContent className="max-w-5xl p-0 bg-secondary border-border">
+      {/* Enhanced Lightbox Dialog */}
+      <Dialog open={selectedPlanIndex !== null} onOpenChange={() => setSelectedPlanIndex(null)}>
+        <DialogContent className="max-w-6xl p-0 bg-secondary border-border">
           {selectedPlan && (
             <div className="relative">
-              {/* Close Button */}
-              <button
-                onClick={() => setSelectedPlan(null)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-secondary/80 text-secondary-foreground hover:bg-secondary transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
+              {/* Top Controls */}
+              <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+                {/* Counter */}
+                <div className="px-3 py-1.5 rounded-full bg-secondary/80 backdrop-blur-sm text-sm font-medium">
+                  {selectedPlanIndex !== null ? selectedPlanIndex + 1 : 0} of {filteredPlans.length}
+                </div>
 
-              {/* Image Container */}
-              <div className="bg-card p-8 flex items-center justify-center min-h-[60vh]">
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-9 w-9 bg-secondary/80 backdrop-blur-sm"
+                    onClick={() => setZoom(z => Math.max(z - 0.25, 0.5))}
+                    disabled={zoom <= 0.5}
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="px-2 text-sm font-medium min-w-[50px] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-9 w-9 bg-secondary/80 backdrop-blur-sm"
+                    onClick={() => setZoom(z => Math.min(z + 0.25, 3))}
+                    disabled={zoom >= 3}
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-9 w-9 bg-secondary/80 backdrop-blur-sm"
+                    onClick={resetView}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setSelectedPlanIndex(null)}
+                  className="p-2 rounded-full bg-secondary/80 backdrop-blur-sm text-secondary-foreground hover:bg-secondary transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Navigation Arrows */}
+              {hasMultiplePlans && (
+                <>
+                  <button
+                    onClick={goToPrevious}
+                    disabled={selectedPlanIndex === 0}
+                    className={cn(
+                      "absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-secondary/80 backdrop-blur-sm transition-all",
+                      selectedPlanIndex === 0 
+                        ? "opacity-30 cursor-not-allowed" 
+                        : "hover:bg-secondary hover:scale-110"
+                    )}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={goToNext}
+                    disabled={selectedPlanIndex === filteredPlans.length - 1}
+                    className={cn(
+                      "absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-secondary/80 backdrop-blur-sm transition-all",
+                      selectedPlanIndex === filteredPlans.length - 1 
+                        ? "opacity-30 cursor-not-allowed" 
+                        : "hover:bg-secondary hover:scale-110"
+                    )}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+
+              {/* Image Container with Zoom/Pan */}
+              <div 
+                className={cn(
+                  "bg-card p-8 flex items-center justify-center min-h-[60vh] overflow-hidden",
+                  zoom > 1 && "cursor-grab",
+                  isDragging && "cursor-grabbing"
+                )}
+                onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+              >
                 <img
                   src={selectedPlan.url}
                   alt={selectedPlan.title}
-                  className="max-w-full max-h-[70vh] object-contain"
+                  className="max-w-full max-h-[70vh] object-contain select-none"
+                  style={{
+                    transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                    transition: isDragging ? 'none' : 'transform 0.2s ease-out'
+                  }}
+                  draggable={false}
                 />
               </div>
+
+              {/* Thumbnail Strip */}
+              {hasMultiplePlans && (
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-10">
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/80 backdrop-blur-sm">
+                    {filteredPlans.map((plan, index) => (
+                      <button
+                        key={plan.id}
+                        onClick={() => setSelectedPlanIndex(index)}
+                        className={cn(
+                          "w-12 h-12 rounded-md overflow-hidden border-2 transition-all",
+                          index === selectedPlanIndex 
+                            ? "border-primary ring-2 ring-primary/30" 
+                            : "border-transparent opacity-60 hover:opacity-100"
+                        )}
+                      >
+                        <img
+                          src={plan.url}
+                          alt={plan.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Info Bar */}
               <div className="p-6 border-t border-border bg-secondary">
@@ -161,6 +374,14 @@ export function ProjectFloorPlans({ floorPlans, brandColor }: ProjectFloorPlansP
                       Download
                     </a>
                   </Button>
+                </div>
+
+                {/* Keyboard hints */}
+                <div className="mt-4 pt-4 border-t border-border/50 flex items-center gap-4 text-xs text-muted-foreground">
+                  <span>Use <kbd className="px-1.5 py-0.5 rounded bg-muted">←</kbd> <kbd className="px-1.5 py-0.5 rounded bg-muted">→</kbd> to navigate</span>
+                  <span><kbd className="px-1.5 py-0.5 rounded bg-muted">+</kbd> <kbd className="px-1.5 py-0.5 rounded bg-muted">-</kbd> to zoom</span>
+                  <span><kbd className="px-1.5 py-0.5 rounded bg-muted">0</kbd> to reset</span>
+                  <span><kbd className="px-1.5 py-0.5 rounded bg-muted">ESC</kbd> to close</span>
                 </div>
               </div>
             </div>

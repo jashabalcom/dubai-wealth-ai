@@ -13,7 +13,8 @@ import { ProjectUnitTypes } from "@/components/projects/ProjectUnitTypes";
 import { ProjectAmenities } from "@/components/projects/ProjectAmenities";
 import { ProjectPaymentPlans } from "@/components/projects/ProjectPaymentPlans";
 import { ProjectFloorPlans } from "@/components/projects/ProjectFloorPlans";
-
+import { ProjectMediaSection } from "@/components/projects/ProjectMediaSection";
+import { ConstructionTimeline } from "@/components/projects/ConstructionTimeline";
 const ProjectDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: project, isLoading: projectLoading } = useProject(slug || '');
@@ -148,6 +149,26 @@ const ProjectDetail = () => {
                         {project.description || `${project.name} is a prestigious development located in ${project.location_area}, offering exceptional living spaces with world-class amenities.`}
                       </p>
                     </div>
+
+                    {/* Media Section - Video & Virtual Tour */}
+                    <ProjectMediaSection
+                      videoUrl={project.video_url}
+                      virtualTourUrl={project.virtual_tour_url}
+                      projectName={project.name}
+                      thumbnailUrl={project.image_url || undefined}
+                      brandColor={brandColor}
+                    />
+
+                    {/* Construction Timeline for Under Construction Projects */}
+                    {project.status === 'under_construction' && (
+                      <ConstructionTimeline
+                        status={project.status}
+                        launchDate={project.launch_date}
+                        handoverDate={project.handover_date}
+                        progressPercent={project.construction_progress_percent}
+                        brandColor={brandColor}
+                      />
+                    )}
 
                     {/* Key Features */}
                     {project.key_features && Array.isArray(project.key_features) && project.key_features.length > 0 && (
