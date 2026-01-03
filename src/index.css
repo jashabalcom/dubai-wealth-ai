@@ -812,6 +812,31 @@ textarea,
 .mapboxgl-canvas-container,
 .mapboxgl-canvas {
   max-width: 100%;
+  overflow: hidden;
+}
+
+/* Mobile horizontal scroll helper - full bleed with padding */
+.mobile-scroll-full {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-scroll-full {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Ensure text doesn't overflow on mobile */
+.mobile-text-contain {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* POI category filter horizontal scroll */

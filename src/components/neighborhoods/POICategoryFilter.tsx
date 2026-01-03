@@ -62,7 +62,7 @@ export function POICategoryFilter({
   };
 
   return (
-    <div className={cn("relative overflow-x-hidden", className)}>
+    <div className={cn("relative w-full", className)}>
       {/* Left Arrow - hidden on mobile */}
       {showLeftArrow && (
         <Button
@@ -79,10 +79,11 @@ export function POICategoryFilter({
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-2 overflow-x-auto scrollbar-none py-1 -mx-1 px-1"
+        className="flex gap-2 overflow-x-auto scrollbar-none py-1 px-1"
         style={{ 
           WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain'
+          overscrollBehaviorX: 'contain',
+          overscrollBehaviorY: 'auto'
         }}
       >
         {POI_CATEGORIES.map(cat => {
