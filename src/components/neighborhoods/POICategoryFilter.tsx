@@ -63,12 +63,12 @@ export function POICategoryFilter({
 
   return (
     <div className={cn("relative overflow-x-hidden", className)}>
-      {/* Left Arrow */}
+      {/* Left Arrow - hidden on mobile */}
       {showLeftArrow && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm shadow-md hover:bg-background"
+          className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm shadow-md hover:bg-background"
           onClick={() => scroll('left')}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -79,11 +79,10 @@ export function POICategoryFilter({
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="flex gap-2 overflow-x-auto scrollbar-none py-1 px-1"
+        className="flex gap-2 overflow-x-auto scrollbar-none py-1 -mx-1 px-1"
         style={{ 
           WebkitOverflowScrolling: 'touch',
-          overscrollBehaviorX: 'contain',
-          touchAction: 'pan-x'
+          overscrollBehavior: 'contain'
         }}
       >
         {POI_CATEGORIES.map(cat => {
@@ -124,12 +123,12 @@ export function POICategoryFilter({
         })}
       </div>
 
-      {/* Right Arrow */}
+      {/* Right Arrow - hidden on mobile */}
       {showRightArrow && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm shadow-md hover:bg-background"
+          className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/90 backdrop-blur-sm shadow-md hover:bg-background"
           onClick={() => scroll('right')}
         >
           <ChevronRight className="h-4 w-4" />

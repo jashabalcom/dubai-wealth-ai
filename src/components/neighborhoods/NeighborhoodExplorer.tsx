@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback, Component, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Compass, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { POICategoryFilter, POI_CATEGORIES } from './POICategoryFilter';
 import { NeighborhoodMapEnhanced } from './NeighborhoodMapEnhanced';
@@ -156,33 +155,35 @@ export function NeighborhoodExplorer({
                 </h4>
               </div>
               
-              <ScrollArea className="w-full" style={{ overscrollBehavior: 'contain' }}>
-                <div 
-                  className="flex gap-3 sm:gap-4 pb-4"
-                  style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
-                >
-                  {filteredPOIs.map((poi) => (
-                    <motion.div
-                      key={poi.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className={`w-[240px] sm:w-[280px] shrink-0 transition-all duration-300 cursor-pointer ${
-                        selectedPOIId === poi.id 
-                          ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' 
-                          : ''
-                      }`}
-                      onClick={() => {
-                        if (poi.latitude && poi.longitude) {
-                          handleViewOnMap(poi.id, poi.latitude, poi.longitude);
-                        }
-                      }}
-                    >
-                      <POICard poi={poi} />
-                    </motion.div>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+              <div 
+                className="flex gap-3 sm:gap-4 pb-4 overflow-x-auto scrollbar-none -mx-4 px-4"
+                style={{ 
+                  WebkitOverflowScrolling: 'touch',
+                  overscrollBehavior: 'contain',
+                  scrollSnapType: 'x proximity'
+                }}
+              >
+                {filteredPOIs.map((poi) => (
+                  <motion.div
+                    key={poi.id}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`w-[240px] sm:w-[280px] shrink-0 transition-all duration-300 cursor-pointer ${
+                      selectedPOIId === poi.id 
+                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' 
+                        : ''
+                    }`}
+                    style={{ scrollSnapAlign: 'start' }}
+                    onClick={() => {
+                      if (poi.latitude && poi.longitude) {
+                        handleViewOnMap(poi.id, poi.latitude, poi.longitude);
+                      }
+                    }}
+                  >
+                    <POICard poi={poi} />
+                  </motion.div>
+                ))}
+              </div>
             </div>
           )}
           

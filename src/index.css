@@ -122,15 +122,6 @@
   }
   
   body {
-    overflow-x: hidden;
-  }
-
-  /* Scroll offset for fixed header on anchor targets */
-  [id] {
-    scroll-margin-top: 100px;
-  }
-
-  body {
     @apply bg-background text-foreground antialiased;
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -138,6 +129,21 @@
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
     letter-spacing: -0.01em;
     line-height: 1.65;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    position: relative;
+    width: 100%;
+  }
+
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+
+  /* Scroll offset for fixed header on anchor targets */
+  [id] {
+    scroll-margin-top: 100px;
   }
 
   h1, h2, h3, h4, h5, h6 {
