@@ -1,6 +1,6 @@
 import { useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, LazyMotion, domAnimation } from 'framer-motion';
 import { 
   MapPin, TrendingUp, Home, Train, Waves, Shield, Check, X, 
   GraduationCap, Utensils, Building2, ChevronRight, Star, Globe, ArrowLeft, Lock, Sparkles
@@ -28,10 +28,16 @@ const RESTAURANTS_PREVIEW_LIMIT = 3;
 export default function NeighborhoodDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: neighborhood, isLoading } = useNeighborhood(slug || '');
-  const { data: schools } = useNeighborhoodPOIs(neighborhood?.id || '', 'school');
-  const { data: restaurants } = useNeighborhoodPOIs(neighborhood?.id || '', 'restaurant');
+  // Consolidated: fetch all POIs once, filter client-side for performance
+  const { data: allPOIs } = useNeighborhoodPOIs(neighborhood?.id || '');
   const { data: properties } = useNeighborhoodProperties(neighborhood?.name || '');
   const { profile } = useAuth();
+  
+  // Memoized filtering for specific POI types
+  const schools = useMemo(() => 
+    allPOIs?.filter(poi => poi.poi_type === 'school') || [], [allPOIs]);
+  const restaurants = useMemo(() => 
+    allPOIs?.filter(poi => poi.poi_type === 'restaurant') || [], [allPOIs]);
   
   const userTier = profile?.membership_tier || 'free';
   const hasFullAccess = userTier === 'investor' || userTier === 'elite';

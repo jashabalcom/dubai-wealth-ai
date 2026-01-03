@@ -1,12 +1,63 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, Component, ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Compass } from 'lucide-react';
+import { MapPin, Compass, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
 import { POICategoryFilter, POI_CATEGORIES } from './POICategoryFilter';
 import { NeighborhoodMapEnhanced } from './NeighborhoodMapEnhanced';
 import { POICard } from './POICard';
 import { useNeighborhoodPOIs } from '@/hooks/useNeighborhoods';
+
+// Error Boundary Component
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class NeighborhoodExplorerErrorBoundary extends Component<
+  { children: ReactNode; neighborhoodName: string },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: ReactNode; neighborhoodName: string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('NeighborhoodExplorer error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Card className="border-destructive/20 bg-card/60 backdrop-blur-sm overflow-hidden">
+          <CardContent className="p-8 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-medium mb-2">Unable to load map</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              There was an error loading the neighborhood explorer for {this.props.neighborhoodName}.
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => this.setState({ hasError: false, error: undefined })}
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 interface NeighborhoodExplorerProps {
   neighborhoodId: string;
@@ -54,14 +105,15 @@ export function NeighborhoodExplorer({
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden">
-        {/* Gold accent line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+    <NeighborhoodExplorerErrorBoundary neighborhoodName={neighborhoodName}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden">
+          {/* Gold accent line */}
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         
         <CardHeader className="pb-4">
           <CardTitle className="font-serif text-xl flex items-center gap-2">
@@ -148,5 +200,6 @@ export function NeighborhoodExplorer({
         </CardContent>
       </Card>
     </motion.div>
+    </NeighborhoodExplorerErrorBoundary>
   );
 }

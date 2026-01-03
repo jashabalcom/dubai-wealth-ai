@@ -75,6 +75,8 @@ export interface NeighborhoodFilters {
 export function useNeighborhoods(filters?: NeighborhoodFilters) {
   return useQuery({
     queryKey: ['neighborhoods', filters],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     queryFn: async () => {
       let query = supabase
         .from('neighborhoods')
@@ -114,6 +116,8 @@ export function useNeighborhoods(filters?: NeighborhoodFilters) {
 export function useNeighborhood(slug: string) {
   return useQuery({
     queryKey: ['neighborhood', slug],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
     queryFn: async () => {
       const { data, error } = await supabase
         .from('neighborhoods')
@@ -139,6 +143,8 @@ export function useNeighborhood(slug: string) {
 export function useNeighborhoodPOIs(neighborhoodId: string, poiType?: string) {
   return useQuery({
     queryKey: ['neighborhood-pois', neighborhoodId, poiType],
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 60, // 1 hour
     queryFn: async () => {
       let query = supabase
         .from('neighborhood_pois')

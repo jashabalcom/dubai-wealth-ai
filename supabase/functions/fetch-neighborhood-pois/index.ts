@@ -206,13 +206,18 @@ serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, 200));
     }
 
+    // Deduplicate POIs by external_id to prevent ON CONFLICT errors
+    const uniquePOIs = Array.from(
+      new Map(allPOIs.map(poi => [poi.external_id, poi])).values()
+    );
+
     // Upsert POIs into database
-    if (allPOIs.length > 0) {
-      console.log(`Upserting ${allPOIs.length} POIs into database...`);
+    if (uniquePOIs.length > 0) {
+      console.log(`Upserting ${uniquePOIs.length} unique POIs into database (from ${allPOIs.length} total)...`);
       
       const { error: upsertError } = await supabase
         .from('neighborhood_pois')
-        .upsert(allPOIs, { 
+        .upsert(uniquePOIs, { 
           onConflict: 'external_id',
           ignoreDuplicates: false 
         });
@@ -222,7 +227,7 @@ serve(async (req) => {
         throw upsertError;
       }
 
-      console.log(`Successfully upserted ${allPOIs.length} POIs`);
+      console.log(`Successfully upserted ${uniquePOIs.length} POIs`);
     }
 
     // Get POI counts by type
@@ -242,7 +247,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         totalFetched,
-        totalUpserted: allPOIs.length,
+        totalUpserted: uniquePOIs.length,
         countsByType,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
