@@ -110,7 +110,7 @@ export function NeighborhoodExplorer({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-      <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden overflow-x-hidden">
+      <Card className="border-primary/10 bg-card/60 backdrop-blur-sm">
           {/* Gold accent line */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         
@@ -156,12 +156,14 @@ export function NeighborhoodExplorer({
               </div>
               
               <div 
-                className="flex gap-3 sm:gap-4 pb-4 overflow-x-auto scrollbar-none -mx-4 px-4"
+                className="flex gap-3 sm:gap-4 pb-4 overflow-x-auto scrollbar-none"
                 style={{ 
                   WebkitOverflowScrolling: 'touch',
                   overscrollBehaviorX: 'contain',
                   overscrollBehaviorY: 'auto',
-                  scrollSnapType: 'x mandatory'
+                  scrollSnapType: 'x mandatory',
+                  paddingLeft: '1rem',
+                  paddingRight: '1rem'
                 }}
               >
                 {filteredPOIs.map((poi) => (
