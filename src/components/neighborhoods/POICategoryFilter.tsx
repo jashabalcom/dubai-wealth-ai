@@ -62,7 +62,7 @@ export function POICategoryFilter({
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn("relative overflow-x-hidden", className)}>
       {/* Left Arrow */}
       {showLeftArrow && (
         <Button
@@ -80,6 +80,11 @@ export function POICategoryFilter({
         ref={scrollRef}
         onScroll={checkScroll}
         className="flex gap-2 overflow-x-auto scrollbar-none py-1 px-1"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorX: 'contain',
+          touchAction: 'pan-x'
+        }}
       >
         {POI_CATEGORIES.map(cat => {
           const Icon = cat.icon;

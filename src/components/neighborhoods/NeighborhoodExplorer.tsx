@@ -111,7 +111,7 @@ export function NeighborhoodExplorer({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden">
+      <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden overflow-x-hidden">
           {/* Gold accent line */}
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         
@@ -142,12 +142,12 @@ export function NeighborhoodExplorer({
             activeCategory={activeCategory}
             selectedPOIId={selectedPOIId}
             onPOISelect={handlePOISelect}
-            className="h-[500px]"
+            className="h-[300px] sm:h-[400px] md:h-[500px]"
           />
           
           {/* POI Cards - Horizontal Scroll */}
           {filteredPOIs.length > 0 && (
-            <div className="p-4 border-t border-border/50">
+            <div className="p-4 border-t border-border/50 overflow-x-hidden">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
@@ -156,14 +156,17 @@ export function NeighborhoodExplorer({
                 </h4>
               </div>
               
-              <ScrollArea className="w-full">
-                <div className="flex gap-4 pb-4">
+              <ScrollArea className="w-full" style={{ overscrollBehavior: 'contain' }}>
+                <div 
+                  className="flex gap-3 sm:gap-4 pb-4"
+                  style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
+                >
                   {filteredPOIs.map((poi) => (
                     <motion.div
                       key={poi.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className={`w-[280px] shrink-0 transition-all duration-300 ${
+                      className={`w-[240px] sm:w-[280px] shrink-0 transition-all duration-300 cursor-pointer ${
                         selectedPOIId === poi.id 
                           ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' 
                           : ''
