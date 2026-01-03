@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { MAP_STYLES, MAP_3D_CONFIG } from '@/types/maps';
 
 interface POI {
   id: string;
@@ -63,10 +64,11 @@ export function NeighborhoodMapEnhanced({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11', // Dark style for better contrast and visibility
+      style: MAP_STYLES.standard, // Mapbox Standard style with 3D buildings
       center: [longitude, latitude],
-      zoom: 14,
-      pitch: 45,
+      zoom: 15,
+      pitch: MAP_3D_CONFIG.pitch,
+      bearing: MAP_3D_CONFIG.bearing,
     });
 
     // Add navigation controls
@@ -74,6 +76,31 @@ export function NeighborhoodMapEnhanced({
       new mapboxgl.NavigationControl({ visualizePitch: true }), 
       'top-right'
     );
+
+    // Add 3D terrain, atmosphere, and set loading state on style load
+    map.current.on('style.load', () => {
+      // Add terrain source for 3D elevation
+      map.current!.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+      
+      map.current!.setTerrain({ 
+        source: 'mapbox-dem', 
+        exaggeration: MAP_3D_CONFIG.terrain.exaggeration 
+      });
+
+      // Add atmospheric fog for depth
+      map.current!.setFog({
+        color: MAP_3D_CONFIG.fog.color,
+        'high-color': MAP_3D_CONFIG.fog['high-color'],
+        'horizon-blend': MAP_3D_CONFIG.fog['horizon-blend'],
+      });
+      
+      setIsLoading(false);
+    });
 
     // Add neighborhood center marker with custom styling
     const centerEl = document.createElement('div');
@@ -95,10 +122,6 @@ export function NeighborhoodMapEnhanced({
         </div>
       `))
       .addTo(map.current);
-
-    map.current.on('load', () => {
-      setIsLoading(false);
-    });
 
     return () => {
       map.current?.remove();
