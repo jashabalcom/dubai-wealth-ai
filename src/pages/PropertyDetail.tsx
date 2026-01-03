@@ -35,6 +35,7 @@ import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
 import { DualPrice } from '@/components/DualPrice';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { ViewLimitDialog } from '@/components/properties/ViewLimitDialog';
+import { RemainingViewsBadge } from '@/components/freemium/RemainingViewsBadge';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -153,7 +154,10 @@ export default function PropertyDetail() {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [showViewLimitDialog, setShowViewLimitDialog] = useState(false);
   
-  const { viewCount, canViewProperty, trackView } = usePropertyViewLimit();
+  const { viewCount, canViewProperty, trackView, getPropertyAccessLevel, remainingFullViews, showRemainingBadge } = usePropertyViewLimit();
+
+  // Get access level for this property
+  const propertyAccessLevel = property ? getPropertyAccessLevel(property.id) : 'full';
 
   // Check view limit and track views for anonymous users
   useEffect(() => {
@@ -381,12 +385,18 @@ export default function PropertyDetail() {
       <section className="py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <Breadcrumbs
-              items={[
-                { label: 'Properties', href: '/properties' },
-                { label: property.title }
-              ]}
-            />
+            <div className="flex items-center gap-3">
+              <Breadcrumbs
+                items={[
+                  { label: 'Properties', href: '/properties' },
+                  { label: property.title }
+                ]}
+              />
+              {/* Remaining Views Badge for anonymous users */}
+              {showRemainingBadge && (
+                <RemainingViewsBadge remainingViews={remainingFullViews} />
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               {user && (
                 <Button variant="outline" size="sm" onClick={() => toggleSave(property.id)} className="min-h-[44px]">
@@ -706,6 +716,7 @@ export default function PropertyDetail() {
                   isOffPlan={property.is_off_plan}
                   developerName={property.developer?.name || property.developer_name}
                   variant="card"
+                  accessLevel={propertyAccessLevel}
                 />
               )}
 
@@ -724,6 +735,7 @@ export default function PropertyDetail() {
                   sizeSqft={property.size_sqft}
                   area={property.location_area}
                   isOffPlan={property.is_off_plan}
+                  accessLevel={propertyAccessLevel}
                 />
               )}
 
