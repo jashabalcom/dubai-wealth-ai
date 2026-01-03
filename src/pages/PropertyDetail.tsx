@@ -787,7 +787,6 @@ export default function PropertyDetail() {
               {property.listing_type !== 'rent' && (
               <div className="p-6 rounded-xl bg-card border border-border">
                 <h2 className="font-heading text-xl text-foreground mb-4">Investment Metrics</h2>
-                <h2 className="font-heading text-xl text-foreground mb-4">Investment Metrics</h2>
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                     <div className="flex items-center justify-between">
