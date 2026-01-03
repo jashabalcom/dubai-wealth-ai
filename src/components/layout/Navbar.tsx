@@ -170,24 +170,37 @@ export function Navbar() {
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
                 const isActive = link.isRoute && isActiveLink(link.href);
                 
-                // Render Properties dropdown
+                // Render Properties dropdown with hybrid navigation
                 if (link.hasDropdown && link.label === 'Properties') {
                   return (
                     <NavigationMenu key={link.label}>
                       <NavigationMenuList>
                         <NavigationMenuItem>
-                          <NavigationMenuTrigger 
-                            className={cn(
-                              "text-xs uppercase tracking-[0.15em] font-sans bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent px-0",
-                              isActive 
-                                ? "text-primary" 
-                                : useDarkText 
-                                  ? "text-foreground/80 hover:text-primary"
-                                  : "text-secondary-foreground/80 hover:text-primary"
-                            )}
-                          >
-                            {link.label}
-                          </NavigationMenuTrigger>
+                          <div className="flex items-center">
+                            <Link
+                              to="/properties"
+                              className={cn(
+                                "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
+                                isActive 
+                                  ? "text-primary" 
+                                  : useDarkText 
+                                    ? "text-foreground/80 hover:text-primary"
+                                    : "text-secondary-foreground/80 hover:text-primary"
+                              )}
+                            >
+                              {link.label}
+                            </Link>
+                            <NavigationMenuTrigger 
+                              className={cn(
+                                "bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent p-0 pl-1 h-auto",
+                                useDarkText 
+                                  ? "text-foreground/60 hover:text-primary"
+                                  : "text-secondary-foreground/60 hover:text-primary"
+                              )}
+                            >
+                              <span className="sr-only">Open properties menu</span>
+                            </NavigationMenuTrigger>
+                          </div>
                           <NavigationMenuContent>
                             <ul className="grid w-[300px] gap-2 p-4">
                               {propertiesDropdownItems.map((item) => (
@@ -216,24 +229,37 @@ export function Navbar() {
                   );
                 }
 
-                // Render Insights dropdown
+                // Render Insights dropdown with hybrid navigation
                 if (link.hasDropdown && link.label === 'Insights') {
                   return (
                     <NavigationMenu key={link.label}>
                       <NavigationMenuList>
                         <NavigationMenuItem>
-                          <NavigationMenuTrigger 
-                            className={cn(
-                              "text-xs uppercase tracking-[0.15em] font-sans bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent px-0",
-                              isActive 
-                                ? "text-primary" 
-                                : useDarkText 
-                                  ? "text-foreground/80 hover:text-primary"
-                                  : "text-secondary-foreground/80 hover:text-primary"
-                            )}
-                          >
-                            {link.label}
-                          </NavigationMenuTrigger>
+                          <div className="flex items-center">
+                            <Link
+                              to="/briefing"
+                              className={cn(
+                                "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
+                                isActive 
+                                  ? "text-primary" 
+                                  : useDarkText 
+                                    ? "text-foreground/80 hover:text-primary"
+                                    : "text-secondary-foreground/80 hover:text-primary"
+                              )}
+                            >
+                              {link.label}
+                            </Link>
+                            <NavigationMenuTrigger 
+                              className={cn(
+                                "bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent p-0 pl-1 h-auto",
+                                useDarkText 
+                                  ? "text-foreground/60 hover:text-primary"
+                                  : "text-secondary-foreground/60 hover:text-primary"
+                              )}
+                            >
+                              <span className="sr-only">Open insights menu</span>
+                            </NavigationMenuTrigger>
+                          </div>
                           <NavigationMenuContent>
                             <ul className="grid w-[320px] gap-2 p-4">
                               {insightsDropdownItems.map((item) => (
