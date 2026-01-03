@@ -1,46 +1,29 @@
-import { useRef, useMemo } from 'react';
+import { useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, LazyMotion, domAnimation } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   MapPin, TrendingUp, Home, Train, Waves, Shield, Check, X, 
-  GraduationCap, Utensils, Building2, ChevronRight, Star, Globe, ArrowLeft, Lock, Sparkles
+  Building2, ChevronRight, ArrowLeft, Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEOHead } from '@/components/SEOHead';
-import { useNeighborhood, useNeighborhoodPOIs, useNeighborhoodProperties } from '@/hooks/useNeighborhoods';
+import { useNeighborhood, useNeighborhoodProperties } from '@/hooks/useNeighborhoods';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { useAuth } from '@/hooks/useAuth';
 import { NeighborhoodLeadCapture } from '@/components/leadgen/NeighborhoodLeadCapture';
-import { NeighborhoodTierGate } from '@/components/neighborhoods/NeighborhoodTierGate';
 import { useCountUp, useInView } from '@/hooks/useCountUp';
 import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
 import { NeighborhoodExplorer } from '@/components/neighborhoods/NeighborhoodExplorer';
 
-// Preview limits for free tier
-const SCHOOLS_PREVIEW_LIMIT = 3;
-const RESTAURANTS_PREVIEW_LIMIT = 3;
-
 export default function NeighborhoodDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: neighborhood, isLoading } = useNeighborhood(slug || '');
-  // Consolidated: fetch all POIs once, filter client-side for performance
-  const { data: allPOIs } = useNeighborhoodPOIs(neighborhood?.id || '');
   const { data: properties } = useNeighborhoodProperties(neighborhood?.name || '');
   const { profile } = useAuth();
-  
-  // Memoized filtering for specific POI types
-  const schools = useMemo(() => 
-    allPOIs?.filter(poi => poi.poi_type === 'school') || [], [allPOIs]);
-  const restaurants = useMemo(() => 
-    allPOIs?.filter(poi => poi.poi_type === 'restaurant') || [], [allPOIs]);
-  
-  const userTier = profile?.membership_tier || 'free';
-  const hasFullAccess = ['investor', 'elite', 'private'].includes(userTier);
 
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
@@ -416,272 +399,6 @@ export default function NeighborhoodDetail() {
                   )}
                 </div>
 
-                {/* Styled Tabs */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                >
-                  <Tabs defaultValue="schools" className="w-full">
-                    <TabsList className="w-full justify-start bg-card/60 backdrop-blur-sm border border-border/50 p-1 rounded-xl">
-                      <TabsTrigger 
-                        value="schools" 
-                        className="flex items-center gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg transition-all"
-                      >
-                        <GraduationCap className="h-4 w-4" />
-                        Schools
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="restaurants" 
-                        className="flex items-center gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg transition-all"
-                      >
-                        <Utensils className="h-4 w-4" />
-                        Dining
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="investment" 
-                        className="flex items-center gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg transition-all"
-                      >
-                        <TrendingUp className="h-4 w-4" />
-                        Investment
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="schools" className="mt-6">
-                      {schools && schools.length > 0 ? (
-                        <div className="grid gap-4">
-                          {schools.slice(0, hasFullAccess ? undefined : SCHOOLS_PREVIEW_LIMIT).map((school, idx) => (
-                            <motion.div
-                              key={school.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                            >
-                              <Card className="border-border/30 bg-card/60 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
-                                <CardContent className="p-5">
-                                  <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-lg bg-primary/10">
-                                          <GraduationCap className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <h4 className="font-semibold text-foreground">{school.name}</h4>
-                                      </div>
-                                      {school.curriculum && (
-                                        <Badge variant="secondary" className="mb-2">{school.curriculum} Curriculum</Badge>
-                                      )}
-                                      {school.description && (
-                                        <p className="text-sm text-muted-foreground mt-2">{school.description}</p>
-                                      )}
-                                      <div className="flex items-center flex-wrap gap-4 mt-3 text-sm text-muted-foreground">
-                                        {school.grade_levels && <span>{school.grade_levels}</span>}
-                                        {school.annual_fees_from && (
-                                          <span>
-                                            AED {school.annual_fees_from.toLocaleString()}
-                                            {school.annual_fees_to && ` - ${school.annual_fees_to.toLocaleString()}`}/year
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                      {school.rating && (
-                                        <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10">
-                                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                                          <span className="font-semibold text-amber-400">{school.rating}</span>
-                                        </div>
-                                      )}
-                                      {school.website_url && (
-                                        <Button variant="ghost" size="sm" asChild>
-                                          <a href={school.website_url} target="_blank" rel="noopener noreferrer">
-                                            <Globe className="h-4 w-4" />
-                                          </a>
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </motion.div>
-                          ))}
-                          
-                          {/* Upgrade Prompt */}
-                          {!hasFullAccess && schools.length > SCHOOLS_PREVIEW_LIMIT && (
-                            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-sm">
-                              <CardContent className="p-8 text-center">
-                                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
-                                  <Lock className="h-6 w-6 text-primary" />
-                                </div>
-                                <h4 className="font-serif font-semibold text-lg text-foreground mb-2">
-                                  {schools.length - SCHOOLS_PREVIEW_LIMIT} More Schools Available
-                                </h4>
-                                <p className="text-sm text-muted-foreground mb-5">
-                                  Upgrade to Investor tier to view all schools in {neighborhood.name}
-                                </p>
-                                <Button asChild variant="hero" size="sm">
-                                  <Link to="/pricing">Upgrade Now</Link>
-                                </Button>
-                              </CardContent>
-                            </Card>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-16 px-4 rounded-xl bg-card/40 border border-border/30">
-                          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                            <GraduationCap className="h-8 w-8 text-primary/60" />
-                          </div>
-                          <p className="text-muted-foreground">No schools data available yet. Check back soon!</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="restaurants" className="mt-6">
-                      {restaurants && restaurants.length > 0 ? (
-                        <div className="grid md:grid-cols-2 gap-4">
-                          {restaurants.slice(0, hasFullAccess ? undefined : RESTAURANTS_PREVIEW_LIMIT).map((restaurant, idx) => (
-                            <motion.div
-                              key={restaurant.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                            >
-                              <Card className="h-full border-border/30 bg-card/60 backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
-                                <CardContent className="p-5">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-3 mb-2">
-                                        <div className="p-2 rounded-lg bg-primary/10">
-                                          <Utensils className="h-4 w-4 text-primary" />
-                                        </div>
-                                        <h4 className="font-semibold text-foreground">{restaurant.name}</h4>
-                                      </div>
-                                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                        {restaurant.cuisine && <Badge variant="secondary">{restaurant.cuisine}</Badge>}
-                                        {restaurant.price_level && (
-                                          <span className="text-sm text-muted-foreground">{restaurant.price_level}</span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    {restaurant.rating && (
-                                      <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 shrink-0">
-                                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                                        <span className="font-semibold text-amber-400">{restaurant.rating}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </motion.div>
-                          ))}
-                          
-                          {/* Upgrade Prompt */}
-                          {!hasFullAccess && restaurants.length > RESTAURANTS_PREVIEW_LIMIT && (
-                            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur-sm md:col-span-2">
-                              <CardContent className="p-8 text-center">
-                                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
-                                  <Lock className="h-6 w-6 text-primary" />
-                                </div>
-                                <h4 className="font-serif font-semibold text-lg text-foreground mb-2">
-                                  {restaurants.length - RESTAURANTS_PREVIEW_LIMIT} More Restaurants
-                                </h4>
-                                <p className="text-sm text-muted-foreground mb-5">
-                                  Upgrade to view the complete dining guide
-                                </p>
-                                <Button asChild variant="hero" size="sm">
-                                  <Link to="/pricing">Upgrade Now</Link>
-                                </Button>
-                              </CardContent>
-                            </Card>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center py-16 px-4 rounded-xl bg-card/40 border border-border/30">
-                          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                            <Utensils className="h-8 w-8 text-primary/60" />
-                          </div>
-                          <p className="text-muted-foreground">No restaurant data available yet. Check back soon!</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="investment" className="mt-6">
-                      <NeighborhoodTierGate requiredTier="investor" feature="investment analysis">
-                        <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden">
-                          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-                          <CardHeader>
-                            <CardTitle className="font-serif flex items-center gap-2">
-                              <TrendingUp className="h-5 w-5 text-primary" />
-                              Investment Analysis
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid md:grid-cols-2 gap-8">
-                              <div>
-                                <h5 className="font-medium text-foreground mb-4 flex items-center gap-2">
-                                  <Home className="h-4 w-4 text-primary" />
-                                  Average Rent Prices
-                                </h5>
-                                <div className="space-y-3">
-                                  {neighborhood.avg_rent_studio && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-muted/30">
-                                      <span className="text-muted-foreground">Studio</span>
-                                      <span className="font-semibold">AED {neighborhood.avg_rent_studio.toLocaleString()}/year</span>
-                                    </div>
-                                  )}
-                                  {neighborhood.avg_rent_1br && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-muted/30">
-                                      <span className="text-muted-foreground">1 Bedroom</span>
-                                      <span className="font-semibold">AED {neighborhood.avg_rent_1br.toLocaleString()}/year</span>
-                                    </div>
-                                  )}
-                                  {neighborhood.avg_rent_2br && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-muted/30">
-                                      <span className="text-muted-foreground">2 Bedrooms</span>
-                                      <span className="font-semibold">AED {neighborhood.avg_rent_2br.toLocaleString()}/year</span>
-                                    </div>
-                                  )}
-                                  {neighborhood.avg_rent_3br && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-muted/30">
-                                      <span className="text-muted-foreground">3 Bedrooms</span>
-                                      <span className="font-semibold">AED {neighborhood.avg_rent_3br.toLocaleString()}/year</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <h5 className="font-medium text-foreground mb-4 flex items-center gap-2">
-                                  <TrendingUp className="h-4 w-4 text-primary" />
-                                  Key Metrics
-                                </h5>
-                                <div className="space-y-3">
-                                  {neighborhood.avg_price_sqft && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-muted/30">
-                                      <span className="text-muted-foreground">Avg. Price/sqft</span>
-                                      <span className="font-semibold">AED {neighborhood.avg_price_sqft.toLocaleString()}</span>
-                                    </div>
-                                  )}
-                                  {neighborhood.avg_rental_yield && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-primary/10">
-                                      <span className="text-muted-foreground">Rental Yield</span>
-                                      <span className="font-semibold text-primary">{neighborhood.avg_rental_yield.toFixed(1)}%</span>
-                                    </div>
-                                  )}
-                                  {neighborhood.yoy_appreciation && (
-                                    <div className="flex justify-between text-sm p-3 rounded-lg bg-muted/30">
-                                      <span className="text-muted-foreground">YoY Appreciation</span>
-                                      <span className={`font-semibold ${neighborhood.yoy_appreciation >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                        {neighborhood.yoy_appreciation >= 0 ? '+' : ''}{neighborhood.yoy_appreciation.toFixed(1)}%
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </NeighborhoodTierGate>
-                    </TabsContent>
-                  </Tabs>
-                </motion.div>
               </div>
 
               {/* Sidebar */}

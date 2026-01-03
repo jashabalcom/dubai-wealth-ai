@@ -754,6 +754,154 @@
   }
 }
 
+/* ============================================
+   MOBILE TOUCH & RESPONSIVENESS OPTIMIZATIONS
+   ============================================ */
+
+/* Improved touch targets for all interactive elements */
+@media (pointer: coarse) {
+  button:not(.btn-sm),
+  a:not(.text-link),
+  [role="button"],
+  .touch-target-auto {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Increase padding on cards for easier tapping */
+  .card-luxury,
+  .card-dark {
+    @apply p-5 sm:p-8;
+  }
+}
+
+/* Prevent double-tap zoom on interactive elements */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="tab"],
+[role="menuitem"] {
+  touch-action: manipulation;
+}
+
+/* Smooth momentum scrolling for all scroll containers */
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-auto {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Better map touch interaction */
+.mapboxgl-map {
+  touch-action: pan-x pan-y;
+}
+
+/* POI category filter horizontal scroll */
+.poi-category-scroll {
+  @apply flex overflow-x-auto scrollbar-hide gap-2 pb-2 -mx-1 px-1;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.poi-category-scroll > * {
+  @apply flex-shrink-0 snap-start;
+}
+
+/* Mobile sticky CTA bar */
+.mobile-sticky-cta {
+  @apply fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border p-4;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Ensure proper spacing for content above sticky footer */
+.has-sticky-cta {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Mobile hero section adjustments */
+@media (max-width: 640px) {
+  .hero-mobile {
+    @apply min-h-[50vh];
+  }
+  
+  .hero-content-mobile {
+    @apply pb-8;
+  }
+}
+
+/* Stats bar mobile optimization */
+@media (max-width: 640px) {
+  .stats-grid-mobile {
+    @apply grid-cols-2 gap-3;
+  }
+  
+  .stats-grid-mobile > div {
+    @apply text-center p-3;
+  }
+  
+  .stats-grid-mobile .stat-value {
+    @apply text-lg;
+  }
+}
+
+/* Property card mobile touch optimization */
+.property-card-touch {
+  @apply transition-transform duration-100 active:scale-[0.98];
+}
+
+/* Image gallery swipe indicator */
+.gallery-swipe-hint {
+  @apply absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5;
+}
+
+.gallery-swipe-hint > span {
+  @apply w-2 h-2 rounded-full bg-white/50 transition-all duration-300;
+}
+
+.gallery-swipe-hint > span.active {
+  @apply w-4 bg-white;
+}
+
+/* Better form inputs for mobile (prevents iOS zoom) */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Navbar mobile improvements */
+@media (max-width: 768px) {
+  .navbar-mobile {
+    @apply px-4;
+  }
+  
+  .navbar-mobile-menu {
+    @apply fixed inset-0 top-16 backdrop-blur-lg z-50;
+    background-color: hsl(var(--background) / 0.98);
+  }
+}
+
+/* Filter pills horizontal scroll on mobile */
+.filter-pills-scroll {
+  @apply flex overflow-x-auto scrollbar-hide gap-2 py-2 -mx-4 px-4;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filter-pills-scroll > * {
+  @apply flex-shrink-0;
+}
+
 /* RTL Support */
 @layer utilities {
   /* RTL-aware margin utilities */
