@@ -158,3 +158,9 @@ verify_jwt = false
 
 [functions.generate-zoom-signature]
 verify_jwt = false
+
+[functions.geocode-neighborhood]
+verify_jwt = false
+
+[functions.fetch-neighborhood-pois]
+verify_jwt = false
