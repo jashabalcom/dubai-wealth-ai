@@ -658,12 +658,49 @@
   }
 
   /* Hide scrollbar but allow scrolling */
-  .scrollbar-hide {
+  .scrollbar-hide,
+  .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .scrollbar-hide::-webkit-scrollbar {
+  .scrollbar-hide::-webkit-scrollbar,
+  .scrollbar-none::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Mobile horizontal scroll - full bleed pattern */
+  .mobile-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .mobile-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Full bleed on mobile, normal on desktop */
+  .mobile-full-bleed {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .mobile-full-bleed {
+      margin-left: 0;
+      margin-right: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  /* Prevent text overflow on mobile */
+  .text-contain {
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Touch-friendly sizing - Apple HIG 44px minimum */

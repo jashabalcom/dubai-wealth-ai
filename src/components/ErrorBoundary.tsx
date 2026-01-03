@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import { Component, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
@@ -52,11 +53,11 @@ function ErrorFallback({ error, componentStack, resetError }: FallbackProps) {
         </details>
         
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button variant="outline" onClick={resetError}>
+          <Button variant="outline" onClick={resetError} className="min-h-[44px]">
             <RefreshCw className="w-4 h-4 mr-2" />
             Try Again
           </Button>
-          <Button variant="gold" onClick={() => window.location.href = '/'}>
+          <Button variant="gold" onClick={() => window.location.href = '/'} className="min-h-[44px]">
             <Home className="w-4 h-4 mr-2" />
             Go Home
           </Button>
@@ -64,7 +65,7 @@ function ErrorFallback({ error, componentStack, resetError }: FallbackProps) {
         
         <button
           onClick={() => Sentry.showReportDialog()}
-          className="mt-6 text-sm text-muted-foreground hover:text-gold transition-colors underline"
+          className="mt-6 text-sm text-muted-foreground hover:text-gold transition-colors underline min-h-[44px]"
         >
           Report this issue
         </button>
@@ -74,7 +75,55 @@ function ErrorFallback({ error, componentStack, resetError }: FallbackProps) {
 }
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+// Lightweight error boundary for component-level errors
+interface SimpleBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+export class SimpleErrorBoundary extends Component<
+  { children: ReactNode; fallback?: ReactNode; onError?: (error: Error) => void },
+  SimpleBoundaryState
+> {
+  constructor(props: { children: ReactNode; fallback?: ReactNode; onError?: (error: Error) => void }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): SimpleBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[SimpleErrorBoundary] Error:', error, errorInfo);
+    this.props.onError?.(error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-center">
+          <AlertTriangle className="w-6 h-6 text-destructive mx-auto mb-2" />
+          <p className="text-sm text-destructive">Something went wrong</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => this.setState({ hasError: false, error: undefined })}
+            className="mt-2 min-h-[44px]"
+          >
+            <RefreshCw className="w-3 h-3 mr-1" />
+            Retry
+          </Button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 export function ErrorBoundary({ children }: ErrorBoundaryProps) {
