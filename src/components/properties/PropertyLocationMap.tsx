@@ -12,7 +12,7 @@ import {
   MapPin, Navigation, GraduationCap, Utensils, 
   Building2, Train, ShoppingCart, Dumbbell, Heart
 } from 'lucide-react';
-import { POI_COLORS, MAP_STYLES } from '@/types/maps';
+import { POI_COLORS, MAP_STYLES, MAP_3D_CONFIG } from '@/types/maps';
 
 interface PropertyLocationMapProps {
   latitude: number | null;
@@ -82,11 +82,11 @@ export function PropertyLocationMap({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: MAP_STYLES.streets,
+      style: MAP_STYLES.standard, // Mapbox Standard style with 3D buildings
       center: [longitude, latitude],
-      zoom: 15,
-      pitch: 45,
-      bearing: -17.6,
+      zoom: 16,
+      pitch: MAP_3D_CONFIG.pitch,
+      bearing: MAP_3D_CONFIG.bearing,
     });
 
     // Add navigation controls
@@ -123,34 +123,28 @@ export function PropertyLocationMap({
       )
       .addTo(map.current);
 
-    map.current.on('load', () => {
+    map.current.on('style.load', () => {
       setIsMapReady(true);
       
-      // Add 3D building layer for visual depth
-      const layers = map.current!.getStyle().layers;
-      const labelLayerId = layers?.find(
-        (layer) => layer.type === 'symbol' && layer.layout?.['text-field']
-      )?.id;
+      // Add terrain source for 3D elevation
+      map.current!.addSource('mapbox-dem', {
+        type: 'raster-dem',
+        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+        tileSize: 512,
+        maxzoom: 14,
+      });
+      
+      map.current!.setTerrain({ 
+        source: 'mapbox-dem', 
+        exaggeration: MAP_3D_CONFIG.terrain.exaggeration 
+      });
 
-      if (labelLayerId) {
-        map.current!.addLayer(
-          {
-            id: '3d-buildings',
-            source: 'composite',
-            'source-layer': 'building',
-            filter: ['==', 'extrude', 'true'],
-            type: 'fill-extrusion',
-            minzoom: 14,
-            paint: {
-              'fill-extrusion-color': '#aaa',
-              'fill-extrusion-height': ['get', 'height'],
-              'fill-extrusion-base': ['get', 'min_height'],
-              'fill-extrusion-opacity': 0.6,
-            },
-          },
-          labelLayerId
-        );
-      }
+      // Add atmospheric fog for depth and realism
+      map.current!.setFog({
+        color: MAP_3D_CONFIG.fog.color,
+        'high-color': MAP_3D_CONFIG.fog['high-color'],
+        'horizon-blend': MAP_3D_CONFIG.fog['horizon-blend'],
+      });
     });
 
     return () => {

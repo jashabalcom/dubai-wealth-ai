@@ -54,6 +54,22 @@ export const MAP_STYLES = {
   light: 'mapbox://styles/mapbox/light-v11',
   dark: 'mapbox://styles/mapbox/dark-v11',
   satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+  standard: 'mapbox://styles/mapbox/standard',
+} as const;
+
+// 3D map configuration presets
+export const MAP_3D_CONFIG = {
+  pitch: 60,
+  bearing: -17.6,
+  terrain: {
+    source: 'mapbox-dem',
+    exaggeration: 1.5,
+  },
+  fog: {
+    color: 'rgb(220, 215, 210)',
+    'high-color': 'rgb(200, 200, 225)',
+    'horizon-blend': 0.2,
+  },
 } as const;
 
 export type MapStyleKey = keyof typeof MAP_STYLES;
