@@ -63,10 +63,10 @@ export function NeighborhoodMapEnhanced({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12', // Better contrast style
+      style: 'mapbox://styles/mapbox/dark-v11', // Dark style for better contrast and visibility
       center: [longitude, latitude],
       zoom: 14,
-      pitch: 30,
+      pitch: 45,
     });
 
     // Add navigation controls

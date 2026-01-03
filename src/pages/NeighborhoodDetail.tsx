@@ -560,9 +560,6 @@ export default function NeighborhoodDetail() {
                                           <span className="text-sm text-muted-foreground">{restaurant.price_level}</span>
                                         )}
                                       </div>
-                                      {restaurant.description && (
-                                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{restaurant.description}</p>
-                                      )}
                                     </div>
                                     {restaurant.rating && (
                                       <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 shrink-0">

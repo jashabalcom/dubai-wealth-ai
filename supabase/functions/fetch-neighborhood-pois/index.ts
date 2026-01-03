@@ -124,6 +124,17 @@ function extractCuisineType(types: string[] | undefined): string | null {
   return null;
 }
 
+// Format the primary type into a human-readable description
+function formatPrimaryType(primaryType: string | undefined): string | null {
+  if (!primaryType) return null;
+  // Convert snake_case to Title Case and make it readable
+  return primaryType
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -180,7 +191,7 @@ serve(async (req) => {
           neighborhood_id: neighborhoodId,
           poi_type: categoryKey,
           name: place.displayName?.text || 'Unknown',
-          description: place.primaryType?.replace(/_/g, ' ') || null,
+          description: formatPrimaryType(place.primaryType),
           latitude: place.location?.latitude || latitude,
           longitude: place.location?.longitude || longitude,
           address: place.formattedAddress || null,
