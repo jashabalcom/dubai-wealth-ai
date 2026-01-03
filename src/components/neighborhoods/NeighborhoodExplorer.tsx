@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, Component, ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Compass, AlertTriangle } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { POICategoryFilter, POI_CATEGORIES } from './POICategoryFilter';
 import { NeighborhoodMapEnhanced } from './NeighborhoodMapEnhanced';
@@ -34,23 +33,22 @@ class NeighborhoodExplorerErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <Card className="border-destructive/20 bg-card/60 backdrop-blur-sm overflow-hidden">
-          <CardContent className="p-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
-              <AlertTriangle className="h-8 w-8 text-destructive" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">Unable to load map</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              There was an error loading the neighborhood explorer for {this.props.neighborhoodName}.
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={() => this.setState({ hasError: false, error: undefined })}
-            >
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border border-destructive/20 bg-card/60 backdrop-blur-sm p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">Unable to load map</h3>
+          <p className="text-muted-foreground text-sm mb-4">
+            There was an error loading the neighborhood explorer for {this.props.neighborhoodName}.
+          </p>
+          <Button 
+            variant="outline" 
+            onClick={() => this.setState({ hasError: false, error: undefined })}
+            className="min-h-[44px]"
+          >
+            Try Again
+          </Button>
+        </div>
       );
     }
 
@@ -98,10 +96,13 @@ export function NeighborhoodExplorer({
   }, []);
   
   // Handle fly to POI from card click
-  const handleViewOnMap = useCallback((poiId: string, lat: number, lng: number) => {
+  const handleViewOnMap = useCallback((poiId: string) => {
     setSelectedPOIId(poiId);
-    // The map component will handle the fly-to animation
   }, []);
+
+  const activeCategoryLabel = activeCategory === 'all' 
+    ? 'All Places' 
+    : POI_CATEGORIES.find(c => c.key === activeCategory)?.label || 'Places';
 
   return (
     <NeighborhoodExplorerErrorBoundary neighborhoodName={neighborhoodName}>
@@ -109,16 +110,17 @@ export function NeighborhoodExplorer({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="rounded-xl border border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden"
       >
-      <Card className="border-primary/10 bg-card/60 backdrop-blur-sm">
-          {/* Gold accent line */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        {/* Gold accent line */}
+        <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
         
-        <CardHeader className="pb-4">
-          <CardTitle className="font-serif text-xl flex items-center gap-2">
+        {/* Header */}
+        <div className="p-4 pb-3">
+          <h3 className="font-serif text-xl flex items-center gap-2 mb-3">
             <Compass className="h-5 w-5 text-primary" />
             Explore {neighborhoodName}
-          </CardTitle>
+          </h3>
           
           {/* Category Filter Pills */}
           <POICategoryFilter
@@ -126,84 +128,78 @@ export function NeighborhoodExplorer({
             onCategoryChange={setActiveCategory}
             counts={poiCounts}
             totalCount={allPOIs?.length || 0}
-            className="mt-4"
           />
-        </CardHeader>
+        </div>
         
-        <CardContent className="p-0 space-y-0">
-          {/* Enhanced Map */}
-          <NeighborhoodMapEnhanced
-            latitude={latitude}
-            longitude={longitude}
-            neighborhoodId={neighborhoodId}
-            neighborhoodName={neighborhoodName}
-            pois={filteredPOIs}
-            activeCategory={activeCategory}
-            selectedPOIId={selectedPOIId}
-            onPOISelect={handlePOISelect}
-            className="h-[300px] sm:h-[400px] md:h-[500px]"
-          />
-          
-          {/* POI Cards - Horizontal Scroll */}
-          {filteredPOIs.length > 0 && (
-            <div className="p-4 border-t border-border/50">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {activeCategory === 'all' ? 'All Places' : POI_CATEGORIES.find(c => c.key === activeCategory)?.label}
-                  <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{filteredPOIs.length}</span>
-                </h4>
-              </div>
-              
-              <div className="relative -mx-4 sm:mx-0">
-                <div 
-                  className="flex gap-3 sm:gap-4 pb-4 px-4 sm:px-0 overflow-x-auto scrollbar-none snap-x snap-mandatory"
-                  style={{ 
-                    WebkitOverflowScrolling: 'touch',
-                    overscrollBehaviorX: 'contain'
-                  }}
+        {/* Map */}
+        <NeighborhoodMapEnhanced
+          latitude={latitude}
+          longitude={longitude}
+          neighborhoodId={neighborhoodId}
+          neighborhoodName={neighborhoodName}
+          pois={filteredPOIs}
+          activeCategory={activeCategory}
+          selectedPOIId={selectedPOIId}
+          onPOISelect={handlePOISelect}
+          className="h-[280px] sm:h-[360px] md:h-[450px]"
+        />
+        
+        {/* POI Cards Section */}
+        {filteredPOIs.length > 0 && (
+          <div className="border-t border-border/50">
+            {/* Section Header */}
+            <div className="px-4 pt-4 pb-2">
+              <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                {activeCategoryLabel}
+                <span className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                  {filteredPOIs.length}
+                </span>
+              </h4>
+            </div>
+            
+            {/* Horizontal Scroll Container */}
+            <div 
+              className="flex gap-3 overflow-x-auto scrollbar-none pb-4 px-4"
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehaviorX: 'contain'
+              }}
+            >
+              {filteredPOIs.map((poi) => (
+                <motion.div
+                  key={poi.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`w-[240px] flex-none cursor-pointer transition-all duration-200 ${
+                    selectedPOIId === poi.id 
+                      ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' 
+                      : ''
+                  }`}
+                  onClick={() => handleViewOnMap(poi.id)}
                 >
-                {filteredPOIs.map((poi) => (
-                  <motion.div
-                    key={poi.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`w-[220px] sm:w-[260px] shrink-0 transition-all duration-300 cursor-pointer snap-start ${
-                      selectedPOIId === poi.id 
-                        ? 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl' 
-                        : ''
-                    }`}
-                    onClick={() => {
-                      if (poi.latitude && poi.longitude) {
-                        handleViewOnMap(poi.id, poi.latitude, poi.longitude);
-                      }
-                    }}
-                  >
-                    <POICard poi={poi} />
-                  </motion.div>
-                ))}
-                </div>
-              </div>
+                  <POICard poi={poi} />
+                </motion.div>
+              ))}
             </div>
-          )}
-          
-          {/* Empty State */}
-          {!isLoading && filteredPOIs.length === 0 && (
-            <div className="p-8 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4">
-                <MapPin className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground">
-                No points of interest found for this area
-              </p>
-              <p className="text-sm text-muted-foreground/60 mt-1">
-                POIs can be fetched from the admin panel
-              </p>
+          </div>
+        )}
+        
+        {/* Empty State */}
+        {!isLoading && filteredPOIs.length === 0 && (
+          <div className="p-8 text-center border-t border-border/50">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4">
+              <MapPin className="h-8 w-8 text-muted-foreground" />
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+            <p className="text-muted-foreground">
+              No points of interest found for this area
+            </p>
+            <p className="text-sm text-muted-foreground/60 mt-1">
+              POIs can be fetched from the admin panel
+            </p>
+          </div>
+        )}
+      </motion.div>
     </NeighborhoodExplorerErrorBoundary>
   );
 }

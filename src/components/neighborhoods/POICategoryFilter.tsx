@@ -48,8 +48,17 @@ export function POICategoryFilter({
 
   useEffect(() => {
     checkScroll();
+    const ref = scrollRef.current;
+    if (ref) {
+      ref.addEventListener('scroll', checkScroll);
+    }
     window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
+    return () => {
+      if (ref) {
+        ref.removeEventListener('scroll', checkScroll);
+      }
+      window.removeEventListener('resize', checkScroll);
+    };
   }, []);
 
   const scroll = (direction: 'left' | 'right') => {
@@ -62,7 +71,7 @@ export function POICategoryFilter({
   };
 
   return (
-    <div className={cn("relative w-full", className)}>
+    <div className={cn("relative", className)}>
       {/* Left Arrow - hidden on mobile */}
       {showLeftArrow && (
         <Button
@@ -75,17 +84,15 @@ export function POICategoryFilter({
         </Button>
       )}
 
-      {/* Scrollable Pills */}
-      <div className="relative -mx-4 sm:mx-0">
-        <div
-          ref={scrollRef}
-          onScroll={checkScroll}
-          className="flex gap-2 overflow-x-auto scrollbar-none py-2 px-4 sm:px-0 snap-x"
-          style={{ 
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehaviorX: 'contain'
-          }}
-        >
+      {/* Scrollable Pills - simple single container */}
+      <div
+        ref={scrollRef}
+        className="flex gap-2 overflow-x-auto scrollbar-none py-1"
+        style={{ 
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehaviorX: 'contain'
+        }}
+      >
         {POI_CATEGORIES.map(cat => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.key;
@@ -97,7 +104,7 @@ export function POICategoryFilter({
               variant={isActive ? 'default' : 'outline'}
               size="sm"
               className={cn(
-                "shrink-0 gap-2 rounded-full transition-all duration-300 snap-start min-h-[44px]",
+                "flex-none gap-1.5 rounded-full transition-all duration-300 min-h-[44px] px-3",
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
                   : "bg-card hover:bg-muted border-border"
@@ -105,13 +112,13 @@ export function POICategoryFilter({
               onClick={() => onCategoryChange(cat.key)}
             >
               <Icon 
-                className="h-4 w-4" 
+                className="h-4 w-4 flex-none" 
                 style={{ color: isActive ? undefined : cat.color }} 
               />
-              <span className="font-medium">{cat.label}</span>
+              <span className="font-medium whitespace-nowrap">{cat.label}</span>
               {count > 0 && (
                 <span className={cn(
-                  "text-xs px-1.5 py-0.5 rounded-full",
+                  "text-xs px-1.5 py-0.5 rounded-full flex-none",
                   isActive 
                     ? "bg-primary-foreground/20 text-primary-foreground" 
                     : "bg-muted text-muted-foreground"
@@ -122,7 +129,6 @@ export function POICategoryFilter({
             </Button>
           );
         })}
-        </div>
       </div>
 
       {/* Right Arrow - hidden on mobile */}
