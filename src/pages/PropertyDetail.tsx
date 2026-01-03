@@ -31,6 +31,7 @@ import { InvestmentScoreBadge } from '@/components/properties/InvestmentScoreBad
 import { GoldenVisaBadge } from '@/components/properties/GoldenVisaBadge';
 import { TrueCostCard } from '@/components/properties/TrueCostCard';
 import { NeighborhoodWidget } from '@/components/properties/NeighborhoodWidget';
+import { PropertyLocationMap } from '@/components/properties/PropertyLocationMap';
 import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
 import { DualPrice } from '@/components/DualPrice';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
@@ -73,6 +74,8 @@ interface Property {
   amenities: Array<string | { type: string; items: string[] }>;
   highlights: string[];
   is_featured: boolean;
+  latitude: number | null;
+  longitude: number | null;
   // New fields
   listing_type: string;
   furnishing: string;
@@ -620,6 +623,21 @@ export default function PropertyDetail() {
                   </p>
                 </div>
               )}
+
+              {/* Location Map */}
+              <div className="space-y-4">
+                <h2 className="font-heading text-xl text-foreground flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  Location & Surroundings
+                </h2>
+                <PropertyLocationMap
+                  latitude={property.latitude}
+                  longitude={property.longitude}
+                  propertyTitle={property.title}
+                  locationArea={property.location_area}
+                  neighborhoodId={property.community_id || undefined}
+                />
+              </div>
 
               {/* Floor Plans */}
               <FloorPlansGallery floorPlans={floorPlans} />

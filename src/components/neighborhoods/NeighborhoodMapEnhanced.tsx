@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { supabase } from '@/integrations/supabase/client';
+import { useMapboxToken } from '@/hooks/useMapboxToken';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -51,21 +51,9 @@ export function NeighborhoodMapEnhanced({
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
-  const [mapToken, setMapToken] = useState<string | null>(null);
-
-  // Fetch Mapbox token
-  useEffect(() => {
-    const fetchToken = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-        if (error) throw error;
-        setMapToken(data.token);
-      } catch (error) {
-        console.error('Error fetching Mapbox token:', error);
-      }
-    };
-    fetchToken();
-  }, []);
+  
+  // Use cached Mapbox token from React Query
+  const { token: mapToken, loading: tokenLoading, error: tokenError } = useMapboxToken();
 
   // Initialize map
   useEffect(() => {
@@ -224,8 +212,8 @@ export function NeighborhoodMapEnhanced({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Loading State */}
-      {isLoading && (
+      {/* Loading State - show while token loading or map initializing */}
+      {(tokenLoading || isLoading) && (
         <div className="absolute inset-0 z-10">
           <Skeleton className="w-full h-full" />
         </div>
