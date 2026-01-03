@@ -19,9 +19,7 @@ import { NeighborhoodLeadCapture } from '@/components/leadgen/NeighborhoodLeadCa
 import { NeighborhoodTierGate } from '@/components/neighborhoods/NeighborhoodTierGate';
 import { useCountUp, useInView } from '@/hooks/useCountUp';
 import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
-import { NeighborhoodMap } from '@/components/neighborhoods/NeighborhoodMap';
-import { NeighborhoodAmenities } from '@/components/neighborhoods/NeighborhoodAmenities';
-import { POICarousel } from '@/components/neighborhoods/POICarousel';
+import { NeighborhoodExplorer } from '@/components/neighborhoods/NeighborhoodExplorer';
 
 // Preview limits for free tier
 const SCHOOLS_PREVIEW_LIMIT = 3;
@@ -32,19 +30,7 @@ export default function NeighborhoodDetail() {
   const { data: neighborhood, isLoading } = useNeighborhood(slug || '');
   const { data: schools } = useNeighborhoodPOIs(neighborhood?.id || '', 'school');
   const { data: restaurants } = useNeighborhoodPOIs(neighborhood?.id || '', 'restaurant');
-  const { data: allPOIs } = useNeighborhoodPOIs(neighborhood?.id || '');
-  const { data: healthcarePOIs } = useNeighborhoodPOIs(neighborhood?.id || '', 'healthcare');
-  const { data: gymPOIs } = useNeighborhoodPOIs(neighborhood?.id || '', 'gym');
   const { data: properties } = useNeighborhoodProperties(neighborhood?.name || '');
-  
-  // Calculate POI counts for amenities widget
-  const poiCounts = useMemo(() => {
-    if (!allPOIs) return {};
-    return allPOIs.reduce((acc, poi) => {
-      acc[poi.poi_type] = (acc[poi.poi_type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-  }, [allPOIs]);
   const { profile } = useAuth();
   
   const userTier = profile?.membership_tier || 'free';
@@ -339,65 +325,13 @@ export default function NeighborhoodDetail() {
                   </motion.div>
                 )}
 
-                {/* Interactive Map Section */}
+                {/* Unified Neighborhood Explorer - Map + POIs */}
                 {neighborhood.latitude && neighborhood.longitude && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15, duration: 0.5 }}
-                  >
-                    <Card className="border-primary/10 bg-card/60 backdrop-blur-sm overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-                      <CardHeader>
-                        <CardTitle className="font-serif text-xl flex items-center gap-2">
-                          <MapPin className="h-5 w-5 text-primary" />
-                          Explore {neighborhood.name}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <NeighborhoodMap
-                          latitude={neighborhood.latitude}
-                          longitude={neighborhood.longitude}
-                          neighborhoodId={neighborhood.id}
-                          neighborhoodName={neighborhood.name}
-                          className="h-[400px]"
-                        />
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-
-                {/* Amenities Summary */}
-                {Object.keys(poiCounts).length > 0 && (
-                  <NeighborhoodAmenities
-                    poiCounts={poiCounts}
-                    hasMetro={neighborhood.has_metro_access || false}
-                    hasBeach={neighborhood.has_beach_access || false}
-                  />
-                )}
-
-                {/* POI Carousels */}
-                {restaurants && restaurants.length > 0 && (
-                  <POICarousel
-                    title="Restaurants & Dining"
-                    poiType="restaurant"
-                    pois={restaurants}
-                  />
-                )}
-
-                {healthcarePOIs && healthcarePOIs.length > 0 && (
-                  <POICarousel
-                    title="Healthcare Facilities"
-                    poiType="healthcare"
-                    pois={healthcarePOIs}
-                  />
-                )}
-
-                {gymPOIs && gymPOIs.length > 0 && (
-                  <POICarousel
-                    title="Fitness Centers"
-                    poiType="gym"
-                    pois={gymPOIs}
+                  <NeighborhoodExplorer
+                    neighborhoodId={neighborhood.id}
+                    neighborhoodName={neighborhood.name}
+                    latitude={neighborhood.latitude}
+                    longitude={neighborhood.longitude}
                   />
                 )}
 
