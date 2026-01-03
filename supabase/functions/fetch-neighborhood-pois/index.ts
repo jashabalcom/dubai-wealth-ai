@@ -6,32 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Map Geoapify categories to our POI types
-const CATEGORY_MAPPING: Record<string, { apiCategories: string[], ourType: string }> = {
-  restaurant: { 
-    apiCategories: ['catering.restaurant', 'catering.cafe', 'catering.fast_food'],
-    ourType: 'restaurant' 
-  },
-  school: { 
-    apiCategories: ['education'],
-    ourType: 'school' 
-  },
-  healthcare: { 
-    apiCategories: ['healthcare'],
-    ourType: 'healthcare' 
-  },
-  gym: { 
-    apiCategories: ['sport.fitness', 'sport.sports_centre'],
-    ourType: 'gym' 
-  },
-  supermarket: { 
-    apiCategories: ['commercial.supermarket', 'commercial.convenience'],
-    ourType: 'supermarket' 
-  },
-  entertainment: { 
-    apiCategories: ['entertainment', 'leisure.park'],
-    ourType: 'entertainment' 
-  },
+// Map our categories to Google Place types
+const GOOGLE_PLACE_TYPES: Record<string, string[]> = {
+  restaurant: ['restaurant', 'cafe', 'bakery'],
+  school: ['school', 'university', 'primary_school'],
+  healthcare: ['hospital', 'doctor', 'pharmacy'],
+  gym: ['gym'],
+  supermarket: ['supermarket', 'grocery_store'],
+  entertainment: ['movie_theater', 'amusement_park', 'night_club', 'park'],
 };
 
 interface POIResult {
@@ -50,6 +32,96 @@ interface POIResult {
   source: string;
   last_synced_at: string;
   opening_hours: object | null;
+  google_place_id: string | null;
+  price_level: string | null;
+  cuisine_type: string | null;
+}
+
+async function fetchGooglePlacesPOIs(
+  latitude: number, 
+  longitude: number, 
+  radius: number,
+  categoryKey: string,
+  placeTypes: string[],
+  apiKey: string
+): Promise<any[]> {
+  const results: any[] = [];
+  
+  for (const placeType of placeTypes) {
+    try {
+      const response = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.rating,places.priceLevel,places.photos,places.location,places.primaryType,places.types,places.userRatingCount,places.websiteUri'
+        },
+        body: JSON.stringify({
+          includedTypes: [placeType],
+          locationRestriction: {
+            circle: {
+              center: { latitude, longitude },
+              radius
+            }
+          },
+          languageCode: 'en',
+          maxResultCount: 10
+        })
+      });
+
+      if (!response.ok) {
+        console.error(`Google Places API error for ${placeType}: ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json();
+      if (data.places && data.places.length > 0) {
+        results.push(...data.places);
+        console.log(`Found ${data.places.length} ${placeType} places`);
+      }
+
+      // Rate limiting between requests
+      await new Promise(resolve => setTimeout(resolve, 100));
+    } catch (error) {
+      console.error(`Error fetching ${placeType}:`, error);
+    }
+  }
+
+  return results;
+}
+
+function mapPriceLevel(priceLevel: string | undefined): string | null {
+  if (!priceLevel) return null;
+  const mapping: Record<string, string> = {
+    'PRICE_LEVEL_FREE': 'Free',
+    'PRICE_LEVEL_INEXPENSIVE': '$',
+    'PRICE_LEVEL_MODERATE': '$$',
+    'PRICE_LEVEL_EXPENSIVE': '$$$',
+    'PRICE_LEVEL_VERY_EXPENSIVE': '$$$$',
+  };
+  return mapping[priceLevel] || null;
+}
+
+function extractCuisineType(types: string[] | undefined): string | null {
+  if (!types) return null;
+  const cuisineTypes = types.filter(t => 
+    t.includes('cuisine') || 
+    ['italian_restaurant', 'indian_restaurant', 'chinese_restaurant', 'japanese_restaurant', 
+     'thai_restaurant', 'mexican_restaurant', 'french_restaurant', 'mediterranean_restaurant',
+     'middle_eastern_restaurant', 'american_restaurant', 'seafood_restaurant', 'steak_house',
+     'sushi_restaurant', 'pizza_restaurant', 'burger_restaurant', 'cafe', 'bakery'].includes(t)
+  );
+  
+  if (cuisineTypes.length > 0) {
+    // Clean up the type name
+    return cuisineTypes[0]
+      .replace('_restaurant', '')
+      .replace('_', ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+  return null;
 }
 
 serve(async (req) => {
@@ -64,9 +136,9 @@ serve(async (req) => {
       throw new Error('neighborhoodId, latitude, and longitude are required');
     }
 
-    const GEOAPIFY_API_KEY = Deno.env.get('GEOAPIFY_API_KEY');
-    if (!GEOAPIFY_API_KEY) {
-      throw new Error('Geoapify API key not configured');
+    const GOOGLE_PLACES_API_KEY = Deno.env.get('GOOGLE_PLACES_API_KEY');
+    if (!GOOGLE_PLACES_API_KEY) {
+      throw new Error('Google Places API key not configured');
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -75,60 +147,60 @@ serve(async (req) => {
 
     console.log(`Fetching POIs for neighborhood ${neighborhoodId} at ${latitude}, ${longitude}`);
 
-    const categoriesToFetch = categories || Object.keys(CATEGORY_MAPPING);
+    const categoriesToFetch = categories || Object.keys(GOOGLE_PLACE_TYPES);
     const allPOIs: POIResult[] = [];
     let totalFetched = 0;
 
     for (const categoryKey of categoriesToFetch) {
-      const categoryConfig = CATEGORY_MAPPING[categoryKey];
-      if (!categoryConfig) continue;
+      const placeTypes = GOOGLE_PLACE_TYPES[categoryKey];
+      if (!placeTypes) continue;
 
-      // Build the categories query parameter
-      const apiCategories = categoryConfig.apiCategories.join(',');
-      
-      const placesUrl = `https://api.geoapify.com/v2/places?categories=${apiCategories}&filter=circle:${longitude},${latitude},${radius}&limit=20&apiKey=${GEOAPIFY_API_KEY}`;
+      console.log(`Fetching ${categoryKey} POIs from Google Places...`);
 
-      console.log(`Fetching ${categoryKey} POIs...`);
+      const places = await fetchGooglePlacesPOIs(
+        latitude, 
+        longitude, 
+        radius, 
+        categoryKey, 
+        placeTypes, 
+        GOOGLE_PLACES_API_KEY
+      );
 
-      const response = await fetch(placesUrl);
-      if (!response.ok) {
-        console.error(`Geoapify API error for ${categoryKey}: ${response.status}`);
-        continue;
-      }
-
-      const data = await response.json();
-      
-      if (data.features && data.features.length > 0) {
-        for (const feature of data.features) {
-          const props = feature.properties;
-          
-          // Skip if no valid place ID or name
-          if (!props.place_id || !props.name) continue;
-
-          const poi: POIResult = {
-            external_id: `geoapify_${props.place_id}`,
-            neighborhood_id: neighborhoodId,
-            poi_type: categoryConfig.ourType,
-            name: props.name,
-            description: props.categories?.join(', ') || null,
-            latitude: feature.geometry.coordinates[1],
-            longitude: feature.geometry.coordinates[0],
-            address: props.formatted || props.address_line1 || null,
-            rating: props.rating || null,
-            review_count: null,
-            website_url: props.website || null,
-            image_url: null,
-            source: 'geoapify',
-            last_synced_at: new Date().toISOString(),
-            opening_hours: props.opening_hours ? { raw: props.opening_hours } : null,
-          };
-
-          allPOIs.push(poi);
+      for (const place of places) {
+        // Build photo URL if available
+        let imageUrl: string | null = null;
+        if (place.photos && place.photos.length > 0) {
+          const photoName = place.photos[0].name;
+          // Store the photo reference to be fetched via our proxy
+          imageUrl = `${supabaseUrl}/functions/v1/google-place-photo?photoName=${encodeURIComponent(photoName)}&maxWidth=400`;
         }
 
-        totalFetched += data.features.length;
-        console.log(`Found ${data.features.length} ${categoryKey} POIs`);
+        const poi: POIResult = {
+          external_id: `google_${place.id}`,
+          neighborhood_id: neighborhoodId,
+          poi_type: categoryKey,
+          name: place.displayName?.text || 'Unknown',
+          description: place.primaryType?.replace(/_/g, ' ') || null,
+          latitude: place.location?.latitude || latitude,
+          longitude: place.location?.longitude || longitude,
+          address: place.formattedAddress || null,
+          rating: place.rating || null,
+          review_count: place.userRatingCount || null,
+          website_url: place.websiteUri || null,
+          image_url: imageUrl,
+          source: 'google_places',
+          last_synced_at: new Date().toISOString(),
+          opening_hours: null,
+          google_place_id: place.id,
+          price_level: mapPriceLevel(place.priceLevel),
+          cuisine_type: extractCuisineType(place.types),
+        };
+
+        allPOIs.push(poi);
       }
+
+      totalFetched += places.length;
+      console.log(`Processed ${places.length} ${categoryKey} POIs`);
 
       // Rate limiting between category requests
       await new Promise(resolve => setTimeout(resolve, 200));

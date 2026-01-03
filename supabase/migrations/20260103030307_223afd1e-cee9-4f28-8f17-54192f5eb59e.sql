@@ -1,0 +1,1 @@
+ALTER TABLE neighborhood_pois ADD COLUMN IF NOT EXISTS google_place_id TEXT;
