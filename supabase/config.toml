@@ -167,3 +167,6 @@ verify_jwt = false
 
 [functions.google-place-photo]
 verify_jwt = false
+
+[functions.batch-geocode-neighborhoods]
+verify_jwt = false
