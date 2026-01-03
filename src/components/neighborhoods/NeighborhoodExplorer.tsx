@@ -159,8 +159,9 @@ export function NeighborhoodExplorer({
                 className="flex gap-3 sm:gap-4 pb-4 overflow-x-auto scrollbar-none -mx-4 px-4"
                 style={{ 
                   WebkitOverflowScrolling: 'touch',
-                  overscrollBehavior: 'contain',
-                  scrollSnapType: 'x proximity'
+                  overscrollBehaviorX: 'contain',
+                  overscrollBehaviorY: 'auto',
+                  scrollSnapType: 'x mandatory'
                 }}
               >
                 {filteredPOIs.map((poi) => (

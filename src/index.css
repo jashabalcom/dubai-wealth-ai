@@ -807,9 +807,11 @@ textarea,
   overscroll-behavior: contain;
 }
 
-/* Better map touch interaction */
-.mapboxgl-map {
-  touch-action: pan-x pan-y;
+/* Mapbox canvas containment - prevent overflow on mobile */
+.mapboxgl-map,
+.mapboxgl-canvas-container,
+.mapboxgl-canvas {
+  max-width: 100%;
 }
 
 /* POI category filter horizontal scroll */
