@@ -14,6 +14,16 @@ import {
 } from 'lucide-react';
 import { POI_COLORS, MAP_STYLES, MAP_3D_CONFIG } from '@/types/maps';
 
+// Detect mobile/touch device
+const isTouchDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    window.matchMedia('(pointer: coarse)').matches
+  );
+};
+
 interface PropertyLocationMapProps {
   latitude: number | null;
   longitude: number | null;
@@ -74,6 +84,8 @@ export function PropertyLocationMap({
     return counts;
   }, [allPOIs]);
 
+  const isMobile = useMemo(() => isTouchDevice(), []);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || !mapToken || !latitude || !longitude) return;
@@ -88,7 +100,15 @@ export function PropertyLocationMap({
       pitch: 45,
       bearing: -17.6,
       antialias: true,
+      // On mobile: require two-finger gesture to pan/zoom
+      cooperativeGestures: isMobile,
     });
+
+    // Disable rotation gestures on mobile for simpler UX
+    if (isMobile) {
+      map.current.touchPitch.disable();
+      map.current.dragRotate.disable();
+    }
 
     // Add navigation controls
     map.current.addControl(
