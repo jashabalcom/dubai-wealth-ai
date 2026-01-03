@@ -5,8 +5,9 @@ import { toast } from 'sonner';
 import { 
   Plus, Edit, Trash2, Eye, EyeOff, MapPin, Search, 
   GraduationCap, Utensils, Building2, ChevronRight, Sparkles, Loader2,
-  Zap, Square, CheckCircle2, XCircle
+  Zap, Square, CheckCircle2, XCircle, Globe, Download
 } from 'lucide-react';
+import { useGeoapify } from '@/hooks/useGeoapify';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,6 +32,8 @@ interface Neighborhood {
   overview: string | null;
   image_url: string | null;
   cover_image_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
   lifestyle_type: string | null;
   is_freehold: boolean | null;
   golden_visa_eligible: boolean | null;
@@ -104,6 +107,34 @@ export default function AdminNeighborhoods() {
   const [isBulkGenerating, setIsBulkGenerating] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, failed: 0 });
   const bulkAbortRef = useRef(false);
+  
+  // Geoapify integration
+  const { geocodeNeighborhood, fetchNeighborhoodPOIs, isGeocoding, isFetchingPOIs } = useGeoapify();
+  const [geocodingId, setGeocodingId] = useState<string | null>(null);
+  const [fetchingPOIsId, setFetchingPOIsId] = useState<string | null>(null);
+
+  const handleGeocode = async (neighborhood: Neighborhood) => {
+    setGeocodingId(neighborhood.id);
+    const result = await geocodeNeighborhood(neighborhood.id, neighborhood.name);
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ['admin-neighborhoods'] });
+    }
+    setGeocodingId(null);
+  };
+
+  const handleFetchPOIs = async (neighborhood: Neighborhood) => {
+    if (!neighborhood.latitude || !neighborhood.longitude) {
+      toast.error('Please geocode the neighborhood first');
+      return;
+    }
+    setFetchingPOIsId(neighborhood.id);
+    await fetchNeighborhoodPOIs(
+      neighborhood.id,
+      neighborhood.latitude,
+      neighborhood.longitude
+    );
+    setFetchingPOIsId(null);
+  };
 
   const { data: neighborhoods, isLoading } = useQuery({
     queryKey: ['admin-neighborhoods', search],
@@ -474,13 +505,58 @@ export default function AdminNeighborhoods() {
                         {neighborhood.description || 'No description'}
                       </p>
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        {neighborhood.is_freehold && <span>Freehold</span>}
+                        {neighborhood.latitude && neighborhood.longitude ? (
+                          <span className="flex items-center gap-1 text-emerald-500">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Geocoded
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-amber-500">
+                            <XCircle className="h-3 w-3" />
+                            Not geocoded
+                          </span>
+                        )}
+                        {neighborhood.is_freehold && <span>• Freehold</span>}
                         {neighborhood.has_metro_access && <span>• Metro</span>}
                         {neighborhood.has_beach_access && <span>• Beach</span>}
                         {neighborhood.avg_price_sqft && (
                           <span>• AED {neighborhood.avg_price_sqft.toLocaleString()}/sqft</span>
                         )}
                       </div>
+                    </div>
+
+                    {/* Geoapify Actions */}
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleGeocode(neighborhood)}
+                        disabled={geocodingId === neighborhood.id}
+                        className="gap-1.5 text-xs"
+                        title="Geocode to get coordinates"
+                      >
+                        {geocodingId === neighborhood.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Globe className="h-3 w-3" />
+                        )}
+                        Geocode
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleFetchPOIs(neighborhood)}
+                        disabled={fetchingPOIsId === neighborhood.id || !neighborhood.latitude}
+                        className="gap-1.5 text-xs"
+                        title="Fetch POIs from Geoapify"
+                      >
+                        {fetchingPOIsId === neighborhood.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Download className="h-3 w-3" />
+                        )}
+                        Fetch POIs
+                      </Button>
                     </div>
 
                     {/* Actions */}

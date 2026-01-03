@@ -3368,21 +3368,25 @@ export type Database = {
           cuisine: string | null
           curriculum: string | null
           description: string | null
+          external_id: string | null
           grade_levels: string | null
           id: string
           image_url: string | null
           is_delivery_available: boolean | null
           is_featured: boolean | null
+          last_synced_at: string | null
           latitude: number | null
           longitude: number | null
           name: string
           neighborhood_id: string
+          opening_hours: Json | null
           order_index: number | null
           phone: string | null
           poi_type: string
           price_level: string | null
           rating: number | null
           review_count: number | null
+          source: string | null
           updated_at: string
           website_url: string | null
         }
@@ -3394,21 +3398,25 @@ export type Database = {
           cuisine?: string | null
           curriculum?: string | null
           description?: string | null
+          external_id?: string | null
           grade_levels?: string | null
           id?: string
           image_url?: string | null
           is_delivery_available?: boolean | null
           is_featured?: boolean | null
+          last_synced_at?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
           neighborhood_id: string
+          opening_hours?: Json | null
           order_index?: number | null
           phone?: string | null
           poi_type: string
           price_level?: string | null
           rating?: number | null
           review_count?: number | null
+          source?: string | null
           updated_at?: string
           website_url?: string | null
         }
@@ -3420,21 +3428,25 @@ export type Database = {
           cuisine?: string | null
           curriculum?: string | null
           description?: string | null
+          external_id?: string | null
           grade_levels?: string | null
           id?: string
           image_url?: string | null
           is_delivery_available?: boolean | null
           is_featured?: boolean | null
+          last_synced_at?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
           neighborhood_id?: string
+          opening_hours?: Json | null
           order_index?: number | null
           phone?: string | null
           poi_type?: string
           price_level?: string | null
           rating?: number | null
           review_count?: number | null
+          source?: string | null
           updated_at?: string
           website_url?: string | null
         }
