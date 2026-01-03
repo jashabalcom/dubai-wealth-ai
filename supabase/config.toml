@@ -170,3 +170,6 @@ verify_jwt = false
 
 [functions.batch-geocode-neighborhoods]
 verify_jwt = false
+
+[functions.bulk-fetch-all-pois]
+verify_jwt = false
