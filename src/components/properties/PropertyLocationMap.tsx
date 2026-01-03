@@ -82,11 +82,10 @@ export function PropertyLocationMap({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: MAP_STYLES.standard, // Mapbox Standard style with 3D buildings
+      style: MAP_STYLES.light, // Reliable style that works everywhere
       center: [longitude, latitude],
       zoom: 16,
-      pitch: MAP_3D_CONFIG.pitch,
-      bearing: MAP_3D_CONFIG.bearing,
+      pitch: 45, // Simple tilt for depth
     });
 
     // Add navigation controls
@@ -123,28 +122,14 @@ export function PropertyLocationMap({
       )
       .addTo(map.current);
 
-    map.current.on('style.load', () => {
-      setIsMapReady(true);
-      
-      // Add terrain source for 3D elevation
-      map.current!.addSource('mapbox-dem', {
-        type: 'raster-dem',
-        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        tileSize: 512,
-        maxzoom: 14,
-      });
-      
-      map.current!.setTerrain({ 
-        source: 'mapbox-dem', 
-        exaggeration: MAP_3D_CONFIG.terrain.exaggeration 
-      });
+    // Handle errors gracefully
+    map.current.on('error', (e) => {
+      console.error('Mapbox error:', e.error);
+    });
 
-      // Add atmospheric fog for depth and realism
-      map.current!.setFog({
-        color: MAP_3D_CONFIG.fog.color,
-        'high-color': MAP_3D_CONFIG.fog['high-color'],
-        'horizon-blend': MAP_3D_CONFIG.fog['horizon-blend'],
-      });
+    // Set ready state on load event (more reliable than style.load)
+    map.current.on('load', () => {
+      setIsMapReady(true);
     });
 
     return () => {
