@@ -13,6 +13,7 @@ import { NavigationProgress } from "@/components/NavigationProgress";
 import { CookieConsent } from "@/components/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
+import { EmailVerificationBanner } from "@/components/freemium/EmailVerificationBanner";
 import { OfflineBanner } from "@/components/ui/offline-banner";
 
 const queryClient = new QueryClient({
@@ -51,6 +52,7 @@ const App = () => (
               <NavigationProgress />
               <ScrollToTop />
               <SmoothScrollHandler />
+              <EmailVerificationBanner />
               <TrialBannerWrapper />
               <AnimatedRoutes />
               <CookieConsent />

@@ -35,7 +35,10 @@ import { PropertyNotesCard } from '@/components/properties/PropertyNotesCard';
 import { DualPrice } from '@/components/DualPrice';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { ViewLimitDialog } from '@/components/properties/ViewLimitDialog';
+import { UpgradeLimitDialog } from '@/components/freemium/UpgradeLimitDialog';
+import { EmailVerificationDialog } from '@/components/freemium/EmailVerificationDialog';
 import { RemainingViewsBadge } from '@/components/freemium/RemainingViewsBadge';
+import { useEmailVerification } from '@/hooks/useEmailVerification';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -153,22 +156,40 @@ export default function PropertyDetail() {
   const [loading, setLoading] = useState(true);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [showViewLimitDialog, setShowViewLimitDialog] = useState(false);
+  const [showUpgradeLimitDialog, setShowUpgradeLimitDialog] = useState(false);
+  const [showEmailVerificationDialog, setShowEmailVerificationDialog] = useState(false);
+  const [emailVerificationFeature, setEmailVerificationFeature] = useState('this feature');
   
-  const { viewCount, canViewProperty, trackView, getPropertyAccessLevel, remainingFullViews, showRemainingBadge } = usePropertyViewLimit();
+  const { isEmailVerified } = useEmailVerification();
+  const { 
+    viewCount, 
+    canViewProperty, 
+    trackView, 
+    getPropertyAccessLevel, 
+    remainingFullViews, 
+    showRemainingBadge,
+    userTier,
+    isPaidMember
+  } = usePropertyViewLimit();
 
   // Get access level for this property
   const propertyAccessLevel = property ? getPropertyAccessLevel(property.id) : 'full';
 
-  // Check view limit and track views for anonymous users
+  // Check view limit and track views for non-paid users
   useEffect(() => {
-    if (property && !user) {
+    if (property && !isPaidMember) {
       if (!canViewProperty(property.id)) {
-        setShowViewLimitDialog(true);
+        // Show appropriate dialog based on user type
+        if (!user) {
+          setShowViewLimitDialog(true);
+        } else {
+          setShowUpgradeLimitDialog(true);
+        }
       } else {
         trackView(property.id);
       }
     }
-  }, [property?.id, user]);
+  }, [property?.id, isPaidMember, user]);
 
   // Track recently viewed
   useEffect(() => {
@@ -392,14 +413,26 @@ export default function PropertyDetail() {
                   { label: property.title }
                 ]}
               />
-              {/* Remaining Views Badge for anonymous users */}
+              {/* Remaining Views Badge for non-paid users */}
               {showRemainingBadge && (
-                <RemainingViewsBadge remainingViews={remainingFullViews} />
+                <RemainingViewsBadge remainingViews={remainingFullViews} userTier={userTier} />
               )}
             </div>
             <div className="flex flex-wrap gap-2">
               {user && (
-                <Button variant="outline" size="sm" onClick={() => toggleSave(property.id)} className="min-h-[44px]">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    if (!isEmailVerified) {
+                      setEmailVerificationFeature('save favorites');
+                      setShowEmailVerificationDialog(true);
+                      return;
+                    }
+                    toggleSave(property.id);
+                  }} 
+                  className="min-h-[44px]"
+                >
                   <Heart className={cn("w-4 h-4 mr-2", propertyIsSaved && "fill-red-500 text-red-500")} />
                   {propertyIsSaved ? 'Saved' : 'Save'}
                 </Button>
@@ -816,7 +849,14 @@ export default function PropertyDetail() {
                   <Button 
                     variant="gold" 
                     className="w-full mt-4" 
-                    onClick={() => setShowAIAnalysis(true)}
+                    onClick={() => {
+                      if (!isEmailVerified) {
+                        setEmailVerificationFeature('AI Investment Analysis');
+                        setShowEmailVerificationDialog(true);
+                        return;
+                      }
+                      setShowAIAnalysis(true);
+                    }}
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     Get AI Investment Analysis
@@ -897,6 +937,18 @@ export default function PropertyDetail() {
         open={showViewLimitDialog} 
         onOpenChange={setShowViewLimitDialog}
         viewedCount={viewCount}
+      />
+      
+      <UpgradeLimitDialog 
+        open={showUpgradeLimitDialog} 
+        onOpenChange={setShowUpgradeLimitDialog}
+        viewedCount={viewCount}
+      />
+      
+      <EmailVerificationDialog 
+        open={showEmailVerificationDialog} 
+        onOpenChange={setShowEmailVerificationDialog}
+        feature={emailVerificationFeature}
       />
     </div>
   );

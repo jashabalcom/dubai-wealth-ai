@@ -7,33 +7,33 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Unlock, Heart, TrendingUp, Search, Sparkles } from "lucide-react";
+import { Rocket, Infinity, Sparkles, LineChart, Users } from "lucide-react";
 import { motion } from "framer-motion";
 
-interface ViewLimitDialogProps {
+interface UpgradeLimitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   viewedCount: number;
 }
 
-export function ViewLimitDialog({ open, onOpenChange, viewedCount }: ViewLimitDialogProps) {
+export function UpgradeLimitDialog({ open, onOpenChange, viewedCount }: UpgradeLimitDialogProps) {
   const navigate = useNavigate();
 
-  const handleSignUp = () => {
+  const handleUpgrade = () => {
     onOpenChange(false);
-    navigate("/auth?mode=signup");
+    navigate("/pricing");
   };
 
-  const handleSignIn = () => {
+  const handleViewPlans = () => {
     onOpenChange(false);
-    navigate("/auth?mode=login");
+    navigate("/pricing");
   };
 
   const benefits = [
-    { icon: Search, text: "20 more property views free" },
-    { icon: Heart, text: "Save and compare favorites" },
-    { icon: TrendingUp, text: "Access market insights" },
-    { icon: Sparkles, text: "AI-powered recommendations" },
+    { icon: Infinity, text: "Unlimited property browsing" },
+    { icon: Sparkles, text: "AI-powered investment analysis" },
+    { icon: LineChart, text: "Advanced market insights" },
+    { icon: Users, text: "Exclusive investor community" },
   ];
 
   return (
@@ -44,15 +44,15 @@ export function ViewLimitDialog({ open, onOpenChange, viewedCount }: ViewLimitDi
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10"
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-gold/20 to-primary/20"
           >
-            <Unlock className="h-8 w-8 text-primary" />
+            <Rocket className="h-8 w-8 text-gold" />
           </motion.div>
           <DialogTitle className="text-xl font-bold">
-            You've explored {viewedCount} properties
+            You're getting great insights!
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Create a free account to continue browsing and unlock exclusive features
+            You've explored {viewedCount} properties. Upgrade to Investor for unlimited access.
           </DialogDescription>
         </DialogHeader>
 
@@ -70,7 +70,7 @@ export function ViewLimitDialog({ open, onOpenChange, viewedCount }: ViewLimitDi
               transition={{ delay: 0.15 + index * 0.05, duration: 0.3 }}
               className="flex items-center gap-3 rounded-lg bg-muted/50 p-3"
             >
-              <benefit.icon className="h-5 w-5 text-primary" />
+              <benefit.icon className="h-5 w-5 text-gold" />
               <span className="text-sm font-medium">{benefit.text}</span>
             </motion.div>
           ))}
@@ -78,23 +78,24 @@ export function ViewLimitDialog({ open, onOpenChange, viewedCount }: ViewLimitDi
 
         <div className="flex flex-col gap-3 pt-2">
           <Button 
-            onClick={handleSignUp} 
+            onClick={handleUpgrade} 
+            variant="gold"
             className="w-full"
             size="lg"
           >
-            Create Free Account
+            Upgrade to Investor
           </Button>
           <Button 
             variant="outline" 
-            onClick={handleSignIn}
+            onClick={handleViewPlans}
             className="w-full"
           >
-            Already have an account? Sign In
+            View All Plans
           </Button>
         </div>
 
         <p className="text-center text-xs text-muted-foreground pt-2">
-          Join thousands of investors discovering opportunities in Dubai
+          Join thousands of investors making smarter decisions in Dubai
         </p>
       </DialogContent>
     </Dialog>
