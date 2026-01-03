@@ -112,7 +112,7 @@ export function HeroSection() {
 
       {/* Content with subtle parallax */}
       <motion.div 
-        className="relative z-10 container-luxury text-center pt-36 pb-24 md:pt-44 md:pb-32 will-change-transform"
+        className="relative z-10 container-luxury text-center pt-24 pb-16 md:pt-32 md:pb-24 will-change-transform"
         style={{ y: reduceMotion ? 0 : contentY }}
       >
         <div className="max-w-5xl mx-auto">
@@ -172,7 +172,7 @@ export function HeroSection() {
             ref={statsRef}
             {...fadeIn}
             transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 1.2 }}
-            className="mt-20 pt-12 border-t border-primary/10"
+            className="mt-12 pt-8 border-t border-primary/10"
           >
             <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
               <div className="flex items-center gap-3">

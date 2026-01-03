@@ -155,7 +155,7 @@ export function Navbar() {
         )}
       >
         <div className="container-luxury">
-          <nav className="flex items-center justify-between h-24 md:h-28 pb-2">
+          <nav className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link to="/" className="group flex-shrink-0">
               <BrandLogo 
