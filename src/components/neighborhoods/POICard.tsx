@@ -11,9 +11,9 @@ interface POICardProps {
     description?: string | null;
     address?: string | null;
     rating?: number | null;
-    website?: string | null;
+    website_url?: string | null;
     image_url?: string | null;
-    cuisine_type?: string | null;
+    cuisine?: string | null;
     price_level?: string | null;
     curriculum?: string | null;
   };
@@ -117,9 +117,9 @@ export function POICard({ poi }: POICardProps) {
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5">
-          {poi.cuisine_type && (
+          {poi.cuisine && (
             <Badge variant="outline" className="text-xs px-2 py-0.5 bg-muted/50">
-              {poi.cuisine_type}
+              {poi.cuisine}
             </Badge>
           )}
           {poi.curriculum && (
@@ -138,9 +138,9 @@ export function POICard({ poi }: POICardProps) {
         )}
 
         {/* Website Link */}
-        {poi.website && (
+        {poi.website_url && (
           <a 
-            href={poi.website} 
+            href={poi.website_url} 
             target="_blank" 
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-auto pt-1"

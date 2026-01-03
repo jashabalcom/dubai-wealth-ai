@@ -11,9 +11,9 @@ interface POI {
   description?: string | null;
   address?: string | null;
   rating?: number | null;
-  website?: string | null;
+  website_url?: string | null;
   image_url?: string | null;
-  cuisine_type?: string | null;
+  cuisine?: string | null;
   price_level?: string | null;
   curriculum?: string | null;
 }

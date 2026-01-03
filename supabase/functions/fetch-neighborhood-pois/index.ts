@@ -34,7 +34,7 @@ interface POIResult {
   opening_hours: object | null;
   google_place_id: string | null;
   price_level: string | null;
-  cuisine_type: string | null;
+  cuisine: string | null;
 }
 
 async function fetchGooglePlacesPOIs(
@@ -193,7 +193,7 @@ serve(async (req) => {
           opening_hours: null,
           google_place_id: place.id,
           price_level: mapPriceLevel(place.priceLevel),
-          cuisine_type: extractCuisineType(place.types),
+          cuisine: extractCuisineType(place.types),
         };
 
         allPOIs.push(poi);
