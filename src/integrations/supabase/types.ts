@@ -2150,17 +2150,23 @@ export type Database = {
       }
       developer_projects: {
         Row: {
+          amenities: Json | null
           bedrooms_range: string | null
           brochure_url: string | null
+          capital_appreciation_rating: string | null
+          comparable_project_ids: string[] | null
           completion_year: number | null
           construction_progress_percent: number | null
           created_at: string | null
           description: string | null
           developer_id: string
+          gallery_images: Json | null
           handover_date: string | null
           highlights: Json | null
           id: string
+          ideal_buyer_persona: string | null
           image_url: string | null
+          investment_thesis: string | null
           is_flagship: boolean | null
           key_features: Json | null
           latitude: number | null
@@ -2169,30 +2175,42 @@ export type Database = {
           location_map_url: string | null
           longitude: number | null
           master_plan_url: string | null
+          min_investment_aed: number | null
           name: string
+          payment_plan_structure: string | null
           price_per_sqft_from: number | null
           project_type: string | null
+          rental_yield_rating: string | null
+          risks_considerations: string | null
+          sales_deck_url: string | null
           slug: string
           starting_price: number | null
           status: string | null
           total_units: number | null
           total_value: number | null
+          unit_types: Json | null
           updated_at: string | null
           video_url: string | null
           virtual_tour_url: string | null
         }
         Insert: {
+          amenities?: Json | null
           bedrooms_range?: string | null
           brochure_url?: string | null
+          capital_appreciation_rating?: string | null
+          comparable_project_ids?: string[] | null
           completion_year?: number | null
           construction_progress_percent?: number | null
           created_at?: string | null
           description?: string | null
           developer_id: string
+          gallery_images?: Json | null
           handover_date?: string | null
           highlights?: Json | null
           id?: string
+          ideal_buyer_persona?: string | null
           image_url?: string | null
+          investment_thesis?: string | null
           is_flagship?: boolean | null
           key_features?: Json | null
           latitude?: number | null
@@ -2201,30 +2219,42 @@ export type Database = {
           location_map_url?: string | null
           longitude?: number | null
           master_plan_url?: string | null
+          min_investment_aed?: number | null
           name: string
+          payment_plan_structure?: string | null
           price_per_sqft_from?: number | null
           project_type?: string | null
+          rental_yield_rating?: string | null
+          risks_considerations?: string | null
+          sales_deck_url?: string | null
           slug: string
           starting_price?: number | null
           status?: string | null
           total_units?: number | null
           total_value?: number | null
+          unit_types?: Json | null
           updated_at?: string | null
           video_url?: string | null
           virtual_tour_url?: string | null
         }
         Update: {
+          amenities?: Json | null
           bedrooms_range?: string | null
           brochure_url?: string | null
+          capital_appreciation_rating?: string | null
+          comparable_project_ids?: string[] | null
           completion_year?: number | null
           construction_progress_percent?: number | null
           created_at?: string | null
           description?: string | null
           developer_id?: string
+          gallery_images?: Json | null
           handover_date?: string | null
           highlights?: Json | null
           id?: string
+          ideal_buyer_persona?: string | null
           image_url?: string | null
+          investment_thesis?: string | null
           is_flagship?: boolean | null
           key_features?: Json | null
           latitude?: number | null
@@ -2233,14 +2263,20 @@ export type Database = {
           location_map_url?: string | null
           longitude?: number | null
           master_plan_url?: string | null
+          min_investment_aed?: number | null
           name?: string
+          payment_plan_structure?: string | null
           price_per_sqft_from?: number | null
           project_type?: string | null
+          rental_yield_rating?: string | null
+          risks_considerations?: string | null
+          sales_deck_url?: string | null
           slug?: string
           starting_price?: number | null
           status?: string | null
           total_units?: number | null
           total_value?: number | null
+          unit_types?: Json | null
           updated_at?: string | null
           video_url?: string | null
           virtual_tour_url?: string | null
@@ -2257,8 +2293,10 @@ export type Database = {
       }
       developers: {
         Row: {
+          avg_delivery_months: number | null
           awards: Json | null
           brand_accent_color: string | null
+          brand_partnerships: Json | null
           brand_primary_color: string | null
           cover_image_url: string | null
           created_at: string
@@ -2267,25 +2305,32 @@ export type Database = {
           featured_project_id: string | null
           headquarters: string | null
           id: string
+          investment_reputation: string | null
           is_active: boolean | null
           is_verified: boolean | null
           key_partnerships: Json | null
           logo_url: string | null
+          market_share_percent: number | null
           name: string
+          on_time_delivery_rate: number | null
           slug: string
           social_links: Json | null
           specialty: string | null
           tagline: string | null
+          target_buyer_profile: string | null
           tier: string | null
           total_projects: number | null
           total_units_delivered: number | null
+          total_value_delivered: number | null
           updated_at: string
           video_url: string | null
           website: string | null
         }
         Insert: {
+          avg_delivery_months?: number | null
           awards?: Json | null
           brand_accent_color?: string | null
+          brand_partnerships?: Json | null
           brand_primary_color?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -2294,25 +2339,32 @@ export type Database = {
           featured_project_id?: string | null
           headquarters?: string | null
           id?: string
+          investment_reputation?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
           key_partnerships?: Json | null
           logo_url?: string | null
+          market_share_percent?: number | null
           name: string
+          on_time_delivery_rate?: number | null
           slug: string
           social_links?: Json | null
           specialty?: string | null
           tagline?: string | null
+          target_buyer_profile?: string | null
           tier?: string | null
           total_projects?: number | null
           total_units_delivered?: number | null
+          total_value_delivered?: number | null
           updated_at?: string
           video_url?: string | null
           website?: string | null
         }
         Update: {
+          avg_delivery_months?: number | null
           awards?: Json | null
           brand_accent_color?: string | null
+          brand_partnerships?: Json | null
           brand_primary_color?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -2321,18 +2373,23 @@ export type Database = {
           featured_project_id?: string | null
           headquarters?: string | null
           id?: string
+          investment_reputation?: string | null
           is_active?: boolean | null
           is_verified?: boolean | null
           key_partnerships?: Json | null
           logo_url?: string | null
+          market_share_percent?: number | null
           name?: string
+          on_time_delivery_rate?: number | null
           slug?: string
           social_links?: Json | null
           specialty?: string | null
           tagline?: string | null
+          target_buyer_profile?: string | null
           tier?: string | null
           total_projects?: number | null
           total_units_delivered?: number | null
+          total_value_delivered?: number | null
           updated_at?: string
           video_url?: string | null
           website?: string | null
