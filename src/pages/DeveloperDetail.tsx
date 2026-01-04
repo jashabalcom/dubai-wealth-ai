@@ -7,6 +7,8 @@ import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DeveloperHero } from '@/components/developers/DeveloperHero';
 import { DeveloperStats } from '@/components/developers/DeveloperStats';
+import { DeveloperTrackRecord } from '@/components/developers/DeveloperTrackRecord';
+import { BrandPartnerships } from '@/components/developers/BrandPartnerships';
 import { ProjectPortfolio } from '@/components/developers/ProjectPortfolio';
 import { useDeveloper, usePropertiesByDeveloper } from '@/hooks/useDevelopers';
 import { SEOHead } from '@/components/SEOHead';
@@ -114,6 +116,23 @@ export default function DeveloperDetail() {
                   </p>
                 </motion.section>
               )}
+
+              {/* Brand Partnerships */}
+              {developer.brand_partnerships && (
+                <motion.section
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 }}
+                >
+                  <BrandPartnerships 
+                    partnerships={developer.brand_partnerships} 
+                    brandColor={developer.brand_primary_color || undefined}
+                  />
+                </motion.section>
+              )}
+
+              {/* Investment Track Record */}
+              <DeveloperTrackRecord developer={developer} />
 
               {/* Project Portfolio */}
               <motion.section

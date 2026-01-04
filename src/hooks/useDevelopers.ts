@@ -22,6 +22,16 @@ export interface Developer {
   awards: Json;
   key_partnerships: Json;
   social_links: Json;
+  brand_primary_color: string | null;
+  brand_accent_color: string | null;
+  // Investment Intelligence Fields
+  target_buyer_profile: string | null;
+  investment_reputation: string | null;
+  total_value_delivered: number | null;
+  market_share_percent: number | null;
+  avg_delivery_months: number | null;
+  on_time_delivery_rate: number | null;
+  brand_partnerships: Json;
 }
 
 export interface DeveloperProject {
