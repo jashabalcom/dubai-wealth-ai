@@ -1,6 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { escapeHtml } from "../_shared/html-escape.ts";
+import { getSecurityHeaders } from "../_shared/security.ts";
+import { 
+  checkRateLimit, 
+  getIpRateLimitKey, 
+  getClientIp, 
+  rateLimitResponse 
+} from "../_shared/rate-limit.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -64,6 +71,16 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+
+    // Rate limiting: 10 requests per hour per IP
+    const clientIp = getClientIp(req);
+    const rateLimitKey = getIpRateLimitKey("property-inquiry", clientIp);
+    const rateLimit = await checkRateLimit(rateLimitKey, 10, 3600);
+
+    if (!rateLimit.allowed) {
+      logStep("Rate limit exceeded", { ip: clientIp });
+      return rateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
 
     const inquiry: InquiryRequest = await req.json();
     logStep("Received inquiry", { propertyId: inquiry.propertyId, type: inquiry.inquiryType });
@@ -313,14 +330,22 @@ serve(async (req) => {
       routed_to: routeToAgent ? 'agent' : 'admin',
       inquiry_id: savedInquiry?.id,
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { 
+        ...corsHeaders, 
+        ...getSecurityHeaders(),
+        "Content-Type": "application/json" 
+      },
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { 
+        ...corsHeaders, 
+        ...getSecurityHeaders(),
+        "Content-Type": "application/json" 
+      },
       status: 500,
     });
   }

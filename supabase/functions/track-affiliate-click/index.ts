@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getSecurityHeaders } from "../_shared/security.ts";
+import { 
+  checkRateLimit, 
+  getIpRateLimitKey, 
+  getClientIp, 
+  rateLimitResponse 
+} from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +25,16 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // Rate limiting: 100 requests per minute per IP (prevent click fraud)
+    const clientIp = getClientIp(req);
+    const rateLimitKey = getIpRateLimitKey("track-affiliate-click", clientIp);
+    const rateLimit = await checkRateLimit(rateLimitKey, 100, 60);
+
+    if (!rateLimit.allowed) {
+      logStep("Rate limit exceeded", { ip: clientIp });
+      return rateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -28,7 +45,7 @@ serve(async (req) => {
 
     if (!referral_code) {
       return new Response(JSON.stringify({ error: "No referral code provided" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
         status: 400,
       });
     }
@@ -51,7 +68,7 @@ serve(async (req) => {
     if (!affiliate) {
       logStep("Affiliate not found or not approved", { referral_code });
       return new Response(JSON.stringify({ error: "Invalid referral code" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
         status: 404,
       });
     }
@@ -83,7 +100,7 @@ serve(async (req) => {
     if (recentClicks && recentClicks.length > 0) {
       logStep("Duplicate click detected, skipping", { ip_hash: ipHash });
       return new Response(JSON.stringify({ success: true, duplicate: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
         status: 200,
       });
     }
@@ -108,14 +125,14 @@ serve(async (req) => {
     logStep("Click recorded successfully");
 
     return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
       status: 500,
     });
   }
