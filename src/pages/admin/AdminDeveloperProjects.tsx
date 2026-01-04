@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, ArrowLeft, Star, Building, Video, FileText, Map } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Star, Building, Video, FileText, Map, Upload } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ImageUploader } from '@/components/admin/ImageUploader';
 import { BulkProjectImporter } from '@/components/admin/BulkProjectImporter';
+import { DocumentUploader } from '@/components/admin/DocumentUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -395,57 +396,64 @@ export default function AdminDeveloperProjects() {
                   </TabsContent>
                   
                   <TabsContent value="documents" className="space-y-4 mt-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4">
                       <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          Brochure URL
+                          Brochure
                         </Label>
-                        <Input
+                        <DocumentUploader
                           value={formData.brochure_url}
-                          onChange={(e) => setFormData({ ...formData, brochure_url: e.target.value })}
-                          placeholder="https://..."
+                          onChange={(url) => setFormData({ ...formData, brochure_url: url })}
+                          folder={`brochures/${developerId}`}
+                          label="Brochure"
                         />
                       </div>
                       
                       <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
-                          Sales Deck URL
+                          Sales Deck
                         </Label>
-                        <Input
+                        <DocumentUploader
                           value={formData.sales_deck_url}
-                          onChange={(e) => setFormData({ ...formData, sales_deck_url: e.target.value })}
-                          placeholder="https://..."
+                          onChange={(url) => setFormData({ ...formData, sales_deck_url: url })}
+                          folder={`sales-decks/${developerId}`}
+                          label="Sales Deck"
                         />
                       </div>
                       
                       <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                           <Map className="h-4 w-4 text-muted-foreground" />
-                          Master Plan URL
+                          Master Plan
                         </Label>
-                        <Input
+                        <DocumentUploader
                           value={formData.master_plan_url}
-                          onChange={(e) => setFormData({ ...formData, master_plan_url: e.target.value })}
-                          placeholder="https://..."
+                          onChange={(url) => setFormData({ ...formData, master_plan_url: url })}
+                          folder={`master-plans/${developerId}`}
+                          label="Master Plan"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
                         />
                       </div>
                       
                       <div className="space-y-2">
                         <Label className="flex items-center gap-2">
                           <Map className="h-4 w-4 text-muted-foreground" />
-                          Location Map URL
+                          Location Map
                         </Label>
-                        <Input
+                        <DocumentUploader
                           value={formData.location_map_url}
-                          onChange={(e) => setFormData({ ...formData, location_map_url: e.target.value })}
-                          placeholder="https://..."
+                          onChange={(url) => setFormData({ ...formData, location_map_url: url })}
+                          folder={`location-maps/${developerId}`}
+                          label="Location Map"
+                          accept=".pdf,.jpg,.jpeg,.png,.webp"
                         />
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Add direct links to PDF documents or hosted files. These will appear in the project's Documents section.
+                    <p className="text-xs text-muted-foreground mt-4">
+                      <Upload className="h-3 w-3 inline mr-1" />
+                      Upload files directly or paste URLs. These will appear in the project's Documents section.
                     </p>
                   </TabsContent>
                 </Tabs>
