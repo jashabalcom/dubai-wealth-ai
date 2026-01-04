@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Crown, Send, ChevronDown, Pin, MoreVertical, Flag } from 'lucide-react';
+import { MessageCircle, Crown, Send, ChevronDown, Pin, MoreVertical, Flag, ShieldCheck, BadgeCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -12,19 +12,24 @@ import { PollDisplay } from '@/components/community/PollDisplay';
 import { VideoEmbed } from '@/components/community/VideoEmbed';
 import { PostReactions } from '@/components/community/PostReactions';
 import { ReportContentDialog } from '@/components/community/ReportContentDialog';
+import { UpvoteButton } from '@/components/community/UpvoteButton';
+import { KarmaDisplay } from '@/components/community/ContributionScore';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
 import { usePostReactions } from '@/hooks/usePostReactions';
 import { useAuth } from '@/hooks/useAuth';
+import { useSinglePostUpvote } from '@/hooks/useUpvotes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
 interface Author {
   full_name: string | null;
   avatar_url: string | null;
   membership_tier: string;
   level?: number;
   points?: number;
+  karma?: number;
+  verified_investor?: boolean;
+  verified_agent?: boolean;
 }
 
 interface Comment {
@@ -47,10 +52,12 @@ interface PostCardProps {
     content: string;
     likes_count: number;
     comments_count: number;
+    upvote_count?: number;
     created_at: string;
     user_id?: string;
     author?: Author;
     has_liked?: boolean;
+    has_upvoted?: boolean;
     images?: string[];
     is_pinned?: boolean;
     post_type?: string;
@@ -68,11 +75,11 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
   const { isAdmin } = useAdmin();
   const { user } = useAuth();
   const { getReactionsForPost, toggleReaction } = usePostReactions([post.id]);
+  const { hasUpvoted, toggleUpvote, isVoting } = useSinglePostUpvote(post.id);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
-  const [isLiking, setIsLiking] = useState(false);
   const [poll, setPoll] = useState<Poll | null>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
@@ -127,11 +134,13 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
     setComments(fetchedComments);
   };
 
-  const handleLike = () => {
+  const handleUpvote = () => {
     if (!canInteract) return;
-    setIsLiking(true);
-    onLike(post.id, !!post.has_liked);
-    setTimeout(() => setIsLiking(false), 300);
+    if (isOwnPost) {
+      toast.error("You can't upvote your own post");
+      return;
+    }
+    toggleUpvote();
   };
 
   const handlePin = async () => {
@@ -208,6 +217,15 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
             </Link>
             {post.author?.level && post.author.level > 1 && (
               <MemberLevelBadge level={post.author.level} size="sm" />
+            )}
+            {post.author?.karma && post.author.karma > 0 && (
+              <KarmaDisplay karma={post.author.karma} />
+            )}
+            {post.author?.verified_investor && (
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            )}
+            {post.author?.verified_agent && (
+              <BadgeCheck className="h-4 w-4 text-blue-500" />
             )}
             {isElite && (
               <motion.span
@@ -327,29 +345,14 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-6">
-        <motion.button
-          onClick={handleLike}
-          whileTap={{ scale: 0.9 }}
-          disabled={!canInteract}
-          className={cn(
-            "flex items-center gap-2 text-sm font-medium transition-colors group",
-            post.has_liked ? "text-red-500" : "text-muted-foreground hover:text-red-500",
-            !canInteract && "opacity-50 cursor-not-allowed"
-          )}
-        >
-          <motion.div
-            animate={isLiking ? { scale: [1, 1.3, 1] } : {}}
-            transition={{ duration: 0.3 }}
-          >
-            <Heart className={cn(
-              "h-5 w-5 transition-all",
-              post.has_liked && "fill-current",
-              canInteract && "group-hover:scale-110"
-            )} />
-          </motion.div>
-          <span>{post.likes_count}</span>
-        </motion.button>
+      <div className="flex items-center gap-4">
+        <UpvoteButton
+          count={post.upvote_count || 0}
+          hasUpvoted={hasUpvoted}
+          onToggle={handleUpvote}
+          disabled={!canInteract || isVoting}
+          isOwnContent={isOwnPost}
+        />
         
         <button
           onClick={handleToggleComments}

@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Hash, MessageSquarePlus } from 'lucide-react';
 import { ChannelList } from '@/components/community/ChannelList';
@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/community/PageTransition';
 import { ReadOnlyBadge } from '@/components/freemium/ReadOnlyBadge';
 import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { SidebarCard } from '@/components/community/SidebarCard';
+import { SortingTabs, SortOption, sortPosts } from '@/components/community/SortingTabs';
 import { useCommunity } from '@/hooks/useCommunity';
 import { useProfile } from '@/hooks/useProfile';
 import { COMMUNITY_LAYOUT } from '@/lib/designTokens';
@@ -29,6 +30,7 @@ const itemVariants = {
 
 export default function DiscussionsPage() {
   const { profile } = useProfile();
+  const [sortBy, setSortBy] = useState<SortOption>('hot');
   const canParticipate = profile?.membership_tier === 'investor' || profile?.membership_tier === 'elite';
   
   const {
@@ -58,12 +60,13 @@ export default function DiscussionsPage() {
 
   const selectedChannel = channels.find((c) => c.id === selectedChannelId);
 
-  // Sort posts: pinned first, then by date
-  const sortedPosts = [...posts].sort((a, b) => {
-    if (a.is_pinned && !b.is_pinned) return -1;
-    if (!a.is_pinned && b.is_pinned) return 1;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
+  // Sort posts: pinned first, then by selected sort option
+  const sortedPosts = useMemo(() => {
+    const pinnedPosts = posts.filter(p => p.is_pinned);
+    const unpinnedPosts = posts.filter(p => !p.is_pinned);
+    const sortedUnpinned = sortPosts(unpinnedPosts, sortBy);
+    return [...pinnedPosts, ...sortedUnpinned];
+  }, [posts, sortBy]);
 
   return (
     <PageTransition>
@@ -136,6 +139,11 @@ export default function DiscussionsPage() {
                 </div>
               </motion.div>
             )}
+
+            {/* Sorting Tabs */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <SortingTabs value={sortBy} onChange={setSortBy} />
+            </div>
 
             {/* Inline Post Composer */}
             <InlinePostComposer
