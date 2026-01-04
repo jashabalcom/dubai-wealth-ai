@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet';
 import { SITE_CONFIG, generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo-config';
+import { getOgImageUrl } from '@/lib/domain-config';
 
 interface SEOHeadProps {
   title: string;
@@ -18,12 +19,13 @@ export function SEOHead({
   description,
   keywords = [],
   canonical,
-  ogImage = 'https://dubaiwealthhub.com/images/og-image.png',
+  ogImage,
   ogType = 'website',
   noIndex = false,
   structuredData,
   children,
 }: SEOHeadProps) {
+  const defaultOgImage = getOgImageUrl();
   const fullTitle = title.includes(SITE_CONFIG.name) ? title : `${title} | ${SITE_CONFIG.name}`;
   const canonicalUrl = canonical || (typeof window !== 'undefined' ? window.location.href : SITE_CONFIG.url);
   
@@ -61,7 +63,7 @@ export function SEOHead({
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={ogImage} />
+      <meta property="og:image" content={ogImage || defaultOgImage} />
       <meta property="og:site_name" content={SITE_CONFIG.name} />
       <meta property="og:locale" content={SITE_CONFIG.locale} />
       
@@ -70,7 +72,7 @@ export function SEOHead({
       <meta name="twitter:site" content={SITE_CONFIG.twitter} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image" content={ogImage || defaultOgImage} />
       
       {/* Structured Data */}
       {allStructuredData.map((data, index) => (
@@ -88,9 +90,10 @@ export function SEOHead({
 export function HomePageSEO() {
   return (
     <SEOHead
-      title="Dubai Real Estate Investing — AI-Powered Investment Platform | Dubai Wealth Hub"
+      title={`Dubai Real Estate Investing — AI-Powered Investment Platform | ${SITE_CONFIG.name}`}
       description="Start Dubai real estate investing with AI-powered analysis, exclusive education, and priority off-plan access. Join 12,000+ global investors building wealth in UAE."
       keywords={[
+        'Dubai real estate investors',
         'Dubai real estate investing',
         'Dubai real estate investment',
         'invest in Dubai property',
@@ -100,7 +103,7 @@ export function HomePageSEO() {
         'UAE property investment',
         'Dubai real estate AI',
       ]}
-      canonical="https://dubaiwealthhub.com"
+      canonical={SITE_CONFIG.url}
       structuredData={[
         generateOrganizationSchema(),
         generateWebsiteSchema(),

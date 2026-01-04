@@ -204,7 +204,7 @@ export function BrandedLoader({
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
         >
-          Dubai Wealth Hub
+          Dubai Real Estate Investor
         </motion.p>
       </motion.div>
     );

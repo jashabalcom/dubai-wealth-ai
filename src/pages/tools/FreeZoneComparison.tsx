@@ -175,7 +175,7 @@ export default function FreeZoneComparison() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="Free Zone Comparison Tool | Dubai Wealth Hub"
+        title="Free Zone Comparison Tool | Dubai Real Estate Investor"
         description="Compare Dubai free zones side-by-side. Analyze DMCC, DIFC, JAFZA, and more with setup costs, visa allocation, and sector fit."
         keywords={['dubai free zones', 'free zone comparison', 'dmcc', 'difc', 'jafza', 'business setup dubai']}
       />

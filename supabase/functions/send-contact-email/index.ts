@@ -9,6 +9,7 @@ import {
 } from "../_shared/rate-limit.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SITE_NAME = "Dubai Real Estate Investor";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,7 +32,7 @@ const sendEmail = async (to: string[], subject: string, html: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: "Dubai Wealth Hub <hello@dubairealestateinvestor.com>",
+      from: `${SITE_NAME} <hello@dubairealestateinvestor.com>`,
       to,
       subject,
       html,
@@ -93,7 +94,7 @@ const handler = async (req: Request): Promise<Response> => {
         </div>
         
         <p style="color: #666; font-size: 12px; margin-top: 20px;">
-          Sent from Dubai Wealth Hub Contact Form
+          Sent from ${SITE_NAME} Contact Form
         </p>
       </div>
     `;
@@ -122,19 +123,19 @@ const handler = async (req: Request): Promise<Response> => {
         
         <p style="color: #666; font-size: 14px;">
           Best regards,<br>
-          <strong>The Dubai Wealth Hub Team</strong>
+          <strong>The ${SITE_NAME} Team</strong>
         </p>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
         
         <p style="color: #999; font-size: 12px; text-align: center;">
-          Balcom Prive LLC | Dubai Wealth Hub<br>
+          Balcom Prive LLC | ${SITE_NAME}<br>
           This is an automated message. Please do not reply directly to this email.
         </p>
       </div>
     `;
 
-    await sendEmail([email], "We received your message - Dubai Wealth Hub", userEmailHtml);
+    await sendEmail([email], `We received your message - ${SITE_NAME}`, userEmailHtml);
     console.log("User confirmation email sent successfully");
 
     return new Response(

@@ -42,15 +42,15 @@ function generateArticleSchema(article: any, url: string) {
     dateModified: article.created_at,
     author: {
       "@type": "Organization",
-      name: "Dubai Wealth Hub",
-      url: "https://dubaiwealthhub.com",
+      name: "Dubai Real Estate Investor",
+      url: "https://dubairealestateinvestor.com",
     },
     publisher: {
       "@type": "Organization",
-      name: "Dubai Wealth Hub",
+      name: "Dubai Real Estate Investor",
       logo: {
         "@type": "ImageObject",
-        url: "https://dubaiwealthhub.com/images/mla-logo.png",
+        url: "https://dubairealestateinvestor.com/images/mla-logo.png",
       },
     },
     mainEntityOfPage: {
@@ -121,7 +121,7 @@ const BlogArticle = () => {
   return (
     <>
       <Helmet>
-        <title>{article.title} | Dubai Wealth Hub Blog</title>
+        <title>{article.title} | Dubai Real Estate Investor Blog</title>
         <meta name="description" content={article.excerpt || article.title} />
         <meta property="og:title" content={article.title} />
         <meta property="og:description" content={article.excerpt || article.title} />

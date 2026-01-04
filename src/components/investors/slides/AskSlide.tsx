@@ -41,12 +41,12 @@ export const AskSlide = () => (
         </Button>
         <Button size="lg" variant="outline" className="gap-2">
           <Mail className="h-5 w-5" />
-          invest@dubaiwealthhub.com
+          invest@dubairealestateinvestor.com
         </Button>
       </div>
 
       <p className="text-sm text-muted-foreground pt-8">
-        Dubai Wealth Hub © 2025 • Confidential Investment Materials
+        Dubai Real Estate Investor © 2025 • Confidential Investment Materials
       </p>
     </div>
   </PitchDeckSlide>
