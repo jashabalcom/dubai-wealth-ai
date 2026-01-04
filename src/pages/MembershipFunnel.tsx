@@ -121,7 +121,7 @@ export default function MembershipFunnel() {
 
   const handleCTA = async () => {
     if (!user) {
-      localStorage.setItem('pending_checkout_tier', 'investor');
+      sessionStorage.setItem('pending_checkout_tier', 'investor');
       navigate('/auth');
       return;
     }

@@ -48,10 +48,11 @@ export default function Auth() {
   // Redirect if already logged in - check for pending checkout intent
   useEffect(() => {
     if (user) {
-      const pendingTier = localStorage.getItem('pending_checkout_tier');
+      const pendingTier = sessionStorage.getItem('pending_checkout_tier');
       
       if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
-        localStorage.removeItem('pending_checkout_tier');
+        sessionStorage.removeItem('pending_checkout_tier');
+        sessionStorage.removeItem('pending_checkout_billing');
         // Use Stripe hosted checkout instead of embedded
         startCheckout(pendingTier as 'investor' | 'elite');
       } else {
@@ -142,17 +143,19 @@ export default function Auth() {
             });
           }
         } else {
-          const pendingTier = localStorage.getItem('pending_checkout_tier');
-          const pendingInquirySlug = localStorage.getItem('pending_inquiry_property_slug');
+          const pendingTier = sessionStorage.getItem('pending_checkout_tier');
+          const pendingInquirySlug = sessionStorage.getItem('pending_inquiry_property_slug');
           
           if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
-            localStorage.removeItem('pending_checkout_tier');
+            sessionStorage.removeItem('pending_checkout_tier');
+            sessionStorage.removeItem('pending_checkout_billing');
             toast({
               title: 'Welcome back!',
               description: 'Continuing to checkout...',
             });
             startCheckout(pendingTier as 'investor' | 'elite');
           } else if (pendingInquirySlug) {
+            sessionStorage.removeItem('pending_inquiry_property_slug');
             toast({
               title: 'Welcome back!',
               description: 'Complete your property inquiry.',
@@ -183,17 +186,19 @@ export default function Auth() {
             });
           }
         } else {
-          const pendingTier = localStorage.getItem('pending_checkout_tier');
-          const pendingInquirySlug = localStorage.getItem('pending_inquiry_property_slug');
+          const pendingTier = sessionStorage.getItem('pending_checkout_tier');
+          const pendingInquirySlug = sessionStorage.getItem('pending_inquiry_property_slug');
           
           if (pendingTier && (pendingTier === 'investor' || pendingTier === 'elite')) {
-            localStorage.removeItem('pending_checkout_tier');
+            sessionStorage.removeItem('pending_checkout_tier');
+            sessionStorage.removeItem('pending_checkout_billing');
             toast({
               title: 'Welcome to Dubai Wealth Hub!',
               description: 'Continuing to checkout...',
             });
             startCheckout(pendingTier as 'investor' | 'elite');
           } else if (pendingInquirySlug) {
+            sessionStorage.removeItem('pending_inquiry_property_slug');
             toast({
               title: 'Welcome to Dubai Wealth Hub!',
               description: 'Complete your property inquiry.',
@@ -216,11 +221,11 @@ export default function Auth() {
   const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      const pendingTier = localStorage.getItem('pending_checkout_tier');
+      const pendingTier = sessionStorage.getItem('pending_checkout_tier');
       let redirectUrl = `${window.location.origin}/dashboard`;
       
       if (pendingTier) {
-        localStorage.setItem('pending_oauth_checkout', 'true');
+        sessionStorage.setItem('pending_oauth_checkout', 'true');
       }
       
       const { error } = await supabase.auth.signInWithOAuth({

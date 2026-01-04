@@ -30,7 +30,7 @@ export function ContextualUpgradePrompt({
 
   const handleUpgradeClick = () => {
     if (!user) {
-      localStorage.setItem('pending_checkout_tier', requiredTier);
+      sessionStorage.setItem('pending_checkout_tier', requiredTier);
       navigate('/auth');
     } else {
       navigate('/upgrade');
