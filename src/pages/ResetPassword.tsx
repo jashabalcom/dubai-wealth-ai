@@ -118,9 +118,9 @@ export default function ResetPassword() {
         <div className="mb-8">
           <a href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gold flex items-center justify-center">
-              <span className="text-primary-dark font-heading font-bold text-lg">DW</span>
+              <span className="text-primary-dark font-heading font-bold text-lg">DR</span>
             </div>
-            <span className="font-heading text-xl text-foreground">Dubai Wealth Hub</span>
+            <span className="font-heading text-xl text-foreground">Dubai Real Estate Investor</span>
           </a>
         </div>
 

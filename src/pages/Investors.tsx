@@ -94,12 +94,12 @@ export default function Investors() {
                 <span className="text-gold">Dubai Real Estate</span> Investors
               </h1>
               <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Dubai Wealth Hub is building the Bloomberg Terminal for Dubai real estate — 
+                Dubai Real Estate Investor is building the Bloomberg Terminal for Dubai real estate — 
                 combining data intelligence, education, and community for global investors.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-gold hover:bg-gold/90 text-primary-foreground">
-                  <a href="mailto:invest@dubaiwealthhub.com">Request Pitch Deck</a>
+                  <a href="mailto:invest@dubairealestateinvestor.com">Request Pitch Deck</a>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="lg">
@@ -262,7 +262,7 @@ export default function Investors() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-gold hover:bg-gold/90 text-primary-foreground">
-                <a href="mailto:invest@dubaiwealthhub.com">invest@dubaiwealthhub.com</a>
+                <a href="mailto:invest@dubairealestateinvestor.com">invest@dubairealestateinvestor.com</a>
               </Button>
               <Button variant="outline" size="lg">
                 <Link to="/contact">Schedule Introduction</Link>

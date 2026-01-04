@@ -9,8 +9,8 @@ const PrivacyPolicy = () => {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy | Dubai Wealth Hub</title>
-        <meta name="description" content="Privacy Policy for Dubai Wealth Hub - How we collect, use, and protect your personal data." />
+        <title>Privacy Policy | Dubai Real Estate Investor</title>
+        <meta name="description" content="Privacy Policy for Dubai Real Estate Investor - How we collect, use, and protect your personal data." />
       </Helmet>
       
       <div className="min-h-screen bg-background">
@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
                 <section>
                   <h2 className="text-2xl font-display font-semibold text-foreground">1. Introduction</h2>
                   <p className="text-muted-foreground leading-relaxed">
-                    Balcom Privé LLC ("we," "us," or "our") operates Dubai Wealth Hub. This Privacy Policy 
+                    Balcom Privé LLC ("we," "us," or "our") operates Dubai Real Estate Investor. This Privacy Policy 
                     explains how we collect, use, disclose, and safeguard your personal information when 
                     you use our Platform.
                   </p>
@@ -52,7 +52,7 @@ const PrivacyPolicy = () => {
                   </p>
                   <div className="bg-card border border-border rounded-lg p-6 mt-4">
                     <p className="text-foreground font-semibold">Balcom Privé LLC</p>
-                    <p className="text-muted-foreground">Email: privacy@dubaiwealthhub.com</p>
+                    <p className="text-muted-foreground">Email: privacy@dubairealestateinvestor.com</p>
                     <p className="text-muted-foreground">Address: Atlanta, Georgia, United States</p>
                   </div>
                 </section>
@@ -237,7 +237,7 @@ const PrivacyPolicy = () => {
                   <div className="bg-card border border-border rounded-lg p-6 my-4">
                     <p className="text-foreground font-medium">To Exercise Your Rights:</p>
                     <p className="text-muted-foreground mt-2">
-                      Contact us at <strong>privacy@dubaiwealthhub.com</strong> or use the account 
+                      Contact us at <strong>privacy@dubairealestateinvestor.com</strong> or use the account 
                       settings in your dashboard. We will respond within 30 days (or sooner as required 
                       by applicable law).
                     </p>

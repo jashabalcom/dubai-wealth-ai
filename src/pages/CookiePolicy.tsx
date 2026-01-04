@@ -222,7 +222,7 @@ const CookiePolicy = () => {
                   </p>
                   <div className="bg-card border border-border rounded-lg p-6 mt-4">
                     <p className="text-foreground font-semibold">Balcom Privé LLC</p>
-                    <p className="text-muted-foreground">Email: privacy@dubaiwealthhub.com</p>
+                    <p className="text-muted-foreground">Email: privacy@dubairealestateinvestor.com</p>
                   </div>
                 </section>
 

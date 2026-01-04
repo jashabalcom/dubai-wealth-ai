@@ -98,12 +98,12 @@ const About = () => {
                 <div className="bg-card border border-border rounded-lg p-6 mt-4">
                   <p className="text-foreground font-semibold">Balcom Privé LLC</p>
                   <p className="text-muted-foreground mt-2">
-                    Dubai Wealth Hub is operated by Balcom Privé LLC, a company dedicated to providing 
+                    Dubai Real Estate Investor is operated by Balcom Privé LLC, a company dedicated to providing 
                     premium real estate investment platforms and services.
                   </p>
                   <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-sm text-muted-foreground">
-                      For inquiries: <a href="mailto:hello@dubaiwealthhub.com" className="text-primary hover:underline">hello@dubaiwealthhub.com</a>
+                      For inquiries: <a href="mailto:hello@dubairealestateinvestor.com" className="text-primary hover:underline">hello@dubairealestateinvestor.com</a>
                     </p>
                   </div>
                 </div>

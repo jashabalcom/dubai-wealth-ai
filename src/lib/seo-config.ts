@@ -1,16 +1,18 @@
-// Centralized SEO Configuration for Dubai Wealth Hub
+// Centralized SEO Configuration for Dubai Real Estate Investor
 // Keywords, meta templates, and structured data generators
 
+import { DOMAIN_CONFIG, getFullUrl, getOgImageUrl } from './domain-config';
+
 export const SITE_CONFIG = {
-  name: 'Dubai Wealth Hub',
-  tagline: 'AI-Powered Real Estate Investment Platform',
-  url: 'https://dubaiwealthhub.com',
-  logo: 'https://dubaiwealthhub.com/images/og-image.png',
-  twitter: '@DubaiWealthHub',
-  author: 'Balcom Privé',
-  locale: 'en_US',
-  geoRegion: 'AE-DU',
-  geoPlacename: 'Dubai',
+  name: DOMAIN_CONFIG.siteName,
+  tagline: DOMAIN_CONFIG.tagline,
+  url: DOMAIN_CONFIG.baseUrl,
+  logo: getOgImageUrl(),
+  twitter: DOMAIN_CONFIG.twitter,
+  author: DOMAIN_CONFIG.author,
+  locale: DOMAIN_CONFIG.locale,
+  geoRegion: DOMAIN_CONFIG.geoRegion,
+  geoPlacename: DOMAIN_CONFIG.geoPlacename,
 };
 
 // Primary keyword clusters for different page types

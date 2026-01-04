@@ -9,8 +9,8 @@ const TermsOfService = () => {
   return (
     <>
       <Helmet>
-        <title>Terms of Service | Dubai Wealth Hub</title>
-        <meta name="description" content="Terms of Service for Dubai Wealth Hub - Educational platform and referral network for Dubai real estate investors." />
+        <title>Terms of Service | Dubai Real Estate Investor</title>
+        <meta name="description" content="Terms of Service for Dubai Real Estate Investor - Educational platform and referral network for Dubai real estate investors." />
       </Helmet>
       
       <div className="min-h-screen bg-background">
@@ -32,13 +32,13 @@ const TermsOfService = () => {
                 <section>
                   <h2 className="text-2xl font-display font-semibold text-foreground">1. Introduction and Acceptance</h2>
                   <p className="text-muted-foreground leading-relaxed">
-                    Welcome to Dubai Wealth Hub ("Platform," "we," "us," or "our"), operated by Balcom Privé LLC. 
+                    Welcome to Dubai Real Estate Investor ("Platform," "we," "us," or "our"), operated by Balcom Privé LLC. 
                     By accessing or using our Platform, you agree to be bound by these Terms of Service ("Terms"). 
                     If you do not agree to these Terms, please do not use our Platform.
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
                     These Terms constitute a legally binding agreement between you and Balcom Privé LLC, 
-                    governing your use of the Dubai Wealth Hub platform, including all content, features, 
+                    governing your use of the Dubai Real Estate Investor platform, including all content, features, 
                     and services offered.
                   </p>
                 </section>
@@ -49,7 +49,7 @@ const TermsOfService = () => {
                   <div className="bg-accent/30 border border-border rounded-lg p-6 my-4">
                     <p className="text-foreground font-medium mb-2">Important Disclosure:</p>
                     <p className="text-muted-foreground">
-                      Dubai Wealth Hub is an <strong>educational platform and referral network</strong>. 
+                      Dubai Real Estate Investor is an <strong>educational platform and referral network</strong>. 
                       We are NOT a licensed real estate brokerage, investment advisor, financial planner, 
                       legal advisor, or immigration consultant.
                     </p>

@@ -91,7 +91,7 @@ async function sendAdminNotification(type: 'new_subscription' | 'cancellation' |
         Authorization: `Bearer ${resendKey}`,
       },
       body: JSON.stringify({
-        from: "Dubai Wealth Hub <notifications@dubairealestateinvestor.com>",
+        from: "Dubai Real Estate Investor <notifications@dubairealestateinvestor.com>",
         to: [adminEmail],
         subject,
         html: body,

@@ -20,7 +20,7 @@ interface NotificationRequest {
 }
 
 const getEmailTemplate = (type: string, title: string, body: string, link: string | null) => {
-  const baseUrl = "https://dubaiwealthhub.com";
+  const baseUrl = Deno.env.get("SITE_URL") || "https://dubairealestateinvestor.com";
   const ctaUrl = link ? `${baseUrl}${link}` : baseUrl;
   
   // Escape user-provided content
@@ -52,7 +52,7 @@ const getEmailTemplate = (type: string, title: string, body: string, link: strin
                 <!-- Header -->
                 <tr>
                   <td style="background: linear-gradient(135deg, #0A0F1D 0%, #1a1f2e 100%); padding: 32px; text-align: center;">
-                    <h1 style="margin: 0; color: #CBB89E; font-size: 24px; font-weight: 600;">Dubai Wealth Hub</h1>
+                    <h1 style="margin: 0; color: #CBB89E; font-size: 24px; font-weight: 600;">Dubai Real Estate Investor</h1>
                     <p style="margin: 8px 0 0 0; color: #CBB89E; font-size: 12px; text-transform: uppercase; letter-spacing: 2px;">by Balcom Privé</p>
                   </td>
                 </tr>
@@ -195,7 +195,7 @@ const handler = async (req: Request): Promise<Response> => {
       const emailSubject = getEmailSubject(type, title);
 
       const { error: emailError } = await resend.emails.send({
-        from: "Dubai Wealth Hub <hello@dubairealestateinvestor.com>",
+        from: "Dubai Real Estate Investor <hello@dubairealestateinvestor.com>",
         to: [profile.email],
         subject: emailSubject,
         html: emailHtml,

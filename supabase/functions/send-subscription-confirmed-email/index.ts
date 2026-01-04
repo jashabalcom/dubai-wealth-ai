@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SITE_URL = Deno.env.get("SITE_URL") || "https://dubairealestateinvestor.com";
+const SITE_NAME = "Dubai Real Estate Investor";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,7 +43,7 @@ const getEmailHtml = (name: string, tier: string, amount: string, nextBillingDat
     
     <!-- Header -->
     <div style="text-align: center; padding-bottom: 32px; border-bottom: 1px solid rgba(203, 184, 158, 0.2);">
-      <p style="color: #CBB89E; font-size: 24px; font-weight: 700; margin: 0;">Dubai Wealth Hub</p>
+      <p style="color: #CBB89E; font-size: 24px; font-weight: 700; margin: 0;">${SITE_NAME}</p>
     </div>
     
     <!-- Success Banner -->
@@ -94,9 +96,9 @@ const getEmailHtml = (name: string, tier: string, amount: string, nextBillingDat
     <!-- Footer -->
     <div style="padding-top: 32px; border-top: 1px solid rgba(203, 184, 158, 0.2); margin-top: 32px;">
       <p style="color: #898989; font-size: 12px; text-align: center; margin: 0 0 16px 0;">
-        <a href="mailto:support@dubaiwealthhub.com" style="color: #898989; text-decoration: underline;">support@dubaiwealthhub.com</a>
+        <a href="mailto:support@dubairealestateinvestor.com" style="color: #898989; text-decoration: underline;">support@dubairealestateinvestor.com</a>
       </p>
-      <p style="color: #666666; font-size: 11px; text-align: center; margin: 0;">© ${new Date().getFullYear()} Dubai Wealth Hub. All rights reserved.</p>
+      <p style="color: #666666; font-size: 11px; text-align: center; margin: 0;">© ${new Date().getFullYear()} ${SITE_NAME}. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -110,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, name, tier, amount, nextBillingDate, siteUrl = "https://dubaiwealthhub.com" }: SubscriptionConfirmedRequest = await req.json();
+    const { email, name, tier, amount, nextBillingDate, siteUrl = SITE_URL }: SubscriptionConfirmedRequest = await req.json();
     
     console.log(`[SUBSCRIPTION-CONFIRMED-EMAIL] Sending to ${email}`);
 
@@ -125,7 +127,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dubai Wealth Hub <subscriptions@dubairealestateinvestor.com>",
+        from: `${SITE_NAME} <subscriptions@dubairealestateinvestor.com>`,
         to: [email],
         subject: `Welcome to ${tierName}! Your subscription is confirmed`,
         html,

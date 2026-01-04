@@ -1,4 +1,8 @@
-// Shared branded email templates for Dubai Wealth Hub
+// Shared branded email templates for Dubai Real Estate Investor
+// Domain: Uses SITE_URL environment variable for dynamic domain switching
+
+const SITE_URL = Deno.env.get('SITE_URL') || 'https://dubairealestateinvestor.com';
+const SITE_NAME = 'Dubai Real Estate Investor';
 
 const BRAND_COLORS = {
   primary: '#0A0F1D',
@@ -16,19 +20,19 @@ const FOOTER_HTML = `
       <table width="100%" cellpadding="0" cellspacing="0">
         <tr>
           <td style="color: ${BRAND_COLORS.gold}; font-size: 14px; font-weight: 600; padding-bottom: 15px;">
-            Dubai Wealth Hub
+            ${SITE_NAME}
           </td>
         </tr>
         <tr>
           <td style="color: #999999; font-size: 12px; line-height: 1.6;">
             <p style="margin: 0 0 10px;">Balcom Privé LLC | Dubai, UAE</p>
             <p style="margin: 0 0 10px;">
-              <a href="https://dubaiwealthhub.com/privacy" style="color: #999999; text-decoration: underline;">Privacy Policy</a> · 
-              <a href="https://dubaiwealthhub.com/terms" style="color: #999999; text-decoration: underline;">Terms of Service</a> · 
-              <a href="https://dubaiwealthhub.com/settings" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
+              <a href="${SITE_URL}/privacy" style="color: #999999; text-decoration: underline;">Privacy Policy</a> · 
+              <a href="${SITE_URL}/terms" style="color: #999999; text-decoration: underline;">Terms of Service</a> · 
+              <a href="${SITE_URL}/settings" style="color: #999999; text-decoration: underline;">Unsubscribe</a>
             </p>
             <p style="margin: 0; color: #666666;">
-              © ${new Date().getFullYear()} Dubai Wealth Hub. All rights reserved.
+              © ${new Date().getFullYear()} ${SITE_NAME}. All rights reserved.
             </p>
           </td>
         </tr>
@@ -45,7 +49,7 @@ export function createEmailWrapper(content: string, preheader = ''): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Dubai Wealth Hub</title>
+  <title>${SITE_NAME}</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -78,8 +82,8 @@ export function createEmailWrapper(content: string, preheader = ''): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td>
-                    <span style="display: inline-block; width: 40px; height: 40px; background: ${BRAND_COLORS.gold}; border-radius: 8px; text-align: center; line-height: 40px; font-weight: bold; color: ${BRAND_COLORS.primary}; font-size: 16px;">DW</span>
-                    <span style="color: #ffffff; font-size: 18px; font-weight: 600; margin-left: 12px; vertical-align: middle;">Dubai Wealth Hub</span>
+                    <span style="display: inline-block; width: 40px; height: 40px; background: ${BRAND_COLORS.gold}; border-radius: 8px; text-align: center; line-height: 40px; font-weight: bold; color: ${BRAND_COLORS.primary}; font-size: 16px;">DR</span>
+                    <span style="color: #ffffff; font-size: 18px; font-weight: 600; margin-left: 12px; vertical-align: middle;">${SITE_NAME}</span>
                   </td>
                 </tr>
               </table>
@@ -105,7 +109,7 @@ export function createEmailWrapper(content: string, preheader = ''): string {
 export function welcomeEmailTemplate(name: string): string {
   const content = `
     <h1 style="margin: 0 0 20px; color: ${BRAND_COLORS.primary}; font-size: 28px; font-weight: 700;">
-      Welcome to Dubai Wealth Hub, ${name}! 🎉
+      Welcome to ${SITE_NAME}, ${name}! 🎉
     </h1>
     
     <p style="margin: 0 0 20px; color: ${BRAND_COLORS.text}; font-size: 16px; line-height: 1.6;">
@@ -132,7 +136,7 @@ export function welcomeEmailTemplate(name: string): string {
     </div>
     
     <p style="text-align: center; margin: 30px 0;">
-      <a href="https://dubaiwealthhub.com/dashboard" class="btn">
+      <a href="${SITE_URL}/dashboard" class="btn">
         Go to Your Dashboard →
       </a>
     </p>
@@ -176,7 +180,7 @@ export function subscriptionConfirmedTemplate(name: string, tier: string): strin
     </div>
     
     <p style="text-align: center; margin: 30px 0;">
-      <a href="https://dubaiwealthhub.com/dashboard" class="btn">
+      <a href="${SITE_URL}/dashboard" class="btn">
         Explore Your Benefits →
       </a>
     </p>
@@ -200,19 +204,19 @@ export function contactConfirmationTemplate(name: string, subject: string): stri
         In the meantime, explore our free resources:
       </p>
       <ul style="margin: 16px 0 0; padding-left: 20px; color: ${BRAND_COLORS.text};">
-        <li style="padding: 4px 0;"><a href="https://dubaiwealthhub.com/academy" style="color: ${BRAND_COLORS.goldDark};">Dubai Investment Academy</a></li>
-        <li style="padding: 4px 0;"><a href="https://dubaiwealthhub.com/tools" style="color: ${BRAND_COLORS.goldDark};">Investment Calculators</a></li>
-        <li style="padding: 4px 0;"><a href="https://dubaiwealthhub.com/properties" style="color: ${BRAND_COLORS.goldDark};">Property Listings</a></li>
+        <li style="padding: 4px 0;"><a href="${SITE_URL}/academy" style="color: ${BRAND_COLORS.goldDark};">Dubai Investment Academy</a></li>
+        <li style="padding: 4px 0;"><a href="${SITE_URL}/tools" style="color: ${BRAND_COLORS.goldDark};">Investment Calculators</a></li>
+        <li style="padding: 4px 0;"><a href="${SITE_URL}/properties" style="color: ${BRAND_COLORS.goldDark};">Property Listings</a></li>
       </ul>
     </div>
     
     <p style="margin: 0; color: ${BRAND_COLORS.mutedText}; font-size: 14px;">
       Best regards,<br>
-      <strong>The Dubai Wealth Hub Team</strong>
+      <strong>The ${SITE_NAME} Team</strong>
     </p>
   `;
 
-  return createEmailWrapper(content, `We received your message - Dubai Wealth Hub`);
+  return createEmailWrapper(content, `We received your message - ${SITE_NAME}`);
 }
 
 export function paymentFailedTemplate(name: string): string {
@@ -233,15 +237,15 @@ export function paymentFailedTemplate(name: string): string {
     </div>
     
     <p style="text-align: center; margin: 30px 0;">
-      <a href="https://dubaiwealthhub.com/settings" class="btn" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+      <a href="${SITE_URL}/settings" class="btn" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
         Update Payment Method →
       </a>
     </p>
     
     <p style="margin: 0; color: ${BRAND_COLORS.mutedText}; font-size: 14px;">
-      Need help? Contact us at support@dubaiwealthhub.com
+      Need help? Contact us at support@dubairealestateinvestor.com
     </p>
   `;
 
-  return createEmailWrapper(content, `Action required: Payment issue with your Dubai Wealth Hub subscription`);
+  return createEmailWrapper(content, `Action required: Payment issue with your ${SITE_NAME} subscription`);
 }
