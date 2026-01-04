@@ -21,7 +21,9 @@ export function DeveloperStats({ developer }: DeveloperStatsProps) {
     },
     {
       label: 'Projects',
-      value: developer.total_projects ? `${developer.total_projects}+` : 'N/A',
+      value: developer.total_projects !== null && developer.total_projects !== undefined 
+        ? developer.total_projects.toString() 
+        : 'N/A',
       icon: Building2,
     },
     {

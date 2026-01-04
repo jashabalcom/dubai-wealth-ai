@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Trash2, ArrowLeft, Star, Building } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ImageUploader } from '@/components/admin/ImageUploader';
+import { BulkProjectImporter } from '@/components/admin/BulkProjectImporter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -195,13 +196,20 @@ export default function AdminDeveloperProjects() {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-lg font-semibold">{developer?.name || 'Developer'} Projects</h2>
-            <p className="text-sm text-muted-foreground">Manage projects and portfolio images</p>
+            <p className="text-sm text-muted-foreground">
+              {projects.length} {projects.length === 1 ? 'project' : 'projects'} in portfolio
+            </p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gold hover:bg-gold/90 text-background" onClick={() => resetForm()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Project
+          <div className="flex gap-2">
+            <BulkProjectImporter 
+              developerId={developerId!} 
+              onImportComplete={() => queryClient.invalidateQueries({ queryKey: ['developer-projects', developerId] })} 
+            />
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gold hover:bg-gold/90 text-background" onClick={() => resetForm()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Project
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
@@ -314,8 +322,9 @@ export default function AdminDeveloperProjects() {
                   </Button>
                 </div>
               </form>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
