@@ -10,7 +10,7 @@ const features = [
     title: "Dubai Real Estate Academy",
     description:
       "Master Dubai investing with expert-led courses covering fundamentals, off-plan strategies, short-term rentals, and Golden Visa pathways.",
-    highlight: "50+ Premium Lessons",
+    highlight: "100+ Premium Lessons",
     link: "/academy",
   },
   {
@@ -26,7 +26,7 @@ const features = [
     title: "Investment Tools Suite",
     description:
       "ROI calculators, mortgage planners, rental yield analyzers, and off-plan cash flow projections to make data-driven decisions.",
-    highlight: "5 Powerful Tools",
+    highlight: "13 Powerful Tools",
     link: "/tools",
   },
   {
@@ -42,7 +42,7 @@ const features = [
     title: "Investor Community",
     description:
       "Connect with global investors, share insights, discuss deals, and access elite networking opportunities with like-minded wealth builders.",
-    highlight: "12,000+ Members",
+    highlight: "Global Network",
     link: "/community",
   },
   {

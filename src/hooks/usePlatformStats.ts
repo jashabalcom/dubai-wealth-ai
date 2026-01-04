@@ -12,7 +12,7 @@ interface PlatformStats {
 const DEFAULT_STATS: PlatformStats = {
   properties: 700,
   lessons: 100,
-  tools: 11,
+  tools: 13,
   neighborhoods: 100,
 };
 
@@ -29,7 +29,7 @@ export function usePlatformStats() {
       return {
         properties: propertiesRes.count ?? DEFAULT_STATS.properties,
         lessons: lessonsRes.count ?? DEFAULT_STATS.lessons,
-        tools: 11, // Static - number of calculator tools
+        tools: 13, // Static - number of calculator tools
         neighborhoods: neighborhoodsRes.count ?? DEFAULT_STATS.neighborhoods,
       };
     },
