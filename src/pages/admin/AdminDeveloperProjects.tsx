@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Trash2, ArrowLeft, Star, Building } from 'lucide-react';
+import { Plus, Edit, Trash2, ArrowLeft, Star, Building, Video, FileText, Map } from 'lucide-react';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ImageUploader } from '@/components/admin/ImageUploader';
 import { BulkProjectImporter } from '@/components/admin/BulkProjectImporter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -51,6 +52,14 @@ interface DeveloperProject {
   total_units: number | null;
   image_url: string | null;
   is_flagship: boolean | null;
+  // Media fields
+  video_url: string | null;
+  virtual_tour_url: string | null;
+  // Document fields
+  brochure_url: string | null;
+  sales_deck_url: string | null;
+  master_plan_url: string | null;
+  location_map_url: string | null;
 }
 
 export default function AdminDeveloperProjects() {
@@ -70,6 +79,14 @@ export default function AdminDeveloperProjects() {
     total_units: 0,
     image_url: '',
     is_flagship: false,
+    // Media fields
+    video_url: '',
+    virtual_tour_url: '',
+    // Document fields
+    brochure_url: '',
+    sales_deck_url: '',
+    master_plan_url: '',
+    location_map_url: '',
   });
 
   const { data: developer } = useQuery({
@@ -155,6 +172,12 @@ export default function AdminDeveloperProjects() {
       total_units: 0,
       image_url: '',
       is_flagship: false,
+      video_url: '',
+      virtual_tour_url: '',
+      brochure_url: '',
+      sales_deck_url: '',
+      master_plan_url: '',
+      location_map_url: '',
     });
     setEditingProject(null);
     setIsDialogOpen(false);
@@ -173,6 +196,12 @@ export default function AdminDeveloperProjects() {
       total_units: project.total_units || 0,
       image_url: project.image_url || '',
       is_flagship: project.is_flagship || false,
+      video_url: project.video_url || '',
+      virtual_tour_url: project.virtual_tour_url || '',
+      brochure_url: project.brochure_url || '',
+      sales_deck_url: project.sales_deck_url || '',
+      master_plan_url: project.master_plan_url || '',
+      location_map_url: project.location_map_url || '',
     });
     setIsDialogOpen(true);
   };
@@ -217,105 +246,211 @@ export default function AdminDeveloperProjects() {
                 <DialogTitle>{editingProject ? 'Edit Project' : 'Create New Project'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <Label>Project Image</Label>
-                    <div className="mt-2">
-                      <ImageUploader
-                        currentImageUrl={formData.image_url || null}
-                        onUpload={(url) => setFormData({ ...formData, image_url: url })}
-                        folder={`projects/${developerId}`}
-                        aspectRatio={4/3}
-                        label="Project Image"
-                        previewClassName="w-full h-48"
-                      />
+                <Tabs defaultValue="basic" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                    <TabsTrigger value="media" className="flex items-center gap-1">
+                      <Video className="h-3 w-3" />
+                      Media
+                    </TabsTrigger>
+                    <TabsTrigger value="documents" className="flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Documents
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="basic" className="space-y-4 mt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <Label>Project Image</Label>
+                        <div className="mt-2">
+                          <ImageUploader
+                            currentImageUrl={formData.image_url || null}
+                            onUpload={(url) => setFormData({ ...formData, image_url: url })}
+                            folder={`projects/${developerId}`}
+                            aspectRatio={4/3}
+                            label="Project Image"
+                            previewClassName="w-full h-48"
+                          />
+                        </div>
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label>Project Name *</Label>
+                        <Input
+                          value={formData.name}
+                          onChange={(e) => setFormData({ 
+                            ...formData, 
+                            name: e.target.value,
+                            slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+                          })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Slug</Label>
+                        <Input
+                          value={formData.slug}
+                          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Location Area</Label>
+                        <Input
+                          value={formData.location_area}
+                          onChange={(e) => setFormData({ ...formData, location_area: e.target.value })}
+                          placeholder="Dubai Marina, Downtown Dubai..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Status</Label>
+                        <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="under_construction">Under Construction</SelectItem>
+                            <SelectItem value="upcoming">Upcoming</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Project Type</Label>
+                        <Input
+                          value={formData.project_type}
+                          onChange={(e) => setFormData({ ...formData, project_type: e.target.value })}
+                          placeholder="Residential, Commercial, Mixed Use..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Completion Year</Label>
+                        <Input
+                          type="number"
+                          value={formData.completion_year}
+                          onChange={(e) => setFormData({ ...formData, completion_year: Number(e.target.value) })}
+                          min={2000}
+                          max={2040}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Total Units</Label>
+                        <Input
+                          type="number"
+                          value={formData.total_units}
+                          onChange={(e) => setFormData({ ...formData, total_units: Number(e.target.value) })}
+                          min={0}
+                        />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label>Description</Label>
+                        <Textarea
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+                      <div className="col-span-2 flex items-center gap-2">
+                        <Switch
+                          checked={formData.is_flagship}
+                          onCheckedChange={(checked) => setFormData({ ...formData, is_flagship: checked })}
+                        />
+                        <Label>Flagship Project</Label>
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label>Project Name *</Label>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        name: e.target.value,
-                        slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-                      })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Slug</Label>
-                    <Input
-                      value={formData.slug}
-                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Location Area</Label>
-                    <Input
-                      value={formData.location_area}
-                      onChange={(e) => setFormData({ ...formData, location_area: e.target.value })}
-                      placeholder="Dubai Marina, Downtown Dubai..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="under_construction">Under Construction</SelectItem>
-                        <SelectItem value="upcoming">Upcoming</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Project Type</Label>
-                    <Input
-                      value={formData.project_type}
-                      onChange={(e) => setFormData({ ...formData, project_type: e.target.value })}
-                      placeholder="Residential, Commercial, Mixed Use..."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Completion Year</Label>
-                    <Input
-                      type="number"
-                      value={formData.completion_year}
-                      onChange={(e) => setFormData({ ...formData, completion_year: Number(e.target.value) })}
-                      min={2000}
-                      max={2040}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Total Units</Label>
-                    <Input
-                      type="number"
-                      value={formData.total_units}
-                      onChange={(e) => setFormData({ ...formData, total_units: Number(e.target.value) })}
-                      min={0}
-                    />
-                  </div>
-                  <div className="col-span-2 space-y-2">
-                    <Label>Description</Label>
-                    <Textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="col-span-2 flex items-center gap-2">
-                    <Switch
-                      checked={formData.is_flagship}
-                      onCheckedChange={(checked) => setFormData({ ...formData, is_flagship: checked })}
-                    />
-                    <Label>Flagship Project</Label>
-                  </div>
-                </div>
-                <div className="flex justify-end gap-2">
+                  </TabsContent>
+                  
+                  <TabsContent value="media" className="space-y-4 mt-4">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Video className="h-4 w-4 text-muted-foreground" />
+                          Video URL
+                        </Label>
+                        <Input
+                          value={formData.video_url}
+                          onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                          placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Supports YouTube, Vimeo, or direct video URLs
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Map className="h-4 w-4 text-muted-foreground" />
+                          Virtual Tour URL
+                        </Label>
+                        <Input
+                          value={formData.virtual_tour_url}
+                          onChange={(e) => setFormData({ ...formData, virtual_tour_url: e.target.value })}
+                          placeholder="https://my.matterport.com/... or tour embed URL"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Matterport, Kuula, or other 360° tour embeds
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="documents" className="space-y-4 mt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          Brochure URL
+                        </Label>
+                        <Input
+                          value={formData.brochure_url}
+                          onChange={(e) => setFormData({ ...formData, brochure_url: e.target.value })}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-muted-foreground" />
+                          Sales Deck URL
+                        </Label>
+                        <Input
+                          value={formData.sales_deck_url}
+                          onChange={(e) => setFormData({ ...formData, sales_deck_url: e.target.value })}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Map className="h-4 w-4 text-muted-foreground" />
+                          Master Plan URL
+                        </Label>
+                        <Input
+                          value={formData.master_plan_url}
+                          onChange={(e) => setFormData({ ...formData, master_plan_url: e.target.value })}
+                          placeholder="https://..."
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                          <Map className="h-4 w-4 text-muted-foreground" />
+                          Location Map URL
+                        </Label>
+                        <Input
+                          value={formData.location_map_url}
+                          onChange={(e) => setFormData({ ...formData, location_map_url: e.target.value })}
+                          placeholder="https://..."
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Add direct links to PDF documents or hosted files. These will appear in the project's Documents section.
+                    </p>
+                  </TabsContent>
+                </Tabs>
+                
+                <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button type="button" variant="outline" onClick={resetForm}>Cancel</Button>
                   <Button type="submit" className="bg-gold hover:bg-gold/90 text-background">
                     {editingProject ? 'Update' : 'Create'}
