@@ -85,10 +85,10 @@ export function DeveloperCard({ developer, index = 0 }: DeveloperCardProps) {
                   Est. {establishedYear}
                 </span>
               )}
-              {developer.total_projects && developer.total_projects > 0 && (
+              {developer.total_projects !== null && developer.total_projects !== undefined && (
                 <span className="flex items-center gap-1">
                   <Building2 className="h-3 w-3" />
-                  {developer.total_projects}+ Projects
+                  {developer.total_projects} {developer.total_projects === 1 ? 'Project' : 'Projects'}
                 </span>
               )}
               {developer.headquarters && (
