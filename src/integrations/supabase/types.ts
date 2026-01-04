@@ -5439,6 +5439,42 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          created_at: string
+          details: Json | null
+          endpoint: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          endpoint?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          endpoint?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sync_alerts: {
         Row: {
           acknowledged: boolean | null
@@ -6117,6 +6153,18 @@ export type Database = {
         Returns: boolean
       }
       is_group_member: { Args: { group_uuid: string }; Returns: boolean }
+      log_security_event: {
+        Args: {
+          p_details?: Json
+          p_endpoint?: string
+          p_event_type: string
+          p_ip_address?: string
+          p_severity?: string
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       affiliate_status: "pending" | "approved" | "suspended" | "rejected"

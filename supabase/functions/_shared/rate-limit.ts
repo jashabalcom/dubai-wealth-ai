@@ -48,6 +48,20 @@ export async function checkRateLimit(
     // Entry exists within window - check if limit exceeded
     if (existing.count >= maxRequests) {
       const resetAt = new Date(new Date(existing.window_start).getTime() + windowSeconds * 1000);
+      
+      // Log rate limit hit as security event
+      try {
+        await supabase.rpc('log_security_event', {
+          p_event_type: 'rate_limit_hit',
+          p_severity: 'warn',
+          p_endpoint: key.split(':')[0], // Extract function name from key
+          p_ip_address: key.includes(':ip:') ? key.split(':ip:')[1] : null,
+          p_details: { key, count: existing.count, max: maxRequests }
+        });
+      } catch (e) {
+        console.error("[RATE-LIMIT] Failed to log security event:", e);
+      }
+      
       return { allowed: false, remaining: 0, resetAt };
     }
 

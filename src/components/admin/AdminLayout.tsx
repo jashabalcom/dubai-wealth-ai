@@ -18,7 +18,8 @@ import {
   MapPin,
   RefreshCw,
   Newspaper,
-  Share2
+  Share2,
+  Gauge
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -33,6 +34,8 @@ const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { label: 'OKRs', href: '/admin/okrs', icon: Target },
   { label: 'Revenue', href: '/admin/revenue', icon: DollarSign },
+  { label: 'Security', href: '/admin/security', icon: Shield },
+  { label: 'Performance', href: '/admin/performance', icon: Gauge },
   { label: 'Affiliates', href: '/admin/affiliates', icon: Share2 },
   { label: 'Mortgage Leads', href: '/admin/mortgage-leads', icon: Building2 },
   { label: 'Mortgage Partners', href: '/admin/mortgage-partners', icon: Briefcase },
