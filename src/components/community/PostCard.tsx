@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Crown, Send, ChevronDown, Pin, MoreVertical } from 'lucide-react';
+import { Heart, MessageCircle, Crown, Send, ChevronDown, Pin, MoreVertical, Flag } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MemberLevelBadge } from '@/components/community/MemberLevelBadge';
 import { PollDisplay } from '@/components/community/PollDisplay';
 import { VideoEmbed } from '@/components/community/VideoEmbed';
 import { PostReactions } from '@/components/community/PostReactions';
+import { ReportContentDialog } from '@/components/community/ReportContentDialog';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
 import { usePostReactions } from '@/hooks/usePostReactions';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -64,6 +66,7 @@ interface PostCardProps {
 
 export function PostCard({ post, onLike, onComment, getComments, canInteract = true, onPinToggle }: PostCardProps) {
   const { isAdmin } = useAdmin();
+  const { user } = useAuth();
   const { getReactionsForPost, toggleReaction } = usePostReactions([post.id]);
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -71,6 +74,10 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
   const [loadingComments, setLoadingComments] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [poll, setPoll] = useState<Poll | null>(null);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
+
+  const isOwnPost = user?.id === post.user_id;
 
   const postReactions = getReactionsForPost(post.id);
 
@@ -217,22 +224,31 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
           </span>
         </div>
         
-        {/* Admin Menu */}
-        {isAdmin && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handlePin}>
-                <Pin className="h-4 w-4 mr-2" />
-                {post.is_pinned ? 'Unpin Post' : 'Pin Post'}
+        {/* Post Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isAdmin && (
+              <>
+                <DropdownMenuItem onClick={handlePin}>
+                  <Pin className="h-4 w-4 mr-2" />
+                  {post.is_pinned ? 'Unpin Post' : 'Pin Post'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {!isOwnPost && (
+              <DropdownMenuItem onClick={() => setShowReportDialog(true)} className="text-destructive focus:text-destructive">
+                <Flag className="h-4 w-4 mr-2" />
+                Report Post
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Post Content */}
@@ -381,14 +397,16 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
                         No comments yet. Be the first to comment!
                       </p>
                     ) : (
-                      comments.map((comment) => (
+                      comments.map((comment) => {
+                        const isOwnComment = user?.id === (comment as any).user_id;
+                        return (
                         <motion.div
                           key={comment.id}
                           variants={{
                             hidden: { opacity: 0, y: 10 },
                             visible: { opacity: 1, y: 0 }
                           }}
-                          className="flex gap-3"
+                          className="flex gap-3 group"
                         >
                           <Avatar className={cn(
                             "h-8 w-8 ring-1 ring-offset-1 ring-offset-card",
@@ -413,8 +431,17 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
                             </div>
                             <p className="text-sm leading-relaxed">{comment.content}</p>
                           </div>
+                          {!isOwnComment && (
+                            <button
+                              onClick={() => setReportingCommentId(comment.id)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-destructive"
+                              title="Report comment"
+                            >
+                              <Flag className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                         </motion.div>
-                      ))
+                      )})
                     )}
                   </motion.div>
 
@@ -452,6 +479,22 @@ export function PostCard({ post, onLike, onComment, getComments, canInteract = t
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Report Post Dialog */}
+      <ReportContentDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        contentType="post"
+        postId={post.id}
+      />
+
+      {/* Report Comment Dialog */}
+      <ReportContentDialog
+        open={!!reportingCommentId}
+        onOpenChange={(open) => !open && setReportingCommentId(null)}
+        contentType="comment"
+        commentId={reportingCommentId || undefined}
+      />
     </motion.div>
   );
 }
