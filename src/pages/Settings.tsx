@@ -8,26 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
+import { useReauth } from '@/hooks/useReauth';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CookiePreferencesManager } from '@/components/CookiePreferences';
 import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
+import { ReauthDialog } from '@/components/auth/ReauthDialog';
 
 const passwordSchema = z.string().min(6, 'Password must be at least 6 characters');
 
@@ -36,6 +27,7 @@ export default function Settings() {
   const { openCustomerPortal, loading: portalLoading } = useSubscription();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { requireReauth, reauthProps } = useReauth();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -43,7 +35,6 @@ export default function Settings() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [errors, setErrors] = useState<{ current?: string; new?: string; confirm?: string }>({});
 
   const validatePasswordForm = () => {
@@ -109,14 +100,17 @@ export default function Settings() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmation !== 'DELETE') return;
-
+  const performAccountDeletion = async () => {
     setIsDeletingAccount(true);
-
     try {
-      // Note: Full account deletion requires admin privileges
-      // For now, we'll sign out and show a message about contacting support
+      // Log this sensitive action
+      await supabase.rpc('log_security_event', {
+        p_event_type: 'sensitive_action',
+        p_severity: 'warn',
+        p_user_id: user?.id,
+        p_details: { action: 'account_deletion_requested' },
+      });
+
       await signOut();
       toast({
         title: 'Account deletion requested',
@@ -126,6 +120,10 @@ export default function Settings() {
     } finally {
       setIsDeletingAccount(false);
     }
+  };
+
+  const handleDeleteAccount = () => {
+    requireReauth('delete your account', performAccountDeletion);
   };
 
   const getTierBadge = () => {
@@ -366,44 +364,13 @@ export default function Settings() {
                     </div>
                   </div>
 
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive">Delete Account</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your account
-                          and remove all your data from our servers.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="py-4">
-                        <Label htmlFor="delete-confirm">
-                          Type <span className="font-mono font-bold">DELETE</span> to confirm
-                        </Label>
-                        <Input
-                          id="delete-confirm"
-                          value={deleteConfirmation}
-                          onChange={(e) => setDeleteConfirmation(e.target.value)}
-                          placeholder="DELETE"
-                          className="mt-2"
-                        />
-                      </div>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => setDeleteConfirmation('')}>
-                          Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteAccount}
-                          disabled={deleteConfirmation !== 'DELETE' || isDeletingAccount}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button 
+                    variant="destructive" 
+                    onClick={handleDeleteAccount}
+                    disabled={isDeletingAccount}
+                  >
+                    {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+                  </Button>
                 </CardContent>
               </Card>
             </div>
@@ -411,6 +378,9 @@ export default function Settings() {
         </div>
       </div>
       <Footer />
+      
+      {/* Re-authentication dialog for sensitive actions */}
+      <ReauthDialog {...reauthProps} />
     </>
   );
 }

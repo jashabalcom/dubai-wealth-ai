@@ -54,7 +54,21 @@ export const prelaunchChecklist: ChecklistCategory[] = [
         category: 'security',
         title: 'Rate Limiting',
         description: 'API rate limiting implemented for abuse prevention',
-        status: 'pass', // Implemented in Tier 3
+        status: 'pass', // Implemented in Tier 3 with security event logging
+      },
+      {
+        id: 'reauth-sensitive',
+        category: 'security',
+        title: 'Re-authentication',
+        description: 'Sensitive actions require password re-entry',
+        status: 'pass', // Implemented for account deletion
+      },
+      {
+        id: 'security-monitoring',
+        category: 'security',
+        title: 'Security Monitoring',
+        description: 'Security events logged and admin dashboard available',
+        status: 'pass', // AdminSecurityMonitor implemented
       },
     ],
   },
