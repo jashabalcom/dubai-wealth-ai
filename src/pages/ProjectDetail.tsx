@@ -15,6 +15,9 @@ import { ProjectPaymentPlans } from "@/components/projects/ProjectPaymentPlans";
 import { ProjectFloorPlans } from "@/components/projects/ProjectFloorPlans";
 import { ProjectMediaSection } from "@/components/projects/ProjectMediaSection";
 import { ConstructionTimeline } from "@/components/projects/ConstructionTimeline";
+import { InvestmentIntelligence } from "@/components/projects/InvestmentIntelligence";
+import { DocumentsLibrary } from "@/components/projects/DocumentsLibrary";
+
 const ProjectDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: project, isLoading: projectLoading } = useProject(slug || '');
@@ -106,6 +109,14 @@ const ProjectDetail = () => {
                   >
                     Overview
                   </TabsTrigger>
+                  {(project.investment_thesis || project.ideal_buyer_persona || project.capital_appreciation_rating) && (
+                    <TabsTrigger
+                      value="investment"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                    >
+                      Investment
+                    </TabsTrigger>
+                  )}
                   {unitTypes.length > 0 && (
                     <TabsTrigger
                       value="units"
@@ -128,6 +139,14 @@ const ProjectDetail = () => {
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
                     >
                       Amenities
+                    </TabsTrigger>
+                  )}
+                  {(project.brochure_url || project.sales_deck_url) && (
+                    <TabsTrigger
+                      value="documents"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
+                    >
+                      Documents
                     </TabsTrigger>
                   )}
                   {paymentPlans.length > 0 && (
@@ -206,6 +225,18 @@ const ProjectDetail = () => {
                   </div>
                 </TabsContent>
 
+                <TabsContent value="investment" className="mt-0">
+                  <InvestmentIntelligence
+                    investmentThesis={project.investment_thesis}
+                    idealBuyerPersona={project.ideal_buyer_persona}
+                    capitalAppreciationRating={project.capital_appreciation_rating}
+                    rentalYieldRating={project.rental_yield_rating}
+                    risksConsiderations={project.risks_considerations}
+                    paymentPlanStructure={project.payment_plan_structure}
+                    brandColor={brandColor}
+                  />
+                </TabsContent>
+
                 <TabsContent value="units" className="mt-0">
                   <ProjectUnitTypes unitTypes={unitTypes} brandColor={brandColor} />
                 </TabsContent>
@@ -216,6 +247,17 @@ const ProjectDetail = () => {
 
                 <TabsContent value="amenities" className="mt-0">
                   <ProjectAmenities amenities={amenities} brandColor={brandColor} />
+                </TabsContent>
+
+                <TabsContent value="documents" className="mt-0">
+                  <DocumentsLibrary
+                    brochureUrl={project.brochure_url}
+                    salesDeckUrl={project.sales_deck_url}
+                    masterPlanUrl={project.master_plan_url}
+                    locationMapUrl={project.location_map_url}
+                    projectName={project.name}
+                    brandColor={brandColor}
+                  />
                 </TabsContent>
 
                 <TabsContent value="payment" className="mt-0">

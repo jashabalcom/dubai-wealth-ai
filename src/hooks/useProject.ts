@@ -89,6 +89,18 @@ export interface ProjectWithDetails {
   key_features: Json;
   bedrooms_range: string | null;
   total_value: number | null;
+  // Investment Intelligence Fields
+  investment_thesis: string | null;
+  ideal_buyer_persona: string | null;
+  capital_appreciation_rating: string | null;
+  rental_yield_rating: string | null;
+  risks_considerations: string | null;
+  payment_plan_structure: string | null;
+  unit_types: Json;
+  amenities: Json;
+  gallery_images: Json;
+  sales_deck_url: string | null;
+  min_investment_aed: number | null;
   developer?: {
     id: string;
     name: string;

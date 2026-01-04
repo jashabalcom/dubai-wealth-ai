@@ -32,11 +32,25 @@ export interface ProjectWithDeveloper {
   bedrooms_range: string | null;
   handover_date: string | null;
   virtual_tour_url: string | null;
+  video_url: string | null;
   brochure_url: string | null;
   latitude: number | null;
   longitude: number | null;
   construction_progress_percent: number | null;
   key_features: string[] | null;
+  launch_date: string | null;
+  // Investment Intelligence Fields
+  investment_thesis: string | null;
+  ideal_buyer_persona: string | null;
+  capital_appreciation_rating: string | null;
+  rental_yield_rating: string | null;
+  risks_considerations: string | null;
+  payment_plan_structure: string | null;
+  unit_types: string[] | null;
+  amenities: string[] | null;
+  gallery_images: string[] | null;
+  sales_deck_url: string | null;
+  min_investment_aed: number | null;
   developer: {
     id: string;
     name: string;
