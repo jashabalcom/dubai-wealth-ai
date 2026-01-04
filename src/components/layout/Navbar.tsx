@@ -93,13 +93,10 @@ export function Navbar() {
       // Not logged in - show "Membership" → /pricing
       links.push({ label: "Membership", href: "/pricing", isRoute: true });
     } else if (membershipTier === 'free') {
-      // Free tier - show "Upgrade" → /pricing
+      // Free tier only - show "Upgrade" → /pricing
       links.push({ label: "Upgrade", href: "/pricing", isRoute: true, isUpgrade: true });
-    } else if (membershipTier === 'investor') {
-      // Investor tier - show "Upgrade" → /upgrade
-      links.push({ label: "Upgrade", href: "/upgrade", isRoute: true, isUpgrade: true });
     }
-    // Elite tier - no membership link (already at max tier)
+    // Investor, Elite, Private tiers - no upgrade link shown
     
     return links;
   })();
