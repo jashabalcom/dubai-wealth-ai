@@ -1515,6 +1515,35 @@ export type Database = {
           },
         ]
       }
+      comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commissions: {
         Row: {
           affiliate_id: string
@@ -1692,6 +1721,7 @@ export type Database = {
           id: string
           post_id: string
           updated_at: string
+          upvote_count: number | null
           user_id: string
         }
         Insert: {
@@ -1700,6 +1730,7 @@ export type Database = {
           id?: string
           post_id: string
           updated_at?: string
+          upvote_count?: number | null
           user_id: string
         }
         Update: {
@@ -1708,6 +1739,7 @@ export type Database = {
           id?: string
           post_id?: string
           updated_at?: string
+          upvote_count?: number | null
           user_id?: string
         }
         Relationships: [
@@ -1854,6 +1886,7 @@ export type Database = {
           post_type: string | null
           title: string
           updated_at: string
+          upvote_count: number | null
           user_id: string
         }
         Insert: {
@@ -1870,6 +1903,7 @@ export type Database = {
           post_type?: string | null
           title: string
           updated_at?: string
+          upvote_count?: number | null
           user_id: string
         }
         Update: {
@@ -1886,6 +1920,7 @@ export type Database = {
           post_type?: string | null
           title?: string
           updated_at?: string
+          upvote_count?: number | null
           user_id?: string
         }
         Relationships: [
@@ -4391,11 +4426,41 @@ export type Database = {
           },
         ]
       }
+      post_votes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
           budget_range: string | null
+          contribution_score: number | null
           cookie_consent: Json | null
           country: string | null
           created_at: string
@@ -4404,6 +4469,7 @@ export type Database = {
           id: string
           investment_goal: string | null
           is_visible_in_directory: boolean | null
+          karma: number | null
           key_created_at: string | null
           last_digest_sent_at: string | null
           level: number | null
@@ -4428,11 +4494,14 @@ export type Database = {
           stripe_customer_id: string | null
           timeline: string | null
           updated_at: string
+          verified_agent: boolean | null
+          verified_investor: boolean | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           budget_range?: string | null
+          contribution_score?: number | null
           cookie_consent?: Json | null
           country?: string | null
           created_at?: string
@@ -4441,6 +4510,7 @@ export type Database = {
           id: string
           investment_goal?: string | null
           is_visible_in_directory?: boolean | null
+          karma?: number | null
           key_created_at?: string | null
           last_digest_sent_at?: string | null
           level?: number | null
@@ -4465,11 +4535,14 @@ export type Database = {
           stripe_customer_id?: string | null
           timeline?: string | null
           updated_at?: string
+          verified_agent?: boolean | null
+          verified_investor?: boolean | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           budget_range?: string | null
+          contribution_score?: number | null
           cookie_consent?: Json | null
           country?: string | null
           created_at?: string
@@ -4478,6 +4551,7 @@ export type Database = {
           id?: string
           investment_goal?: string | null
           is_visible_in_directory?: boolean | null
+          karma?: number | null
           key_created_at?: string | null
           last_digest_sent_at?: string | null
           level?: number | null
@@ -4502,6 +4576,8 @@ export type Database = {
           stripe_customer_id?: string | null
           timeline?: string | null
           updated_at?: string
+          verified_agent?: boolean | null
+          verified_investor?: boolean | null
         }
         Relationships: []
       }
@@ -5652,6 +5728,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_badges: {
+        Row: {
+          badge_type: string
+          earned_at: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          badge_type: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          badge_type?: string
+          earned_at?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_encryption_keys: {
         Row: {
           created_at: string
@@ -5793,6 +5893,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number | null
+          id: string
+          last_activity_date: string | null
+          longest_streak: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_streak?: number | null
+          id?: string
+          last_activity_date?: string | null
+          longest_streak?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       white_label_configs: {
         Row: {
