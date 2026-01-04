@@ -21,7 +21,10 @@
     "settings": "Settings",
     "savedProperties": "Saved Properties",
     "saved": "Saved",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "admin": "Admin",
+    "help": "Help",
+    "contact": "Contact"
   },
   "hero": {
     "badge": "AI-Powered Wealth Platform",
@@ -42,14 +45,25 @@
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
+    "errorDescription": "An unexpected error occurred. Please try again.",
+    "retry": "Try Again",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
+    "confirm": "Confirm",
     "delete": "Delete",
+    "deleting": "Deleting...",
     "edit": "Edit",
+    "update": "Update",
+    "updating": "Updating...",
     "view": "View",
     "search": "Search",
     "filter": "Filter",
     "sort": "Sort",
+    "clear": "Clear",
+    "clearAll": "Clear All",
+    "apply": "Apply",
+    "reset": "Reset",
     "all": "All",
     "none": "None",
     "yes": "Yes",
@@ -58,10 +72,34 @@
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
+    "submitting": "Submitting...",
     "close": "Close",
     "learnMore": "Learn More",
     "viewAll": "View All",
-    "seeMore": "See More"
+    "viewDetails": "View Details",
+    "seeMore": "See More",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "noResults": "No results found",
+    "noResultsDescription": "Try adjusting your search or filters.",
+    "comingSoon": "Coming Soon",
+    "new": "New",
+    "featured": "Featured",
+    "verified": "Verified",
+    "premium": "Premium",
+    "free": "Free",
+    "required": "Required",
+    "optional": "Optional",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "or": "or",
+    "and": "and",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "share": "Share",
+    "download": "Download",
+    "upload": "Upload"
   },
   "properties": {
     "title": "Dubai Properties",
@@ -76,6 +114,8 @@
     "villa": "Villa",
     "townhouse": "Townhouse",
     "penthouse": "Penthouse",
+    "studio": "Studio",
+    "duplex": "Duplex",
     "investmentScore": "Investment Score",
     "rentalYield": "Rental Yield",
     "goldenVisa": "Golden Visa Eligible",
@@ -83,8 +123,23 @@
     "ready": "Ready",
     "forSale": "For Sale",
     "forRent": "For Rent",
+    "sold": "Sold",
+    "underConstruction": "Under Construction",
     "sqft": "sq ft",
-    "perYear": "per year"
+    "sqm": "sq m",
+    "perYear": "per year",
+    "perSqft": "/sq ft",
+    "actions": {
+      "inquire": "Inquire Now",
+      "schedule": "Schedule Viewing",
+      "saveProperty": "Save Property",
+      "compare": "Compare",
+      "getAnalysis": "Get AI Analysis"
+    },
+    "empty": {
+      "title": "No properties found",
+      "description": "Try adjusting your filters or search criteria."
+    }
   },
   "academy": {
     "title": "Dubai Real Estate Academy",
@@ -94,14 +149,19 @@
     "progress": "Progress",
     "completed": "Completed",
     "complete": "Complete",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started",
     "continue": "Continue Learning",
     "start": "Start Course",
+    "restart": "Restart",
+    "getCertificate": "Get Certificate",
     "beginner": "Beginner",
     "intermediate": "Intermediate",
     "advanced": "Advanced"
   },
   "community": {
     "title": "Community",
+    "subtitle": "Connect with global investors",
     "discussions": "Discussions",
     "events": "Events",
     "members": "Members",
@@ -110,11 +170,25 @@
     "news": "News",
     "qa": "Q&A",
     "leaderboard": "Leaderboard",
+    "channels": "Channels",
+    "trending": "Trending",
+    "recent": "Recent",
+    "popular": "Popular",
     "createPost": "Create Post",
     "askQuestion": "Ask a Question",
     "joinEvent": "Join Event",
     "connect": "Connect",
-    "message": "Message"
+    "message": "Message",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "post": {
+      "like": "Like",
+      "comment": "Comment",
+      "share": "Share",
+      "report": "Report",
+      "reply": "Reply",
+      "replies": "Replies"
+    }
   },
   "tools": {
     "title": "Investment Tools",
@@ -128,26 +202,104 @@
     "capRate": "Cap Rate Calculator",
     "dscr": "DSCR Calculator",
     "freeZone": "Free Zone Comparison",
-    "commercialLease": "Commercial Lease Analyzer"
+    "commercialLease": "Commercial Lease Analyzer",
+    "compareTool": "Property Compare",
+    "yieldAnalyzer": "Yield Analyzer",
+    "goldenVisa": "Golden Visa Checker",
+    "affordability": "Affordability Calculator"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome back",
+    "subtitle": "Your Dubai investment dashboard",
     "portfolio": "Portfolio",
     "insights": "AI Insights",
     "savedProperties": "Saved Properties",
-    "recentActivity": "Recent Activity"
+    "recentActivity": "Recent Activity",
+    "watchlist": "Watchlist",
+    "alerts": "Alerts",
+    "notifications": "Notifications",
+    "stats": {
+      "totalValue": "Total Value",
+      "monthlyIncome": "Monthly Income",
+      "avgYield": "Avg Yield",
+      "properties": "Properties"
+    }
   },
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
+    "signOut": "Sign Out",
     "email": "Email",
     "password": "Password",
+    "confirmPassword": "Confirm Password",
     "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "newPassword": "New Password",
+    "currentPassword": "Current Password",
+    "rememberMe": "Remember me",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "createAccount": "Create Account",
-    "continueWith": "Or continue with"
+    "continueWith": "Or continue with",
+    "termsAgree": "By signing up, you agree to our",
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "verifyEmail": "Verify your email",
+    "checkEmail": "Check your email for a verification link",
+    "resendEmail": "Resend verification email",
+    "errors": {
+      "invalidEmail": "Please enter a valid email address",
+      "invalidPassword": "Password must be at least 6 characters",
+      "passwordMismatch": "Passwords do not match",
+      "invalidCredentials": "Invalid email or password",
+      "emailInUse": "This email is already registered",
+      "tooManyAttempts": "Too many attempts. Please try again later."
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "subtitle": "Manage your account security and billing preferences",
+    "account": {
+      "title": "Account Information",
+      "description": "Your account details and membership status",
+      "email": "Email",
+      "membership": "Membership",
+      "editProfile": "Edit Profile"
+    },
+    "billing": {
+      "title": "Billing & Subscription",
+      "description": "Manage your subscription and payment methods",
+      "manage": "Manage Billing",
+      "managementDescription": "View invoices, update payment method, or change your plan",
+      "freePlan": "You're currently on the Free plan.",
+      "upgradeCta": "Upgrade to unlock premium features"
+    },
+    "notifications": {
+      "title": "Notification Preferences",
+      "description": "Choose how you want to receive updates",
+      "email": "Email Notifications",
+      "push": "Push Notifications",
+      "marketing": "Marketing emails",
+      "updates": "Product updates",
+      "newsletter": "Weekly newsletter"
+    },
+    "security": {
+      "title": "Change Password",
+      "description": "Update your password to keep your account secure",
+      "updatePassword": "Update Password"
+    },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "Permanently delete your account and all associated data",
+      "warning": "This action cannot be undone",
+      "warningDescription": "Once you delete your account, all your data including saved properties, portfolio, course progress, and community posts will be permanently removed.",
+      "button": "Delete Account"
+    },
+    "cookies": {
+      "title": "Cookie Preferences",
+      "description": "Manage your cookie settings"
+    }
   },
   "footer": {
     "description": "An AI-powered Dubai real estate wealth platform for global investors. Education, tools, community, and exclusive deal flow — all in one place.",
@@ -180,7 +332,13 @@
     "disclaimerText": "Dubai Wealth Hub is an educational platform and referral network. We are not a licensed real estate brokerage. Properties are presented by licensed RERA-registered agents and developers. All investment analysis, projections, and AI-generated content are for educational purposes only and do not constitute financial, legal, or investment advice. Past performance does not guarantee future results.",
     "readFullDisclaimer": "Read full disclaimer",
     "copyright": "Dubai Wealth Hub by Balcom Privé. All rights reserved.",
-    "location": "Dubai, United Arab Emirates"
+    "location": "Dubai, United Arab Emirates",
+    "newsletter": {
+      "title": "Stay Updated",
+      "description": "Get the latest Dubai market insights and exclusive opportunities.",
+      "placeholder": "Enter your email",
+      "button": "Subscribe"
+    }
   },
   "membership": {
     "title": "Choose Your Membership",
@@ -192,6 +350,57 @@
     "popular": "Most Popular",
     "currentPlan": "Current Plan",
     "upgrade": "Upgrade Now",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "billing": {
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "save": "Save {{percent}}%"
+    },
+    "features": {
+      "included": "What's included",
+      "propertyAccess": "Property access",
+      "aiQueries": "AI queries",
+      "academy": "Academy access",
+      "community": "Community access",
+      "support": "Support level"
+    },
+    "cta": {
+      "current": "Current Plan",
+      "upgrade": "Upgrade Now",
+      "getStarted": "Get Started",
+      "contactSales": "Contact Sales"
+    }
+  },
+  "errors": {
+    "404": {
+      "title": "Page Not Found",
+      "description": "The page you're looking for doesn't exist or has been moved.",
+      "cta": "Go Home"
+    },
+    "500": {
+      "title": "Something Went Wrong",
+      "description": "We're experiencing technical difficulties. Please try again later.",
+      "cta": "Refresh Page"
+    },
+    "offline": {
+      "title": "You're Offline",
+      "description": "Please check your internet connection and try again.",
+      "cta": "Retry"
+    },
+    "unauthorized": {
+      "title": "Access Denied",
+      "description": "You don't have permission to view this page.",
+      "cta": "Sign In"
+    }
+  },
+  "accessibility": {
+    "skipToMain": "Skip to main content",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "expandSection": "Expand section",
+    "collapseSection": "Collapse section",
+    "loading": "Loading content",
+    "navigatedTo": "Navigated to {{page}}"
   }
 }

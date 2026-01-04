@@ -13,6 +13,15 @@ initSentry();
 // Initialize Web Vitals for performance monitoring
 initWebVitals();
 
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Service worker registration failed silently
+    });
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ErrorBoundary>

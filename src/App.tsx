@@ -15,7 +15,8 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { TrialBannerWrapper } from "@/components/TrialBannerWrapper";
 import { EmailVerificationBanner } from "@/components/freemium/EmailVerificationBanner";
 import { OfflineBanner } from "@/components/ui/offline-banner";
-
+import { SkipNavigation, RouteAnnouncer } from "@/components/a11y/SkipNavigation";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -48,6 +49,8 @@ const App = () => (
             <Sonner />
             <OfflineBanner />
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <SkipNavigation />
+              <RouteAnnouncer />
               <GoogleAnalytics />
               <NavigationProgress />
               <ScrollToTop />
@@ -56,6 +59,7 @@ const App = () => (
               <TrialBannerWrapper />
               <AnimatedRoutes />
               <CookieConsent />
+              <InstallPrompt />
             </BrowserRouter>
           </TooltipProvider>
         </OnlinePresenceProvider>
