@@ -28,6 +28,21 @@ const SavedProperties = lazy(() => import("@/pages/SavedProperties"));
 const MyInquiries = lazy(() => import("@/pages/MyInquiries"));
 const SavedSearches = lazy(() => import("@/pages/SavedSearches"));
 
+// NEW: Programmatic SEO pages - For Sale
+const ForSaleIndex = lazy(() => import("@/pages/for-sale/ForSaleIndex"));
+const ForSaleByType = lazy(() => import("@/pages/for-sale/ForSaleByType"));
+const ForSaleByArea = lazy(() => import("@/pages/for-sale/ForSaleByArea"));
+const ForSaleByAreaType = lazy(() => import("@/pages/for-sale/ForSaleByAreaType"));
+const ForSaleByAreaTypeBeds = lazy(() => import("@/pages/for-sale/ForSaleByAreaTypeBeds"));
+
+// NEW: Off-Plan pages
+const OffPlanIndex = lazy(() => import("@/pages/off-plan/OffPlanIndex"));
+const PaymentPlansGuide = lazy(() => import("@/pages/off-plan/PaymentPlansGuide"));
+
+// NEW: Golden Visa pages (PUBLIC)
+const GoldenVisaHub = lazy(() => import("@/pages/golden-visa/GoldenVisaHub"));
+const GoldenVisaProperties = lazy(() => import("@/pages/golden-visa/GoldenVisaProperties"));
+
 // Lazy loaded - Tools main page
 const Tools = lazy(() => import("@/pages/Tools"));
 
@@ -189,11 +204,25 @@ export function AnimatedRoutes() {
         <Route path="/my-inquiries" element={<ProtectedRoute><LazyPage><MyInquiries /></LazyPage></ProtectedRoute>} />
         <Route path="/saved-searches" element={<ProtectedRoute><LazyPage><SavedSearches /></LazyPage></ProtectedRoute>} />
         
-        {/* Developers & Projects - Public browse */}
+        {/* NEW: Programmatic For-Sale SEO Pages (PUBLIC) */}
+        <Route path="/for-sale" element={<LazyPage><ForSaleIndex /></LazyPage>} />
+        <Route path="/for-sale/:type" element={<LazyPage><ForSaleByType /></LazyPage>} />
+        <Route path="/for-sale/:area/:type" element={<LazyPage><ForSaleByAreaType /></LazyPage>} />
+        <Route path="/for-sale/:area/:type/:beds" element={<LazyPage><ForSaleByAreaTypeBeds /></LazyPage>} />
+        
+        {/* NEW: Off-Plan Pages (PUBLIC) - Redirect from /projects */}
+        <Route path="/off-plan" element={<LazyPage><OffPlanIndex /></LazyPage>} />
+        <Route path="/off-plan/payment-plans" element={<LazyPage><PaymentPlansGuide /></LazyPage>} />
+        <Route path="/projects" element={<Navigate to="/off-plan" replace />} />
+        <Route path="/projects/:slug" element={<LazyPage><ProjectDetail /></LazyPage>} />
+        
+        {/* NEW: Golden Visa Hub (PUBLIC) */}
+        <Route path="/golden-visa" element={<LazyPage><GoldenVisaHub /></LazyPage>} />
+        <Route path="/golden-visa/properties" element={<LazyPage><GoldenVisaProperties /></LazyPage>} />
+        
+        {/* Developers - Public browse */}
         <Route path="/developers" element={<LazyPage><Developers /></LazyPage>} />
         <Route path="/developers/:slug" element={<LazyPage><DeveloperDetail /></LazyPage>} />
-        <Route path="/projects" element={<LazyPage><Projects /></LazyPage>} />
-        <Route path="/projects/:slug" element={<LazyPage><ProjectDetail /></LazyPage>} />
         
         {/* Neighborhoods - Public browse */}
         <Route path="/neighborhoods" element={<LazyPage><Neighborhoods /></LazyPage>} />
