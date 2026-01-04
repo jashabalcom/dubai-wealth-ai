@@ -1928,6 +1928,69 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          comment_id: string | null
+          content_type: string
+          created_at: string | null
+          details: string | null
+          id: string
+          post_id: string | null
+          reason: Database["public"]["Enums"]["report_reason"]
+          reporter_id: string | null
+          resolution_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["report_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          comment_id?: string | null
+          content_type: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          post_id?: string | null
+          reason: Database["public"]["Enums"]["report_reason"]
+          reporter_id?: string | null
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          comment_id?: string | null
+          content_type?: string
+          created_at?: string | null
+          details?: string | null
+          id?: string
+          post_id?: string | null
+          reason?: Database["public"]["Enums"]["report_reason"]
+          reporter_id?: string | null
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["report_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           category: string
@@ -6213,6 +6276,15 @@ export type Database = {
         | "snagging"
         | "general"
       referral_status: "pending" | "qualified" | "churned" | "fraudulent"
+      report_reason:
+        | "spam"
+        | "harassment"
+        | "hate_speech"
+        | "misinformation"
+        | "inappropriate_content"
+        | "scam"
+        | "other"
+      report_status: "pending" | "reviewed" | "resolved" | "dismissed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6391,6 +6463,16 @@ export const Constants = {
         "general",
       ],
       referral_status: ["pending", "qualified", "churned", "fraudulent"],
+      report_reason: [
+        "spam",
+        "harassment",
+        "hate_speech",
+        "misinformation",
+        "inappropriate_content",
+        "scam",
+        "other",
+      ],
+      report_status: ["pending", "reviewed", "resolved", "dismissed"],
     },
   },
 } as const

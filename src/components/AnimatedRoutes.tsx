@@ -127,6 +127,7 @@ const AdminDataRegistry = lazy(() => import("@/pages/admin/AdminDataRegistry"));
 const AdminInquiries = lazy(() => import("@/pages/admin/AdminInquiries"));
 const AdminSecurityMonitor = lazy(() => import("@/pages/admin/AdminSecurityMonitor"));
 const AdminPerformance = lazy(() => import("@/pages/admin/AdminPerformance"));
+const AdminModeration = lazy(() => import("@/pages/admin/AdminModeration"));
 // Lazy loaded - Public investor page
 const Investors = lazy(() => import("@/pages/Investors"));
 const PitchDeck = lazy(() => import("@/pages/PitchDeck"));
@@ -295,6 +296,7 @@ export function AnimatedRoutes() {
         <Route path="/admin/inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
         <Route path="/admin/security" element={<LazyPage><AdminSecurityMonitor /></LazyPage>} />
         <Route path="/admin/performance" element={<LazyPage><AdminPerformance /></LazyPage>} />
+        <Route path="/admin/moderation" element={<LazyPage><AdminModeration /></LazyPage>} />
         
         {/* Public Investor Page */}
         <Route path="/investors" element={<LazyPage><Investors /></LazyPage>} />

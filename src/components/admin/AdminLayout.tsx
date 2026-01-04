@@ -19,7 +19,8 @@ import {
   RefreshCw,
   Newspaper,
   Share2,
-  Gauge
+  Gauge,
+  Flag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -32,6 +33,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Moderation', href: '/admin/moderation', icon: Flag },
   { label: 'OKRs', href: '/admin/okrs', icon: Target },
   { label: 'Revenue', href: '/admin/revenue', icon: DollarSign },
   { label: 'Security', href: '/admin/security', icon: Shield },
