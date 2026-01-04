@@ -22,6 +22,7 @@ interface Post {
   content: string;
   likes_count: number;
   comments_count: number;
+  upvote_count?: number;
   created_at: string;
   images?: string[];
   is_pinned?: boolean;
@@ -33,8 +34,12 @@ interface Post {
     membership_tier: string;
     level?: number;
     points?: number;
+    karma?: number;
+    verified_investor?: boolean;
+    verified_agent?: boolean;
   };
   has_liked?: boolean;
+  has_upvoted?: boolean;
 }
 
 interface Comment {
@@ -97,10 +102,10 @@ export function useCommunity() {
       // Batch fetch: collect unique user IDs
       const userIds = [...new Set(postsData.map(p => p.user_id))];
       
-      // Single query for all author profiles
+      // Single query for all author profiles including karma
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, membership_tier, level, points')
+        .select('id, full_name, avatar_url, membership_tier, level, points, karma, verified_investor, verified_agent')
         .in('id', userIds);
       
       // Create lookup map for O(1) access
