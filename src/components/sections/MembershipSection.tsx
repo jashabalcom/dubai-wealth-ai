@@ -114,8 +114,8 @@ export function MembershipSection() {
     }
 
     if (!user) {
-      localStorage.setItem('pending_checkout_tier', tier);
-      localStorage.setItem('pending_checkout_billing', isAnnual ? 'annual' : 'monthly');
+      sessionStorage.setItem('pending_checkout_tier', tier);
+      sessionStorage.setItem('pending_checkout_billing', isAnnual ? 'annual' : 'monthly');
       navigate('/auth');
       return;
     }

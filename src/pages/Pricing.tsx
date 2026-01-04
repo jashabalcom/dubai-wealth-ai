@@ -29,8 +29,9 @@ export default function Pricing() {
   const handleTierClick = async (tierId: 'free' | 'investor' | 'elite' | 'private') => {
     if (!user) {
       if (tierId !== 'free') {
-        localStorage.setItem('pending_checkout_tier', tierId);
-        localStorage.setItem('pending_checkout_billing', billingPeriod);
+        // Use sessionStorage for security - clears when tab closes
+        sessionStorage.setItem('pending_checkout_tier', tierId);
+        sessionStorage.setItem('pending_checkout_billing', billingPeriod);
       }
       navigate('/auth');
       return;

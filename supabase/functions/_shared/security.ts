@@ -1,9 +1,37 @@
 /**
  * Security utilities for edge functions
+ * - Security headers (CSP, X-Frame-Options, etc.)
  * - Input sanitization for AI prompts
  * - CORS origin validation
  * - Safe error responses
  */
+
+// =============================================================================
+// SECURITY HEADERS
+// =============================================================================
+
+/**
+ * Get security headers for edge function responses
+ * Includes CSP, X-Frame-Options, and other hardening headers
+ */
+export function getSecurityHeaders(): Record<string, string> {
+  return {
+    "Content-Security-Policy": [
+      "default-src 'self'",
+      "script-src 'self' https://js.stripe.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https://*.supabase.co https://api.stripe.com",
+      "frame-src https://js.stripe.com https://hooks.stripe.com",
+      "font-src 'self' https://fonts.gstatic.com",
+    ].join("; "),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+  };
+}
 
 // =============================================================================
 // CORS UTILITIES

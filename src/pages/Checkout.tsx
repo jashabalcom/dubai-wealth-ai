@@ -43,12 +43,12 @@ const Checkout = () => {
     if (authLoading) return;
 
     if (!user) {
-      // Store intent and redirect to auth
+      // Store intent and redirect to auth (sessionStorage for security)
       if (validTier) {
-        localStorage.setItem("pending_checkout_tier", validTier);
-        localStorage.setItem("pending_checkout_billing", billingPeriod);
+        sessionStorage.setItem("pending_checkout_tier", validTier);
+        sessionStorage.setItem("pending_checkout_billing", billingPeriod);
         if (isUpgrade) {
-          localStorage.setItem("pending_checkout_upgrade", "true");
+          sessionStorage.setItem("pending_checkout_upgrade", "true");
         }
       }
       navigate("/auth");
