@@ -1,6 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getSecurityHeaders } from "../_shared/security.ts";
+import { 
+  checkRateLimit, 
+  getUserRateLimitKey, 
+  rateLimitResponse 
+} from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,6 +107,15 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Rate limiting: 10 requests per hour per authenticated user
+    const rateLimitKey = getUserRateLimitKey("create-checkout", user.id);
+    const rateLimit = await checkRateLimit(rateLimitKey, 10, 3600);
+
+    if (!rateLimit.allowed) {
+      logStep("Rate limit exceeded", { userId: user.id });
+      return rateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
 
     const stripe = new Stripe(stripeKey, { 
       apiVersion: "2025-08-27.basil" 
@@ -259,14 +274,14 @@ serve(async (req) => {
     });
 
     return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, ...getSecurityHeaders(), "Content-Type": "application/json" },
       status: 500,
     });
   }

@@ -2,10 +2,17 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { 
   getCorsHeaders, 
+  getSecurityHeaders,
   safeErrorResponse, 
   sanitizeGoldenVisaInput,
   type GoldenVisaInput 
 } from "../_shared/security.ts";
+import { 
+  checkRateLimit, 
+  getIpRateLimitKey, 
+  getClientIp, 
+  rateLimitResponse 
+} from "../_shared/rate-limit.ts";
 
 // Cache configuration
 const CACHE_TTL_DAYS = 7;
@@ -100,6 +107,16 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting: 20 requests per hour per IP
+    const clientIp = getClientIp(req);
+    const rateLimitKey = getIpRateLimitKey("golden-visa-wizard", clientIp);
+    const rateLimit = await checkRateLimit(rateLimitKey, 20, 3600);
+
+    if (!rateLimit.allowed) {
+      console.log(`[GOLDEN-VISA-WIZARD] Rate limit exceeded for IP: ${clientIp}`);
+      return rateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
+
     const rawInput: GoldenVisaInput = await req.json();
     
     // Sanitize and validate all input
@@ -113,7 +130,7 @@ serve(async (req) => {
       console.warn('Suspicious prompt injection attempt detected');
       return new Response(
         JSON.stringify({ error: 'Invalid request data. Please check your input.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -125,7 +142,7 @@ serve(async (req) => {
       console.error('LOVABLE_API_KEY is not configured');
       return new Response(
         JSON.stringify({ error: 'Service configuration error. Please contact support.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 500, headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -144,7 +161,7 @@ serve(async (req) => {
       if (cachedResponse) {
         console.log('Returning cached Golden Visa analysis');
         return new Response(JSON.stringify(cachedResponse), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' },
         });
       }
     }
@@ -213,19 +230,19 @@ Provide a comprehensive analysis with specific property recommendations if appli
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }), {
           status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: 'Service temporarily unavailable. Please try again later.' }), {
           status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' },
         });
       }
       
       return new Response(JSON.stringify({ error: 'AI service temporarily unavailable. Please try again.' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' },
       });
     }
 
@@ -236,7 +253,7 @@ Provide a comprehensive analysis with specific property recommendations if appli
       console.error('No content in AI response');
       return new Response(JSON.stringify({ error: 'Unable to generate analysis. Please try again.' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' },
       });
     }
 
@@ -268,7 +285,7 @@ Provide a comprehensive analysis with specific property recommendations if appli
     console.log('Successfully generated Golden Visa analysis');
     
     return new Response(JSON.stringify(analysis), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, ...getSecurityHeaders(), 'Content-Type': 'application/json' },
     });
   } catch (error) {
     const corsHeaders = getCorsHeaders(req);

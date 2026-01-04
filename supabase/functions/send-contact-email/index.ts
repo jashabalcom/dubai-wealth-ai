@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { escapeHtml } from "../_shared/html-escape.ts";
+import { getSecurityHeaders } from "../_shared/security.ts";
+import { 
+  checkRateLimit, 
+  getIpRateLimitKey, 
+  getClientIp, 
+  rateLimitResponse 
+} from "../_shared/rate-limit.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -45,6 +52,16 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting: 5 requests per hour per IP
+    const clientIp = getClientIp(req);
+    const rateLimitKey = getIpRateLimitKey("send-contact-email", clientIp);
+    const rateLimit = await checkRateLimit(rateLimitKey, 5, 3600);
+
+    if (!rateLimit.allowed) {
+      console.log(`[SEND-CONTACT-EMAIL] Rate limit exceeded for IP: ${clientIp}`);
+      return rateLimitResponse(rateLimit.resetAt, corsHeaders);
+    }
+
     const { name, email, phone, subject, message }: ContactFormRequest = await req.json();
 
     console.log("Received contact form submission:", { name, email, subject });
@@ -122,13 +139,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     return new Response(
       JSON.stringify({ success: true, message: "Emails sent successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { 
+        status: 200, 
+        headers: { 
+          ...corsHeaders, 
+          ...getSecurityHeaders(),
+          "Content-Type": "application/json" 
+        } 
+      }
     );
   } catch (error: any) {
     console.error("Error in send-contact-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { 
+        status: 500, 
+        headers: { 
+          ...corsHeaders, 
+          ...getSecurityHeaders(),
+          "Content-Type": "application/json" 
+        } 
+      }
     );
   }
 };
