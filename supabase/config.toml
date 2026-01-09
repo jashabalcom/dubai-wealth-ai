@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.scheduled-bayut-sync]
 verify_jwt = false
 
+[functions.test-bayut-connection]
+verify_jwt = false
+
 [functions.ai-calculator-analysis]
 verify_jwt = false
 
