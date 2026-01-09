@@ -5707,6 +5707,54 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_schedules: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          cron_expression: string
+          id: string
+          is_enabled: boolean | null
+          last_run_at: string | null
+          last_run_duration_seconds: number | null
+          last_run_properties_synced: number | null
+          last_run_status: string | null
+          next_run_at: string | null
+          schedule_name: string
+          schedule_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          cron_expression: string
+          id?: string
+          is_enabled?: boolean | null
+          last_run_at?: string | null
+          last_run_duration_seconds?: number | null
+          last_run_properties_synced?: number | null
+          last_run_status?: string | null
+          next_run_at?: string | null
+          schedule_name: string
+          schedule_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          cron_expression?: string
+          id?: string
+          is_enabled?: boolean | null
+          last_run_at?: string | null
+          last_run_duration_seconds?: number | null
+          last_run_properties_synced?: number | null
+          last_run_status?: string | null
+          next_run_at?: string | null
+          schedule_name?: string
+          schedule_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tool_usage: {
         Row: {
           id: string

@@ -46,6 +46,7 @@ import {
   Target
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { SyncScheduleTab } from '@/components/admin/SyncScheduleTab';
 
 interface SyncLog {
   id: string;
@@ -991,8 +992,9 @@ export default function AdminBayutSync() {
         </Card>
 
         {/* Main Tabs */}
-        <Tabs defaultValue="properties" className="space-y-4">
+        <Tabs defaultValue="schedule" className="space-y-4">
           <TabsList>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="properties">Properties Sync</TabsTrigger>
             <TabsTrigger value="agents">Agents ({agents.length})</TabsTrigger>
             <TabsTrigger value="agencies">Agencies ({agencies.length})</TabsTrigger>
@@ -1000,6 +1002,11 @@ export default function AdminBayutSync() {
             <TabsTrigger value="developers">Developers</TabsTrigger>
             <TabsTrigger value="history">Sync History</TabsTrigger>
           </TabsList>
+
+          {/* Schedule Tab */}
+          <TabsContent value="schedule">
+            <SyncScheduleTab />
+          </TabsContent>
 
           {/* Properties Tab */}
           <TabsContent value="properties" className="space-y-4">
