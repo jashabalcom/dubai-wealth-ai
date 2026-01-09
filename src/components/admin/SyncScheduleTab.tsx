@@ -14,10 +14,15 @@ import {
   AlertCircle, 
   RefreshCw,
   Settings2,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useSyncSchedule } from '@/hooks/useSyncSchedule';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function SyncScheduleTab() {
   const {
@@ -30,6 +35,60 @@ export function SyncScheduleTab() {
     updateScheduleTime,
     runNow,
   } = useSyncSchedule();
+
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<{
+    tested: boolean;
+    success: boolean;
+    message: string;
+    details?: any;
+  } | null>(null);
+
+  const testConnection = async () => {
+    setIsTestingConnection(true);
+    setConnectionStatus(null);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('test-bayut-connection');
+      
+      if (error) {
+        setConnectionStatus({
+          tested: true,
+          success: false,
+          message: error.message || 'Connection test failed',
+        });
+        toast.error('API connection test failed');
+        return;
+      }
+
+      if (data?.success) {
+        setConnectionStatus({
+          tested: true,
+          success: true,
+          message: data.message || 'Connection successful',
+          details: data.diagnosis,
+        });
+        toast.success('API connection verified!');
+      } else {
+        setConnectionStatus({
+          tested: true,
+          success: false,
+          message: data?.diagnosis?.recommendation || data?.error || 'Connection failed',
+          details: data?.diagnosis,
+        });
+        toast.error(data?.diagnosis?.issue || 'API connection failed');
+      }
+    } catch (err) {
+      setConnectionStatus({
+        tested: true,
+        success: false,
+        message: err instanceof Error ? err.message : 'Unknown error',
+      });
+      toast.error('Connection test error');
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -140,25 +199,78 @@ export function SyncScheduleTab() {
             </div>
           </div>
 
-          {/* Run Now Button */}
-          <Button
-            onClick={runNow}
-            disabled={isRunningNow}
-            className="w-full"
-            variant={schedule.is_enabled ? "default" : "secondary"}
-          >
-            {isRunningNow ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Running Sync...
-              </>
-            ) : (
-              <>
-                <PlayCircle className="h-4 w-4 mr-2" />
-                Run Sync Now
-              </>
-            )}
-          </Button>
+          {/* Connection Status */}
+          {connectionStatus?.tested && (
+            <div className={`p-4 rounded-lg border ${
+              connectionStatus.success 
+                ? 'bg-emerald-500/10 border-emerald-500/30' 
+                : 'bg-red-500/10 border-red-500/30'
+            }`}>
+              <div className="flex items-start gap-3">
+                {connectionStatus.success ? (
+                  <Wifi className="h-5 w-5 text-emerald-400 mt-0.5" />
+                ) : (
+                  <WifiOff className="h-5 w-5 text-red-400 mt-0.5" />
+                )}
+                <div className="flex-1 space-y-1">
+                  <p className={`text-sm font-medium ${
+                    connectionStatus.success ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    {connectionStatus.success ? 'API Connected' : 'API Connection Failed'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {connectionStatus.message}
+                  </p>
+                  {connectionStatus.details && !connectionStatus.success && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Key prefix: {connectionStatus.details.keyPrefix} • 
+                      Status: {connectionStatus.details.httpStatus}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button
+              onClick={testConnection}
+              disabled={isTestingConnection}
+              variant="outline"
+              className="flex-1"
+            >
+              {isTestingConnection ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Testing...
+                </>
+              ) : (
+                <>
+                  <Wifi className="h-4 w-4 mr-2" />
+                  Test API Connection
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={runNow}
+              disabled={isRunningNow}
+              className="flex-1"
+              variant={schedule.is_enabled ? "default" : "secondary"}
+            >
+              {isRunningNow ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="h-4 w-4 mr-2" />
+                  Run Sync Now
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
