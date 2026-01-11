@@ -17,6 +17,7 @@ import { EmailVerificationBanner } from "@/components/freemium/EmailVerification
 import { OfflineBanner } from "@/components/ui/offline-banner";
 import { SkipNavigation, RouteAnnouncer } from "@/components/a11y/SkipNavigation";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -60,6 +61,7 @@ const App = () => (
               <AnimatedRoutes />
               <CookieConsent />
               <InstallPrompt />
+              <FeedbackWidget />
             </BrowserRouter>
           </TooltipProvider>
         </OnlinePresenceProvider>
