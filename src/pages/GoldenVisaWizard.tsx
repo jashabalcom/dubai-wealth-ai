@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Award, Loader2, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { Award, Loader2, ChevronRight, ChevronLeft, Check, Lock, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
 import { GoldenVisaDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO } from '@/lib/seo-config';
+import { hasEliteAccess } from '@/lib/tier-access';
 
 interface GoldenVisaAnalysis {
   eligibilityScore: number;
@@ -67,7 +69,7 @@ const TIMELINES = [
 ];
 
 export default function GoldenVisaWizard() {
-  const { user } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<GoldenVisaAnalysis | null>(null);
@@ -382,6 +384,43 @@ export default function GoldenVisaWizard() {
         return null;
     }
   };
+
+  // Auth loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Tier gate - Elite+ only
+  if (!hasEliteAccess(profile?.membership_tier)) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <SEOHead {...PAGE_SEO.goldenVisa} />
+        <Navbar />
+        <main className="flex-1 container mx-auto px-4 pt-28 md:pt-32 pb-16 flex items-center justify-center">
+          <div className="max-w-md text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/10 flex items-center justify-center">
+              <Lock className="h-10 w-10 text-gold" />
+            </div>
+            <h1 className="text-3xl font-bold mb-4">Elite Members Only</h1>
+            <p className="text-muted-foreground mb-8">
+              The Golden Visa Wizard is an exclusive AI-powered tool for Elite members. Upgrade your membership to get personalized guidance on UAE residency through investment.
+            </p>
+            <Link to="/#membership">
+              <Button className="bg-gold hover:bg-gold/90 text-background">
+                <Crown className="h-4 w-4 mr-2" />
+                Upgrade to Elite
+              </Button>
+            </Link>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

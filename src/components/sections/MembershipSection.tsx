@@ -77,11 +77,11 @@ const tiers = [
   },
   {
     name: "Private",
-    monthlyPrice: STRIPE_TIERS.private.monthly.priceDisplay,
-    annualPrice: STRIPE_TIERS.private.annual.monthlyEquivalent,
-    period: "/month",
-    annualPeriod: "/month (billed yearly)",
-    annualSavings: STRIPE_TIERS.private.annual.savingsDisplay,
+    monthlyPrice: "Custom",
+    annualPrice: "Custom",
+    period: "",
+    annualPeriod: "",
+    annualSavings: null,
     description: "You now have a team in Dubai.",
     features: [
       "Everything in Pro, plus:",
@@ -91,12 +91,13 @@ const tiers = [
       "Same-day priority response",
       "White-glove transaction support",
     ],
-    cta: "Contact Us",
+    cta: "Request Access",
     variant: "private" as const,
     highlighted: false,
     badge: "Concierge",
     tier: "private" as const,
     icon: Shield,
+    isApplication: true,
   },
 ];
 
@@ -219,10 +220,17 @@ export function MembershipSection() {
                     <span className="text-3xl md:text-4xl font-serif text-foreground">
                       {isAnnual ? tier.annualPrice : tier.monthlyPrice}
                     </span>
-                    <span className="text-muted-foreground text-sm">
-                      {isAnnual ? tier.annualPeriod : tier.period}
-                    </span>
+                    {(isAnnual ? tier.annualPeriod : tier.period) && (
+                      <span className="text-muted-foreground text-sm">
+                        {isAnnual ? tier.annualPeriod : tier.period}
+                      </span>
+                    )}
                   </div>
+                  {'isApplication' in tier && tier.isApplication && (
+                    <span className="inline-block mt-2 text-xs text-gold font-medium">
+                      By Application Only
+                    </span>
+                  )}
                   {isAnnual && tier.annualSavings && (
                     <span className="inline-block mt-2 text-xs text-emerald-500 font-medium">
                       {tier.annualSavings}

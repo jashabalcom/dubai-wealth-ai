@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Crown, Lock } from 'lucide-react';
+import { hasEliteAccess } from '@/lib/tier-access';
 import { Link, Navigate } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -36,9 +37,9 @@ export default function Portfolio() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
-  // Create portfolio on first load for Elite users
+  // Create portfolio on first load for Elite+ users
   useEffect(() => {
-    if (user && profile?.membership_tier === 'elite' && !portfolio && !loading) {
+    if (user && hasEliteAccess(profile?.membership_tier) && !portfolio && !loading) {
       createPortfolio.mutate();
     }
   }, [user, profile, portfolio, loading]);
@@ -63,8 +64,8 @@ export default function Portfolio() {
     return <Navigate to="/auth" replace />;
   }
 
-  // Non-Elite access restriction
-  if (profile?.membership_tier !== 'elite') {
+  // Non-Elite+ access restriction
+  if (!hasEliteAccess(profile?.membership_tier)) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
