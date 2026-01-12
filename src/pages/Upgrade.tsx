@@ -32,6 +32,15 @@ const Upgrade = () => {
   };
 
   const getPrice = (tier: 'investor' | 'elite' | 'private') => {
+    // Private tier shows "By Application" instead of price
+    if (tier === 'private') {
+      return {
+        display: 'Custom',
+        period: '',
+        isApplication: true,
+      };
+    }
+    
     const tierConfig = MEMBERSHIP_TIERS[tier];
     if (billingPeriod === 'annual') {
       return {
@@ -318,13 +327,12 @@ const Upgrade = () => {
                     </div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold">{getPrice('private').display}</span>
-                      <span className="text-muted-foreground">{getPrice('private').period}</span>
+                      {getPrice('private').period && (
+                        <span className="text-muted-foreground">{getPrice('private').period}</span>
+                      )}
                     </div>
-                    {'billedAs' in getPrice('private') && (
-                      <div className="mt-1 space-y-0.5">
-                        <p className="text-xs text-muted-foreground">{getPrice('private').billedAs}</p>
-                        <p className="text-xs font-medium text-green-400">Save {getPrice('private').savings}/year</p>
-                      </div>
+                    {'isApplication' in getPrice('private') && (
+                      <p className="text-xs text-gold mt-1">By Application Only</p>
                     )}
                     <CardDescription className="mt-2">
                       High-touch advisory with your dedicated team in Dubai

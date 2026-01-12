@@ -14,6 +14,7 @@ import { SortingTabs, SortOption, sortPosts } from '@/components/community/Sorti
 import { useCommunity } from '@/hooks/useCommunity';
 import { useProfile } from '@/hooks/useProfile';
 import { COMMUNITY_LAYOUT } from '@/lib/designTokens';
+import { hasInvestorAccess } from '@/lib/tier-access';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -31,7 +32,7 @@ const itemVariants = {
 export default function DiscussionsPage() {
   const { profile } = useProfile();
   const [sortBy, setSortBy] = useState<SortOption>('hot');
-  const canParticipate = profile?.membership_tier === 'investor' || profile?.membership_tier === 'elite';
+  const canParticipate = hasInvestorAccess(profile?.membership_tier);
   
   const {
     channels,

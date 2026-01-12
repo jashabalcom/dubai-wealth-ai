@@ -94,7 +94,16 @@ export default function Pricing() {
       return { price: tier.priceDisplay, period: tier.period };
     }
     
-    const paidTier = tier as typeof MEMBERSHIP_TIERS.investor | typeof MEMBERSHIP_TIERS.elite | typeof MEMBERSHIP_TIERS.private;
+    // Private tier shows "By Application" instead of price
+    if (tier.id === 'private') {
+      return {
+        price: 'Custom',
+        period: '',
+        isApplication: true,
+      };
+    }
+    
+    const paidTier = tier as typeof MEMBERSHIP_TIERS.investor | typeof MEMBERSHIP_TIERS.elite;
     
     if (billingPeriod === 'annual') {
       return {
@@ -243,8 +252,13 @@ export default function Pricing() {
                         <span className="text-3xl md:text-4xl font-serif text-foreground">
                           {priceInfo.price}
                         </span>
-                        <span className="text-muted-foreground text-sm">{priceInfo.period}</span>
+                        {priceInfo.period && (
+                          <span className="text-muted-foreground text-sm">{priceInfo.period}</span>
+                        )}
                       </div>
+                      {'isApplication' in priceInfo && (
+                        <p className="text-xs text-gold mt-1">By Application Only</p>
+                      )}
                       {'billedAs' in priceInfo && (
                         <div className="mt-2 space-y-1">
                           <p className="text-xs text-muted-foreground">{priceInfo.billedAs} ({priceInfo.fullPrice})</p>
@@ -345,7 +359,7 @@ export default function Pricing() {
                         Private
                       </div>
                       <div className="text-sm text-gold/70">
-                        {billingPeriod === 'annual' ? '$125/mo' : '$149/mo'}
+                        By Application
                       </div>
                     </div>
                   </div>
