@@ -33,6 +33,11 @@ interface InquiryRequest {
   phone: string;
   message?: string;
   userId?: string;
+  // Consent fields
+  agentSharingConsent: boolean;
+  dataConsent?: boolean; // Only for guests
+  consentTimestamp: string;
+  isLoggedIn: boolean;
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
@@ -139,7 +144,7 @@ serve(async (req) => {
       canShowDirectContact 
     });
 
-    // Save inquiry to database
+    // Save inquiry to database with consent fields
     const { data: savedInquiry, error: insertError } = await supabaseClient
       .from('property_inquiries')
       .insert({
@@ -153,6 +158,9 @@ serve(async (req) => {
         inquiry_type: inquiry.inquiryType,
         source: routeToAgent ? 'direct' : 'platform_routed',
         status: 'new',
+        agent_sharing_consent: inquiry.agentSharingConsent || false,
+        data_consent: inquiry.dataConsent || false,
+        consent_timestamp: inquiry.consentTimestamp || new Date().toISOString(),
       })
       .select()
       .single();
@@ -161,6 +169,44 @@ serve(async (req) => {
       logStep("Warning: Failed to save inquiry", { error: insertError.message });
     } else {
       logStep("Inquiry saved", { inquiryId: savedInquiry?.id });
+      
+      // Store consent records for audit trail
+      const consentRecords = [];
+      
+      // Agent sharing consent - always recorded
+      consentRecords.push({
+        user_id: inquiry.userId || null,
+        form_type: 'property_inquiry',
+        consent_type: 'agent_sharing',
+        consent_given: inquiry.agentSharingConsent,
+        consent_text: 'I consent to my contact details being shared with a RERA-registered real estate agent who may contact me via phone, email, or WhatsApp regarding this property.',
+        consent_version: '1.0',
+        related_record_id: savedInquiry?.id,
+      });
+      
+      // Data processing consent - only for guests
+      if (!inquiry.isLoggedIn) {
+        consentRecords.push({
+          user_id: inquiry.userId || null,
+          form_type: 'property_inquiry',
+          consent_type: 'data_processing',
+          consent_given: inquiry.dataConsent || false,
+          consent_text: 'I consent to the collection and processing of my personal data (name, email, phone number) for the purpose of responding to my inquiry, in accordance with UAE Federal Personal Data Protection Law.',
+          consent_version: '1.0',
+          related_record_id: savedInquiry?.id,
+        });
+      }
+      
+      // Insert consent records
+      const { error: consentError } = await supabaseClient
+        .from('user_consents')
+        .insert(consentRecords);
+      
+      if (consentError) {
+        logStep("Warning: Failed to save consent records", { error: consentError.message });
+      } else {
+        logStep("Consent records saved", { count: consentRecords.length });
+      }
     }
 
     // Format price

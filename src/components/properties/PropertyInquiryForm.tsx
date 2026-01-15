@@ -13,15 +13,26 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { trackPropertyInquiry } from '@/lib/analytics';
 import { AuthPromptDialog } from './AuthPromptDialog';
+import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox';
+import { CONSENT_TEXTS } from '@/lib/consent-texts';
 
-const inquirySchema = z.object({
+// Schema factory to handle conditional validation based on login status
+const createInquirySchema = (isLoggedIn: boolean) => z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Valid email is required'),
   phone: z.string().min(10, 'Valid phone number is required'),
   message: z.string().optional(),
+  agentSharingConsent: z.boolean().refine(val => val === true, {
+    message: 'You must consent to share your details with the agent'
+  }),
+  dataConsent: isLoggedIn 
+    ? z.boolean().optional() 
+    : z.boolean().refine(val => val === true, {
+        message: 'You must consent to data processing'
+      }),
 });
 
-type InquiryFormData = z.infer<typeof inquirySchema>;
+type InquiryFormData = z.infer<ReturnType<typeof createInquirySchema>>;
 
 interface PropertyInquiryFormProps {
   propertyTitle: string;
@@ -41,15 +52,22 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const { user, profile } = useAuth();
 
-  const { register, handleSubmit, formState: { errors }, reset, getValues, trigger } = useForm<InquiryFormData>({
-    resolver: zodResolver(inquirySchema),
+  const isLoggedIn = !!user;
+
+  const { register, handleSubmit, formState: { errors }, reset, getValues, trigger, watch, setValue } = useForm<InquiryFormData>({
+    resolver: zodResolver(createInquirySchema(isLoggedIn)),
     defaultValues: {
       name: profile?.full_name || '',
       email: profile?.email || user?.email || '',
       phone: '',
       message: '',
+      agentSharingConsent: false,
+      dataConsent: false,
     },
   });
+
+  const agentSharingConsent = watch('agentSharingConsent');
+  const dataConsent = watch('dataConsent');
 
   // Restore pending inquiry data if user just logged in
   useEffect(() => {
@@ -99,6 +117,8 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
     // User is logged in, proceed with submission
     setIsSubmitting(true);
     
+    const consentTimestamp = new Date().toISOString();
+    
     try {
       const { data: response, error } = await supabase.functions.invoke('property-inquiry', {
         body: {
@@ -110,6 +130,10 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
           phone: data.phone,
           message: data.message,
           userId: user.id,
+          agentSharingConsent: data.agentSharingConsent,
+          dataConsent: data.dataConsent,
+          consentTimestamp,
+          isLoggedIn,
         }
       });
 
@@ -261,6 +285,31 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
               />
             </div>
 
+            {/* Consent Checkboxes */}
+            <div className="space-y-3 pt-2 border-t border-border">
+              {/* Data Processing Consent - Only for guests */}
+              {!isLoggedIn && (
+                <ConsentCheckbox
+                  id="dataConsent"
+                  checked={dataConsent || false}
+                  onCheckedChange={(checked) => setValue('dataConsent', checked, { shouldValidate: true })}
+                  label={CONSENT_TEXTS.dataProcessing}
+                  required
+                  error={errors.dataConsent?.message}
+                />
+              )}
+              
+              {/* Agent Sharing Consent - Always required */}
+              <ConsentCheckbox
+                id="agentSharingConsent"
+                checked={agentSharingConsent || false}
+                onCheckedChange={(checked) => setValue('agentSharingConsent', checked, { shouldValidate: true })}
+                label={CONSENT_TEXTS.agentSharing}
+                required
+                error={errors.agentSharingConsent?.message}
+              />
+            </div>
+
             <Button
               type="submit"
               variant="gold"
@@ -284,10 +333,6 @@ export function PropertyInquiryForm({ propertyTitle, propertyId, propertyArea, p
                 </>
               )}
             </Button>
-
-            <p className="text-xs text-muted-foreground text-center">
-              By submitting, you agree to be contacted by a licensed RERA-registered agent regarding this property.
-            </p>
           </motion.form>
         )}
       </AnimatePresence>
