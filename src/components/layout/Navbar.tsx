@@ -152,8 +152,8 @@ export function Navbar() {
         )}
       >
         <div className="container-luxury">
-          <nav className="flex items-center h-16 md:h-20">
-            {/* Logo - Fixed width on left */}
+          <nav className="flex items-center justify-between h-16 md:h-20">
+            {/* Logo */}
             <Link to="/" className="group flex-shrink-0">
               <BrandLogo 
                 variant={useDarkText ? "light" : "dark"} 
@@ -161,8 +161,8 @@ export function Navbar() {
               />
             </Link>
 
-            {/* Center: Navigation Links - centered with flex-1 */}
-            <div className="hidden lg:flex items-center justify-center flex-1 gap-5 xl:gap-8">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-5 xl:gap-8 ml-6 xl:ml-10">
               {navLinks.map((link) => {
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
                 const isActive = link.isRoute && isActiveLink(link.href);
@@ -175,7 +175,7 @@ export function Navbar() {
                         <NavigationMenuItem>
                           <NavigationMenuTrigger 
                             className={cn(
-                              "flex items-center gap-1 bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent h-8 px-0",
+                              "flex items-center gap-1 bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent h-auto px-0",
                               "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
                               isActive 
                                 ? "text-primary" 
@@ -229,7 +229,7 @@ export function Navbar() {
                         <NavigationMenuItem>
                           <NavigationMenuTrigger 
                             className={cn(
-                              "flex items-center gap-1 bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent h-8 px-0",
+                              "flex items-center gap-1 bg-transparent hover:bg-transparent focus:bg-transparent data-[state=open]:bg-transparent h-auto px-0",
                               "text-xs uppercase tracking-[0.15em] font-sans transition-all duration-300",
                               isActive 
                                 ? "text-primary" 
@@ -320,18 +320,18 @@ export function Navbar() {
               })}
             </div>
 
-            {/* Right: CTAs - Fixed width on right */}
-            <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+            {/* CTA Buttons */}
+            <div className="hidden lg:flex items-center gap-4">
               <LanguageSelector />
-              <CurrencyPill className={useDarkText ? "border-border" : "border-secondary-foreground/20"} variant="compact" />
+              <CurrencyPill className={useDarkText ? "border-border" : "border-secondary-foreground/20"} />
               {user ? (
                 <>
-                  {/* Action icons group */}
-                  <div className="flex items-center gap-1">
+                  {/* Action icons group - tighter spacing */}
+                  <div className="flex items-center gap-2">
                     <Link 
                       to="/properties/saved" 
                       className={cn(
-                        "relative p-2 h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors",
+                        "relative p-2 rounded-full hover:bg-muted/50 transition-colors",
                         useDarkText ? "text-foreground" : "text-secondary-foreground",
                         "hover:text-primary"
                       )}
@@ -413,14 +413,14 @@ export function Navbar() {
                 <>
                   <Link to="/auth">
                     <Button variant="ghost" size="sm" className={cn(
-                      "h-9 px-3 hover:text-primary",
+                      "hover:text-primary",
                       useDarkText ? "text-foreground" : "text-secondary-foreground"
                     )}>
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/auth">
-                    <Button variant="hero" size="sm" className="h-9 px-4">
+                    <Button variant="hero" size="sm">
                       Get Started
                     </Button>
                   </Link>
@@ -432,7 +432,7 @@ export function Navbar() {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={cn(
-                "lg:hidden p-2 h-10 w-10 flex items-center justify-center transition-transform duration-200 active:scale-90",
+                "lg:hidden p-2 transition-transform duration-200 active:scale-90",
                 useDarkText ? "text-foreground" : "text-secondary-foreground"
               )}
             >

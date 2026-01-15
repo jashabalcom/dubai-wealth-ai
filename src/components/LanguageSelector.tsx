@@ -25,7 +25,7 @@ export function LanguageSelector() {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-9 gap-2 text-muted-foreground hover:text-foreground"
+          className="gap-2 text-muted-foreground hover:text-foreground"
         >
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline">{currentLanguage.flag}</span>
