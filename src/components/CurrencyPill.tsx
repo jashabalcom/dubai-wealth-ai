@@ -37,7 +37,7 @@ export function CurrencyPill({ className, variant = 'default' }: CurrencyPillPro
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border transition-all duration-200",
+            "flex items-center gap-1.5 px-3 h-9 rounded-full border transition-all duration-200",
             "hover:border-gold/50 hover:bg-gold/5 focus:outline-none focus:ring-2 focus:ring-gold/20",
             "text-sm font-medium",
             open ? "border-gold/50 bg-gold/5" : "border-border bg-background/50 backdrop-blur-sm",

@@ -86,11 +86,11 @@ export function BrandLogo({
         />
       )}
 
-      {/* Tagline - hidden on smallest screens to prevent overlap */}
+      {/* Tagline - hidden on smallest screens, shown on medium+ */}
       {showTagline && (
         <span
           className={cn(
-            "uppercase tracking-[0.2em] text-primary font-sans mt-1.5 hidden sm:block",
+            "uppercase tracking-[0.2em] text-primary font-sans mt-1.5 hidden md:block",
             sizes.tagline
           )}
         >
