@@ -21,6 +21,8 @@ import { GoldenVisaDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO } from '@/lib/seo-config';
 import { hasEliteAccess } from '@/lib/tier-access';
+import { ConsentCheckbox } from '@/components/ui/ConsentCheckbox';
+import { CONSENT_TEXTS } from '@/lib/consent-texts';
 
 interface GoldenVisaAnalysis {
   eligibilityScore: number;
@@ -73,6 +75,7 @@ export default function GoldenVisaWizard() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<GoldenVisaAnalysis | null>(null);
+  const [consentError, setConsentError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -84,10 +87,21 @@ export default function GoldenVisaWizard() {
     timeline: '',
     familySize: 1,
     additionalNotes: '',
+    aiProcessingConsent: false,
+    marketingConsent: false,
   });
 
   const handleSubmit = async () => {
+    // Validate AI processing consent
+    if (!formData.aiProcessingConsent) {
+      setConsentError('You must consent to AI data processing to continue');
+      return;
+    }
+    setConsentError(null);
+    
     setIsLoading(true);
+    const consentTimestamp = new Date().toISOString();
+    
     try {
       const { data, error } = await supabase.functions.invoke('golden-visa-wizard', {
         body: formData,
@@ -98,7 +112,7 @@ export default function GoldenVisaWizard() {
       setAnalysis(data);
       setStep(4);
       
-      // Save submission to database
+      // Save submission to database with consent fields
       await supabase.from('golden_visa_submissions').insert({
         user_id: user?.id || null,
         full_name: formData.fullName,
@@ -112,7 +126,32 @@ export default function GoldenVisaWizard() {
         additional_notes: formData.additionalNotes,
         ai_summary: data.summary,
         ai_recommendations: data.investmentRecommendations,
+        ai_processing_consent: formData.aiProcessingConsent,
+        marketing_consent: formData.marketingConsent,
+        consent_timestamp: consentTimestamp,
       });
+      
+      // Store consent records for audit trail
+      if (user?.id) {
+        await supabase.from('user_consents').insert([
+          {
+            user_id: user.id,
+            form_type: 'golden_visa_wizard',
+            consent_type: 'ai_processing',
+            consent_given: formData.aiProcessingConsent,
+            consent_text: CONSENT_TEXTS.aiProcessing,
+            consent_version: CONSENT_TEXTS.version,
+          },
+          ...(formData.marketingConsent ? [{
+            user_id: user.id,
+            form_type: 'golden_visa_wizard',
+            consent_type: 'marketing',
+            consent_given: formData.marketingConsent,
+            consent_text: CONSENT_TEXTS.marketing,
+            consent_version: CONSENT_TEXTS.version,
+          }] : []),
+        ]);
+      }
       
       toast.success('Analysis complete!');
     } catch (error) {
@@ -130,7 +169,7 @@ export default function GoldenVisaWizard() {
       case 2:
         return formData.currentResidence && formData.investmentBudget && formData.investmentType;
       case 3:
-        return formData.timeline && formData.familySize > 0;
+        return formData.timeline && formData.familySize > 0 && formData.aiProcessingConsent;
       default:
         return true;
     }
@@ -269,6 +308,32 @@ export default function GoldenVisaWizard() {
                 className="min-h-[100px]"
               />
             </div>
+            
+            {/* Consent Checkboxes */}
+            <div className="space-y-4 pt-4 border-t border-border">
+              <p className="text-sm font-medium text-foreground">Data Processing Consent</p>
+              
+              <ConsentCheckbox
+                id="aiProcessingConsent"
+                checked={formData.aiProcessingConsent}
+                onCheckedChange={(checked) => {
+                  setFormData({ ...formData, aiProcessingConsent: checked });
+                  if (checked) setConsentError(null);
+                }}
+                label={CONSENT_TEXTS.aiProcessing}
+                required
+                error={consentError || undefined}
+              />
+              
+              <ConsentCheckbox
+                id="marketingConsent"
+                checked={formData.marketingConsent}
+                onCheckedChange={(checked) => setFormData({ ...formData, marketingConsent: checked })}
+                label={CONSENT_TEXTS.marketing}
+                required={false}
+                showPrivacyLink={false}
+              />
+            </div>
           </div>
         );
 
@@ -356,6 +421,7 @@ export default function GoldenVisaWizard() {
                 onClick={() => {
                   setStep(1);
                   setAnalysis(null);
+                  setConsentError(null);
                   setFormData({
                     fullName: '',
                     email: '',
@@ -366,6 +432,8 @@ export default function GoldenVisaWizard() {
                     timeline: '',
                     familySize: 1,
                     additionalNotes: '',
+                    aiProcessingConsent: false,
+                    marketingConsent: false,
                   });
                 }}
                 variant="outline"

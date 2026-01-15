@@ -2883,8 +2883,10 @@ export type Database = {
       golden_visa_submissions: {
         Row: {
           additional_notes: string | null
+          ai_processing_consent: boolean | null
           ai_recommendations: Json | null
           ai_summary: string | null
+          consent_timestamp: string | null
           created_at: string
           current_residence: string
           email: string
@@ -2893,14 +2895,17 @@ export type Database = {
           id: string
           investment_budget: string
           investment_type: string
+          marketing_consent: boolean | null
           nationality: string
           timeline: string
           user_id: string | null
         }
         Insert: {
           additional_notes?: string | null
+          ai_processing_consent?: boolean | null
           ai_recommendations?: Json | null
           ai_summary?: string | null
+          consent_timestamp?: string | null
           created_at?: string
           current_residence: string
           email: string
@@ -2909,14 +2914,17 @@ export type Database = {
           id?: string
           investment_budget: string
           investment_type: string
+          marketing_consent?: boolean | null
           nationality: string
           timeline: string
           user_id?: string | null
         }
         Update: {
           additional_notes?: string | null
+          ai_processing_consent?: boolean | null
           ai_recommendations?: Json | null
           ai_summary?: string | null
+          consent_timestamp?: string | null
           created_at?: string
           current_residence?: string
           email?: string
@@ -2925,6 +2933,7 @@ export type Database = {
           id?: string
           investment_budget?: string
           investment_type?: string
+          marketing_consent?: boolean | null
           nationality?: string
           timeline?: string
           user_id?: string | null
@@ -5162,7 +5171,10 @@ export type Database = {
       property_inquiries: {
         Row: {
           agent_id: string | null
+          agent_sharing_consent: boolean | null
+          consent_timestamp: string | null
           created_at: string
+          data_consent: boolean | null
           email: string
           id: string
           inquiry_type: string | null
@@ -5178,7 +5190,10 @@ export type Database = {
         }
         Insert: {
           agent_id?: string | null
+          agent_sharing_consent?: boolean | null
+          consent_timestamp?: string | null
           created_at?: string
+          data_consent?: boolean | null
           email: string
           id?: string
           inquiry_type?: string | null
@@ -5194,7 +5209,10 @@ export type Database = {
         }
         Update: {
           agent_id?: string | null
+          agent_sharing_consent?: boolean | null
+          consent_timestamp?: string | null
           created_at?: string
+          data_consent?: boolean | null
           email?: string
           id?: string
           inquiry_type?: string | null
@@ -5797,6 +5815,48 @@ export type Database = {
           id?: string
           metadata?: Json | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_consents: {
+        Row: {
+          consent_given: boolean
+          consent_text: string
+          consent_type: string
+          consent_version: string
+          created_at: string | null
+          form_type: string
+          id: string
+          ip_address: string | null
+          related_record_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consent_given: boolean
+          consent_text: string
+          consent_type: string
+          consent_version?: string
+          created_at?: string | null
+          form_type: string
+          id?: string
+          ip_address?: string | null
+          related_record_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consent_given?: boolean
+          consent_text?: string
+          consent_type?: string
+          consent_version?: string
+          created_at?: string | null
+          form_type?: string
+          id?: string
+          ip_address?: string | null
+          related_record_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
