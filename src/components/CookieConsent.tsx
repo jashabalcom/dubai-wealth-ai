@@ -100,9 +100,9 @@ export const CookieConsent = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-4 left-4 right-4 z-50"
+            className="fixed bottom-0 left-0 right-0 z-[60] pb-safe"
           >
-            <div className="max-w-2xl mx-auto bg-background/90 backdrop-blur-xl border border-primary/20 rounded-2xl shadow-2xl shadow-black/10 px-5 py-4">
+            <div className="max-w-2xl mx-auto bg-background/95 backdrop-blur-xl border-t border-x border-primary/20 rounded-t-2xl shadow-2xl shadow-black/20 px-5 py-4 sm:mx-4 sm:mb-4 sm:border sm:rounded-2xl">
               <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
                 <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
                   <Cookie className="h-4 w-4 shrink-0 text-primary" />

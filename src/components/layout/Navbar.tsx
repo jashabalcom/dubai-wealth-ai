@@ -140,6 +140,14 @@ export function Navbar() {
 
   return (
     <>
+      {/* Skip to main content link for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none"
+      >
+        Skip to main content
+      </a>
+      
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -152,8 +160,8 @@ export function Navbar() {
         )}
       >
         <div className="container-luxury">
-          <nav className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
+          <nav className="flex items-center h-16 md:h-20">
+            {/* Logo - Left Column */}
             <Link to="/" className="group flex-shrink-0">
               <BrandLogo 
                 variant={useDarkText ? "light" : "dark"} 
@@ -161,8 +169,8 @@ export function Navbar() {
               />
             </Link>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-5 xl:gap-8 ml-6 xl:ml-10">
+            {/* Desktop Navigation - Center Column */}
+            <div className="hidden lg:flex flex-1 items-center justify-center gap-6 xl:gap-8">
               {navLinks.map((link) => {
                 const totalBadge = link.hasBadge ? unreadCount + pendingCount : 0;
                 const isActive = link.isRoute && isActiveLink(link.href);
@@ -320,10 +328,10 @@ export function Navbar() {
               })}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="hidden lg:flex items-center gap-4">
+            {/* CTA Buttons - Right Column */}
+            <div className="hidden lg:flex items-center gap-3 flex-shrink-0 ml-auto">
               <LanguageSelector />
-              <CurrencyPill className={useDarkText ? "border-border" : "border-secondary-foreground/20"} />
+              <CurrencyPill className={cn("h-9", useDarkText ? "border-border" : "border-secondary-foreground/20")} />
               {user ? (
                 <>
                   {/* Action icons group - tighter spacing */}
