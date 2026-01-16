@@ -125,6 +125,125 @@ function getStatusCode(pattern: string): number {
 }
 
 // =============================================================================
+// AUTHENTICATION HELPERS
+// =============================================================================
+
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
+export interface AuthResult {
+  success: boolean;
+  userId?: string;
+  email?: string;
+  error?: string;
+  statusCode?: number;
+}
+
+export interface AdminAuthResult extends AuthResult {
+  isAdmin: boolean;
+}
+
+/**
+ * Verify JWT token and return user info
+ * Use this for authenticated endpoints
+ */
+export async function verifyAuth(req: Request, supabase: SupabaseClient): Promise<AuthResult> {
+  const authHeader = req.headers.get("Authorization");
+  
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { success: false, error: "Authorization required", statusCode: 401 };
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await supabase.auth.getUser(token);
+
+  if (error || !data.user) {
+    return { success: false, error: "Invalid or expired token", statusCode: 401 };
+  }
+
+  return {
+    success: true,
+    userId: data.user.id,
+    email: data.user.email,
+  };
+}
+
+/**
+ * Verify JWT token and check admin role
+ * Use this for admin-only endpoints
+ */
+export async function verifyAdminAuth(req: Request, supabase: SupabaseClient): Promise<AdminAuthResult> {
+  const authResult = await verifyAuth(req, supabase);
+  
+  if (!authResult.success) {
+    return { ...authResult, isAdmin: false };
+  }
+
+  const { data: isAdmin } = await supabase.rpc('has_role', { 
+    _user_id: authResult.userId, 
+    _role: 'admin' 
+  });
+
+  if (!isAdmin) {
+    return { 
+      success: false, 
+      error: "Admin access required", 
+      statusCode: 403,
+      userId: authResult.userId,
+      email: authResult.email,
+      isAdmin: false 
+    };
+  }
+
+  return { 
+    ...authResult, 
+    isAdmin: true 
+  };
+}
+
+/**
+ * Get client IP for rate limiting and audit logging
+ */
+export function getClientIp(req: Request): string {
+  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+         req.headers.get("x-real-ip") ||
+         "unknown";
+}
+
+/**
+ * Log security event to audit table
+ */
+export async function logSecurityEvent(
+  supabase: SupabaseClient,
+  eventType: string,
+  details: {
+    userId?: string;
+    ip?: string;
+    userAgent?: string;
+    action?: string;
+    outcome?: string;
+    resourceType?: string;
+    resourceId?: string;
+    metadata?: Record<string, unknown>;
+  }
+): Promise<void> {
+  try {
+    await supabase.from('security_audit_log').insert({
+      event_type: eventType,
+      user_id: details.userId,
+      ip_address: details.ip,
+      user_agent: details.userAgent,
+      action: details.action,
+      outcome: details.outcome,
+      resource_type: details.resourceType,
+      resource_id: details.resourceId,
+      details: details.metadata,
+    });
+  } catch (error) {
+    console.error('[Security] Failed to log security event:', error);
+  }
+}
+
+// =============================================================================
 // AI PROMPT INPUT SANITIZATION
 // =============================================================================
 

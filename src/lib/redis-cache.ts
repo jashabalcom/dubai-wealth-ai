@@ -60,7 +60,8 @@ function hashString(str: string): string {
  */
 class RedisCache {
   private localCache = new Map<string, { data: unknown; expiresAt: number }>();
-  private maxLocalSize = 50;
+  private maxLocalSize = 500; // Increased from 50 for better hit rates at scale
+  private cacheStats = { hits: 0, misses: 0, sets: 0 };
 
   /**
    * Get a value from cache (checks local first, then Redis)
@@ -69,11 +70,13 @@ class RedisCache {
     // Check local cache first
     const local = this.localCache.get(key);
     if (local && Date.now() < local.expiresAt) {
+      this.cacheStats.hits++;
       return local.data as T;
     }
     if (local) {
       this.localCache.delete(key);
     }
+    this.cacheStats.misses++;
 
     try {
       const { data, error } = await supabase.functions.invoke('redis-cache', {
@@ -104,6 +107,7 @@ class RedisCache {
   async set<T>(key: string, value: T, ttlSeconds: number): Promise<boolean> {
     // Always set locally first for immediate availability
     this.setLocal(key, value, ttlSeconds);
+    this.cacheStats.sets++;
 
     try {
       const { error } = await supabase.functions.invoke('redis-cache', {
@@ -243,6 +247,25 @@ class RedisCache {
         this.localCache.delete(key);
       }
     }
+  }
+
+  /**
+   * Get cache statistics for monitoring
+   */
+  getStats(): { hits: number; misses: number; sets: number; hitRate: number; localSize: number } {
+    const total = this.cacheStats.hits + this.cacheStats.misses;
+    return {
+      ...this.cacheStats,
+      hitRate: total > 0 ? this.cacheStats.hits / total : 0,
+      localSize: this.localCache.size,
+    };
+  }
+
+  /**
+   * Reset stats (useful for testing)
+   */
+  resetStats(): void {
+    this.cacheStats = { hits: 0, misses: 0, sets: 0 };
   }
 }
 

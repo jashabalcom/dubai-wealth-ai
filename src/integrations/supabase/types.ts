@@ -5596,6 +5596,48 @@ export type Database = {
           },
         ]
       }
+      security_audit_log: {
+        Row: {
+          action: string | null
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          outcome: string | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action?: string | null
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          outcome?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string | null
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          outcome?: string | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
@@ -6504,6 +6546,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_group_member: { Args: { group_uuid: string }; Returns: boolean }
       log_security_event: {
         Args: {
