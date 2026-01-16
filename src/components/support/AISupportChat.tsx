@@ -78,6 +78,11 @@ export function AISupportChat() {
     resolveConversation,
   } = useSupportChat();
 
+  // Only show chat for authenticated users
+  if (!user) {
+    return null;
+  }
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
