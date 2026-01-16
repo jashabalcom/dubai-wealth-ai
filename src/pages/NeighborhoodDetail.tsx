@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
@@ -18,6 +18,7 @@ import { NeighborhoodLeadCapture } from '@/components/leadgen/NeighborhoodLeadCa
 import { useCountUp, useInView } from '@/hooks/useCountUp';
 import { MarketEstimateDisclaimer } from '@/components/ui/disclaimers';
 import { NeighborhoodExplorer } from '@/components/neighborhoods/NeighborhoodExplorer';
+import { generateFAQSchema, generateBreadcrumbSchema, SITE_CONFIG } from '@/lib/seo-config';
 
 export default function NeighborhoodDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -39,6 +40,76 @@ export default function NeighborhoodDetail() {
   const yoyCount = useCountUp({ end: Math.abs(neighborhood?.yoy_appreciation || 0) * 10, duration: 2000, decimals: 0, enabled: statsInView && !!neighborhood });
 
   const lifestyleLabel = neighborhood?.lifestyle_type?.charAt(0).toUpperCase() + (neighborhood?.lifestyle_type?.slice(1) || '') || '';
+
+  // Generate dynamic FAQs based on neighborhood data
+  const neighborhoodFAQs = useMemo(() => {
+    if (!neighborhood) return [];
+    
+    const faqs: Array<{ question: string; answer: string }> = [];
+    
+    if (neighborhood.avg_price_sqft) {
+      faqs.push({
+        question: `What is the average price per square foot in ${neighborhood.name}?`,
+        answer: `The average price per square foot in ${neighborhood.name} is AED ${neighborhood.avg_price_sqft.toLocaleString()}. This figure is based on recent market data and may vary by property type and specific location within the area.`
+      });
+    }
+    
+    faqs.push({
+      question: `Is ${neighborhood.name} freehold for foreigners?`,
+      answer: neighborhood.is_freehold 
+        ? `Yes, ${neighborhood.name} is a freehold area where foreign nationals can purchase property with full ownership rights. This makes it an attractive option for international investors.`
+        : `${neighborhood.name} may have restrictions on foreign ownership. We recommend consulting with a licensed real estate professional for the latest regulations.`
+    });
+    
+    if (neighborhood.avg_rental_yield) {
+      faqs.push({
+        question: `What is the rental yield in ${neighborhood.name}?`,
+        answer: `${neighborhood.name} offers an average rental yield of ${neighborhood.avg_rental_yield.toFixed(1)}%. This is calculated based on current market rents and property prices in the area.`
+      });
+    }
+    
+    faqs.push({
+      question: `Does ${neighborhood.name} qualify for UAE Golden Visa?`,
+      answer: neighborhood.golden_visa_eligible
+        ? `Yes, properties in ${neighborhood.name} can qualify for the UAE Golden Visa program when the property value meets the minimum threshold of AED 2 million. This visa grants 10-year residency to the investor and their family.`
+        : `Golden Visa eligibility depends on the individual property value meeting the AED 2 million threshold. Contact us for specific properties that qualify.`
+    });
+    
+    if (neighborhood.has_metro_access) {
+      faqs.push({
+        question: `Does ${neighborhood.name} have metro access?`,
+        answer: `Yes, ${neighborhood.name} has convenient access to the Dubai Metro, making commuting easy and adding value to properties in the area.`
+      });
+    }
+    
+    if (neighborhood.has_beach_access) {
+      faqs.push({
+        question: `Does ${neighborhood.name} have beach access?`,
+        answer: `Yes, ${neighborhood.name} offers beach access, making it ideal for those seeking a coastal lifestyle in Dubai.`
+      });
+    }
+    
+    return faqs;
+  }, [neighborhood]);
+
+  // Generate breadcrumb schema
+  const breadcrumbItems = useMemo(() => {
+    if (!neighborhood) return [];
+    return [
+      { name: 'Home', url: SITE_CONFIG.url },
+      { name: 'Neighborhoods', url: `${SITE_CONFIG.url}/neighborhoods` },
+      { name: neighborhood.name, url: `${SITE_CONFIG.url}/neighborhoods/${slug}` }
+    ];
+  }, [neighborhood, slug]);
+
+  // Combined structured data
+  const structuredData = useMemo(() => {
+    if (!neighborhood) return undefined;
+    return [
+      generateFAQSchema(neighborhoodFAQs),
+      generateBreadcrumbSchema(breadcrumbItems)
+    ];
+  }, [neighborhoodFAQs, breadcrumbItems, neighborhood]);
 
   if (isLoading) {
     return (
@@ -86,6 +157,7 @@ export default function NeighborhoodDetail() {
         title={`${neighborhood.name} Dubai | Investment Guide, Schools & Restaurants`}
         description={neighborhood.description || `Explore ${neighborhood.name} in Dubai. Investment analysis, top schools, restaurants, and everything you need to know about living in ${neighborhood.name}.`}
         keywords={[`${neighborhood.name} Dubai`, `${neighborhood.name} property`, `${neighborhood.name} real estate`, `invest in ${neighborhood.name}`, `${neighborhood.name} schools`]}
+        structuredData={structuredData}
       />
       <Navbar />
       
