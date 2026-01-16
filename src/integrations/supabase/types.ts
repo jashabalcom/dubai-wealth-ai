@@ -400,10 +400,12 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           bank_details: Json | null
+          bank_details_encrypted: string | null
           commission_rate: number | null
           created_at: string
           id: string
           paypal_email: string | null
+          paypal_email_encrypted: string | null
           pending_earnings: number | null
           preferred_payout_method: string | null
           referral_code: string
@@ -425,10 +427,12 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           bank_details?: Json | null
+          bank_details_encrypted?: string | null
           commission_rate?: number | null
           created_at?: string
           id?: string
           paypal_email?: string | null
+          paypal_email_encrypted?: string | null
           pending_earnings?: number | null
           preferred_payout_method?: string | null
           referral_code: string
@@ -450,10 +454,12 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           bank_details?: Json | null
+          bank_details_encrypted?: string | null
           commission_rate?: number | null
           created_at?: string
           id?: string
           paypal_email?: string | null
+          paypal_email_encrypted?: string | null
           pending_earnings?: number | null
           preferred_payout_method?: string | null
           referral_code?: string
@@ -2890,13 +2896,16 @@ export type Database = {
           created_at: string
           current_residence: string
           email: string
+          email_encrypted: string | null
           family_size: number
           full_name: string
           id: string
           investment_budget: string
+          investment_budget_encrypted: string | null
           investment_type: string
           marketing_consent: boolean | null
           nationality: string
+          phone_encrypted: string | null
           timeline: string
           user_id: string | null
         }
@@ -2909,13 +2918,16 @@ export type Database = {
           created_at?: string
           current_residence: string
           email: string
+          email_encrypted?: string | null
           family_size?: number
           full_name: string
           id?: string
           investment_budget: string
+          investment_budget_encrypted?: string | null
           investment_type: string
           marketing_consent?: boolean | null
           nationality: string
+          phone_encrypted?: string | null
           timeline: string
           user_id?: string | null
         }
@@ -2928,13 +2940,16 @@ export type Database = {
           created_at?: string
           current_residence?: string
           email?: string
+          email_encrypted?: string | null
           family_size?: number
           full_name?: string
           id?: string
           investment_budget?: string
+          investment_budget_encrypted?: string | null
           investment_type?: string
           marketing_consent?: boolean | null
           nationality?: string
+          phone_encrypted?: string | null
           timeline?: string
           user_id?: string | null
         }
@@ -3365,6 +3380,7 @@ export type Database = {
           down_payment_amount: number
           down_payment_percent: number
           email: string
+          email_encrypted: string | null
           employment_status: string
           existing_mortgage: boolean | null
           first_time_buyer: boolean | null
@@ -3375,10 +3391,12 @@ export type Database = {
           lead_score: number | null
           loan_amount: number
           loan_term_years: number
+          monthly_income_encrypted: string | null
           monthly_income_range: string
           monthly_payment: number
           partner_notified_at: string | null
           phone: string
+          phone_encrypted: string | null
           preferred_contact_method: string | null
           property_area: string | null
           property_id: string | null
@@ -3405,6 +3423,7 @@ export type Database = {
           down_payment_amount: number
           down_payment_percent: number
           email: string
+          email_encrypted?: string | null
           employment_status: string
           existing_mortgage?: boolean | null
           first_time_buyer?: boolean | null
@@ -3415,10 +3434,12 @@ export type Database = {
           lead_score?: number | null
           loan_amount: number
           loan_term_years: number
+          monthly_income_encrypted?: string | null
           monthly_income_range: string
           monthly_payment: number
           partner_notified_at?: string | null
           phone: string
+          phone_encrypted?: string | null
           preferred_contact_method?: string | null
           property_area?: string | null
           property_id?: string | null
@@ -3445,6 +3466,7 @@ export type Database = {
           down_payment_amount?: number
           down_payment_percent?: number
           email?: string
+          email_encrypted?: string | null
           employment_status?: string
           existing_mortgage?: boolean | null
           first_time_buyer?: boolean | null
@@ -3455,10 +3477,12 @@ export type Database = {
           lead_score?: number | null
           loan_amount?: number
           loan_term_years?: number
+          monthly_income_encrypted?: string | null
           monthly_income_range?: string
           monthly_payment?: number
           partner_notified_at?: string | null
           phone?: string
+          phone_encrypted?: string | null
           preferred_contact_method?: string | null
           property_area?: string | null
           property_id?: string | null
@@ -4474,6 +4498,7 @@ export type Database = {
           country: string | null
           created_at: string
           email: string | null
+          email_encrypted: string | null
           full_name: string | null
           id: string
           investment_goal: string | null
@@ -4498,9 +4523,11 @@ export type Database = {
           notify_inapp_messages: boolean | null
           onboarding_completed_at: string | null
           onboarding_step: number | null
+          phone_encrypted: string | null
           points: number | null
           public_key: string | null
           stripe_customer_id: string | null
+          stripe_customer_id_encrypted: string | null
           timeline: string | null
           updated_at: string
           verified_agent: boolean | null
@@ -4515,6 +4542,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
+          email_encrypted?: string | null
           full_name?: string | null
           id: string
           investment_goal?: string | null
@@ -4539,9 +4567,11 @@ export type Database = {
           notify_inapp_messages?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_step?: number | null
+          phone_encrypted?: string | null
           points?: number | null
           public_key?: string | null
           stripe_customer_id?: string | null
+          stripe_customer_id_encrypted?: string | null
           timeline?: string | null
           updated_at?: string
           verified_agent?: boolean | null
@@ -4556,6 +4586,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           email?: string | null
+          email_encrypted?: string | null
           full_name?: string | null
           id?: string
           investment_goal?: string | null
@@ -4580,9 +4611,11 @@ export type Database = {
           notify_inapp_messages?: boolean | null
           onboarding_completed_at?: string | null
           onboarding_step?: number | null
+          phone_encrypted?: string | null
           points?: number | null
           public_key?: string | null
           stripe_customer_id?: string | null
+          stripe_customer_id_encrypted?: string | null
           timeline?: string | null
           updated_at?: string
           verified_agent?: boolean | null
@@ -5176,12 +5209,14 @@ export type Database = {
           created_at: string
           data_consent: boolean | null
           email: string
+          email_encrypted: string | null
           id: string
           inquiry_type: string | null
           message: string | null
           name: string
           notes: string | null
           phone: string | null
+          phone_encrypted: string | null
           property_id: string
           source: string | null
           status: string | null
@@ -5195,12 +5230,14 @@ export type Database = {
           created_at?: string
           data_consent?: boolean | null
           email: string
+          email_encrypted?: string | null
           id?: string
           inquiry_type?: string | null
           message?: string | null
           name: string
           notes?: string | null
           phone?: string | null
+          phone_encrypted?: string | null
           property_id: string
           source?: string | null
           status?: string | null
@@ -5214,12 +5251,14 @@ export type Database = {
           created_at?: string
           data_consent?: boolean | null
           email?: string
+          email_encrypted?: string | null
           id?: string
           inquiry_type?: string | null
           message?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
+          phone_encrypted?: string | null
           property_id?: string
           source?: string | null
           status?: string | null
@@ -5669,6 +5708,39 @@ export type Database = {
           id?: string
           ip_address?: string | null
           severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sensitive_data_access_log: {
+        Row: {
+          accessed_at: string | null
+          action: string
+          id: string
+          ip_address: string | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accessed_at?: string | null
+          action: string
+          id?: string
+          ip_address?: string | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accessed_at?: string | null
+          action?: string
+          id?: string
+          ip_address?: string | null
+          record_id?: string | null
+          table_name?: string
           user_agent?: string | null
           user_id?: string | null
         }
@@ -6321,6 +6393,8 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_rate_limits: { Args: never; Returns: undefined }
+      decrypt_sensitive: { Args: { ciphertext: string }; Returns: string }
+      encrypt_sensitive: { Args: { plaintext: string }; Returns: string }
       generate_referral_code: { Args: { prefix?: string }; Returns: string }
       get_active_agents: {
         Args: never
@@ -6376,6 +6450,14 @@ export type Database = {
           posts_this_week: number
           total_members: number
         }[]
+      }
+      get_decrypted_affiliate_bank_details: {
+        Args: { affiliate_id: string }
+        Returns: Json
+      }
+      get_decrypted_profile_email: {
+        Args: { profile_id: string }
+        Returns: string
       }
       get_directory_filter_options: { Args: never; Returns: Json }
       get_directory_members: {
