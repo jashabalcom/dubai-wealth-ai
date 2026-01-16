@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { MapPin, Bed, Bath, Maximize, TrendingUp, ArrowRight } from 'lucide-react';
+import { MapPin, Bed, Maximize, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -54,9 +55,9 @@ export function SimilarProperties({
         .eq('location_area', locationArea)
         .gte('price_aed', priceMin)
         .lte('price_aed', priceMax)
-        .limit(3);
+        .limit(4);
 
-      if (!sameAreaError && sameArea && sameArea.length >= 3) {
+      if (!sameAreaError && sameArea && sameArea.length >= 4) {
         return sameArea.map(p => ({
           ...p,
           images: Array.isArray(p.images) ? (p.images as string[]) : [],
@@ -76,7 +77,7 @@ export function SimilarProperties({
         .eq('property_type', propertyType)
         .gte('price_aed', priceMin)
         .lte('price_aed', priceMax)
-        .limit(3 - (sameArea?.length || 0));
+        .limit(4 - (sameArea?.length || 0));
 
       const combined = [...(sameArea || []), ...(otherAreas || [])];
       
@@ -94,15 +95,12 @@ export function SimilarProperties({
     return (
       <div className="p-6 rounded-xl bg-card border border-border">
         <h2 className="font-heading text-xl text-foreground mb-4">Similar Properties</h2>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4">
-              <Skeleton className="w-24 h-20 rounded-lg" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-4 w-1/3" />
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-3">
+              <Skeleton className="w-full aspect-[4/3] rounded-lg" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
             </div>
           ))}
         </div>
@@ -115,57 +113,78 @@ export function SimilarProperties({
   }
 
   return (
-    <div className="p-6 rounded-xl bg-card border border-border">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-heading text-xl text-foreground">Similar Properties</h2>
-        <Link to="/properties">
-          <Button variant="ghost" size="sm">
-            View All
+    <div className="p-6 rounded-xl bg-card/80 backdrop-blur-sm border border-primary/10 overflow-hidden relative">
+      {/* Decorative top border */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+      
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Sparkles className="h-4 w-4 text-primary" />
+          </div>
+          <h2 className="font-serif text-xl text-foreground">Similar Properties</h2>
+        </div>
+        <Link to={`/properties?area=${encodeURIComponent(locationArea)}`}>
+          <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
+            View all in {locationArea}
             <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </Link>
       </div>
       
-      <div className="space-y-4">
-        {properties.map((property) => (
+      {/* Grid Layout - 2x2 on desktop, 1 column on mobile */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {properties.slice(0, 4).map((property) => (
           <Link
             key={property.id}
             to={`/properties/${property.slug}`}
-            className="flex gap-4 group"
+            className="group block"
           >
-            <div className="w-24 h-20 rounded-lg overflow-hidden flex-shrink-0">
-              <img
-                src={property.images[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=200'}
-                alt={property.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
-                <MapPin className="w-3 h-3" />
-                {property.location_area}
-              </p>
-              <h3 className="font-medium text-foreground text-sm line-clamp-1 group-hover:text-gold transition-colors">
-                {property.title}
-              </h3>
-              <p className="font-heading text-gold mt-1">
-                {formatPrice(property.price_aed)}
-              </p>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                <span className="flex items-center gap-0.5">
-                  <Bed className="w-3 h-3" />
-                  {property.bedrooms === 0 ? 'S' : property.bedrooms}
-                </span>
-                <span className="flex items-center gap-0.5">
-                  <Maximize className="w-3 h-3" />
-                  {property.size_sqft.toLocaleString()}
-                </span>
-                {property.rental_yield_estimate && (
-                  <span className="flex items-center gap-0.5 text-emerald-500">
-                    <TrendingUp className="w-3 h-3" />
-                    {property.rental_yield_estimate}%
+            <div className="rounded-xl overflow-hidden border border-border/50 bg-background/50 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
+              {/* Image */}
+              <div className="aspect-[4/3] overflow-hidden relative">
+                <img
+                  src={property.images[0] || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400'}
+                  alt={property.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                {/* Overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Price badge */}
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <Badge className="bg-primary/90 text-primary-foreground backdrop-blur-sm shadow-lg">
+                    {formatPrice(property.price_aed)}
+                  </Badge>
+                  {property.rental_yield_estimate && property.rental_yield_estimate > 0 && (
+                    <Badge variant="outline" className="bg-emerald-500/90 text-white border-0 backdrop-blur-sm">
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      {property.rental_yield_estimate}%
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-3">
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                  <MapPin className="w-3 h-3" />
+                  {property.location_area}
+                </p>
+                <h3 className="font-medium text-foreground text-sm line-clamp-1 group-hover:text-primary transition-colors">
+                  {property.title}
+                </h3>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                  <span className="flex items-center gap-1">
+                    <Bed className="w-3 h-3" />
+                    {property.bedrooms === 0 ? 'Studio' : `${property.bedrooms} BR`}
                   </span>
-                )}
+                  <span className="flex items-center gap-1">
+                    <Maximize className="w-3 h-3" />
+                    {property.size_sqft.toLocaleString()} sqft
+                  </span>
+                </div>
               </div>
             </div>
           </Link>

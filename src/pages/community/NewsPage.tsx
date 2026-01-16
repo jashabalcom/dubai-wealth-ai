@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Newspaper, Clock, ExternalLink, ArrowRight, ChevronLeft } from 'lucide-react';
+import { Newspaper, Clock, ExternalLink, ArrowRight, ChevronLeft, Share2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,8 @@ import { useNews, NewsCategory, NewsArticle } from '@/hooks/useNews';
 import { formatDistanceToNow, format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { SocialShareButtons } from '@/components/news/SocialShareButtons';
+import { SITE_CONFIG } from '@/lib/seo-config';
 
 const CATEGORIES: { value: NewsCategory; label: string }[] = [
   { value: 'all', label: 'All News' },
@@ -229,7 +231,7 @@ function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: ()
           {article.title}
         </h1>
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8 pb-8 border-b border-border">
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 pb-6 border-b border-border">
           <span className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
             {article.reading_time_minutes || 2} min read
@@ -240,6 +242,19 @@ function ArticleDetail({ article, onClose }: { article: NewsArticle; onClose: ()
           <span className="text-muted-foreground/60">
             via {article.source_name}
           </span>
+        </div>
+
+        {/* Social Share Buttons */}
+        <div className="flex items-center gap-3 mb-8 pb-8 border-b border-border">
+          <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+            <Share2 className="h-4 w-4" />
+            Share:
+          </span>
+          <SocialShareButtons 
+            url={`${SITE_CONFIG.url}/news?article=${article.id}`}
+            title={article.title}
+            description={article.excerpt || ''}
+          />
         </div>
 
         {/* Article Content */}
