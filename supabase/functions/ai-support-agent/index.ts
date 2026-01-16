@@ -56,6 +56,19 @@ You are a helpful, knowledgeable, and professional support assistant. Your goal 
 ## Context Usage
 You will receive context about the user including their profile, subscription, and recent activity. Use this to personalize responses.`;
 
+// Tier levels for access checking
+const TIER_LEVELS: Record<string, number> = {
+  free: 0,
+  investor: 1,
+  elite: 2,
+  private: 3,
+};
+
+function hasEliteAccess(tier: string | null | undefined): boolean {
+  const userLevel = TIER_LEVELS[tier || 'free'] ?? 0;
+  return userLevel >= TIER_LEVELS['elite'];
+}
+
 async function fetchUserContext(supabase: any, userId: string) {
   try {
     // Fetch profile

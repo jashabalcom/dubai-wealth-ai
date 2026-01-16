@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { hasEliteAccess } from '@/lib/tier-access';
+import { useToast } from '@/hooks/use-toast';
 
 export interface Message {
   role: 'user' | 'assistant';
@@ -20,7 +22,8 @@ interface SupportChatState {
 const STORAGE_KEY = 'dubai_wealth_support_ticket';
 
 export function useSupportChat() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
   const [state, setState] = useState<SupportChatState>({
     ticketId: null,
     messages: [],
@@ -126,6 +129,16 @@ export function useSupportChat() {
   const requestEscalation = useCallback(async (reason: string) => {
     if (!state.ticketId) return;
 
+    // Check tier access before escalation
+    if (!hasEliteAccess(profile?.membership_tier)) {
+      toast({
+        title: "Elite Membership Required",
+        description: "Live human support is available for Elite and Private members. Upgrade to access priority support.",
+        variant: "default",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('support_tickets')
@@ -152,7 +165,7 @@ export function useSupportChat() {
     } catch (error) {
       console.error('Error escalating:', error);
     }
-  }, [state.ticketId]);
+  }, [state.ticketId, profile?.membership_tier, toast]);
 
   const startNewConversation = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
