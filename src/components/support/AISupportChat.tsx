@@ -78,11 +78,6 @@ export function AISupportChat() {
     resolveConversation,
   } = useSupportChat();
 
-  // Only show chat for authenticated users
-  if (!user) {
-    return null;
-  }
-
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -94,6 +89,11 @@ export function AISupportChat() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+
+  // Only show chat for authenticated users - must be after all hooks
+  if (!user) {
+    return null;
+  }
 
   const handleSend = () => {
     if (inputValue.trim() && !isLoading) {
