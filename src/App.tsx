@@ -18,6 +18,7 @@ import { OfflineBanner } from "@/components/ui/offline-banner";
 import { SkipNavigation, RouteAnnouncer } from "@/components/a11y/SkipNavigation";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { FeedbackWidget } from "@/components/feedback/FeedbackWidget";
+import { AISupportChat } from "@/components/support/AISupportChat";
 import { queryClient } from "@/lib/queryClient";
 
 const App = () => (
@@ -42,6 +43,7 @@ const App = () => (
               <CookieConsent />
               <InstallPrompt />
               <FeedbackWidget />
+              <AISupportChat />
             </BrowserRouter>
           </TooltipProvider>
         </OnlinePresenceProvider>

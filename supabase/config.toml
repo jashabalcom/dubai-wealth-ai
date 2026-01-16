@@ -1,5 +1,8 @@
 project_id = "bswllmynuxkhekqqeznr"
 
+[functions.ai-support-agent]
+verify_jwt = false
+
 [functions.cached-data]
 verify_jwt = false
 
