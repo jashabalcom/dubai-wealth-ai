@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { SecureFieldReveal, SecureContactReveal } from '@/components/admin/SecureFieldReveal';
 import { 
   useMortgageLeads, 
   useMortgageLeadStats, 
@@ -143,6 +145,7 @@ export default function AdminMortgageLeads() {
   };
 
   return (
+    <TooltipProvider>
     <AdminLayout title="Mortgage Leads">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -259,8 +262,20 @@ export default function AdminMortgageLeads() {
                       <td className="p-4">
                         <div>
                           <p className="font-medium">{lead.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{lead.email}</p>
-                          <p className="text-sm text-muted-foreground">{lead.phone}</p>
+                          <SecureFieldReveal
+                            recordId={lead.id}
+                            maskedValue={lead.email}
+                            fieldType="email"
+                            rpcFunction="get_decrypted_mortgage_lead_contact"
+                            className="text-sm"
+                          />
+                          <SecureFieldReveal
+                            recordId={lead.id}
+                            maskedValue={lead.phone}
+                            fieldType="phone"
+                            rpcFunction="get_decrypted_mortgage_lead_contact"
+                            className="text-sm"
+                          />
                         </div>
                       </td>
                       <td className="p-4">
@@ -449,5 +464,6 @@ export default function AdminMortgageLeads() {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+    </TooltipProvider>
   );
 }

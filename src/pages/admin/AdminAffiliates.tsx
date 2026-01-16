@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { SecureFieldReveal } from '@/components/admin/SecureFieldReveal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow, format } from 'date-fns';
@@ -269,6 +271,7 @@ export default function AdminAffiliates() {
   };
 
   return (
+    <TooltipProvider>
     <AdminLayout title="Affiliate Program">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -364,10 +367,13 @@ export default function AdminAffiliates() {
                           <td className="py-3 px-4">{getTypeBadge(affiliate.affiliate_type)}</td>
                           <td className="py-3 px-4">
                             {affiliate.paypal_email ? (
-                              <div className="flex items-center gap-1">
-                                <Mail className="h-3 w-3 text-emerald-500" />
-                                <span className="text-sm truncate max-w-[150px]">{affiliate.paypal_email}</span>
-                              </div>
+                              <SecureFieldReveal
+                                recordId={affiliate.id}
+                                maskedValue={affiliate.paypal_email}
+                                fieldType="paypal"
+                                rpcFunction="get_decrypted_affiliate_paypal"
+                                className="text-sm"
+                              />
                             ) : (
                               <span className="text-sm text-muted-foreground">Not set</span>
                             )}
@@ -859,5 +865,6 @@ export default function AdminAffiliates() {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+    </TooltipProvider>
   );
 }
