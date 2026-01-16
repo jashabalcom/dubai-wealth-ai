@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { getOptimizedImageUrl, generateSrcSet, IMAGE_SIZES } from '@/lib/imageUtils';
 
-interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface ProgressiveImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'onLoad' | 'onError'> {
   src: string;
   alt: string;
   width?: number;
@@ -15,6 +15,8 @@ interface ProgressiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement
   objectFit?: 'cover' | 'contain' | 'fill' | 'none';
   fallback?: string;
   onLoadComplete?: () => void;
+  onLoad?: (event: React.SyntheticEvent<HTMLImageElement>) => void;
+  onError?: (event: React.SyntheticEvent<HTMLImageElement>) => void;
   showSkeleton?: boolean;
 }
 
@@ -50,6 +52,8 @@ export function ProgressiveImage({
   objectFit = 'cover',
   fallback = '/placeholder.svg',
   onLoadComplete,
+  onLoad: onLoadProp,
+  onError: onErrorProp,
   showSkeleton = true,
   className,
   ...props
@@ -86,16 +90,19 @@ export function ProgressiveImage({
     return getOptimizedImageUrl(src, 20, 20); // Tiny placeholder
   }, [src]);
 
-  const handleLoad = React.useCallback(() => {
+  const handleLoad = React.useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
     setIsLoaded(true);
     onLoadComplete?.();
-  }, [onLoadComplete]);
+    onLoadProp?.(event);
+  }, [onLoadComplete, onLoadProp]);
 
-  const handleError = React.useCallback(() => {
+  const handleError = React.useCallback((event: React.SyntheticEvent<HTMLImageElement>) => {
+    console.warn(`[ProgressiveImage] Failed to load: ${src}`);
     setHasError(true);
     setIsLoaded(true);
     setCurrentSrc(fallback);
-  }, [fallback]);
+    onErrorProp?.(event);
+  }, [fallback, onErrorProp, src]);
 
   // Reset state when src changes
   React.useEffect(() => {

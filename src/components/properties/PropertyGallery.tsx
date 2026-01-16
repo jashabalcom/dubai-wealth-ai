@@ -37,11 +37,27 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
     setCurrentIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
   }, [displayImages.length]);
 
-  // Handle image failures by URL
-  const handleImageError = (url: string) => {
+  // Handle image failures by URL - auto-advance if current image fails
+  const handleImageError = useCallback((url: string, isCurrentImage: boolean = false) => {
     console.warn(`[PropertyGallery] Image failed to load: ${url}`);
-    setFailedImages(prev => new Set(prev).add(url));
-  };
+    setFailedImages(prev => {
+      const newSet = new Set(prev);
+      newSet.add(url);
+      return newSet;
+    });
+    
+    // Auto-advance if current image in lightbox/hero fails
+    if (isCurrentImage && displayImages.length > 1) {
+      const currentUrl = displayImages[currentIndex];
+      if (currentUrl === url) {
+        // Move to next valid image
+        const nextValidIndex = displayImages.findIndex((img, idx) => idx !== currentIndex && !failedImages.has(img));
+        if (nextValidIndex !== -1) {
+          setCurrentIndex(nextValidIndex);
+        }
+      }
+    }
+  }, [currentIndex, displayImages, failedImages]);
 
   // Reset current index if it exceeds valid images
   useEffect(() => {
@@ -90,8 +106,9 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
             className="w-full h-full"
             objectFit="cover"
             priority
-            onLoad={() => setIsLoading(false)}
-            onError={() => handleImageError(displayImages[currentIndex])}
+            sizes="100vw"
+            onLoadComplete={() => setIsLoading(false)}
+            onError={() => handleImageError(displayImages[currentIndex], true)}
           />
           
           {/* Zoom Overlay */}
@@ -161,6 +178,8 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-full"
                     objectFit="cover"
+                    sizes="80px"
+                    showSkeleton={false}
                     onError={() => handleImageError(image)}
                   />
                 </button>
@@ -210,7 +229,8 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
                 className="max-w-[90vw] max-h-[85vh]"
                 objectFit="contain"
                 priority
-                onError={() => handleImageError(displayImages[currentIndex])}
+                sizes="90vw"
+                onError={() => handleImageError(displayImages[currentIndex], true)}
                 fallback={fallbackImage}
               />
             </motion.div>
@@ -256,6 +276,8 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
                     alt={`Thumbnail ${index + 1}`}
                     className="w-full h-full"
                     objectFit="cover"
+                    sizes="64px"
+                    showSkeleton={false}
                     onError={() => handleImageError(image)}
                   />
                 </button>
