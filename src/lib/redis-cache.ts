@@ -215,9 +215,23 @@ class RedisCache {
   }
 
   /**
-   * Set value in local cache only
+   * Get value from local cache only (public for useCachedData hook)
    */
-  private setLocal<T>(key: string, value: T, ttlSeconds: number): void {
+  getLocal<T>(key: string): T | null {
+    const local = this.localCache.get(key);
+    if (local && Date.now() < local.expiresAt) {
+      return local.data as T;
+    }
+    if (local) {
+      this.localCache.delete(key);
+    }
+    return null;
+  }
+
+  /**
+   * Set value in local cache only (public for useCachedData hook)
+   */
+  setLocal<T>(key: string, value: T, ttlSeconds: number): void {
     // Evict oldest if at capacity
     if (this.localCache.size >= this.maxLocalSize) {
       const oldestKey = this.localCache.keys().next().value;
