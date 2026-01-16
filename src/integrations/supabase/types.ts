@@ -5746,6 +5746,98 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          ai_confidence_score: number | null
+          ai_resolution_attempted: boolean | null
+          assigned_to: string | null
+          category: string | null
+          conversation_history: Json
+          created_at: string | null
+          escalation_reason: string | null
+          id: string
+          initial_message: string
+          last_message_at: string | null
+          page_url: string | null
+          priority: string | null
+          resolved_at: string | null
+          session_context: Json | null
+          status: string
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_confidence_score?: number | null
+          ai_resolution_attempted?: boolean | null
+          assigned_to?: string | null
+          category?: string | null
+          conversation_history?: Json
+          created_at?: string | null
+          escalation_reason?: string | null
+          id?: string
+          initial_message: string
+          last_message_at?: string | null
+          page_url?: string | null
+          priority?: string | null
+          resolved_at?: string | null
+          session_context?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_confidence_score?: number | null
+          ai_resolution_attempted?: boolean | null
+          assigned_to?: string | null
+          category?: string | null
+          conversation_history?: Json
+          created_at?: string | null
+          escalation_reason?: string | null
+          id?: string
+          initial_message?: string
+          last_message_at?: string | null
+          page_url?: string | null
+          priority?: string | null
+          resolved_at?: string | null
+          session_context?: Json | null
+          status?: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "member_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "member_directory_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sync_alerts: {
         Row: {
           acknowledged: boolean | null

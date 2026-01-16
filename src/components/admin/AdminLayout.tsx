@@ -21,7 +21,8 @@ import {
   Share2,
   Gauge,
   Flag,
-  MessageSquare
+  MessageSquare,
+  Headphones
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/hooks/useAdmin';
@@ -34,6 +35,7 @@ interface AdminLayoutProps {
 
 const navItems = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+  { label: 'Support', href: '/admin/support', icon: Headphones },
   { label: 'Moderation', href: '/admin/moderation', icon: Flag },
   { label: 'Feedback', href: '/admin/feedback', icon: MessageSquare },
   { label: 'OKRs', href: '/admin/okrs', icon: Target },
