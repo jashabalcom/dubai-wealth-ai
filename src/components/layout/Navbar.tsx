@@ -437,12 +437,12 @@ export function Navbar() {
             </div>
 
             {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={cn(
-                "lg:hidden p-2 transition-transform duration-200 active:scale-90",
-                useDarkText ? "text-foreground" : "text-secondary-foreground"
-              )}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className={cn(
+            "lg:hidden ml-auto p-2 transition-transform duration-200 active:scale-90",
+            useDarkText ? "text-foreground" : "text-secondary-foreground"
+          )}
             >
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
