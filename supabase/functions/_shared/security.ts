@@ -4,7 +4,65 @@
  * - Input sanitization for AI prompts
  * - CORS origin validation
  * - Safe error responses
+ * - Request tracing and timing
  */
+
+// =============================================================================
+// REQUEST TRACING
+// =============================================================================
+
+/**
+ * Generate a unique request ID for tracing
+ */
+export function generateRequestId(): string {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+/**
+ * Request timing helper for performance monitoring
+ */
+export class RequestTimer {
+  private startTime: number;
+  private checkpoints: Map<string, number> = new Map();
+  public readonly requestId: string;
+
+  constructor(requestId?: string) {
+    this.startTime = Date.now();
+    this.requestId = requestId || generateRequestId();
+  }
+
+  checkpoint(name: string): void {
+    this.checkpoints.set(name, Date.now() - this.startTime);
+  }
+
+  getDuration(): number {
+    return Date.now() - this.startTime;
+  }
+
+  getTimings(): Record<string, number> {
+    const timings: Record<string, number> = {
+      total: this.getDuration(),
+    };
+    this.checkpoints.forEach((value, key) => {
+      timings[key] = value;
+    });
+    return timings;
+  }
+
+  log(functionName: string, status: 'success' | 'error' = 'success'): void {
+    const timings = this.getTimings();
+    console.log(`[${this.requestId}] ${functionName} completed`, {
+      status,
+      duration: `${timings.total}ms`,
+      checkpoints: Object.fromEntries(this.checkpoints),
+    });
+
+    // Alert on slow requests (>2 seconds)
+    if (timings.total > 2000) {
+      console.warn(`[SLOW REQUEST] ${this.requestId} ${functionName} took ${timings.total}ms`);
+    }
+  }
+}
 
 // =============================================================================
 // SECURITY HEADERS
