@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   MessageCircle, 
   X, 
@@ -10,7 +11,9 @@ import {
   Loader2,
   User,
   Bot,
-  ExternalLink
+  ExternalLink,
+  Lock,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useSupportChat, Message } from '@/hooks/useSupportChat';
 import { useAuth } from '@/hooks/useAuth';
+import { hasEliteAccess } from '@/lib/tier-access';
 
 const QUICK_ACTIONS = [
   { label: 'How do I use the ROI calculator?', icon: '📊' },
@@ -60,11 +64,14 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
 }
 
 export function AISupportChat() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  const canAccessLiveSupport = hasEliteAccess(profile?.membership_tier);
   
   const {
     messages,
@@ -243,13 +250,29 @@ export function AISupportChat() {
               </Button>
             </div>
             {messages.length > 0 && !isEscalated && (
-              <button
-                onClick={() => requestEscalation('User requested human support')}
-                className="text-[10px] text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Need human support?
-              </button>
+              canAccessLiveSupport ? (
+                <button
+                  onClick={() => requestEscalation('User requested human support')}
+                  className="text-[10px] text-muted-foreground hover:text-foreground mt-2 flex items-center gap-1"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Need human support?
+                </button>
+              ) : (
+                <div className="mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mb-1">
+                    <Lock className="h-3 w-3" />
+                    <span>Live support for Elite members</span>
+                  </div>
+                  <button
+                    onClick={() => navigate('/pricing')}
+                    className="text-[10px] text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+                  >
+                    <Crown className="h-3 w-3" />
+                    Upgrade to Elite →
+                  </button>
+                </div>
+              )
             )}
           </div>
         </div>
