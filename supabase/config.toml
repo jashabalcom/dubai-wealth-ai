@@ -1,5 +1,8 @@
 project_id = "bswllmynuxkhekqqeznr"
 
+[functions.cached-data]
+verify_jwt = false
+
 [functions.health-check]
 verify_jwt = false
 

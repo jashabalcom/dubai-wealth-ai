@@ -6452,6 +6452,31 @@ export type Database = {
           timeline: string
         }[]
       }
+      get_properties_with_counts: {
+        Args: {
+          p_area?: string
+          p_bedrooms?: number
+          p_developer?: string
+          p_limit?: number
+          p_listing_type?: string
+          p_max_price?: number
+          p_min_price?: number
+          p_offset?: number
+          p_property_type?: string
+          p_sort_by?: string
+          p_status?: string
+        }
+        Returns: {
+          area_counts: Json
+          buy_count: number
+          developer_counts: Json
+          offplan_count: number
+          properties: Json
+          ready_count: number
+          rent_count: number
+          total_count: number
+        }[]
+      }
       get_property_clusters: {
         Args: {
           bounds_ne_lat: number
@@ -6548,6 +6573,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_group_member: { Args: { group_uuid: string }; Returns: boolean }
+      is_workspace_member: { Args: { ws_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_details?: Json
