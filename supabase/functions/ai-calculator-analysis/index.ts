@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,28 +11,155 @@ const corsHeaders = {
 const CACHE_TTL_DAYS = 7;
 const FUNCTION_NAME = "ai-calculator-analysis";
 
-// Dubai market benchmarks for context
-const MARKET_BENCHMARKS = {
+// Default Dubai market benchmarks (used as fallback when live data unavailable)
+const DEFAULT_BENCHMARKS = {
   avgGrossYield: 6.5,
   avgNetYield: 5.0,
   avgAppreciation: 5,
   avgServiceCharges: { low: 12, mid: 18, high: 30 },
   goldenVisaThreshold: 2000000,
   mortgageRateRange: { min: 3.5, max: 5.5 },
-  areaYields: {
-    'Dubai Marina': { yield: 6.2, appreciation: 4.5 },
-    'Downtown Dubai': { yield: 5.5, appreciation: 5.5 },
-    'JVC': { yield: 8.0, appreciation: 6.0 },
-    'Palm Jumeirah': { yield: 4.5, appreciation: 4.0 },
-    'Business Bay': { yield: 6.8, appreciation: 5.0 },
-  }
 };
+
+// Live market data interface
+interface LiveMarketData {
+  areaName: string;
+  avgPriceSqft: number | null;
+  avgYield: number | null;
+  priceTrend: number | null;
+  transactionsYtd: number | null;
+  serviceChargeSqft: number | null;
+  recentTransactions: RecentTransaction[];
+  lastUpdated: string;
+}
+
+interface RecentTransaction {
+  date: string;
+  propertyType: string;
+  rooms: string;
+  areaSqft: number;
+  price: number;
+  priceSqft: number;
+}
 
 interface CalculatorData {
   calculatorType: 'roi' | 'mortgage' | 'total-cost' | 'cap-rate' | 'dscr' | 'free-zone';
   inputs: Record<string, any>;
   results: Record<string, any>;
   area?: string;
+}
+
+// Fetch live market data from database
+async function fetchLiveMarketData(
+  supabase: SupabaseClient, 
+  areaName: string
+): Promise<LiveMarketData | null> {
+  try {
+    // Fetch area market data
+    const { data: areaData, error: areaError } = await supabase
+      .from('area_market_data')
+      .select('*')
+      .ilike('area_name', `%${areaName}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (areaError) {
+      console.log(`Error fetching area data for ${areaName}:`, areaError.message);
+    }
+
+    // Fetch recent transactions for this area (last 30 days, limit 10)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { data: transactions, error: txError } = await supabase
+      .from('market_transactions')
+      .select('instance_date, property_type, rooms, procedure_area_sqft, actual_worth, sqft_sale_price')
+      .ilike('area_name', `%${areaName}%`)
+      .gte('instance_date', thirtyDaysAgo.toISOString().split('T')[0])
+      .order('instance_date', { ascending: false })
+      .limit(10);
+
+    if (txError) {
+      console.log(`Error fetching transactions for ${areaName}:`, txError.message);
+    }
+
+    // Also try area_benchmarks as fallback
+    let benchmarkData = null;
+    if (!areaData) {
+      const { data: benchmark } = await supabase
+        .from('area_benchmarks')
+        .select('*')
+        .ilike('area_name', `%${areaName}%`)
+        .limit(1)
+        .maybeSingle();
+      benchmarkData = benchmark;
+    }
+
+    const sourceData = areaData || benchmarkData;
+    
+    if (!sourceData && (!transactions || transactions.length === 0)) {
+      return null;
+    }
+
+    return {
+      areaName: sourceData?.area_name || areaName,
+      avgPriceSqft: sourceData?.avg_price_sqft || null,
+      avgYield: sourceData?.avg_yield || null,
+      priceTrend: sourceData?.price_trend_percent || null,
+      transactionsYtd: sourceData?.total_transactions_ytd || null,
+      serviceChargeSqft: sourceData?.service_charge_sqft || null,
+      recentTransactions: (transactions || []).map(tx => ({
+        date: tx.instance_date,
+        propertyType: tx.property_type || 'Unknown',
+        rooms: tx.rooms || 'Unknown',
+        areaSqft: tx.procedure_area_sqft || 0,
+        price: tx.actual_worth || 0,
+        priceSqft: tx.sqft_sale_price || 0,
+      })),
+      lastUpdated: sourceData?.updated_at || new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Error fetching live market data:', error);
+    return null;
+  }
+}
+
+// Build live market context string for AI prompt
+function buildLiveMarketContext(liveData: LiveMarketData | null, area: string): string {
+  if (!liveData) {
+    return `\n## Market Data for ${area}\nNo live market data available. Using general Dubai benchmarks.`;
+  }
+
+  const parts: string[] = [];
+  parts.push(`\n## LIVE MARKET DATA: ${liveData.areaName}`);
+  parts.push(`(Last updated: ${new Date(liveData.lastUpdated).toLocaleDateString()})`);
+  
+  if (liveData.avgPriceSqft) {
+    parts.push(`- Average Price/sqft: AED ${liveData.avgPriceSqft.toLocaleString()}`);
+  }
+  if (liveData.avgYield) {
+    parts.push(`- Average Rental Yield: ${liveData.avgYield}%`);
+  }
+  if (liveData.priceTrend !== null && liveData.priceTrend !== undefined) {
+    const trendSymbol = liveData.priceTrend >= 0 ? '↑' : '↓';
+    parts.push(`- Price Trend: ${trendSymbol}${Math.abs(liveData.priceTrend).toFixed(1)}% (YoY)`);
+  }
+  if (liveData.transactionsYtd) {
+    parts.push(`- Transactions YTD: ${liveData.transactionsYtd.toLocaleString()}`);
+  }
+  if (liveData.serviceChargeSqft) {
+    parts.push(`- Avg Service Charge: AED ${liveData.serviceChargeSqft}/sqft/year`);
+  }
+
+  // Add recent transactions if available
+  if (liveData.recentTransactions.length > 0) {
+    parts.push(`\n### Recent Comparable Sales (Last 30 Days)`);
+    liveData.recentTransactions.slice(0, 5).forEach((tx, i) => {
+      parts.push(`${i + 1}. ${tx.rooms} ${tx.propertyType} - ${tx.areaSqft.toLocaleString()} sqft @ AED ${tx.priceSqft.toLocaleString()}/sqft (Total: AED ${tx.price.toLocaleString()})`);
+    });
+  }
+
+  return parts.join('\n');
 }
 
 // Normalize inputs for caching (round to reduce cache fragmentation)
@@ -136,8 +263,8 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Initialize Supabase client for caching
-    let supabase: any = null;
+    // Initialize Supabase client for caching and live data
+    let supabase: SupabaseClient | null = null;
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     }
@@ -155,6 +282,20 @@ serve(async (req) => {
         });
       }
     }
+
+    // Fetch live market data for the area
+    let liveMarketData: LiveMarketData | null = null;
+    if (supabase && area) {
+      liveMarketData = await fetchLiveMarketData(supabase, area);
+      console.log(`Live market data for ${area}:`, liveMarketData ? 'Found' : 'Not found');
+    }
+
+    // Build live market context for prompts
+    const liveMarketContext = buildLiveMarketContext(liveMarketData, area || 'Dubai');
+    
+    // Use live data or fall back to defaults
+    const marketYield = liveMarketData?.avgYield || DEFAULT_BENCHMARKS.avgGrossYield;
+    const marketPriceSqft = liveMarketData?.avgPriceSqft || null;
 
     // Build context based on calculator type
     let analysisContext = '';
@@ -180,7 +321,7 @@ serve(async (req) => {
 - Net Annual Income: AED ${results.netRentalIncome?.toLocaleString()}
 `;
       specificPrompt = `Analyze this ROI calculation and provide insights on:
-1. How the yield compares to Dubai market averages (avg gross yield is ${MARKET_BENCHMARKS.avgGrossYield}%)
+1. How the yield compares to Dubai market averages (avg gross yield is ${marketYield}%)
 2. Whether the expected appreciation is realistic for this area
 3. Key risks to consider with these projections
 4. Whether this property meets Golden Visa requirements (AED 2M+ threshold)
@@ -202,7 +343,7 @@ serve(async (req) => {
 - Total Cost of Ownership: AED ${results.totalCostOfOwnership?.toLocaleString()}
 `;
       specificPrompt = `Analyze this mortgage calculation and provide insights on:
-1. How the interest rate compares to current Dubai market rates (typical range: ${MARKET_BENCHMARKS.mortgageRateRange.min}%-${MARKET_BENCHMARKS.mortgageRateRange.max}%)
+1. How the interest rate compares to current Dubai market rates (typical range: ${DEFAULT_BENCHMARKS.mortgageRateRange.min}%-${DEFAULT_BENCHMARKS.mortgageRateRange.max}%)
 2. The total interest as a percentage of the property price and whether that's competitive
 3. Whether the down payment level is optimal (UAE regulations require min 20% for expats)
 4. Cash flow considerations - monthly payment vs potential rental income
@@ -326,16 +467,18 @@ Be specific about why certain zones are better fits based on the stated requirem
 
     const systemPrompt = `You are a Dubai real estate investment analyst. Provide clear, specific analysis in plain English.
 
-## Market Context
-- Average gross rental yield in Dubai: ${MARKET_BENCHMARKS.avgGrossYield}%
-- Average net yield: ${MARKET_BENCHMARKS.avgNetYield}%
-- Average annual appreciation: ${MARKET_BENCHMARKS.avgAppreciation}%
+## General Market Context
+- Average gross rental yield in Dubai: ${DEFAULT_BENCHMARKS.avgGrossYield}%
+- Average net yield: ${DEFAULT_BENCHMARKS.avgNetYield}%
+- Average annual appreciation: ${DEFAULT_BENCHMARKS.avgAppreciation}%
 - Golden Visa property threshold: AED 2,000,000
-- Current mortgage rates: ${MARKET_BENCHMARKS.mortgageRateRange.min}%-${MARKET_BENCHMARKS.mortgageRateRange.max}%
+- Current mortgage rates: ${DEFAULT_BENCHMARKS.mortgageRateRange.min}%-${DEFAULT_BENCHMARKS.mortgageRateRange.max}%
+${liveMarketContext}
 
 ## Response Guidelines
 - Use specific numbers and percentages in your analysis
-- Compare to Dubai market benchmarks
+- Compare to Dubai market benchmarks AND the area-specific live data when available
+- Reference recent comparable sales if provided
 - Be direct about risks and opportunities
 - Keep response concise (300-400 words max)
 - Use clear headings for each insight
