@@ -196,7 +196,7 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center overflow-hidden"
             onClick={() => setIsLightboxOpen(false)}
           >
             {/* Close Button */}
@@ -220,13 +220,13 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="flex items-center justify-center px-16 py-8"
+              className="flex-1 flex items-center justify-center w-full pb-24 pt-16"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={displayImages[currentIndex]}
                 alt={`${title} - Image ${currentIndex + 1}`}
-                className="max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain rounded-lg"
+                className="max-w-[90vw] max-h-[calc(100vh-160px)] w-auto h-auto object-contain rounded-lg"
                 onError={() => handleImageError(displayImages[currentIndex], true)}
               />
             </motion.div>
