@@ -220,18 +220,14 @@ export function PropertyGallery({ images, galleryUrls = [], title }: PropertyGal
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-[90vw] max-h-[85vh] flex items-center justify-center"
+              className="flex items-center justify-center px-16 py-8"
               onClick={(e) => e.stopPropagation()}
             >
-              <ProgressiveImage
+              <img
                 src={displayImages[currentIndex]}
                 alt={`${title} - Image ${currentIndex + 1}`}
-                className="max-w-[90vw] max-h-[85vh]"
-                objectFit="contain"
-                priority
-                sizes="90vw"
+                className="max-w-[90vw] max-h-[80vh] w-auto h-auto object-contain rounded-lg"
                 onError={() => handleImageError(displayImages[currentIndex], true)}
-                fallback={fallbackImage}
               />
             </motion.div>
 
