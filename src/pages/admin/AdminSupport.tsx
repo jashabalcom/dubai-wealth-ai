@@ -7,12 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -29,12 +23,13 @@ import {
   User,
   MessageSquare,
   TrendingUp,
-  Filter,
   RefreshCw,
+  Radio,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
+import { AdminLiveChatPanel } from '@/components/admin/AdminLiveChatPanel';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -52,6 +47,8 @@ interface SupportTicket {
   priority: string;
   ai_confidence_score: number | null;
   escalation_reason: string | null;
+  admin_id: string | null;
+  admin_joined_at: string | null;
   created_at: string;
   last_message_at: string | null;
   resolved_at: string | null;
@@ -82,7 +79,7 @@ export default function AdminSupport() {
   const [statusFilter, setStatusFilter] = useState<string>('escalated');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [liveChatTicket, setLiveChatTicket] = useState<SupportTicket | null>(null);
 
   // Fetch tickets
   const { data: tickets = [], isLoading, refetch } = useQuery({
@@ -157,7 +154,6 @@ export default function AdminSupport() {
       queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
       queryClient.invalidateQueries({ queryKey: ['support-stats'] });
       toast.success('Ticket updated');
-      setSelectedTicket(null);
     },
     onError: () => {
       toast.error('Failed to update ticket');
@@ -311,11 +307,10 @@ export default function AdminSupport() {
                 return (
                   <div
                     key={ticket.id}
-                    onClick={() => setSelectedTicket(ticket)}
                     className="p-4 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0" onClick={() => setLiveChatTicket(ticket)}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium truncate">
                             {ticket.profiles?.full_name || 'Anonymous User'}
@@ -323,6 +318,12 @@ export default function AdminSupport() {
                           {ticket.profiles?.membership_tier && (
                             <Badge variant="outline" className="text-xs">
                               {ticket.profiles.membership_tier}
+                            </Badge>
+                          )}
+                          {ticket.admin_id && (
+                            <Badge className="bg-green-500/10 text-green-500 text-xs">
+                              <Radio className="h-2 w-2 mr-1" />
+                              Live
                             </Badge>
                           )}
                         </div>
@@ -347,14 +348,28 @@ export default function AdminSupport() {
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-muted-foreground text-right shrink-0">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+                      <div className="flex flex-col items-end gap-2">
+                        <div className="text-xs text-muted-foreground text-right">
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+                          </div>
+                          <div className="mt-1">
+                            {ticket.conversation_history?.length || 0} messages
+                          </div>
                         </div>
-                        <div className="mt-1">
-                          {ticket.conversation_history?.length || 0} messages
-                        </div>
+                        {(ticket.status === 'escalated' || ticket.status === 'human_handling') && (
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLiveChatTicket(ticket);
+                            }}
+                          >
+                            <Radio className="h-3 w-3 mr-1" />
+                            Open Chat
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -365,85 +380,23 @@ export default function AdminSupport() {
         </CardContent>
       </Card>
 
-      {/* Ticket Detail Dialog */}
-      <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Ticket Details
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedTicket && (
-            <div className="space-y-4">
-              {/* User Info */}
-              <div className="p-4 rounded-lg bg-muted/50">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <p className="font-medium">{selectedTicket.profiles?.full_name || 'Anonymous'}</p>
-                    <p className="text-sm text-muted-foreground">{selectedTicket.profiles?.email || 'No email'}</p>
-                  </div>
-                  <Badge>{selectedTicket.profiles?.membership_tier || 'free'}</Badge>
-                </div>
-                {selectedTicket.escalation_reason && (
-                  <div className="mt-2 p-2 rounded bg-amber-500/10 text-amber-600 text-sm">
-                    <strong>Escalation Reason:</strong> {selectedTicket.escalation_reason}
-                  </div>
-                )}
-              </div>
-              
-              {/* Conversation */}
-              <ScrollArea className="h-[300px] border rounded-lg p-4">
-                {selectedTicket.conversation_history?.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`mb-3 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
-                      <div className="text-[10px] opacity-70 mt-1">
-                        {format(new Date(msg.timestamp), 'MMM d, h:mm a')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-              
-              {/* Actions */}
-              <div className="flex gap-2 justify-end">
-                {selectedTicket.status === 'escalated' && (
-                  <Button
-                    variant="outline"
-                    onClick={() => updateStatus.mutate({ 
-                      ticketId: selectedTicket.id, 
-                      status: 'human_handling' 
-                    })}
-                  >
-                    Take Over
-                  </Button>
-                )}
-                <Button
-                  variant="default"
-                  onClick={() => updateStatus.mutate({ 
-                    ticketId: selectedTicket.id, 
-                    status: 'resolved' 
-                  })}
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Mark Resolved
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Live Chat Panel - Full Screen Overlay */}
+      {liveChatTicket && (
+        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
+          <div className="container max-w-4xl h-full py-4">
+            <AdminLiveChatPanel
+              ticket={liveChatTicket}
+              onClose={() => setLiveChatTicket(null)}
+              onResolved={() => {
+                setLiveChatTicket(null);
+                queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
+                queryClient.invalidateQueries({ queryKey: ['support-stats'] });
+                toast.success('Ticket resolved');
+              }}
+            />
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
