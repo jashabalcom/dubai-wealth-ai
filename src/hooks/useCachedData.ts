@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { redisCache, CACHE_TTL, CACHE_KEYS } from '@/lib/redis-cache';
+import { withTiming } from '@/hooks/usePerformanceMetrics';
+import { requestDeduplicator } from '@/lib/requestDeduplication';
 
 interface CacheResponse<T> {
   data: T;
@@ -25,9 +27,11 @@ interface FetchOptions {
 
 /**
  * Fetch data through the cached-data edge function with local caching layer
+ * Includes performance tracking and request deduplication
  */
 async function fetchCachedData<T>(dataType: DataType, params?: Record<string, unknown>): Promise<T> {
   const cacheKey = `local:${dataType}:${JSON.stringify(params || {})}`;
+  const dedupeKey = `cached-data:${dataType}:${JSON.stringify(params || {})}`;
   
   // Try local cache first (fastest)
   const localCached = redisCache.getLocal<T>(cacheKey);
@@ -35,23 +39,28 @@ async function fetchCachedData<T>(dataType: DataType, params?: Record<string, un
     return localCached;
   }
 
-  // Call edge function
-  const { data, error } = await supabase.functions.invoke('cached-data', {
-    body: { dataType, params },
+  // Use request deduplication to prevent duplicate in-flight requests
+  return requestDeduplicator.dedupe(dedupeKey, async () => {
+    // Wrap with performance timing
+    return withTiming(`cached-data:${dataType}`, async () => {
+      const { data, error } = await supabase.functions.invoke('cached-data', {
+        body: { dataType, params },
+      });
+
+      if (error) {
+        console.error(`Error fetching ${dataType}:`, error);
+        throw error;
+      }
+
+      const result = (data as CacheResponse<T>).data;
+      
+      // Store in local cache based on data type
+      const ttl = getTTLForDataType(dataType);
+      redisCache.setLocal(cacheKey, result, ttl);
+
+      return result;
+    });
   });
-
-  if (error) {
-    console.error(`Error fetching ${dataType}:`, error);
-    throw error;
-  }
-
-  const result = (data as CacheResponse<T>).data;
-  
-  // Store in local cache based on data type
-  const ttl = getTTLForDataType(dataType);
-  redisCache.setLocal(cacheKey, result, ttl);
-
-  return result;
 }
 
 function getTTLForDataType(dataType: DataType): number {
