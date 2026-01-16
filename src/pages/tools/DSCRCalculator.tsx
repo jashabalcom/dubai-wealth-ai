@@ -13,7 +13,8 @@ import { UpgradeModal } from '@/components/freemium/UpgradeModal';
 import { ContextualUpgradePrompt } from '@/components/freemium/ContextualUpgradePrompt';
 import { HardPaywall } from '@/components/freemium/HardPaywall';
 import { useToolUsage } from '@/hooks/useToolUsage';
-import { Building2, TrendingUp, Calculator, AlertTriangle, CheckCircle, ArrowLeft, Sparkles, Lock } from 'lucide-react';
+import { Building2, TrendingUp, Calculator, AlertTriangle, CheckCircle, Sparkles, Lock } from 'lucide-react';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 function formatAED(amount: number): string {
   return `AED ${amount.toLocaleString('en-AE', { maximumFractionDigits: 0 })}`;
@@ -131,10 +132,13 @@ export default function DSCRCalculator() {
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
-            <Link to="/tools" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Tools
-            </Link>
+            <Breadcrumbs 
+              items={[
+                { label: 'Tools', href: '/tools' },
+                { label: 'DSCR Calculator' }
+              ]} 
+              className="mb-4"
+            />
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 rounded-lg bg-slate-500/20">
                 <TrendingUp className="h-6 w-6 text-slate-400" />

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Home, AlertCircle, Building2 } from 'lucide-react';
+import { Home, AlertCircle, Building2 } from 'lucide-react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { CurrencyPill } from '@/components/CurrencyPill';
@@ -18,6 +18,7 @@ import { calculateAcquisitionCosts, DEFAULT_MORTGAGE_FEES } from '@/lib/dubaiRea
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
 import { PAGE_SEO, generateSoftwareApplicationSchema, SITE_CONFIG } from '@/lib/seo-config';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 // Helper to format AED amounts
 function formatAED(amount: number): string {
@@ -142,15 +143,15 @@ export default function MortgageCalculator() {
       />
       <Navbar />
 
-      <section className="pt-32 pb-8">
+      <section className="pt-24 pb-8">
         <div className="container mx-auto px-4">
-          <Link
-            to="/tools"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Tools
-          </Link>
+          <Breadcrumbs 
+            items={[
+              { label: 'Tools', href: '/tools' },
+              { label: 'Mortgage Calculator' }
+            ]} 
+            className="mb-6"
+          />
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <motion.div

@@ -34,7 +34,7 @@
     --secondary-foreground: 40 20% 92%;
 
     --muted: 40 15% 88%;
-    --muted-foreground: 220 20% 45%; /* Increased from 40% for better contrast */
+    --muted-foreground: 220 25% 38%; /* Improved contrast for better readability */
 
     /* Gold Accent */
     --accent: 35 25% 70%;
@@ -95,7 +95,7 @@
     --secondary-foreground: 40 20% 92%;
 
     --muted: 220 30% 15%;
-    --muted-foreground: 40 15% 70%; /* Increased from 65% for better contrast */
+    --muted-foreground: 40 20% 75%; /* Improved contrast for better readability */
 
     --accent: 35 25% 70%;
     --accent-foreground: 220 40% 8%;

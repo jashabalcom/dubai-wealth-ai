@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Building2, Calendar, Percent, DollarSign, CheckCircle, Lock } from 'lucide-react';
+import { Building2, Calendar, Percent, DollarSign, CheckCircle, Lock } from 'lucide-react';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Label } from '@/components/ui/label';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -287,18 +288,18 @@ export default function OffPlanCalculator() {
         toolName="Off-Plan Calculator"
       />
 
-      <section className="pt-32 pb-8">
+      <section className="pt-24 pb-8">
         <div className="container mx-auto px-4">
           {!isUnlimited && !usageLoading && (
             <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Off-Plan Calculator" />
           )}
-          <Link
-            to="/tools"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Tools
-          </Link>
+          <Breadcrumbs 
+            items={[
+              { label: 'Tools', href: '/tools' },
+              { label: 'Off-Plan Calculator' }
+            ]} 
+            className="mb-6"
+          />
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <motion.div
