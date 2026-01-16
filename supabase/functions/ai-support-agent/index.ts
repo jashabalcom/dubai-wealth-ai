@@ -240,6 +240,40 @@ Deno.serve(async (req) => {
       content: message,
       timestamp: new Date().toISOString(),
     });
+
+    // Store user message in support_messages table
+    if (userId) {
+      await supabase.from("support_messages").insert({
+        ticket_id: ticket.id,
+        sender_id: userId,
+        sender_type: "user",
+        content: message,
+      });
+    }
+    
+    // Check if an admin has joined - if so, don't generate AI response
+    if (ticket.admin_id) {
+      // Admin is handling, just acknowledge the message
+      const { error: updateError } = await supabase
+        .from("support_tickets")
+        .update({
+          conversation_history: conversationHistory,
+          last_message_at: new Date().toISOString(),
+        })
+        .eq("id", ticket.id);
+
+      return new Response(
+        JSON.stringify({
+          ticketId: ticket.id,
+          response: null,
+          category: ticket.category,
+          isEscalated: true,
+          adminJoined: true,
+          conversationHistory,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     
     // Build the prompt with context
     const contextMessage = buildContextMessage(userContext);
@@ -291,6 +325,15 @@ Deno.serve(async (req) => {
       role: "assistant",
       content: aiResponse,
       timestamp: new Date().toISOString(),
+    });
+
+    // Store AI response in support_messages table
+    // Use a system user ID for AI messages
+    await supabase.from("support_messages").insert({
+      ticket_id: ticket.id,
+      sender_id: userId || "00000000-0000-0000-0000-000000000000",
+      sender_type: "ai",
+      content: aiResponse,
     });
     
     // Determine if escalation is needed
