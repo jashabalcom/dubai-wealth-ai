@@ -11,6 +11,7 @@ import { DubaiPresets, DUBAI_AREA_PRESETS, AreaPreset } from '@/components/tools
 import { ROICharts } from '@/components/tools/ROICharts';
 import { FeeBreakdownCard } from '@/components/tools/FeeBreakdownCard';
 import { CalculatorAIAnalysis } from '@/components/tools/CalculatorAIAnalysis';
+import { LiveMarketWidget } from '@/components/tools/LiveMarketWidget';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { calculateAcquisitionCosts, DEFAULT_ACQUISITION_FEES, AREA_SERVICE_CHARGES } from '@/lib/dubaiRealEstateFees';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
@@ -339,6 +340,14 @@ export default function ROICalculator() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="space-y-6"
             >
+              {/* Live Market Data Widget */}
+              <LiveMarketWidget 
+                areaName={inputs.selectedArea}
+                currentPriceSqft={inputs.purchasePrice / inputs.propertySizeSqft}
+                currentYield={grossYield}
+                showComparison={true}
+              />
+
               {/* Key Metrics */}
               <HardPaywall
                 isLocked={hasReachedLimit}
