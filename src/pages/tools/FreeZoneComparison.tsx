@@ -2,9 +2,10 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
-  MapPin, ArrowLeft, Search, Filter, Check, X, Building2, 
+  MapPin, Search, Filter, Check, X, Building2, 
   Users, Clock, Sparkles, Lock, ChevronDown, Info
 } from 'lucide-react';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SEOHead } from '@/components/SEOHead';
@@ -182,15 +183,15 @@ export default function FreeZoneComparison() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-28 pb-8 bg-gradient-to-b from-secondary to-background">
+      <section className="pt-24 pb-8 bg-gradient-to-b from-secondary to-background">
         <div className="container mx-auto px-4">
-          <Link 
-            to="/tools" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Tools</span>
-          </Link>
+          <Breadcrumbs 
+            items={[
+              { label: 'Tools', href: '/tools' },
+              { label: 'Free Zone Comparison' }
+            ]} 
+            className="mb-6"
+          />
           
           <motion.div
             initial={{ opacity: 0, y: 20 }}

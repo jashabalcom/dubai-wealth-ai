@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, 
   Wallet, 
   Building2, 
   Landmark,
@@ -16,6 +15,7 @@ import {
   Download,
   Lock
 } from 'lucide-react';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -396,13 +396,13 @@ export default function TotalCostCalculator() {
           {!isUnlimited && !usageLoading && (
             <UsageLimitBanner remaining={remainingUses} total={2} type="tool" toolName="Total Cost Calculator" />
           )}
-          <Link 
-            to="/tools" 
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Tools</span>
-          </Link>
+          <Breadcrumbs 
+            items={[
+              { label: 'Tools', href: '/tools' },
+              { label: 'Total Cost Calculator' }
+            ]} 
+            className="mb-6"
+          />
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}

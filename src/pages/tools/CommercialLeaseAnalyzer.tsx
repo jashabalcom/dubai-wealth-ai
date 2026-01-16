@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Building2, Calculator, TrendingUp, AlertTriangle, Sparkles, FileText, Scale, ArrowUpRight, Calendar, DollarSign, Percent, Info } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { CalculatorAIAnalysis } from "@/components/tools/CalculatorAIAnalysis";
 import { useAuth } from "@/hooks/useAuth";
 import { useToolUsage } from "@/hooks/useToolUsage";
@@ -243,9 +247,17 @@ const CommercialLeaseAnalyzer = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-7xl mx-auto px-4 py-8">
+      <Navbar />
+      <div className="container max-w-7xl mx-auto px-4 pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
+          <Breadcrumbs 
+            items={[
+              { label: 'Tools', href: '/tools' },
+              { label: 'Commercial Lease Analyzer' }
+            ]} 
+            className="mb-6"
+          />
           <div className="flex items-center gap-3 mb-2">
             <FileText className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Commercial Lease Analyzer</h1>
@@ -920,6 +932,7 @@ const CommercialLeaseAnalyzer = () => {
           feature="tools"
         />
       </div>
+      <Footer />
     </div>
   );
 };
