@@ -165,6 +165,9 @@ export function HeroSection() {
               Start Free
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform rtl:mr-2 rtl:ml-0 rtl:group-hover:-translate-x-1" />
             </Button>
+            <p className="text-xs text-secondary-foreground/50 mt-3">
+              Join 2,000+ investors already learning
+            </p>
           </motion.div>
 
           {/* Platform Stats */}

@@ -4,7 +4,9 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { HomePageSEO } from "@/components/SEOHead";
 
 // Lazy load below-the-fold sections to improve TTI
+const TrustSignalsSection = lazy(() => import("@/components/sections/TrustSignalsSection").then(m => ({ default: m.TrustSignalsSection })));
 const PlatformSection = lazy(() => import("@/components/sections/PlatformSection").then(m => ({ default: m.PlatformSection })));
+const TestimonialsSection = lazy(() => import("@/components/sections/TestimonialsSection").then(m => ({ default: m.TestimonialsSection })));
 const WhoItsForSection = lazy(() => import("@/components/sections/WhoItsForSection").then(m => ({ default: m.WhoItsForSection })));
 const EmailCaptureSection = lazy(() => import("@/components/sections/EmailCaptureSection").then(m => ({ default: m.EmailCaptureSection })));
 const FAQSection = lazy(() => import("@/components/sections/FAQSection").then(m => ({ default: m.FAQSection })));
@@ -26,7 +28,13 @@ const Index = () => {
       <main>
         <HeroSection />
         <Suspense fallback={<SectionPlaceholder />}>
+          <TrustSignalsSection />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
           <PlatformSection />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <TestimonialsSection />
         </Suspense>
         <Suspense fallback={<SectionPlaceholder />}>
           <WhoItsForSection />

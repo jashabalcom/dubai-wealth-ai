@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -9,6 +9,8 @@ const testimonials = [
     role: "Tech Entrepreneur",
     location: "Singapore",
     avatar: "MC",
+    rating: 5,
+    investment: "$800K Portfolio",
   },
   {
     quote:
@@ -17,6 +19,8 @@ const testimonials = [
     role: "Investment Banker",
     location: "London, UK",
     avatar: "SA",
+    rating: 5,
+    investment: "9.2% Yield Achieved",
   },
   {
     quote:
@@ -25,6 +29,8 @@ const testimonials = [
     role: "Portfolio Manager",
     location: "New York, USA",
     avatar: "JP",
+    rating: 5,
+    investment: "3 Properties Acquired",
   },
 ];
 
@@ -52,6 +58,9 @@ export function TestimonialsSection() {
             <br />
             <span className="text-gradient-gold">Wealth Builders</span>
           </h2>
+          <p className="text-secondary-foreground/60 text-lg">
+            Join investors from 50+ countries building wealth in Dubai
+          </p>
         </motion.div>
 
         {/* Testimonials Grid */}
@@ -63,16 +72,29 @@ export function TestimonialsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.15 }}
+              className="group"
             >
-              <div className="h-full p-8 rounded-2xl bg-secondary-foreground/5 border border-secondary-foreground/10 hover:border-primary/20 transition-colors">
-                <Quote className="w-10 h-10 text-primary/30 mb-6" />
+              <div className="h-full p-8 rounded-2xl bg-secondary-foreground/5 border border-secondary-foreground/10 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1">
+                {/* Stars */}
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                  ))}
+                </div>
                 
-                <p className="text-secondary-foreground/80 text-lg leading-relaxed mb-8 font-serif italic">
+                <Quote className="w-8 h-8 text-primary/30 mb-4" />
+                
+                <p className="text-secondary-foreground/80 text-lg leading-relaxed mb-6 font-serif italic">
                   "{testimonial.quote}"
                 </p>
                 
+                {/* Investment Tag */}
+                <div className="inline-block px-3 py-1 bg-primary/10 rounded-full text-sm text-primary mb-6">
+                  {testimonial.investment}
+                </div>
+                
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-lg">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-serif text-lg group-hover:bg-primary group-hover:text-secondary transition-colors duration-300">
                     {testimonial.avatar}
                   </div>
                   <div>

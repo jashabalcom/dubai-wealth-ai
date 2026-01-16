@@ -101,9 +101,9 @@ export function PropertyCard({
         onMouseLeave={handleMouseLeave}
       >
         <div className={cn(
-          "h-full rounded-2xl bg-card border overflow-hidden transition-all duration-200",
-          "hover:shadow-xl hover:shadow-black/5",
-          isComparing ? "border-gold ring-2 ring-gold/20" : "border-border hover:border-gold/40"
+          "h-full rounded-2xl bg-card border overflow-hidden transition-all duration-300",
+          "hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1",
+          isComparing ? "border-gold ring-2 ring-gold/20" : "border-border hover:border-primary/40"
         )}>
           {/* Image Carousel */}
           <div className="relative aspect-[4/3] overflow-hidden">
