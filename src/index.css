@@ -444,11 +444,12 @@
     animation: shimmer 1.5s ease-in-out infinite;
   }
 
-  /* Skeleton wave effect */
+  /* Skeleton wave effect - enhanced for smoother appearance */
   .skeleton-wave {
     position: relative;
     overflow: hidden;
     background: hsl(var(--muted));
+    isolation: isolate;
   }
   .skeleton-wave::after {
     content: '';
@@ -457,10 +458,24 @@
     background: linear-gradient(
       90deg,
       transparent 0%,
-      hsl(var(--muted-foreground) / 0.08) 50%,
+      hsl(var(--muted-foreground) / 0.06) 20%,
+      hsl(var(--muted-foreground) / 0.12) 50%,
+      hsl(var(--muted-foreground) / 0.06) 80%,
       transparent 100%
     );
-    animation: wave 1.5s ease-in-out infinite;
+    animation: wave 1.8s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  /* Image blur-up transition */
+  .blur-up {
+    filter: blur(20px);
+    transform: scale(1.1);
+    transition: filter 0.4s ease-out, transform 0.4s ease-out;
+  }
+  .blur-up.loaded {
+    filter: blur(0);
+    transform: scale(1);
   }
 
   @keyframes shimmer {
