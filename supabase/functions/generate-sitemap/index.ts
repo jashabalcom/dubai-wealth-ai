@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SITE_URL = "https://dubai-wealth-hub.lovable.app";
+const SITE_URL = "https://dubai-wealth-ai.lovable.app";
 
 interface SitemapUrl {
   loc: string;
