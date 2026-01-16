@@ -1,5 +1,6 @@
 import { onCLS, onINP, onFCP, onLCP, onTTFB, type Metric } from 'web-vitals';
 import * as Sentry from '@sentry/react';
+import { useWebVitalsStore } from '@/stores/webVitalsStore';
 
 function sendToAnalytics(metric: Metric) {
   const vitalsData = {
@@ -9,6 +10,13 @@ function sendToAnalytics(metric: Metric) {
     delta: metric.delta,
     id: metric.id,
   };
+
+  // Store in zustand for dashboard access
+  try {
+    useWebVitalsStore.getState().recordVital(metric);
+  } catch (e) {
+    // Store may not be initialized yet during early load
+  }
 
   // Log in development
   if (import.meta.env.DEV) {

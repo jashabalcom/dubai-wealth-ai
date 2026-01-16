@@ -6,17 +6,61 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Request tracing
+function generateRequestId(): string {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+class RequestTimer {
+  private startTime: number;
+  private checkpoints: Map<string, number> = new Map();
+  public readonly requestId: string;
+
+  constructor() {
+    this.startTime = Date.now();
+    this.requestId = generateRequestId();
+  }
+
+  checkpoint(name: string): void {
+    this.checkpoints.set(name, Date.now() - this.startTime);
+  }
+
+  getDuration(): number {
+    return Date.now() - this.startTime;
+  }
+
+  log(dataType: string, status: 'success' | 'error' | 'cache_hit' = 'success'): void {
+    const duration = this.getDuration();
+    const checkpointsObj = Object.fromEntries(this.checkpoints);
+    
+    console.log(JSON.stringify({
+      requestId: this.requestId,
+      dataType,
+      status,
+      duration,
+      checkpoints: checkpointsObj,
+      timestamp: new Date().toISOString(),
+    }));
+
+    // Alert on slow requests (>1 second for cached-data)
+    if (duration > 1000) {
+      console.warn(`[SLOW] ${this.requestId} ${dataType} took ${duration}ms`, checkpointsObj);
+    }
+  }
+}
+
 // CDN cache headers for different data types
-const getCacheHeaders = (ttlSeconds: number, dataType: string): Record<string, string> => ({
+const getCacheHeaders = (ttlSeconds: number, dataType: string, requestId: string): Record<string, string> => ({
   ...corsHeaders,
   'Content-Type': 'application/json',
   // CDN caching: cache publicly for specified duration
   'Cache-Control': `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds * 2}, stale-while-revalidate=${ttlSeconds}`,
   // Vary by authorization to ensure different users get correct data
   'Vary': 'Authorization',
-  // Custom header for debugging cache behavior
+  // Custom headers for debugging cache behavior
   'X-Cache-TTL': ttlSeconds.toString(),
   'X-Data-Type': dataType,
+  'X-Request-ID': requestId,
 });
 
 // Cache TTLs in seconds
@@ -35,7 +79,6 @@ async function redisCommand(command: string[]): Promise<any> {
   const redisToken = Deno.env.get('UPSTASH_REDIS_REST_TOKEN');
   
   if (!redisUrl || !redisToken) {
-    console.log('Redis not configured, skipping cache');
     return null;
   }
 
@@ -79,6 +122,8 @@ async function setCache(key: string, value: any, ttl: number): Promise<void> {
 }
 
 serve(async (req) => {
+  const timer = new RequestTimer();
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -88,22 +133,23 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+    timer.checkpoint('supabase_init');
 
     const { dataType, params } = await req.json();
     const cacheKey = `cache:${dataType}:${JSON.stringify(params || {})}`;
+    timer.checkpoint('parse_request');
 
     // Try cache first
     const cached = await getCached(cacheKey);
+    timer.checkpoint('cache_check');
+    
     if (cached) {
-      console.log(`Cache hit: ${dataType}`);
-      // Use CDN cache headers for cached responses
+      timer.log(dataType, 'cache_hit');
       const ttl = CACHE_TTL[dataType as keyof typeof CACHE_TTL] || 300;
       return new Response(JSON.stringify({ data: cached, fromCache: true }), {
-        headers: getCacheHeaders(ttl, dataType),
+        headers: getCacheHeaders(ttl, dataType, timer.requestId),
       });
     }
-
-    console.log(`Cache miss: ${dataType}`);
     let data: any;
     let ttl: number;
 
@@ -241,26 +287,33 @@ serve(async (req) => {
       }
 
       default:
+        timer.log(dataType, 'error');
         return new Response(
           JSON.stringify({ error: `Unknown data type: ${dataType}` }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-ID': timer.requestId } }
         );
     }
 
+    timer.checkpoint('db_query');
+
     // Cache the result
     await setCache(cacheKey, data, ttl);
+    timer.checkpoint('cache_set');
+    
+    timer.log(dataType, 'success');
 
     return new Response(
       JSON.stringify({ data, fromCache: false }),
-      { headers: getCacheHeaders(ttl, dataType) }
+      { headers: getCacheHeaders(ttl, dataType, timer.requestId) }
     );
 
   } catch (error) {
+    timer.log('unknown', 'error');
     console.error('Error in cached-data function:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-ID': timer.requestId } }
     );
   }
 });
