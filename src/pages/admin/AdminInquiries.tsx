@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { SecureFieldReveal, SecureContactReveal } from '@/components/admin/SecureFieldReveal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -192,6 +194,7 @@ export default function AdminInquiries() {
   };
 
   return (
+    <TooltipProvider>
     <AdminLayout title="Property Inquiries">
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -308,8 +311,20 @@ export default function AdminInquiries() {
                       <td className="p-4">
                         <div>
                           <p className="font-medium">{inquiry.name}</p>
-                          <p className="text-sm text-muted-foreground">{inquiry.email}</p>
-                          <p className="text-sm text-muted-foreground">{inquiry.phone}</p>
+                          <SecureFieldReveal
+                            recordId={inquiry.id}
+                            maskedValue={inquiry.email}
+                            fieldType="email"
+                            rpcFunction="get_decrypted_inquiry_contact"
+                            className="text-sm"
+                          />
+                          <SecureFieldReveal
+                            recordId={inquiry.id}
+                            maskedValue={inquiry.phone}
+                            fieldType="phone"
+                            rpcFunction="get_decrypted_inquiry_contact"
+                            className="text-sm"
+                          />
                         </div>
                       </td>
                       <td className="p-4">
@@ -533,5 +548,6 @@ export default function AdminInquiries() {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+    </TooltipProvider>
   );
 }

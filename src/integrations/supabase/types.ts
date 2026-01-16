@@ -6455,7 +6455,38 @@ export type Database = {
         Args: { affiliate_id: string }
         Returns: Json
       }
+      get_decrypted_affiliate_paypal: {
+        Args: { affiliate_id: string }
+        Returns: string
+      }
+      get_decrypted_golden_visa_contact: {
+        Args: { submission_id: string }
+        Returns: {
+          email: string
+          investment_budget: string
+          phone: string
+        }[]
+      }
+      get_decrypted_inquiry_contact: {
+        Args: { inquiry_id: string }
+        Returns: {
+          email: string
+          phone: string
+        }[]
+      }
+      get_decrypted_mortgage_lead_contact: {
+        Args: { lead_id: string }
+        Returns: {
+          email: string
+          monthly_income: string
+          phone: string
+        }[]
+      }
       get_decrypted_profile_email: {
+        Args: { profile_id: string }
+        Returns: string
+      }
+      get_decrypted_profile_phone: {
         Args: { profile_id: string }
         Returns: string
       }
