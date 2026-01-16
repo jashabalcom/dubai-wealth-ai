@@ -6,6 +6,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// CDN cache headers for different data types
+const getCacheHeaders = (ttlSeconds: number, dataType: string): Record<string, string> => ({
+  ...corsHeaders,
+  'Content-Type': 'application/json',
+  // CDN caching: cache publicly for specified duration
+  'Cache-Control': `public, max-age=${ttlSeconds}, s-maxage=${ttlSeconds * 2}, stale-while-revalidate=${ttlSeconds}`,
+  // Vary by authorization to ensure different users get correct data
+  'Vary': 'Authorization',
+  // Custom header for debugging cache behavior
+  'X-Cache-TTL': ttlSeconds.toString(),
+  'X-Data-Type': dataType,
+});
+
 // Cache TTLs in seconds
 const CACHE_TTL = {
   propertyCounts: 300,      // 5 minutes
@@ -83,8 +96,10 @@ serve(async (req) => {
     const cached = await getCached(cacheKey);
     if (cached) {
       console.log(`Cache hit: ${dataType}`);
+      // Use CDN cache headers for cached responses
+      const ttl = CACHE_TTL[dataType as keyof typeof CACHE_TTL] || 300;
       return new Response(JSON.stringify({ data: cached, fromCache: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: getCacheHeaders(ttl, dataType),
       });
     }
 
@@ -237,7 +252,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ data, fromCache: false }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: getCacheHeaders(ttl, dataType) }
     );
 
   } catch (error) {
