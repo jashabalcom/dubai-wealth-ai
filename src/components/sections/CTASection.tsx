@@ -38,14 +38,14 @@ export function CTASection() {
         >
           {/* Main Headline */}
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground mb-6 leading-tight">
-            Start Building Your
+            Your Next Confident Step
             <br />
-            <span className="text-gradient-gold">Dubai Portfolio Today</span>
+            <span className="text-gradient-gold">Starts Here</span>
           </h2>
 
           <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-10 max-w-2xl mx-auto">
-            Join a growing community of smart property investors building wealth 
-            through Dubai's unprecedented opportunities.
+            Whether you're exploring your first property or expanding your portfolio, 
+            we're here to help you move forward with clarity—not confusion.
           </p>
 
           {/* CTA Buttons */}
@@ -57,7 +57,7 @@ export function CTASection() {
               onClick={() => navigate('/auth')}
               disabled={loading}
             >
-              {loading ? 'Redirecting...' : 'Start Free Today'}
+              {loading ? 'Redirecting...' : 'Begin Your Free Journey'}
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
@@ -71,7 +71,7 @@ export function CTASection() {
 
           {/* Trust badges */}
           <p className="text-muted-foreground/60 text-sm mb-6">
-            Free forever plan available · No credit card required
+            Start free today · Move at your own pace · No pressure, ever
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8 text-muted-foreground text-sm">
             <span className="flex items-center gap-2">
