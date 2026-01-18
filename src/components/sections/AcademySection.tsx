@@ -5,7 +5,7 @@ import { Play, Clock, BarChart, Star } from "lucide-react";
 const courses = [
   {
     title: "Dubai Real Estate 101",
-    description: "Master the fundamentals of Dubai property investment, from market dynamics to legal frameworks.",
+    description: "Build a solid foundation—understand how the market works, what drives value, and how to avoid common mistakes.",
     lessons: 12,
     duration: "3h 45m",
     level: "Beginner",
@@ -14,7 +14,7 @@ const courses = [
   },
   {
     title: "Off-Plan Investment Mastery",
-    description: "Learn to identify, evaluate, and secure the best off-plan opportunities before the market.",
+    description: "Know exactly what to look for in off-plan deals—and how to spot the ones worth your attention.",
     lessons: 18,
     duration: "5h 20m",
     level: "Intermediate",
@@ -23,7 +23,7 @@ const courses = [
   },
   {
     title: "Airbnb & Short-Term Rentals",
-    description: "Maximize returns with Dubai's booming short-term rental market and Airbnb strategies.",
+    description: "Learn if short-term rentals fit your strategy and how to project realistic returns.",
     lessons: 10,
     duration: "2h 50m",
     level: "Intermediate",
@@ -32,7 +32,7 @@ const courses = [
   },
   {
     title: "Golden Visa Pathways",
-    description: "Navigate UAE's Golden Visa program and secure long-term residency through real estate.",
+    description: "Understand your visa options and which investment paths qualify for long-term residency.",
     lessons: 8,
     duration: "2h 15m",
     level: "Beginner",
@@ -60,12 +60,12 @@ export function AcademySection() {
             Dubai Real Estate Academy
           </span>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground mb-6">
-            Learn from the
+            Build Your
             <br />
-            <span className="text-gradient-gold">Best in the Industry</span>
+            <span className="text-gradient-gold">Investment Confidence</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Comprehensive courses designed by Dubai real estate experts with decades of combined experience.
+            Go from uncertain to informed with structured courses that walk you through every step—from market basics to deal evaluation.
           </p>
         </motion.div>
 

@@ -2,17 +2,17 @@ import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 
 const forYou = [
-  "Global investors seeking Dubai real estate exposure",
-  "High-net-worth individuals building international portfolios",
-  "Executives and professionals planning Golden Visa pathways",
-  "Athletes and entertainers diversifying into real assets",
-  "Serious investors who value intelligence over hype",
+  "First-time investors ready to learn before they leap",
+  "Global professionals exploring Dubai real estate",
+  "Portfolio builders adding international assets",
+  "Executives and HNWIs pursuing Golden Visa pathways",
+  "Anyone who values education over sales pressure",
 ];
 
 const notForYou = [
-  "Casual browsers looking for free investment tips",
-  "Get-rich-quick seekers expecting overnight returns",
-  "Those unwilling to do proper due diligence",
+  "Looking for guaranteed overnight returns",
+  "Not ready to invest time in learning first",
+  "Expecting someone else to make decisions for you",
 ];
 
 export function WhoItsForSection() {
@@ -32,13 +32,13 @@ export function WhoItsForSection() {
             Is This For You?
           </span>
           <h2 className="text-4xl md:text-5xl font-serif text-foreground mb-6">
-            Built for
+            Built for Investors
             <br />
-            <span className="text-gradient-gold">Serious Investors</span>
+            <span className="text-gradient-gold">Who Value Clarity</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            This platform is designed for investors who approach real estate with 
-            intention, discipline, and a long-term perspective.
+            We've designed this platform for people who want to invest with confidence—whether 
+            you're taking your first step or building on an existing portfolio.
           </p>
         </motion.div>
 
