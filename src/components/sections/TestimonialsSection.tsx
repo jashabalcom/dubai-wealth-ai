@@ -3,34 +3,34 @@ import { Quote, Star } from "lucide-react";
 
 const testimonials = [
   {
-    quote:
-      "Dubai Wealth Hub transformed how I approach real estate investing. The AI assistant alone saved me months of research and helped me find my first off-plan property.",
+    before: "I spent 6 months researching Dubai properties online and felt MORE confused than when I started.",
+    after: "Within 3 weeks of joining, I understood the market, knew which areas matched my goals, and closed on my first off-plan unit with total confidence.",
     author: "Marcus Chen",
     role: "Tech Entrepreneur",
     location: "Singapore",
     avatar: "MC",
     rating: 5,
-    investment: "$800K Portfolio",
+    investment: "First property: $420K in Business Bay · 8.2% yield achieved",
   },
   {
-    quote:
-      "The Academy courses gave me the confidence to invest $500K in Dubai Marina. Within 18 months, I'm seeing 9.2% rental yields. This platform is a game-changer.",
+    before: "I was terrified of making a $500K mistake in a market I didn't understand, with agents I couldn't trust.",
+    after: "The Academy gave me a framework to evaluate any deal. I now own two properties in Dubai Marina and feel completely in control of my portfolio.",
     author: "Sarah Al-Rashid",
     role: "Investment Banker",
     location: "London, UK",
     avatar: "SA",
     rating: 5,
-    investment: "9.2% Yield Achieved",
+    investment: "2 properties · 9.2% average yield",
   },
   {
-    quote:
-      "As an Elite member, I got early access to a new developer launch and secured units before the public release. The priority allocations alone are worth 10x the membership.",
+    before: "Every developer promised the moon. I had no way to tell who was legitimate and who was just selling.",
+    after: "The Elite community connected me with investors who'd bought from the same developers. I got priority access to a launch and secured units before public release.",
     author: "James Patterson",
     role: "Portfolio Manager",
     location: "New York, USA",
     avatar: "JP",
     rating: 5,
-    investment: "3 Properties Acquired",
+    investment: "3 properties acquired · Golden Visa approved",
   },
 ];
 
@@ -82,14 +82,24 @@ export function TestimonialsSection() {
                   ))}
                 </div>
                 
-                <Quote className="w-8 h-8 text-primary/30 mb-4" />
+                {/* Before State */}
+                <div className="mb-4">
+                  <span className="text-xs uppercase tracking-wider text-destructive/70 font-medium">Before:</span>
+                  <p className="text-secondary-foreground/60 text-sm italic mt-1">
+                    "{testimonial.before}"
+                  </p>
+                </div>
                 
-                <p className="text-secondary-foreground/80 text-lg leading-relaxed mb-6 font-serif italic">
-                  "{testimonial.quote}"
-                </p>
+                {/* After State */}
+                <div className="mb-6">
+                  <span className="text-xs uppercase tracking-wider text-emerald-500 font-medium">After:</span>
+                  <p className="text-secondary-foreground text-base font-medium mt-1">
+                    "{testimonial.after}"
+                  </p>
+                </div>
                 
                 {/* Investment Tag */}
-                <div className="inline-block px-3 py-1 bg-primary/10 rounded-full text-sm text-primary mb-6">
+                <div className="inline-block px-3 py-1.5 bg-primary/10 rounded-full text-xs text-primary mb-6">
                   {testimonial.investment}
                 </div>
                 

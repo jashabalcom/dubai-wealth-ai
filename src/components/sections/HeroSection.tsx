@@ -124,7 +124,7 @@ export function HeroSection() {
           >
             <span className="h-px w-12 bg-primary" />
             <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans">
-              Smart Dubai Real Estate Investing
+              For Global Investors Ready to Act
             </span>
             <span className="h-px w-12 bg-primary" />
           </motion.div>
@@ -135,22 +135,43 @@ export function HeroSection() {
             transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 0.4 }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-serif text-secondary-foreground leading-[1.1] mb-8"
           >
-            Build Wealth Through
+            Go From Curious to
             <br />
-            <span className="text-gradient-gold">Dubai Real Estate</span>
+            <span className="text-gradient-gold">Confident Investor</span>
           </motion.h1>
 
           {/* Subheadline */}
-            <motion.p
+          <motion.p
             {...fadeIn}
             transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 0.6 }}
-            className="text-lg md:text-xl text-secondary-foreground/70 max-w-2xl mx-auto mb-12 font-sans leading-relaxed"
+            className="text-lg md:text-xl text-secondary-foreground/70 max-w-2xl mx-auto mb-8 font-sans leading-relaxed"
           >
-            Education, tools, and market intelligence to help you make confident 
-            property decisions — whether you're buying your first home or building a portfolio.
+            Stop second-guessing. Start with clarity. Join investors who've turned 
+            hesitation into confident action with expert guidance, proven tools, 
+            and a community that has your back.
           </motion.p>
 
-          {/* CTA Button */}
+          {/* Risk Reversal */}
+          <motion.div
+            {...fadeIn}
+            transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 0.7 }}
+            className="flex flex-wrap items-center justify-center gap-4 mb-8 text-xs text-secondary-foreground/60"
+          >
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Education-first, no sales pressure
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Free forever plan available
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              30-day money-back guarantee
+            </span>
+          </motion.div>
+
+          {/* CTA Buttons */}
           <motion.div
             {...fadeIn}
             transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 0.8 }}
@@ -162,13 +183,29 @@ export function HeroSection() {
               className="group"
               onClick={() => navigate('/auth')}
             >
-              Start Free
+              Start Your Free Journey
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform rtl:mr-2 rtl:ml-0 rtl:group-hover:-translate-x-1" />
             </Button>
-            <p className="text-xs text-secondary-foreground/50 mt-3">
-              Join 2,000+ investors already learning
-            </p>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="border-secondary-foreground/20 text-secondary-foreground/80 hover:bg-secondary-foreground/10"
+              onClick={() => {
+                const section = document.getElementById('transformation');
+                section?.scrollIntoView({ behavior: 'smooth' });
+              }}
+            >
+              See How It Works
+            </Button>
           </motion.div>
+          
+          <motion.p
+            {...fadeIn}
+            transition={{ ...fadeIn.transition, delay: reduceMotion ? 0 : 0.9 }}
+            className="text-xs text-secondary-foreground/50 mt-4"
+          >
+            Join 2,000+ investors from 50+ countries already building Dubai portfolios
+          </motion.p>
 
           {/* Platform Stats */}
           <motion.div
