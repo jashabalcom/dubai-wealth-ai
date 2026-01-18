@@ -4,12 +4,13 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useBlogArticle } from "@/hooks/useBlogArticles";
 import { ShareButtons } from "@/components/blog/ShareButtons";
-import { ArticleCard, ArticleCardSkeleton } from "@/components/blog/ArticleCard";
+import { ArticleCard } from "@/components/blog/ArticleCard";
 import { ArrowLeft, Clock, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { ScrollToTopButton } from '@/components/ui/scroll-to-top-button';
 import { Badge } from "@/components/ui/badge";
+import { NewsArticleSchema } from "@/components/seo/NewsArticleSchema";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -137,6 +138,16 @@ const BlogArticle = () => {
           {JSON.stringify(generateArticleSchema(article, currentUrl))}
         </script>
       </Helmet>
+      
+      <NewsArticleSchema
+        headline={article.title}
+        description={article.excerpt || article.title}
+        image={article.image_url || undefined}
+        datePublished={article.published_at || article.created_at}
+        dateModified={article.created_at}
+        url={currentUrl}
+        articleSection={categoryLabels[article.category] || article.category}
+      />
 
       <div className="min-h-screen bg-background">
         <Navbar />

@@ -24,9 +24,30 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { InvestmentDisclaimer } from '@/components/ui/disclaimers';
 import { SEOHead } from '@/components/SEOHead';
+import { FAQSchema } from '@/components/seo/FAQSchema';
 import { PAGE_SEO } from '@/lib/seo-config';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+
+// FAQ data for structured data
+const toolsFAQs = [
+  {
+    question: "What investment calculators are available for Dubai real estate?",
+    answer: "We offer 13+ calculators including ROI Calculator, Mortgage Calculator, Rent vs Buy, Airbnb Yield Calculator, Off-Plan Payment Calculator, Total Cost of Ownership, Cap Rate & NOI Calculator, DSCR Calculator, and Golden Visa Wizard.",
+  },
+  {
+    question: "Are the Dubai real estate calculators free to use?",
+    answer: "Yes, the Mortgage Calculator and Rent vs Buy Calculator are completely free. Other calculators offer 2 free uses, with unlimited access for Investor tier members and above.",
+  },
+  {
+    question: "Do the calculators use real Dubai market data?",
+    answer: "Yes, all calculators are pre-configured with Dubai-specific data including DLD fees (4%), agent commissions, typical service charges, and current market benchmarks from the Dubai Land Department.",
+  },
+  {
+    question: "Can I calculate returns in my local currency?",
+    answer: "Yes, all tools support real-time currency conversion to USD, EUR, GBP, INR, CNY, and 5 other major currencies with live exchange rates.",
+  },
+];
 
 const residentialTools = [
   {
@@ -213,6 +234,7 @@ export default function Tools() {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       <SEOHead {...PAGE_SEO.tools} />
+      <FAQSchema faqs={toolsFAQs} />
       <Navbar />
 
       {/* Hero Section */}
