@@ -5,6 +5,7 @@ import { HomePageSEO } from "@/components/SEOHead";
 
 // Lazy load below-the-fold sections to improve TTI
 const DynamicTrustSignals = lazy(() => import("@/components/sections/DynamicTrustSignals").then(m => ({ default: m.DynamicTrustSignals })));
+const TransformationSection = lazy(() => import("@/components/sections/TransformationSection").then(m => ({ default: m.TransformationSection })));
 const PlatformSection = lazy(() => import("@/components/sections/PlatformSection").then(m => ({ default: m.PlatformSection })));
 const TestimonialsSection = lazy(() => import("@/components/sections/TestimonialsSection").then(m => ({ default: m.TestimonialsSection })));
 const WhoItsForSection = lazy(() => import("@/components/sections/WhoItsForSection").then(m => ({ default: m.WhoItsForSection })));
@@ -29,6 +30,9 @@ const Index = () => {
         <HeroSection />
         <Suspense fallback={<SectionPlaceholder />}>
           <DynamicTrustSignals />
+        </Suspense>
+        <Suspense fallback={<SectionPlaceholder />}>
+          <TransformationSection />
         </Suspense>
         <Suspense fallback={<SectionPlaceholder />}>
           <PlatformSection />

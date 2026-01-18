@@ -16,13 +16,13 @@ const tiers = [
     annualPrice: "$0",
     period: "forever",
     annualPeriod: "forever",
-    description: "Everything you need to start learning.",
+    description: "Learn the fundamentals at your own pace.",
     features: [
-      "Property listings browser",
+      "Browse property listings",
       "Basic community access",
-      "Newsletter & market updates",
+      "Weekly market updates",
     ],
-    cta: "Start Free",
+    cta: "Start Learning Free",
     variant: "outline" as const,
     highlighted: false,
     tier: "free" as const,
@@ -35,16 +35,16 @@ const tiers = [
     period: "/month",
     annualPeriod: "/month (billed yearly)",
     annualSavings: STRIPE_TIERS.investor.annual.savingsDisplay,
-    description: "Full access to education, tools, and community.",
+    description: "Get the complete toolkit for confident decisions.",
     features: [
       "Full Academy (50+ lessons)",
       "All investment calculators",
-      "AI-powered analysis",
+      "AI-powered deal analysis",
       "Save & compare properties",
       "Core community channels",
-      "Monthly market reports",
+      "Monthly market intelligence",
     ],
-    cta: "Upgrade to Investor",
+    cta: "Build My Confidence",
     variant: "hero" as const,
     highlighted: true,
     badge: "Most Popular",
@@ -58,7 +58,7 @@ const tiers = [
     period: "/month",
     annualPeriod: "/month (billed yearly)",
     annualSavings: STRIPE_TIERS.elite.annual.savingsDisplay,
-    description: "Priority access, advanced AI, and elite networking.",
+    description: "Fast-track your journey with priority access.",
     features: [
       "Everything in Investor, plus:",
       "Priority off-plan allocations",
@@ -68,7 +68,7 @@ const tiers = [
       "Weekly intelligence reports",
       "Direct expert consultation",
     ],
-    cta: "Go Pro",
+    cta: "Accelerate My Journey",
     variant: "default" as const,
     highlighted: false,
     badge: "Best Value",
@@ -82,7 +82,7 @@ const tiers = [
     period: "",
     annualPeriod: "",
     annualSavings: null,
-    description: "You now have a team in Dubai.",
+    description: "Your dedicated team in Dubai.",
     features: [
       "Everything in Pro, plus:",
       "Dedicated concierge",
@@ -148,15 +148,15 @@ export function MembershipSection() {
           className="text-center max-w-3xl mx-auto mb-16"
         >
           <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans mb-4 block">
-            Membership
+            Your Journey
           </span>
           <h2 className="text-4xl md:text-5xl font-serif text-foreground mb-6">
-            Choose Your
+            Choose Your Path
             <br />
-            <span className="text-gradient-gold">Level of Access</span>
+            <span className="text-gradient-gold">to Confidence</span>
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed">
-            Start free. Upgrade when you're ready.
+            Start free. Upgrade when you're ready. Go at your own pace.
           </p>
 
           {/* Annual/Monthly Toggle */}

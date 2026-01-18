@@ -15,6 +15,7 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const Profile = lazy(() => import("@/pages/Profile"));
+const StartHere = lazy(() => import("@/pages/StartHere"));
 
 // Lazy loaded - Academy pages
 const Academy = lazy(() => import("@/pages/Academy"));
@@ -195,6 +196,8 @@ export function AnimatedRoutes() {
             </ProtectedRoute>
           }
         />
+        {/* Start Here - Onboarding page */}
+        <Route path="/start-here" element={<ProtectedRoute><LazyPage><StartHere /></LazyPage></ProtectedRoute>} />
         {/* Academy - Free to browse, lesson access controlled in-page */}
         <Route path="/academy" element={<LazyPage><Academy /></LazyPage>} />
         <Route path="/academy/:slug" element={<LazyPage><Course /></LazyPage>} />
