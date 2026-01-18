@@ -16,6 +16,7 @@ import { HeroStatsRow } from '@/components/dashboard/HeroStatsRow';
 import { ContinueLearningWidget } from '@/components/dashboard/ContinueLearningWidget';
 import { RecentlyViewedWidget } from '@/components/dashboard/RecentlyViewedWidget';
 import { QuickActionsDock } from '@/components/dashboard/QuickActionsDock';
+import { MemberJourneyCard } from '@/components/dashboard/MemberJourneyCard';
 
 export default function Dashboard() {
   const { user, profile, loading, signOut } = useAuth();
@@ -220,11 +221,21 @@ export default function Dashboard() {
           </motion.div>
         )}
 
+        {/* Member Journey Stages */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="mb-6"
+        >
+          <MemberJourneyCard />
+        </motion.div>
+
         {/* Hero Stats Row - Bento Cards */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.18 }}
           className="mb-6"
         >
           <HeroStatsRow isPaidMember={isPaidMember} isElite={isElite || isPrivate} />
