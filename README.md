@@ -1,73 +1,129 @@
-# Welcome to your Lovable project
+# Dubai Wealth AI — Real Estate Investment Intelligence SaaS Platform
 
-## Project info
+Dubai Wealth AI is a **production-grade SaaS platform** built to help global investors analyze Dubai real estate opportunities using **live market data, AI-powered deal analysis, secure multi-tenant architecture, and subscription billing**.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+This project demonstrates **cloud architecture, serverless backend design, API orchestration, scalable database modeling, Stripe billing integration, and AI workflow engineering** — applied to a real commercial product.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 What the Platform Does
 
-**Use Lovable**
+Dubai Wealth AI enables users to:
+- Discover and analyze Dubai real estate opportunities  
+- Evaluate rental yield, ROI, and market performance  
+- Track properties, neighborhoods, and investment trends  
+- Receive AI-powered deal insights and recommendations  
+- Manage subscriptions and personalized dashboards  
+- Interact with real-time market intelligence tools  
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## ✨ Key Features
 
-**Use your preferred IDE**
+- Live ingestion of **Dubai property data** via external APIs  
+- **AI-powered investment analysis** (yield, ROI scoring, deal evaluation)  
+- **Stripe subscription billing** with webhook event handling  
+- Secure **multi-tenant authentication** with role-based access control  
+- Real-time dashboards and property analytics  
+- **Geospatial neighborhood intelligence** (Mapbox)  
+- Automated alerts, saved searches, and notifications  
+- Performance optimization, caching, retries, and rate-limit protection  
+- Scalable backend workflows and automation pipelines  
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🧠 Technical Architecture Overview
 
-Follow these steps:
+### Frontend
+- React / Next.js  
+- TypeScript  
+- Modular UI architecture  
+- Real-time UI updates & state synchronization  
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Backend
+- **Supabase (PostgreSQL + Row-Level Security)**  
+- Serverless **Edge Functions**  
+- Event-driven background jobs  
+- External API ingestion & sync pipelines  
+- Stripe webhook event processing  
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Database & Security
+- 100+ structured relational tables  
+- Secure **Row-Level Security (RLS)** for tenant isolation  
+- Optimized indexing and query performance  
+- Strong data integrity constraints  
+- Secure secrets management via environment variables  
 
-# Step 3: Install the necessary dependencies.
-npm i
+### AI & Intelligence Layer
+- LLM-powered property analysis agent  
+- AI-assisted deal scoring and recommendations  
+- Prompt-driven automation logic  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### Cloud & DevOps
+- Serverless deployment architecture  
+- Error handling, logging, retries, and resilience patterns  
+- Scalable API orchestration  
+- Performance monitoring & optimization  
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🛠 Engineering Challenges Solved
 
-**Use GitHub Codespaces**
+- Reliable syncing of large-scale external real estate datasets  
+- Secure multi-tenant access control with database-level RLS  
+- Safe handling of Stripe billing events (**idempotency & replay protection**)  
+- Async job orchestration and background automation  
+- API rate-limit resilience and retry logic  
+- Query performance optimization across large relational datasets  
+- Secure handling of user identity and access permissions  
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## 🎯 Why This Project Matters
 
-This project is built with:
+Dubai Wealth AI demonstrates real-world experience in:
+- **Cloud & serverless architecture**  
+- **SaaS platform engineering**  
+- **API integration & automation**  
+- **Scalable backend system design**  
+- **Secure database modeling**  
+- **Billing & subscription systems**  
+- **AI integration into production workflows**  
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+This project reflects **engineering practices used in startup, enterprise, and fintech-adjacent environments**.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 🧰 Tech Stack Summary
 
-## Can I connect a custom domain to my Lovable project?
+**Supabase • PostgreSQL • Serverless Functions • Stripe • Next.js • React • TypeScript • External APIs • Mapbox • AI / LLMs**
 
-Yes, you can!
+---
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🔮 Future Scalability Improvements
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Background job queue (Redis / task workers)  
+- Observability stack (metrics, tracing, structured logs)  
+- Redis caching layer  
+- Horizontal scaling for ingestion workers  
+- CI/CD pipeline automation  
+- Advanced rate-limit & cost optimization  
+
+---
+
+## 👤 Author
+
+Built and architected by **Jasha Balcom**  
+Cloud & SaaS Systems Builder | API Integrations | AI Automation | AWS (CCP in Progress)  
+📍 Atlanta, GA  
+
+🔗 LinkedIn: https://linkedin.com/in/jashabalcom  
+🔗 GitHub: https://github.com/mrvidaboa  
+
+---
+
+## 📩 Contact
+
+For collaboration, technical discussion, or opportunities:  
+**jasha.balcom@delta.com**  
+**jashabalcom@gmail.com**
